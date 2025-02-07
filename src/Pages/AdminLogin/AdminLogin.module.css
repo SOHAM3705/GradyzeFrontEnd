@@ -1,0 +1,121 @@
+/* Google Font */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css");
+
+/* Background Styling */
+.adminBg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: ivory;
+}
+
+/* Login Container */
+.loginContainer {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 350px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.loginContainer:hover {
+  transform: scale(1.05);
+}
+
+/* Title */
+.loginContainer h2 {
+  color: #7c3aed;
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+/* Input Groups */
+.inputGroup {
+  display: flex;
+  align-items: center;
+  background: #f1f1f1;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.inputGroup i {
+  margin-right: 10px;
+  color: #555;
+}
+
+.inputGroup input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 16px;
+  padding: 5px;
+}
+
+/* Buttons */
+.submitAdminbut {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #7c3aed;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+.submitAdminbut:hover {
+  background: #5b21b6;
+}
+
+/* Align the back button and heading */
+.loginHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* Circular Back Button */
+.backButton_Alogin {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #7c3aed;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out, background 0.3s;
+}
+
+/* Arrow Icon */
+.backButton_Alogin i {
+  color: white;
+  font-size: 18px;
+}
+
+/* Rotate and Darken on Hover */
+.backButton_Alogin:hover {
+  transform: rotate(180deg);
+  background: #5b21b6;
+}
+
+.AdminSignup_a {
+  color: #7c3aed;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.AdminSignup_a:hover {
+  text-decoration: none;
+}

@@ -1,0 +1,114 @@
+/* Background Styling */
+.teacherBg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: ivory;
+}
+
+/* Login Container */
+.loginContainer {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 350px;
+  transition: transform 0.3s ease-in-out;
+  position: relative;
+}
+
+.loginContainer:hover {
+  transform: scale(1.05);
+}
+
+/* Title */
+.loginContainer h2 {
+  color: #059669;
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+/* Input Groups */
+.inputGroup {
+  display: flex;
+  align-items: center;
+  background: #f1f1f1;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.inputGroup i {
+  margin-right: 10px;
+  color: #555;
+}
+
+.inputGroup input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 16px;
+  padding: 5px;
+}
+
+/* Buttons */
+.Tlogin_but {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #059669;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+/* Links */
+p {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.TeacherLogin_a {
+  color: #059669;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.TeacherLogin_a:hover {
+  text-decoration: none;
+}
+
+/* Back Button */
+.backButton_Tlogin {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #046b57;
+  border: none;
+  position: absolute;
+  top: 15px; /* Adjusted for better alignment */
+  left: 15px; /* Ensure it's inside the container */
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out, background 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Ensure the arrow is visible */
+.backButton_Tlogin i {
+  color: white;
+  font-size: 18px;
+}
+
+/* Rotate and Darken on Hover */
+.backButton_Tlogin:hover {
+  transform: rotate(180deg);
+  background: #034d44;
+}

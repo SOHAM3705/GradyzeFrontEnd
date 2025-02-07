@@ -1,0 +1,193 @@
+/* Google Font */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+
+body {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 50px 20px;
+  background: rgb(200, 200, 200);
+  color: #000;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.header p {
+  font-size: 1.5rem;
+}
+
+/* About Section */
+.about {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 50px 20px;
+  flex-wrap: wrap;
+}
+
+.about img {
+  max-width: 400px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.aboutContent {
+  max-width: 500px;
+}
+
+.aboutContent h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.aboutContent p {
+  font-size: 1.2rem;
+}
+
+/* Role Cards */
+.roles {
+  display: flex;
+  justify-content: space-evenly;
+  text-align: center;
+  padding: 50px 20px;
+  flex-wrap: wrap;
+}
+
+.roleCard {
+  width: 350px;
+  padding: 20px;
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+.roleCard h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.roleCard p {
+  font-size: 1.2rem;
+}
+
+.teacher {
+  background-color: #059669; /* Green */
+}
+
+.admin {
+  background-color: #7c3aed; /* Purple */
+}
+
+.student {
+  background-color: #2563eb; /* Blue */
+}
+
+/* Mission Section */
+.mission {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgb(86, 173, 227);
+  color: white;
+}
+
+.mission h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.mission p {
+  font-size: 1.2rem;
+}
+
+/* Stats Section */
+.stats {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding: 50px 20px;
+  flex-wrap: wrap;
+}
+
+.statBox {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  width: 200px;
+}
+
+.statBox h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.statBox p {
+  font-size: 1.2rem;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 20px;
+  background: #333;
+  color: white;
+}
+
+.footer p {
+  font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .about {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .roles {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .roleCard {
+    width: 80%;
+    margin-bottom: 20px;
+  }
+}
+
+/* Back to Main Website Button */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: whitesmoke;
+  color: #000;
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.backButton i {
+  font-size: 1.5rem;
+}
+
+.backButton:hover {
+  background: ivory;
+  transform: translateX(-5px);
+}

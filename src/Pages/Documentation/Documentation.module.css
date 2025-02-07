@@ -1,0 +1,154 @@
+/* Documentation.module.css */
+
+.docsContainer {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  line-height: 1.8;
+  color: #333;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.docsNavbar {
+  display: flex;
+  justify-content: space-around;
+  background-color: #007bff;
+  padding: 15px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.docsNavbar button {
+  text-decoration: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.docsNavbar button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.docsNavActive {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.docsContent {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.docsSection {
+  margin-bottom: 40px;
+  animation: docsFadeIn 0.5s ease-in-out;
+}
+
+@keyframes docsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.docsTitle {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+  color: #007bff;
+}
+
+.docsSubtitle {
+  font-size: 1.8em;
+  margin-bottom: 15px;
+  color: #444;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 5px;
+}
+
+.docsText {
+  margin-bottom: 20px;
+  color: #555;
+  line-height: 1.8;
+}
+
+.docsStrong {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.docsSection ul {
+  margin-left: 20px;
+  list-style-type: disc;
+}
+
+.docsSection ul li {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.docsSection ol {
+  margin-left: 20px;
+  list-style-type: decimal;
+}
+
+.docsSection ol li {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.docsSection a {
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.docsSection a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Back Button */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: whitesmoke;
+  color: #000;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.backButton i {
+  font-size: 1.2rem;
+  text-decoration: none;
+}
+
+.backButton:hover {
+  background: #000000;
+  color: rgb(255, 255, 255);
+  transform: translateX(-5px);
+  text-decoration: none;
+}

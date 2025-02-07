@@ -1,0 +1,79 @@
+/* PrivacyPolicy.css */
+
+.privacy-policy {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+.privacy-policy h1 {
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.privacy-policy h2 {
+  font-size: 1.5em;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  color: #444;
+}
+
+.privacy-policy p {
+  margin-bottom: 20px;
+  color: #555;
+}
+
+.privacy-policy ul {
+  margin-left: 20px;
+  list-style-type: disc;
+}
+
+.privacy-policy ul li {
+  margin-bottom: 10px;
+}
+
+.privacy-policy strong {
+  font-weight: bold;
+}
+
+.privacy-policy a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.privacy-policy a:hover {
+  text-decoration: underline;
+}
+
+/* Back to Main Website Button */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: whitesmoke;
+  color: #000;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.back-button i {
+  font-size: 1.2rem;
+  text-decoration: none;
+}
+
+.back-button:hover {
+  background: #000000;
+  color: rgb(255, 255, 255);
+  transform: translateX(-5px);
+  text-decoration: none;
+}

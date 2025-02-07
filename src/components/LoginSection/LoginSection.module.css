@@ -1,0 +1,110 @@
+.loginSection {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.decorativeLine {
+  width: 80%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #6b7280, transparent);
+}
+
+.top {
+  margin-top: 0;
+  margin-bottom: 50px;
+}
+
+.bottom {
+  margin-top: 90px;
+  margin-bottom: 0;
+}
+
+.sectionHeader {
+  margin-bottom: 3rem;
+}
+
+.sectionHeader h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.sectionHeader p {
+  font-size: 1.2rem;
+}
+
+.loginCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.loginCard {
+  background: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s;
+  text-decoration: none;
+  height: 350px;
+  align-items: center;
+}
+
+.loginCard:hover {
+  transform: translateY(-5px);
+}
+
+.cardIcon {
+  margin-top: 20px;
+  font-size: 2.5rem;
+  color: #2563eb;
+  margin-bottom: 1rem;
+}
+
+.teacherCard {
+  color: #059669;
+}
+
+.adminCard {
+  color: #7c3aed;
+}
+
+.btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-top: 20px;
+}
+
+.studentBtn {
+  background: #2563eb;
+  color: white;
+}
+
+.teacherBtn {
+  background: #059669;
+  color: white;
+}
+
+.adminBtn {
+  background: #7c3aed;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .loginCards {
+    grid-template-columns: 1fr;
+  }
+}
