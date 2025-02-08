@@ -26,7 +26,7 @@ const AdminSignUp = () => {
     try {
       // Correct path for signup
       const response = await axios.post(
-        "https://gradyze-com.onrender.com/api/admin/signup",
+        "https://gradyzebackend.onrender.com/api/admin/signup",
         formData
       );
       alert(response.data.message);

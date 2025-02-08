@@ -22,7 +22,7 @@ const AdminLogin = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://gradyze-com.onrender.com/api/admin/adminlogin",
+        "https://gradyzebackend.onrender.com/api/admin/adminlogin",
         formData
       );
 
