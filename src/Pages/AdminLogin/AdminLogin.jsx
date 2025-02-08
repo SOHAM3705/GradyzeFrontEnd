@@ -29,9 +29,8 @@ const AdminLogin = () => {
       // Store Token, ID, and Name in Local Storage
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("adminId", response.data.adminId);
-      localStorage.setItem("adminName", response.data.name); // Store name;
+      localStorage.setItem("adminName", response.data.name); // Store name
 
-      alert(response.data.message);
       navigate("/admindash");
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");

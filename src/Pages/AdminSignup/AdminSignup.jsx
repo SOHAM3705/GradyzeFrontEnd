@@ -24,13 +24,17 @@ const AdminSignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Correct path for signup
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/admin/signup",
         formData
       );
-      alert(response.data.message);
-      navigate("/adminlogin");
+
+      // Store Token, ID, and Name in Local Storage
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("adminId", response.data.adminId);
+      localStorage.setItem("adminName", response.data.name); // Store name
+
+      navigate("/admindash");
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
       console.error("Signup Error:", err.response?.data);
