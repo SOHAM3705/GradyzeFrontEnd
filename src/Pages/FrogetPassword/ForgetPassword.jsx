@@ -15,7 +15,7 @@ const ForgetPassword = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.REACT_APP_BACKEND_URL}/api/password/verify-email`,
+        "https://gradyzebackend.onrender.com/api/password/verify-email",
         { email }
       );
       setMessage(response.data.message);
