@@ -1,0 +1,73 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
+const ForgetPassword = () => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/password/verify-email`,
+        { email }
+      );
+      setMessage(response.data.message);
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Something went wrong.");
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-96 text-center">
+        {/* Back Button */}
+        <button
+          className="absolute left-4 top-4 text-purple-600 hover:text-purple-800"
+          onClick={() => navigate(-1)}
+        >
+          <i className="fas fa-arrow-left text-xl"></i>
+        </button>
+
+        <h2 className="text-2xl font-bold text-purple-700 mb-4">
+          Verify Email
+        </h2>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex items-center border border-gray-300 p-2 rounded-lg bg-gray-50">
+            <i className="fas fa-envelope text-gray-500 mx-2"></i>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full outline-none bg-transparent"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-800 transition"
+          >
+            {loading ? "Sending..." : "Verify Email"}
+          </button>
+        </form>
+
+        {message && <p className="text-gray-700 mt-3">{message}</p>}
+      </div>
+    </div>
+  );
+};
+
+export default ForgetPassword;

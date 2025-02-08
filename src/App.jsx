@@ -11,6 +11,8 @@ import TeacherLogin from "./Pages/TeacherLogin/TeacherLogin";
 import PPSection from "./Pages/PPSection/PPSection";
 import Documentation from "./Pages/Documentation/Documentation";
 import AdminDash from "./Pages/AdminDash/AdminDash";
+import ForgetPassword from "./Pages/FrogetPassword/ForgetPassword";
+import ChangePassword from "./Pages/FrogetPassword/ChangePassword";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
@@ -27,6 +29,8 @@ function App() {
       <Route path="/teacherlogin" element={<TeacherLogin />} />
       <Route path="/privacypolicy" element={<PPSection />} />
       <Route path="/documentation" element={<Documentation />} />
+      <Route path="/forgetpassword" element={<ForgetPassword />} />
+      <Route path="/change-password" element={<ChangePassword />} />
 
       {/* Protect the Admin Dashboard route with PrivateRoute */}
       <Route
