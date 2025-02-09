@@ -13,6 +13,8 @@ import Documentation from "./Pages/Documentation/Documentation";
 import AdminDash from "./Pages/AdminDash/AdminDash";
 import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
 import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
+import ProfileSettings from "./components/DashBoardMenu/Settings";
+import SyllabusManagement from "./components/DashBoardMenu/Syllabus";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
