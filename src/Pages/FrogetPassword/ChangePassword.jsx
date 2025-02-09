@@ -11,7 +11,8 @@ const ChangePassword = () => {
   const location = useLocation();
 
   // Extract token from URL query params
-  const token = new URLSearchParams(location.search).get("token");
+  const searchParams = new URLSearchParams(window.location.search);
+  const token = searchParams.get("token");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
