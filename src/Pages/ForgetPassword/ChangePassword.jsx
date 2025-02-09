@@ -13,6 +13,7 @@ const ChangePassword = () => {
   // Extract token from URL query params
   const searchParams = new URLSearchParams(window.location.search);
   const token = searchParams.get("token");
+  console.log("Token:", token); // Debugging line
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,13 +35,15 @@ const ChangePassword = () => {
           confirmPassword,
         }
       );
+      console.log("API Response:", response); // Debugging line
       setMessage(response.data.message);
-      navigate("/login"); // Redirect to login after success
+      navigate("/adminlogin"); // Redirect to login after success
     } catch (error) {
+      console.log("Error:", error); // Debugging line
       setMessage(error.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false); // Ensure loading is always reset
     }
-
-    setLoading(false);
   };
 
   return (

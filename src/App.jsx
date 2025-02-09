@@ -40,7 +40,10 @@ function App() {
             <AdminDash />
           </PrivateRoute>
         }
-      />
+      >
+        <Route path="settings" element={<ProfileSettings />} />
+        <Route path="Syllbus" element={<SyllabusManagement />} />
+      </Route>
     </Routes>
   );
 }
