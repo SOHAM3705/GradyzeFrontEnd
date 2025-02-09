@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./Pages/LandingPage/LandingPage";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import AboutUs from "./Pages/AboutUs/AboutUs";
@@ -11,8 +11,8 @@ import TeacherLogin from "./Pages/TeacherLogin/TeacherLogin";
 import PPSection from "./Pages/PPSection/PPSection";
 import Documentation from "./Pages/Documentation/Documentation";
 import AdminDash from "./Pages/AdminDash/AdminDash";
-import ForgetPassword from "./Pages/FrogetPassword/ForgetPassword";
-import ChangePassword from "./Pages/FrogetPassword/ChangePassword";
+import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
+import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import "@fortawesome/fontawesome-free/css/all.min.css"; // Ensure FontAwesome is loaded
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState("");
@@ -20,19 +21,27 @@ const ForgetPassword = () => {
       );
       setMessage(response.data.message);
     } catch (error) {
-      setMessage(error.response?.data?.message || "Something went wrong.");
+      setMessage(error?.response?.data?.message ?? "Something went wrong.");
     }
 
     setLoading(false);
   };
 
+  const handleBack = () => {
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate("/login"); // Change to your login page
+    }
+  };
+
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-96 text-center">
+      <div className="relative bg-white p-8 rounded-lg shadow-lg w-96 text-center">
         {/* Back Button */}
         <button
           className="absolute left-4 top-4 text-purple-600 hover:text-purple-800"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
         >
           <i className="fas fa-arrow-left text-xl"></i>
         </button>
