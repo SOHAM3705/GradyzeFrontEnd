@@ -16,10 +16,10 @@ const SyllabusManagement = () => {
     e.preventDefault();
 
     if (
-      !streamInputRef.current ||
-      !patternInputRef.current ||
-      !yearInputRef.current ||
-      !syllabusFileRef.current
+      !streamInputRef.current.value ||
+      !patternInputRef.current.value ||
+      !yearInputRef.current.value ||
+      !syllabusFileRef.current.files.length
     ) {
       alert("Some form fields are missing!");
       return;
@@ -97,6 +97,12 @@ const SyllabusManagement = () => {
     }, 1000); // Delay URL revoke
   };
 
+  const handleDelete = (index) => {
+    const updatedSyllabusData = [...syllabusData];
+    updatedSyllabusData.splice(index, 1);
+    setSyllabusData(updatedSyllabusData);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="header flex justify-between items-center mb-4">
@@ -104,7 +110,7 @@ const SyllabusManagement = () => {
           Syllabus Management
         </h1>
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600 text-lg"
           onClick={openModal}
         >
           Add New Syllabus
@@ -115,12 +121,19 @@ const SyllabusManagement = () => {
         <select
           id="pattern"
           className="filter-select p-2 border rounded w-full"
+          value={filterPattern}
+          onChange={(e) => setFilterPattern(e.target.value)}
         >
           <option value="">All Patterns</option>
           <option value="2024">2024 Pattern</option>
           <option value="2019">2019 Pattern</option>
         </select>
-        <select id="stream" className="filter-select p-2 border rounded w-full">
+        <select
+          id="stream"
+          className="filter-select p-2 border rounded w-full"
+          value={filterStream}
+          onChange={(e) => setFilterStream(e.target.value)}
+        >
           <option value="">All Streams</option>
           <option value="computer">Computer Engineering</option>
           <option value="it">Information Technology</option>
@@ -130,7 +143,12 @@ const SyllabusManagement = () => {
           </option>
           <option value="civil">Civil Engineering</option>
         </select>
-        <select id="year" className="filter-select p-2 border rounded w-full">
+        <select
+          id="year"
+          className="filter-select p-2 border rounded w-full"
+          value={filterYear}
+          onChange={(e) => setFilterYear(e.target.value)}
+        >
           <option value="">All Years</option>
           <option value="FE">First Year</option>
           <option value="SE">Second Year</option>
@@ -143,8 +161,14 @@ const SyllabusManagement = () => {
         {filterSyllabi().map((entry, index) => (
           <div
             key={index}
-            className="syllabus-card p-4 bg-white rounded shadow"
+            className="syllabus-card p-4 bg-white rounded shadow relative"
           >
+            <button
+              className="delete-btn absolute top-2 right-2 text-red-500 hover:text-red-700 text-2xl px-3 py-2"
+              onClick={() => handleDelete(index)}
+            >
+              &times;
+            </button>
             <div className="syllabus-header mb-2">
               <div className="syllabus-title text-lg font-semibold">
                 {formatStream(entry.stream)}
@@ -156,7 +180,7 @@ const SyllabusManagement = () => {
             <div className="syllabus-info flex justify-between items-center mt-4 pt-4 border-t">
               <span className="syllabus-size text-gray-600">{entry.size}</span>
               <button
-                className="download-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                className="download-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-lg"
                 onClick={() =>
                   handleDownload(
                     entry.file,
@@ -178,7 +202,10 @@ const SyllabusManagement = () => {
           <div className="modal-content bg-white p-6 rounded shadow-lg w-full max-w-md">
             <div className="modal-header flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Add New Syllabus</h2>
-              <button className="close-btn text-gray-600" onClick={closeModal}>
+              <button
+                className="close-btn text-gray-600 text-xl"
+                onClick={closeModal}
+              >
                 &times;
               </button>
             </div>
@@ -208,11 +235,12 @@ const SyllabusManagement = () => {
                   Pattern
                 </label>
                 <select
-                  value={filterPattern}
-                  onChange={(e) => setFilterPattern(e.target.value)}
-                  className="p-2 border rounded w-full"
+                  id="patternInput"
+                  ref={patternInputRef}
+                  required
+                  className="w-full p-2 border rounded"
                 >
-                  <option value="">All Patterns</option>
+                  <option value="">Select Pattern</option>
                   <option value="2024">2024 Pattern</option>
                   <option value="2019">2019 Pattern</option>
                 </select>
@@ -250,14 +278,14 @@ const SyllabusManagement = () => {
               <div className="form-buttons flex justify-end gap-4">
                 <button
                   type="button"
-                  className="cancel-btn px-4 py-2 border rounded"
+                  className="cancel-btn px-6 py-3 border rounded text-lg"
                   onClick={closeModal}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="submit-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  className="submit-btn bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600 text-lg"
                 >
                   Add Syllabus
                 </button>
