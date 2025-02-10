@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import LandingPage from "./Pages/LandingPage/LandingPage";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import AboutUs from "./Pages/AboutUs/AboutUs";
-import ContactUs from "./Pages/contactus/ContactUs";
+import ContactUs from "./Pages/contactus/contactus";
 import AdminLogin from "./Pages/AdminLogin/AdminLogin";
 import AdminSignUp from "./Pages/AdminSignup/AdminSignup";
 import StudentLogin from "./Pages/StudentLogin/StudentLogin";

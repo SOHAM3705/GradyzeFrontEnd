@@ -123,6 +123,81 @@ const FacultyManagement = () => {
     setSelectedFacultyId(null);
   };
 
+  const updateFields = () => {
+    const department = document.querySelector(
+      'select[name="department"]'
+    ).value;
+    const yearSelect = document.getElementById("year");
+    const semesterSelect = document.getElementById("semester");
+    const subjectSelect = document.getElementById("subject");
+
+    yearSelect.disabled = !department;
+    semesterSelect.disabled = true;
+    subjectSelect.disabled = true;
+
+    if (department) {
+      yearSelect.disabled = false;
+      updateSemesters();
+    }
+  };
+
+  const updateSemesters = () => {
+    const yearSelect = document.getElementById("year");
+    const semesterSelect = document.getElementById("semester");
+    const year = yearSelect.value;
+
+    semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+    semesterSelect.disabled = !year;
+
+    if (year) {
+      const semesters =
+        year === "First"
+          ? ["1", "2"]
+          : year === "Second"
+          ? ["3", "4"]
+          : year === "Third"
+          ? ["5", "6"]
+          : ["7", "8"];
+
+      semesters.forEach((sem) => {
+        const option = document.createElement("option");
+        option.value = sem;
+        option.textContent = `Semester ${sem}`;
+        semesterSelect.appendChild(option);
+      });
+    }
+  };
+
+  const updateSubjects = () => {
+    const departmentSelect = document.querySelector(
+      'select[name="department"]'
+    );
+    const yearSelect = document.getElementById("year");
+    const semesterSelect = document.getElementById("semester");
+    const subjectSelect = document.getElementById("subject");
+
+    const department = departmentSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+
+    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+    subjectSelect.disabled = !semester;
+
+    if (
+      department &&
+      year &&
+      semester &&
+      subjectDatabase[department]?.[year]?.[semester]
+    ) {
+      subjectDatabase[department][year][semester].forEach((subject) => {
+        const option = document.createElement("option");
+        option.value = subject;
+        option.textContent = subject;
+        subjectSelect.appendChild(option);
+      });
+    }
+  };
+
   const createFaculty = (event) => {
     event.preventDefault();
     const form = event.target;
