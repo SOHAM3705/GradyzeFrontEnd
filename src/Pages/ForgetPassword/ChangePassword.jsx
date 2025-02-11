@@ -76,7 +76,7 @@ const ChangePassword = () => {
         {/* Back Button */}
         <button
           className="absolute left-4 top-4 text-purple-600 hover:text-purple-800"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/adminlogin")}
         >
           <i className="fas fa-arrow-left text-xl"></i>
         </button>
