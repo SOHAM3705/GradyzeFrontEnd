@@ -10,6 +10,10 @@ import StudentLogin from "./Pages/StudentLogin/StudentLogin";
 import TeacherLogin from "./Pages/TeacherLogin/TeacherLogin";
 import PPSection from "./Pages/PPSection/PPSection";
 import Documentation from "./Pages/Documentation/Documentation";
+
+import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
+import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
+
 import AdminDash from "./Pages/AdminDash/AdminDash";
 import ProfileSettings from "./components/DashBoardMenu/Settings";
 import SyllabusManagement from "./components/DashBoardMenu/Syllabus";
@@ -34,6 +38,8 @@ function App() {
       <Route path="/teacherlogin" element={<TeacherLogin />} />
       <Route path="/privacypolicy" element={<PPSection />} />
       <Route path="/documentation" element={<Documentation />} />
+      <Route path="/forgetpassword" element={<ForgetPassword />} />
+      <Route path="/change-password" element={<ChangePassword />} />
 
       {/* Protect the Admin Dashboard route with PrivateRoute */}
       <Route
