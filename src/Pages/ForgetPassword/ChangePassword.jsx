@@ -35,7 +35,7 @@ const ChangePassword = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/password/change-password`,
+        `https://gradyzebackend.onrender.com/api/password/change-password`,
         {
           token,
           newPassword,
