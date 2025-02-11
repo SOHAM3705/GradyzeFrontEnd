@@ -8,17 +8,24 @@ const ChangePassword = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // Extract token from URL query params
-  const searchParams = new URLSearchParams(window.location.search);
-  const token = searchParams.get("token");
-  console.log("Token:", token); // Debugging line
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get("token");
+    console.log("Token:", token); // Debugging line
+
+    if (!token) {
+      setMessage("Token is missing.");
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get("token");
 
     if (newPassword !== confirmPassword) {
       setMessage("Passwords do not match.");
@@ -39,7 +46,7 @@ const ChangePassword = () => {
       setMessage(response.data.message);
       navigate("/adminlogin"); // Redirect to login after success
     } catch (error) {
-      console.log("Error:", error); // Debugging line
+      console.error("Error:", error); // Debugging line
       setMessage(error.response?.data?.message || "Something went wrong.");
     } finally {
       setLoading(false); // Ensure loading is always reset
