@@ -43,11 +43,28 @@ const ChangePassword = () => {
         }
       );
       console.log("API Response:", response); // Debugging line
-      setMessage(response.data.message);
-      navigate("/adminlogin"); // Redirect to login after success
+
+      if (response.data && response.data.message) {
+        setMessage(response.data.message);
+        setTimeout(() => {
+          navigate("/adminlogin"); // Redirect to login after success
+        }, 2000); // Redirect after 2 seconds
+      } else {
+        setMessage("Unexpected response from the server.");
+      }
     } catch (error) {
       console.error("Error:", error); // Debugging line
-      setMessage(error.response?.data?.message || "Something went wrong.");
+
+      if (error.response) {
+        // Server responded with a status code outside 2xx
+        setMessage(error.response.data?.message || "Something went wrong.");
+      } else if (error.request) {
+        // Request was made but no response was received
+        setMessage("No response from the server. Please try again.");
+      } else {
+        // Something else happened
+        setMessage("An error occurred. Please try again.");
+      }
     } finally {
       setLoading(false); // Ensure loading is always reset
     }
