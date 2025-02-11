@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const ChangePassword = () => {
@@ -12,8 +12,6 @@ const ChangePassword = () => {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const token = searchParams.get("token");
-    console.log("Token:", token); // Debugging line
-
     if (!token) {
       setMessage("Token is missing.");
     }
@@ -42,38 +40,31 @@ const ChangePassword = () => {
           confirmPassword,
         }
       );
-      console.log("API Response:", response); // Debugging line
 
       if (response.data && response.data.message) {
         setMessage(response.data.message);
         setTimeout(() => {
-          navigate("/adminlogin"); // Redirect to login after success
-        }, 2000); // Redirect after 2 seconds
+          navigate("/adminlogin");
+        }, 2000);
       } else {
         setMessage("Unexpected response from the server.");
       }
     } catch (error) {
-      console.error("Error:", error); // Debugging line
-
       if (error.response) {
-        // Server responded with a status code outside 2xx
         setMessage(error.response.data?.message || "Something went wrong.");
       } else if (error.request) {
-        // Request was made but no response was received
         setMessage("No response from the server. Please try again.");
       } else {
-        // Something else happened
         setMessage("An error occurred. Please try again.");
       }
     } finally {
-      setLoading(false); // Ensure loading is always reset
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96 text-center relative">
-        {/* Back Button */}
         <button
           className="absolute left-4 top-4 text-purple-600 hover:text-purple-800"
           onClick={() => navigate("/adminlogin")}
@@ -85,7 +76,6 @@ const ChangePassword = () => {
           Reset Password
         </h2>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center border border-gray-300 p-2 rounded-lg bg-gray-50">
             <i className="fas fa-lock text-gray-500 mx-2"></i>
