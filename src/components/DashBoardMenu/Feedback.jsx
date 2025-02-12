@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
+import axios from "axios";
 
 const Feedback = () => {
   const [formData, setFormData] = useState({
@@ -7,9 +8,10 @@ const Feedback = () => {
     feedback: "",
     opinions: "",
   });
+
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [responseMessage, setResponseMessage] = useState("");
 
   // Handle input changes
   const handleChange = (e) => {
@@ -20,10 +22,15 @@ const Feedback = () => {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
+
+    // Clear success/error message when user edits form
+    if (responseMessage) {
+      setResponseMessage("");
+    }
   };
 
   // Validate form fields
-  const validateForm = useCallback(() => {
+  const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Please enter your name";
     if (
@@ -37,34 +44,35 @@ const Feedback = () => {
     if (!formData.opinions.trim())
       newErrors.opinions = "Please share your opinions";
     return newErrors;
-  }, [formData]);
+  };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formErrors = validateForm();
     if (Object.keys(formErrors).length === 0) {
-      setIsSubmitting(true);
-      // Simulate API call
-      setTimeout(() => {
-        setSuccessMessage(true);
-        setFormData({ name: "", email: "", feedback: "", opinions: "" });
-        setIsSubmitting(false);
-        setTimeout(() => setSuccessMessage(false), 5000); // Hide success message after 5 seconds
-      }, 1500);
+      setLoading(true);
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_FEEDBACK_API_URL,
+          formData
+        );
+        setResponseMessage(
+          response.data.message || "Thank you for your feedback!"
+        );
+        setFormData({ name: "", email: "", feedback: "", opinions: "" }); // Reset form
+      } catch (error) {
+        setResponseMessage("Error submitting feedback. Try again.");
+      }
+      setLoading(false);
     } else {
       setErrors(formErrors);
     }
   };
 
-  // Clear errors when form data changes
-  useEffect(() => {
-    setErrors({});
-  }, [formData]);
-
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 p-5">
-      <div className="bg-white bg-opacity-95 rounded-2xl p-8 shadow-lg w-full max-w-xl opacity-0 animate-fadeIn">
+      <div className="bg-white bg-opacity-95 rounded-2xl p-8 shadow-lg w-full max-w-xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-semibold text-purple-600 mb-2">
             Gradyze Feedback
@@ -118,14 +126,14 @@ const Feedback = () => {
           <button
             type="submit"
             className={`w-full p-4 bg-purple-600 text-white rounded-lg font-semibold transition-all duration-300 ${
-              isSubmitting
+              loading
                 ? "bg-gray-400 cursor-not-allowed"
                 : "hover:shadow-lg active:translate-y-0.5"
             }`}
-            disabled={isSubmitting}
+            disabled={loading}
             aria-label="Submit Feedback"
           >
-            {isSubmitting ? (
+            {loading ? (
               <div className="flex items-center justify-center">
                 <span className="mr-2">Submitting...</span>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -135,10 +143,16 @@ const Feedback = () => {
             )}
           </button>
         </form>
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mt-6 bg-green-500 text-white p-4 rounded-lg text-center animate-fadeIn">
-            {successMessage}
+        {/* Success/Error Message */}
+        {responseMessage && (
+          <div
+            className={`mt-6 p-4 rounded-lg text-center animate-fadeIn ${
+              responseMessage.includes("Error")
+                ? "bg-red-500 text-white"
+                : "bg-green-500 text-white"
+            }`}
+          >
+            {responseMessage}
           </div>
         )}
       </div>
