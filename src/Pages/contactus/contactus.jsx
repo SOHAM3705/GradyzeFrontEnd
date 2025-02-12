@@ -13,6 +13,7 @@ const ContactUs = () => {
 
   const [loading, setLoading] = useState(false);
   const [responseMessage, setResponseMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState(""); // Add successMessage state
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -30,7 +31,7 @@ const ContactUs = () => {
       setResponseMessage(response.data.message);
       setSuccessMessage(
         "Thank you for your message! We'll get back to you soon."
-      );
+      ); // Set success message
       setFormData({ name: "", email: "", subject: "", message: "" }); // Reset form
     } catch (error) {
       setResponseMessage("Error submitting the form. Try again.");

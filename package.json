@@ -18,6 +18,8 @@
     "@reduxjs/toolkit": "^2.5.1",
     "amqplib": "^0.10.5",
     "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "env": "^0.0.2",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "lucide-react": "^0.474.0",
