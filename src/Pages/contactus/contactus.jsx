@@ -25,7 +25,7 @@ const ContactUs = () => {
 
     try {
       const response = await axios.post(
-        `https://gradyzebackend.onrender.com/api/Gsheet/contact`,
+        `https://gradyzebackend.onrender.com/api/Gsheet/contactus`,
         formData
       );
       setResponseMessage(response.data.message);
