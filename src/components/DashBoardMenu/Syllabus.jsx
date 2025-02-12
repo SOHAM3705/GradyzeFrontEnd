@@ -110,7 +110,7 @@ const SyllabusManagement = () => {
           Syllabus Management
         </h1>
         <button
-          className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600 text-lg"
+          className="bg-purple-700 text-white px-6 py-3 rounded hover:bg-purple-800 text-lg"
           onClick={openModal}
         >
           Add New Syllabus
@@ -180,7 +180,7 @@ const SyllabusManagement = () => {
             <div className="syllabus-info flex justify-between items-center mt-4 pt-4 border-t">
               <span className="syllabus-size text-gray-600">{entry.size}</span>
               <button
-                className="download-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-lg"
+                className="download-btn bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800 text-lg"
                 onClick={() =>
                   handleDownload(
                     entry.file,
@@ -285,7 +285,7 @@ const SyllabusManagement = () => {
                 </button>
                 <button
                   type="submit"
-                  className="submit-btn bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600 text-lg"
+                  className="submit-btn bg-purple-700 text-white px-6 py-3 rounded hover:bg-purple-800 text-lg"
                 >
                   Add Syllabus
                 </button>

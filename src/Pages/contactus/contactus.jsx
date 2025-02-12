@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./contactus.module.css";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -9,13 +10,31 @@ const ContactUs = () => {
     subject: "",
     message: "",
   });
-  const [errors, setErrors] = useState({
-    nameError: "",
-    emailError: "",
-    subjectError: "",
-    messageError: "",
-  });
-  const [successMessage, setSuccessMessage] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [responseMessage, setResponseMessage] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await axios.post(
+        process.env.REACT_APP_CONTACT_API_URL,
+        formData
+      );
+      setResponseMessage(response.data.message);
+      setFormData({ name: "", email: "", subject: "", message: "" }); // Reset form
+    } catch (error) {
+      setResponseMessage("Error submitting the form. Try again.");
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
     // Hide loading overlay after page loads
@@ -45,68 +64,6 @@ const ContactUs = () => {
       window.removeEventListener("scroll", revealOnScroll);
     };
   }, [styles.reveal, styles.visible]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    let isValid = true;
-
-    // Name validation
-    if (formData.name.trim() === "") {
-      setErrors({ ...errors, nameError: "Name is required." });
-      isValid = false;
-    } else {
-      setErrors({ ...errors, nameError: "" });
-    }
-
-    // Email validation
-    if (
-      formData.email.trim() === "" ||
-      !/^\S+@\S+\.\S+$/.test(formData.email.trim())
-    ) {
-      setErrors({ ...errors, emailError: "Enter a valid email." });
-      isValid = false;
-    } else {
-      setErrors({ ...errors, emailError: "" });
-    }
-
-    // Subject validation
-    if (formData.subject.trim() === "") {
-      setErrors({ ...errors, subjectError: "Subject is required." });
-      isValid = false;
-    } else {
-      setErrors({ ...errors, subjectError: "" });
-    }
-
-    // Message validation
-    if (formData.message.trim() === "") {
-      setErrors({ ...errors, messageError: "Message cannot be empty." });
-      isValid = false;
-    } else {
-      setErrors({ ...errors, messageError: "" });
-    }
-
-    // If valid, show success message
-    if (isValid) {
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
-      setSuccessMessage(true);
-      setTimeout(() => {
-        setSuccessMessage(false);
-      }, 3000);
-    }
-  };
 
   return (
     <div>
@@ -179,9 +136,6 @@ const ContactUs = () => {
                   onChange={handleChange}
                   required
                 />
-                <div className={styles.error} id="nameError">
-                  {errors.nameError}
-                </div>
               </div>
 
               <div className={styles.formGroup}>
@@ -195,9 +149,6 @@ const ContactUs = () => {
                   onChange={handleChange}
                   required
                 />
-                <div className={styles.error} id="emailError">
-                  {errors.emailError}
-                </div>
               </div>
 
               <div className={styles.formGroup}>
@@ -211,9 +162,6 @@ const ContactUs = () => {
                   onChange={handleChange}
                   required
                 />
-                <div className={styles.error} id="subjectError">
-                  {errors.subjectError}
-                </div>
               </div>
 
               <div className={styles.formGroup}>
@@ -227,14 +175,16 @@ const ContactUs = () => {
                   onChange={handleChange}
                   required
                 ></textarea>
-                <div className={styles.error} id="messageError">
-                  {errors.messageError}
-                </div>
               </div>
 
-              <button type="submit" className={styles.submitBtn}>
-                <i className="fas fa-paper-plane"></i> Send Message
+              <button
+                type="submit"
+                className={styles.submitBtn}
+                disabled={loading}
+              >
+                {loading ? "Submitting..." : "Send Message"}
               </button>
+              {responseMessage && <p>{responseMessage}</p>}
             </form>
 
             {successMessage && (

@@ -118,7 +118,7 @@ const StudentManagement = () => {
           </div>
           <button
             onClick={openClassModal}
-            className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2"
+            className="bg-purple-700 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-800"
           >
             <i className="fas fa-plus-circle"></i>
             Add New Class
@@ -196,7 +196,7 @@ const StudentManagement = () => {
                     />
                     <button
                       type="submit"
-                      className="bg-blue-500 text-white px-4 py-2 rounded"
+                      className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
                     >
                       Add
                     </button>
@@ -323,7 +323,7 @@ const StudentManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
                 >
                   Create Class
                 </button>

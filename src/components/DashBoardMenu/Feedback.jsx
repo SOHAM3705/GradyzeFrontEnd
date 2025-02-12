@@ -66,7 +66,7 @@ const Feedback = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-100 p-5">
       <div className="bg-white bg-opacity-95 rounded-2xl p-8 shadow-lg w-full max-w-xl opacity-0 animate-fadeIn">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-semibold text-blue-600 mb-2">
+          <h1 className="text-4xl font-semibold text-purple-600 mb-2">
             Gradyze Feedback
           </h1>
           <p className="text-lg text-gray-600">
@@ -117,7 +117,7 @@ const Feedback = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className={`w-full p-4 bg-blue-600 text-white rounded-lg font-semibold transition-all duration-300 ${
+            className={`w-full p-4 bg-purple-600 text-white rounded-lg font-semibold transition-all duration-300 ${
               isSubmitting
                 ? "bg-gray-400 cursor-not-allowed"
                 : "hover:shadow-lg active:translate-y-0.5"
@@ -138,7 +138,7 @@ const Feedback = () => {
         {/* Success Message */}
         {successMessage && (
           <div className="mt-6 bg-green-500 text-white p-4 rounded-lg text-center animate-fadeIn">
-            Thank you for your valuable feedback!
+            {successMessage}
           </div>
         )}
       </div>
@@ -158,14 +158,16 @@ const FormField = ({
 }) => {
   return (
     <div className="relative">
-      <label className="block text-blue-600 font-semibold mb-2">{label}</label>
+      <label className="block text-purple-600 font-semibold mb-2">
+        {label}
+      </label>
       {type === "textarea" ? (
         <textarea
           name={name}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white transition-all duration-300 min-h-[120px]"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white transition-all duration-300 min-h-[120px]"
           required
           aria-invalid={!!error}
           aria-describedby={`${name}-error`}
@@ -177,7 +179,7 @@ const FormField = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white transition-all duration-300"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white transition-all duration-300"
           required
           aria-invalid={!!error}
           aria-describedby={`${name}-error`}

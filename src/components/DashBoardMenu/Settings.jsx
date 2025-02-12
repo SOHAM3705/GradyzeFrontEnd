@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 
 const ProfileSettings = () => {
-  const [profileImage, setProfileImage] = useState("/assets/profile.png");
+  const [profileImage, setProfileImage] = useState("/profile.png");
   const [notification, setNotification] = useState("");
   const [error, setError] = useState("");
   const [showChangePassword, setShowChangePassword] = useState(false);

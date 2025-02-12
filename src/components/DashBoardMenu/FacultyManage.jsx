@@ -309,7 +309,7 @@ const FacultyManagement = () => {
           </div>
           <button
             onClick={openFacultyModal}
-            className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2"
+            className="bg-purple-700 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-800"
           >
             <i className="fas fa-plus-circle"></i>
             Add New Faculty
@@ -322,21 +322,25 @@ const FacultyManagement = () => {
             <h3 className="text-lg font-semibold">Total Faculty</h3>
             <div className="stat-value flex items-center gap-2">
               <i className="fas fa-chalkboard-teacher"></i>
-              <span id="totalFaculty">0</span>
+              <span id="totalFaculty">{faculty.length}</span>
             </div>
           </div>
           <div className="stat-card bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold">Departments</h3>
             <div className="stat-value flex items-center gap-2">
               <i className="fas fa-building"></i>
-              <span id="totalDepartments">0</span>
+              <span id="totalDepartments">
+                {new Set(faculty.map((f) => f.department)).size}
+              </span>
             </div>
           </div>
           <div className="stat-card bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold">Total Subjects</h3>
             <div className="stat-value flex items-center gap-2">
               <i className="fas fa-book"></i>
-              <span id="totalSubjects">0</span>
+              <span id="totalSubjects">
+                {faculty.reduce((total, f) => total + f.subjects.length, 0)}
+              </span>
             </div>
           </div>
         </div>
@@ -356,7 +360,7 @@ const FacultyManagement = () => {
                 </div>
                 <button
                   onClick={() => openSubjectModal(f.id)}
-                  className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2"
+                  className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-600"
                 >
                   <i className="fas fa-plus"></i>
                   Add Subject
@@ -480,7 +484,7 @@ const FacultyManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
                 >
                   Add Faculty
                 </button>
@@ -557,7 +561,7 @@ const FacultyManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
                 >
                   Add Subject
                 </button>

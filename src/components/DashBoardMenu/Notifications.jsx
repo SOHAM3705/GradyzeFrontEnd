@@ -86,7 +86,7 @@ const Notification = () => {
         <h1 className="text-2xl font-semibold mb-4">Notifications</h1>
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+          className="bg-purple-700 text-white px-6 py-2 rounded hover:bg-purple-800"
         >
           Create Notification
         </button>
@@ -154,11 +154,11 @@ const Notification = () => {
                     key={value}
                     onClick={() => setAudience(value)}
                     className={`p-3 rounded border flex flex-col items-center gap-1
-                      ${
-                        audience === value
-                          ? "bg-blue-500 text-white border-blue-500"
-                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                      }`}
+                    ${
+                      audience === value
+                        ? "bg-purple-700 text-white border-purple-700"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
                   >
                     <span className="text-xl">{icon}</span>
                     <span className="text-xs">{label}</span>
@@ -176,7 +176,7 @@ const Notification = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Write your message here..."
-                className="w-full p-3 border rounded-lg h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border rounded-lg h-32 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
 
@@ -217,7 +217,7 @@ const Notification = () => {
               <button
                 onClick={handleSubmit}
                 disabled={isSending}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 min-w-[100px]"
+                className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 disabled:opacity-50 min-w-[100px]"
               >
                 {isSending ? (
                   <div className="flex items-center justify-center gap-2">
