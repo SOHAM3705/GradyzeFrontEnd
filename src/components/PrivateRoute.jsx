@@ -1,17 +1,11 @@
 import { Navigate } from "react-router-dom";
 
-const PrivateRoute = ({ children, role }) => {
-  const adminId = localStorage.getItem("adminId");
-  const teacherId = localStorage.getItem("teacherId");
+const PrivateRoute = ({ children }) => {
+  const adminId = localStorage.getItem("adminId"); // Use adminId instead of auth_token
 
-  // Check authentication based on the role
-  const isAuthenticated =
-    (role === "admin" && adminId) || (role === "teacher" && teacherId);
-
-  if (!isAuthenticated) {
-    // Redirect to the correct login page
-    const loginPath = role === "admin" ? "/adminlogin" : "/teacherlogin";
-    return <Navigate to={loginPath} />;
+  if (!adminId) {
+    // Redirect to login if not authenticated
+    return <Navigate to="/adminlogin" />;
   }
 
   return children;

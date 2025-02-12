@@ -10,10 +10,6 @@ import StudentLogin from "./Pages/StudentLogin/StudentLogin";
 import TeacherLogin from "./Pages/TeacherLogin/TeacherLogin";
 import PPSection from "./Pages/PPSection/PPSection";
 import Documentation from "./Pages/Documentation/Documentation";
-
-import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
-import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
-
 import AdminDash from "./Pages/AdminDash/AdminDash";
 import ProfileSettings from "./components/DashBoardMenu/Settings";
 import SyllabusManagement from "./components/DashBoardMenu/Syllabus";
@@ -22,6 +18,18 @@ import Feedback from "./components/DashBoardMenu/Feedback";
 import SubscriptionPlan from "./components/DashBoardMenu/SubscriptionPlan";
 import StudentManagement from "./components/DashBoardMenu/StudentManage";
 import FacultyManagement from "./components/DashBoardMenu/FacultyManage";
+import TeacherDash from "./Pages/TeacherDash/TeacherDash";
+import StudentDash from "./Pages/StudentDash/StudentDash";
+{
+  /*import StudentManage from "./components/TeacherDashMenu/StudentManage";
+import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
+import Analytics from "./components/TeacherDashMenu/Analytics";
+import AttendanceReport from "./components/TeacherDashMenu/AttendanceReport";
+import TeacherNotifications from "./components/TeacherDashMenu/Notifications";
+import TeacherSyllabus from "./components/TeacherDashMenu/Syllabus";
+import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
+import TeacherSettings from "./components/TeacherDashMenu/Settings";*/
+}
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
@@ -38,26 +46,47 @@ function App() {
       <Route path="/teacherlogin" element={<TeacherLogin />} />
       <Route path="/privacypolicy" element={<PPSection />} />
       <Route path="/documentation" element={<Documentation />} />
-      <Route path="/forgetpassword" element={<ForgetPassword />} />
-      <Route path="/change-password" element={<ChangePassword />} />
+      <Route path="/teacherdash" element={<TeacherDash />} />
+      <Route path="/studentdash" element={<StudentDash />} />
 
-      {/* Protect the Admin Dashboard route with PrivateRoute */}
+      {/* 🔹 Admin Routes */}
+      <Route path="/adminlogin" element={<AdminLogin />} />
       <Route
         path="/admindash"
         element={
-          <PrivateRoute>
+          <PrivateRoute role="admin">
             <AdminDash />
           </PrivateRoute>
         }
       >
         <Route path="settings" element={<ProfileSettings />} />
-        <Route path="Syllbus" element={<SyllabusManagement />} />
+        <Route path="syllabus" element={<SyllabusManagement />} />
         <Route path="notifications" element={<Notification />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="subscription-plan" element={<SubscriptionPlan />} />
-        <Route path="StudentManage" element={<StudentManagement />} />
-        <Route path="FacultyManage" element={<FacultyManagement />} />
+        <Route path="student-manage" element={<StudentManagement />} />
+        <Route path="faculty-manage" element={<FacultyManagement />} />
       </Route>
+
+      {/* 🔹 Teacher Routes */}
+      {/*<Route path="/teacherlogin" element={<TeacherLogin />} />
+      <Route
+        path="/teacherdash"
+        element={
+          <PrivateRoute role="teacher">
+            <TeacherDash />
+          </PrivateRoute>
+        }
+      >
+        <Route path="student-manage" element={<StudentManage />} />
+        <Route path="subject-marks" element={<SubjectMarks />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="attendance-report" element={<AttendanceReport />} />
+        <Route path="notifications" element={<TeacherNotifications />} />
+        <Route path="syllabus" element={<TeacherSyllabus />} />
+        <Route path="feedback" element={<TeacherFeedback />} />
+        <Route path="settings" element={<TeacherSettings />} />
+      </Route>*/}
     </Routes>
   );
 }
