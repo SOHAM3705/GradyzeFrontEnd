@@ -57,14 +57,18 @@ const Feedback = () => {
           `https://gradyzebackend.onrender.com/api/Gsheet/Adminfeedback`,
           formData
         );
+        console.log(response.data); // Log the response for debugging
         setResponseMessage(
           response.data.message || "Thank you for your feedback!"
         );
         setFormData({ name: "", email: "", feedback: "", opinions: "" }); // Reset form
+        setErrors({}); // Clear errors
       } catch (error) {
+        console.log(error); // Log the error for debugging
         setResponseMessage("Error submitting feedback. Try again.");
+      } finally {
+        setLoading(false); // Ensure loading is always set to false
       }
-      setLoading(false);
     } else {
       setErrors(formErrors);
     }
@@ -151,6 +155,7 @@ const Feedback = () => {
                 ? "bg-red-500 text-white"
                 : "bg-green-500 text-white"
             }`}
+            aria-live="polite"
           >
             {responseMessage}
           </div>
@@ -184,7 +189,7 @@ const FormField = ({
           className="w-full p-3 border border-gray-300 rounded-lg focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white transition-all duration-300 min-h-[120px]"
           required
           aria-invalid={!!error}
-          aria-describedby={`${name}-error`}
+          aria-describedby={error ? `${name}-error` : undefined}
         />
       ) : (
         <input
@@ -196,7 +201,7 @@ const FormField = ({
           className="w-full p-3 border border-gray-300 rounded-lg focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white transition-all duration-300"
           required
           aria-invalid={!!error}
-          aria-describedby={`${name}-error`}
+          aria-describedby={error ? `${name}-error` : undefined}
         />
       )}
       {error && (
