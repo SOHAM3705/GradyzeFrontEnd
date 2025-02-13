@@ -9,69 +9,40 @@ const Feedback = () => {
     opinions: "",
   });
 
-  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [responseMessage, setResponseMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState(""); // Add successMessage state
 
-  // Handle input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    // Clear error for the current field when the user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-
-    // Clear success/error message when user edits form
-    if (responseMessage) {
-      setResponseMessage("");
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Validate form fields
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Please enter your name";
-    if (
-      !formData.email.trim() ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-    ) {
-      newErrors.email = "Please enter a valid email address";
-    }
-    if (!formData.feedback.trim())
-      newErrors.feedback = "Please provide your feedback";
-    if (!formData.opinions.trim())
-      newErrors.opinions = "Please share your opinions";
-    return newErrors;
-  };
-
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formErrors = validateForm();
-    if (Object.keys(formErrors).length === 0) {
-      setLoading(true);
-      try {
-        const response = await axios.post(
-          `https://gradyzebackend.onrender.com/api/Gsheet/Adminfeedback`,
-          formData
-        );
-        console.log(response.data); // Log the response for debugging
-        setResponseMessage(
-          response.data.message || "Thank you for your feedback!"
-        );
-        setFormData({ name: "", email: "", feedback: "", opinions: "" }); // Reset form
-        setErrors({}); // Clear errors
-      } catch (error) {
-        console.log(error); // Log the error for debugging
-        setResponseMessage("Error submitting feedback. Try again.");
-      } finally {
-        setLoading(false); // Ensure loading is always set to false
-      }
-    } else {
-      setErrors(formErrors);
+    setLoading(true);
+
+    try {
+      console.log("Sending data:", formData); // Log the data before sending
+      const response = await axios.post(
+        `https://gradyzebackend.onrender.com/api/Gsheet/Adminfeedback`,
+        formData
+      );
+      console.log("Response received:", response.data); // Log response from the server
+      setResponseMessage(response.data.message);
+      setSuccessMessage(
+        "Thank you for your message! We'll get back to you soon."
+      );
+      setFormData({ name: "", email: "", feedback: "", opinions: "" }); // Reset form
+    } catch (error) {
+      console.error(
+        "Error submitting form:",
+        error.response?.data || error.message
+      );
+      setResponseMessage("Error submitting the form. Try again.");
+      setSuccessMessage("");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -85,7 +56,12 @@ const Feedback = () => {
             We value your insights and opinions!
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+        <form
+          id="AdminfeedBack"
+          onSubmit={handleSubmit}
+          className="space-y-6"
+          noValidate
+        >
           {/* Name Field */}
           <FormField
             label="Name"
@@ -94,7 +70,6 @@ const Feedback = () => {
             placeholder="Enter your name"
             value={formData.name}
             onChange={handleChange}
-            error={errors.name}
           />
           {/* Email Field */}
           <FormField
@@ -104,7 +79,6 @@ const Feedback = () => {
             placeholder="Enter your email"
             value={formData.email}
             onChange={handleChange}
-            error={errors.email}
           />
           {/* Feedback Field */}
           <FormField
@@ -114,7 +88,6 @@ const Feedback = () => {
             placeholder="Share your thoughts about the Gradyze project"
             value={formData.feedback}
             onChange={handleChange}
-            error={errors.feedback}
           />
           {/* Opinions Field */}
           <FormField
@@ -124,7 +97,6 @@ const Feedback = () => {
             placeholder="Share your opinions"
             value={formData.opinions}
             onChange={handleChange}
-            error={errors.opinions}
           />
           {/* Submit Button */}
           <button
