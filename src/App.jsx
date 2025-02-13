@@ -51,7 +51,7 @@ function App() {
       <Route path="/teacherdash" element={<TeacherDash />} />
       <Route path="/studentdash" element={<StudentDash />} />
       <Route path="/forgetpassword" element={<ForgetPassword />} />
-      <Route path="/changepassword" element={<ChangePassword />} />
+      <Route path="/change-password" element={<ChangePassword />} />
 
       {/* 🔹 Admin Routes */}
       <Route path="/adminlogin" element={<AdminLogin />} />
