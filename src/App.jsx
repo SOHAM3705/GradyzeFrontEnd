@@ -60,12 +60,12 @@ function App() {
         }
       >
         <Route path="settings" element={<ProfileSettings />} />
-        <Route path="syllabus" element={<SyllabusManagement />} />
+        <Route path="Syllbus" element={<SyllabusManagement />} />
         <Route path="notifications" element={<Notification />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="subscription-plan" element={<SubscriptionPlan />} />
-        <Route path="student-manage" element={<StudentManagement />} />
-        <Route path="faculty-manage" element={<FacultyManagement />} />
+        <Route path="StudentManage" element={<StudentManagement />} />
+        <Route path="FacultyManage" element={<FacultyManagement />} />
       </Route>
 
       {/* 🔹 Teacher Routes */}
