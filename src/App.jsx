@@ -20,6 +20,8 @@ import StudentManagement from "./components/DashBoardMenu/StudentManage";
 import FacultyManagement from "./components/DashBoardMenu/FacultyManage";
 import TeacherDash from "./Pages/TeacherDash/TeacherDash";
 import StudentDash from "./Pages/StudentDash/StudentDash";
+import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
+import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
 {
   /*import StudentManage from "./components/TeacherDashMenu/StudentManage";
 import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
@@ -48,6 +50,8 @@ function App() {
       <Route path="/documentation" element={<Documentation />} />
       <Route path="/teacherdash" element={<TeacherDash />} />
       <Route path="/studentdash" element={<StudentDash />} />
+      <Route path="/forgetpassword" element={<ForgetPassword />} />
+      <Route path="/changepassword" element={<ChangePassword />} />
 
       {/* 🔹 Admin Routes */}
       <Route path="/adminlogin" element={<AdminLogin />} />
