@@ -54,7 +54,7 @@ const Feedback = () => {
       setLoading(true);
       try {
         const response = await axios.post(
-          process.env.REACT_APP_FEEDBACK_API_URL,
+          `https://gradyzebackend.onrender.com/api/Gsheet/Adminfeedback`,
           formData
         );
         setResponseMessage(
