@@ -22,8 +22,10 @@ import TeacherDash from "./Pages/TeacherDash/TeacherDash";
 import StudentDash from "./Pages/StudentDash/StudentDash";
 import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
 import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
+
+import StudentManage from "./components/TeacherDashMenu/StudentManage";
 {
-  /*import StudentManage from "./components/TeacherDashMenu/StudentManage";
+  /*
 import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
 import Analytics from "./components/TeacherDashMenu/Analytics";
 import AttendanceReport from "./components/TeacherDashMenu/AttendanceReport";
@@ -68,13 +70,13 @@ function App() {
         <Route path="notifications" element={<Notification />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="subscription-plan" element={<SubscriptionPlan />} />
-        <Route path="StudentManage" element={<StudentManagement />} />
+        <Route path="AdminStudentManage" element={<StudentManagement />} />
         <Route path="FacultyManage" element={<FacultyManagement />} />
       </Route>
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />
       <Route path="/teacherdash" element={<TeacherDash />}>
-        <Route path="student-manage" element={<StudentManage />} />
+        <Route path="TeacherStudentManage" element={<StudentManage />} />
         {/*<Route path="subject-marks" element={<SubjectMarks />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="attendance-report" element={<AttendanceReport />} />

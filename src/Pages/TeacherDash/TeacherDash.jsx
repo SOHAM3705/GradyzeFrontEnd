@@ -28,7 +28,7 @@ function TeacherDash() {
     {
       icon: "👨‍🏫",
       label: "Student Management",
-      path: "/teacherdash/student-manage",
+      path: "/teacherdash/TeacherStudentManage",
     },
     { icon: "📝", label: "Subject Marks", path: "/teacherdash/subject-marks" },
     { icon: "📊", label: "Analytics", path: "/teacherdash/analytics" },

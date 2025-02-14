@@ -38,7 +38,7 @@ function AdminDash() {
     {
       icon: "👥",
       label: "Student Management",
-      path: "/admindash/StudentManage",
+      path: "/admindash/AdminStudentManage",
     },
     { icon: "📝", label: "Students' Marks", path: "/admindash/students-marks" },
     {
