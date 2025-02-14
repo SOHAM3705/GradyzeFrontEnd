@@ -74,8 +74,8 @@ function App() {
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />
       <Route path="/teacherdash" element={<TeacherDash />}>
-        {/*  <Route path="student-manage" element={<StudentManage />} />
-        <Route path="subject-marks" element={<SubjectMarks />} />
+        <Route path="student-manage" element={<StudentManage />} />
+        {/*<Route path="subject-marks" element={<SubjectMarks />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="attendance-report" element={<AttendanceReport />} />
         <Route path="notifications" element={<TeacherNotifications />} />
