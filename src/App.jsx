@@ -18,6 +18,8 @@ import Feedback from "./components/DashBoardMenu/Feedback";
 import SubscriptionPlan from "./components/DashBoardMenu/SubscriptionPlan";
 import StudentManagement from "./components/DashBoardMenu/StudentManage";
 import FacultyManagement from "./components/DashBoardMenu/FacultyManage";
+import MarksEntrySystem from "./components/DashBoardMenu/StudentsMarks";
+
 import TeacherDash from "./Pages/TeacherDash/TeacherDash";
 import StudentDash from "./Pages/StudentDash/StudentDash";
 import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
@@ -72,6 +74,7 @@ function App() {
         <Route path="subscription-plan" element={<SubscriptionPlan />} />
         <Route path="AdminStudentManage" element={<StudentManagement />} />
         <Route path="FacultyManage" element={<FacultyManagement />} />
+        <Route path="students-marks" element={<MarksEntrySystem />} />
       </Route>
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />

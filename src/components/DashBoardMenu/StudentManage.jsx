@@ -1,316 +1,344 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 const StudentManagement = () => {
-  const [students] = useState([
-    { roll: "1", name: "John Doe", email: "john@example.com" },
-    { roll: "2", name: "Jane Smith", email: "jane@example.com" },
-    { roll: "3", name: "Bob Wilson", email: "bob@example.com" },
-    { roll: "4", name: "Alice Brown", email: "alice@example.com" },
-    { roll: "5", name: "Charlie Davis", email: "charlie@example.com" },
-  ]);
+  const [classes, setClasses] = useState([]);
+  const [currentClassId, setCurrentClassId] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [departmentData] = useState([
-    {
-      department: "Computer Engineering",
-      divisions: ["A", "B"],
-      year: "Third Year",
-      semester: "Sixth",
-      totalStudents: 60,
-      marksStatus: "pending",
-    },
-    {
-      department: "Information Technology",
-      divisions: ["A", "B", "C"],
-      year: "Second Year",
-      semester: "Fourth",
-      totalStudents: 60,
-      marksStatus: "complete",
-    },
-    {
-      department: "Electronics & Telecommunication",
-      divisions: ["A", "B"],
-      year: "First Year",
-      semester: "Second",
-      totalStudents: 60,
-      marksStatus: "pending",
-    },
-  ]);
+  const openClassModal = () => setIsModalOpen(true);
+  const closeClassModal = () => setIsModalOpen(false);
 
-  const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [examType, setExamType] = useState("");
-  const [subject, setSubject] = useState("");
-  const [maxMarks, setMaxMarks] = useState(0);
-  const [showModal, setShowModal] = useState(false);
-  const [marksTable, setMarksTable] = useState(null);
+  const createClass = (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
 
-  const handleDepartmentClick = (department) => {
-    setSelectedDepartment(department);
-    setShowModal(true);
+    const newClass = {
+      iid: currentClassId + 1,
+      department: formData.get("department"),
+      year: formData.get("year"),
+      studentCount: parseInt(formData.get("studentCount")),
+      classTeacher: formData.get("classTeacher"),
+      division: formData.get("division"),
+      students: [],
+    };
+
+    setClasses([...classes, newClass]);
+    closeClassModal();
+    form.reset();
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  const addStudent = (event, classId) => {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
 
-  const updateMaxMarks = () => {
-    setMaxMarks(
-      examType === "unit_test" || examType === "reunit_test" ? 30 : 70
-    );
-  };
+    const classIndex = classes.findIndex((c) => c.id === classId);
+    if (classIndex === -1) return;
 
-  const showMarksTable = () => {
-    if (!examType || !subject || !selectedDepartment) {
-      alert("Please fill all the fields");
+    const newStudent = {
+      rollNo: parseInt(formData.get("rollNo")),
+      name: formData.get("name"),
+      email: formData.get("email"),
+    };
+
+    if (
+      classes[classIndex].students.some(
+        (student) => student.rollNo === newStudent.rollNo
+      )
+    ) {
+      alert("A student with this Roll No already exists in this class!");
       return;
     }
 
-    if (maxMarks === 0) {
-      updateMaxMarks();
-    }
-
-    closeModal();
-
-    const tableHtml = (
-      <div>
-        <div className="table-header">
-          <h3 className="text-purple-700">
-            Enter Marks - {subject.toUpperCase()} (Max Marks: {maxMarks})
-          </h3>
-          <p>
-            Department: {selectedDepartment.department} | Year:{" "}
-            {selectedDepartment.year} | Semester: {selectedDepartment.semester}{" "}
-            | Exam: {examType.replace("_", " ").toUpperCase()}
-          </p>
-        </div>
-        <table className="marks-table min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-purple-700 text-white">
-              <th className="py-2 px-4">Roll No.</th>
-              <th className="py-2 px-4">Name</th>
-              <th className="py-2 px-4">Email</th>
-              <th className="py-2 px-4">Marks (Max: {maxMarks})</th>
-              <th className="py-2 px-4">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student) => (
-              <tr key={student.roll} className="border-b">
-                <td className="py-2 px-4">{student.roll}</td>
-                <td className="py-2 px-4">{student.name}</td>
-                <td className="py-2 px-4">{student.email}</td>
-                <td className="py-2 px-4">
-                  <input
-                    type="number"
-                    className="marks-input w-16 border border-gray-300 rounded px-2"
-                    min="0"
-                    max={maxMarks}
-                    onChange={(e) => updateStatus(e, student.roll)}
-                  />
-                </td>
-                <td className="py-2 px-4">
-                  <span id={`status-${student.roll}`}></span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-
-    setMarksTable(tableHtml);
-    updateStats();
+    const updatedClasses = [...classes];
+    updatedClasses[classIndex].students.push(newStudent);
+    setClasses(updatedClasses);
+    form.reset();
   };
 
-  const updateStatus = (event, roll) => {
-    const marks = parseInt(event.target.value) || 0;
-    if (marks > maxMarks) {
-      alert(`Marks cannot exceed ${maxMarks}`);
-      event.target.value = maxMarks;
-      return;
-    }
+  const generatePDF = (classId) => {
+    const classData = classes.find((c) => c.id === classId);
+    if (!classData) return;
 
-    const statusCell = document.getElementById(`status-${roll}`);
-    const status = marks >= 35 ? "Pass" : "Fail";
-    statusCell.textContent = status;
-    statusCell.className =
-      status === "Pass" ? "text-purple-700" : "text-red-500";
+    const doc = new jsPDF();
 
-    updateStats();
-  };
+    doc.setFontSize(18);
+    doc.text(`Class Details - ${classData.department}`, 20, 20);
 
-  const updateStats = () => {
-    const inputs = document.querySelectorAll(".marks-input");
-    let total = 0;
-    let passed = 0;
-    let highest = 0;
-    let validInputs = 0;
+    doc.setFontSize(12);
+    doc.text(`Year: ${classData.year}`, 20, 30);
+    doc.text(`Division: ${classData.division}`, 20, 40);
+    doc.text(`Class Teacher: ${classData.classTeacher}`, 20, 50);
 
-    inputs.forEach((input) => {
-      const value = parseInt(input.value) || 0;
-      if (value > 0) {
-        total += value;
-        validInputs++;
-        if (value >= 35) passed++;
-        highest = Math.max(highest, value);
-      }
+    const headers = [["Roll No", "Name", "Email"]];
+    const data = classData.students.map((student) => [
+      student.rollNo,
+      student.name,
+      student.email,
+    ]);
+
+    doc.autoTable({
+      startY: 60,
+      head: headers,
+      body: data,
     });
 
-    const average = validInputs ? (total / validInputs).toFixed(1) : 0;
-    const passRate = validInputs
-      ? ((passed / validInputs) * 100).toFixed(1)
-      : 0;
-
-    document.getElementById("totalStudents").textContent = students.length;
-    document.getElementById("passRate").textContent = `${passRate}%`;
-    document.getElementById("avgScore").textContent = average;
-    document.getElementById("highestScore").textContent = highest;
+    doc.save(`class_${classData.department}_${classData.division}.pdf`);
   };
 
-  useEffect(() => {
-    updateMaxMarks();
-  }, [examType]);
+  const uploadPDF = (event, classId) => {
+    const file = event.target.files[0];
+
+    if (!file) {
+      alert("No file selected!");
+      return;
+    }
+
+    if (file.type !== "application/pdf") {
+      alert("Please upload a valid PDF file!");
+      return;
+    }
+
+    alert(`PDF uploaded successfully for Class ID: ${classId}`);
+  };
 
   return (
-    <div className="container mx-auto p-5 bg-gray-100 min-h-screen">
-      <div className="header bg-purple-700 text-white p-4 rounded mb-5">
-        <h2 className="text-2xl">Subject Marks</h2>
-      </div>
-
-      <div className="stats-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-        <div className="stat-card bg-white p-4 rounded shadow">
-          <h3 className="text-purple-700 mb-2">Total Students</h3>
-          <p id="totalStudents">0</p>
-        </div>
-        <div className="stat-card bg-white p-4 rounded shadow">
-          <h3 className="text-purple-700 mb-2">Pass Rate</h3>
-          <p id="passRate">0%</p>
-        </div>
-        <div className="stat-card bg-white p-4 rounded shadow">
-          <h3 className="text-purple-700 mb-2">Average Score</h3>
-          <p id="avgScore">0</p>
-        </div>
-        <div className="stat-card bg-white p-4 rounded shadow">
-          <h3 className="text-purple-700 mb-2">Highest Score</h3>
-          <p id="highestScore">0</p>
-        </div>
-      </div>
-
-      <div className="department-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
-        {departmentData.map((dept) => (
-          <div
-            key={dept.department}
-            className="department-card bg-white p-5 rounded shadow cursor-pointer transition transform hover:-translate-y-1"
-            onClick={() => handleDepartmentClick(dept)}
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="container mx-auto">
+        {/* Header */}
+        <div className="header flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Student Management
+            </h1>
+            <p className="text-gray-600">Manage classes and students</p>
+          </div>
+          <button
+            onClick={openClassModal}
+            className="bg-purple-700 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-800"
           >
-            <h3 className="text-purple-700 text-lg mb-3">{dept.department}</h3>
-            <div className="card-detail text-gray-600 mb-2">
-              <span>Year:</span> <strong>{dept.year}</strong>
-            </div>
-            <div className="card-detail text-gray-600 mb-2">
-              <span>Semester:</span> <strong>{dept.semester}</strong>
-            </div>
-            <div className="card-detail text-gray-600 mb-2">
-              <span>Divisions:</span>{" "}
-              <strong>{dept.divisions.join(", ")}</strong>
-            </div>
-            <div className="card-detail text-gray-600 mb-2">
-              <span>Total Students:</span> <strong>{dept.totalStudents}</strong>
-            </div>
-            <div
-              className={`status-tag inline-block px-2 py-1 rounded text-sm ${
-                dept.marksStatus === "pending"
-                  ? "bg-yellow-200 text-yellow-800"
-                  : "bg-green-200 text-green-800"
-              }`}
-            >
-              {dept.marksStatus.charAt(0).toUpperCase() +
-                dept.marksStatus.slice(1)}
+            <i className="fas fa-plus-circle"></i>
+            Add New Class
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="stats-container grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="stat-card bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold">Total Classes</h3>
+            <div className="stat-value flex items-center gap-2">
+              <i className="fas fa-chalkboard"></i>
+              <span>{classes.length}</span>
             </div>
           </div>
-        ))}
+          <div className="stat-card bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold">Total Students</h3>
+            <div className="stat-value flex items-center gap-2">
+              <i className="fas fa-users"></i>
+              <span>
+                {classes.reduce((total, cls) => total + cls.students.length, 0)}
+              </span>
+            </div>
+          </div>
+          <div className="stat-card bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold">Departments</h3>
+            <div className="stat-value flex items-center gap-2">
+              <i className="fas fa-building"></i>
+              <span>{new Set(classes.map((cls) => cls.department)).size}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Class List */}
+        <div id="classList" className="space-y-4">
+          {classes.map((cls) => (
+            <div
+              key={cls.id}
+              className="class-card bg-white p-6 rounded-lg shadow"
+            >
+              <h3 className="text-lg font-semibold">
+                {cls.department} - {cls.year} (Division {cls.division})
+              </h3>
+              <p>Class Teacher: {cls.classTeacher}</p>
+              <p>
+                Students: {cls.students.length}/{cls.studentCount}
+              </p>
+
+              {cls.students.length < cls.studentCount && (
+                <form
+                  onSubmit={(e) => addStudent(e, cls.id)}
+                  className="space-y-2 mt-4"
+                >
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      name="rollNo"
+                      required
+                      placeholder="Roll No"
+                      className="flex-1 p-2 border rounded"
+                    />
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      placeholder="Name"
+                      className="flex-1 p-2 border rounded"
+                    />
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      placeholder="Email"
+                      className="flex-1 p-2 border rounded"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {cls.students.length > 0 && (
+                <table className="student-table w-full mt-4 bg-white rounded-lg overflow-hidden">
+                  <thead>
+                    <tr>
+                      <th className="p-2 border-b">Roll No</th>
+                      <th className="p-2 border-b">Name</th>
+                      <th className="p-2 border-b">Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cls.students.map((student, index) => (
+                      <tr key={index}>
+                        <td className="p-2 border-b">{student.rollNo}</td>
+                        <td className="p-2 border-b">{student.name}</td>
+                        <td className="p-2 border-b">{student.email}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              <div className="class-actions flex gap-2 mt-4">
+                <label className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2 cursor-pointer">
+                  <i className="fas fa-upload"></i>
+                  Upload PDF
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={(e) => uploadPDF(e, cls.id)}
+                  />
+                </label>
+                <button
+                  onClick={() => generatePDF(cls.id)}
+                  className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2"
+                >
+                  <i className="fas fa-file-pdf"></i>
+                  Generate PDF
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {showModal && (
-        <div className="modal fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="modal-content bg-white p-6 rounded shadow relative w-full max-w-md">
-            <span
-              className="close absolute top-2 right-2 text-2xl cursor-pointer"
-              onClick={closeModal}
-            >
-              &times;
-            </span>
-            <h3 className="text-purple-700 text-xl mb-4">
-              Enter Marks - {selectedDepartment?.department} (
-              {selectedDepartment?.year}, {selectedDepartment?.semester})
-            </h3>
-            <div className="form-group mb-4">
-              <label className="block text-gray-700 mb-2">Exam Type:</label>
-              <select
-                className="w-full p-2 border border-gray-300 rounded"
-                value={examType}
-                onChange={(e) => setExamType(e.target.value)}
-              >
-                <option value="">Select Exam Type</option>
-                <option value="unit_test">Unit Test</option>
-                <option value="reunit_test">Re-Unit Test</option>
-                <option value="prelim">Prelim</option>
-                <option value="reprelim">Re-Prelim</option>
-              </select>
-            </div>
-            <div className="form-group mb-4">
-              <label className="block text-gray-700 mb-2">Subject:</label>
-              <select
-                className="w-full p-2 border border-gray-300 rounded"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              >
-                <option value="">Select Subject</option>
-                <option value="mathematics">Engineering Mathematics</option>
-                <option value="physics">Engineering Physics</option>
-                <option value="chemistry">Engineering Chemistry</option>
-              </select>
-            </div>
-            <button
-              className="submit-btn bg-purple-700 text-white p-2 rounded hover:bg-purple-800 transition"
-              onClick={showMarksTable}
-            >
-              Proceed
-            </button>
+      {/* Add Class Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="modal-content bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 className="text-xl font-semibold mb-4">Add New Class</h2>
+            <form onSubmit={createClass} className="space-y-4">
+              <div className="form-group">
+                <label className="block text-gray-700">Department</label>
+                <select
+                  name="department"
+                  required
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select Department</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Information Technology">
+                    Information Technology
+                  </option>
+                  <option value="Mechanical Engineering">
+                    Mechanical Engineering
+                  </option>
+                  <option value="Electronic & Telecommunication">
+                    Electronic & Telecommunication
+                  </option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Year</label>
+                <select
+                  name="year"
+                  required
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select Year</option>
+                  <option value="First">First Year</option>
+                  <option value="Second">Second Year</option>
+                  <option value="Third">Third Year</option>
+                  <option value="Fourth">Fourth Year</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">
+                  Number of Students
+                </label>
+                <input
+                  type="number"
+                  name="studentCount"
+                  min="1"
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Class Teacher</label>
+                <input
+                  type="text"
+                  name="classTeacher"
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Division</label>
+                <input
+                  type="text"
+                  name="division"
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="submit"
+                  className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
+                >
+                  Create Class
+                </button>
+                <button
+                  type="button"
+                  onClick={closeClassModal}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
-
-      <div id="marksTableContainer">{marksTable}</div>
-
-      <div className="action-buttons flex gap-4 mt-5">
-        <button
-          className="btn bg-purple-700 text-white p-2 rounded hover:bg-purple-800 transition"
-          onClick={() => setShowModal(true)}
-        >
-          Add Marks
-        </button>
-        <button
-          className="btn bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
-          onClick={() => alert("PDF generation would be implemented here")}
-        >
-          Generate PDF
-        </button>
-        <input
-          type="file"
-          id="fileUpload"
-          className="file-upload hidden"
-          accept=".csv,.xlsx"
-          onChange={(e) =>
-            alert("File upload processing would be implemented here")
-          }
-        />
-        <button
-          className="btn bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600 transition"
-          onClick={() => document.getElementById("fileUpload").click()}
-        >
-          Upload Marks File
-        </button>
-      </div>
     </div>
   );
 };
