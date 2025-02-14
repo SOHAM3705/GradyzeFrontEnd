@@ -39,7 +39,7 @@ function StudentDash() {
     { icon: "📚", label: "Syllabus", path: "/studentdash/syllabus" },
     { icon: "🔔", label: "Notifications", path: "/studentdash/notifications" },
     { icon: "📝", label: "Feedback", path: "/studentdash/feedback" },
-    { icon: "⚙️", label: "Settings", path: "/studentdash/settings" },
+    { icon: "⚙️", label: "Settings", path: "/studentdash/TeacherSettings" },
   ];
 
   return (

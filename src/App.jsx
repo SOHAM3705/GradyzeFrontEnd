@@ -30,8 +30,9 @@ import AttendanceReport from "./components/TeacherDashMenu/AttendanceReport";
 import TeacherNotifications from "./components/TeacherDashMenu/Notifications";
 import TeacherSyllabus from "./components/TeacherDashMenu/Syllabus";
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
-import TeacherSettings from "./components/TeacherDashMenu/Settings";*/
+*/
 }
+import TeacherSettings from "./components/TeacherDashMenu/Settings";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
@@ -48,7 +49,6 @@ function App() {
       <Route path="/teacherlogin" element={<TeacherLogin />} />
       <Route path="/privacypolicy" element={<PPSection />} />
       <Route path="/documentation" element={<Documentation />} />
-      <Route path="/teacherdash" element={<TeacherDash />} />
       <Route path="/studentdash" element={<StudentDash />} />
       <Route path="/forgetpassword" element={<ForgetPassword />} />
       <Route path="/change-password" element={<ChangePassword />} />
@@ -72,16 +72,8 @@ function App() {
         <Route path="FacultyManage" element={<FacultyManagement />} />
       </Route>
 
-      {/* 🔹 Teacher Routes */}
-      {/*<Route path="/teacherlogin" element={<TeacherLogin />} />
-      <Route
-        path="/teacherdash"
-        element={
-          <PrivateRoute role="teacher">
-            <TeacherDash />
-          </PrivateRoute>
-        }
-      >
+      <Route path="/teacherlogin" element={<TeacherLogin />} />
+      <Route path="/teacherdash" element={<TeacherDash />}>
         <Route path="student-manage" element={<StudentManage />} />
         <Route path="subject-marks" element={<SubjectMarks />} />
         <Route path="analytics" element={<Analytics />} />
@@ -90,7 +82,7 @@ function App() {
         <Route path="syllabus" element={<TeacherSyllabus />} />
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
-      </Route>*/}
+      </Route>
     </Routes>
   );
 }
