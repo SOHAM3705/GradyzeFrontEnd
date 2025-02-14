@@ -28,10 +28,10 @@ import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
 import Analytics from "./components/TeacherDashMenu/Analytics";
 import AttendanceReport from "./components/TeacherDashMenu/AttendanceReport";
 import TeacherNotifications from "./components/TeacherDashMenu/Notifications";
-import TeacherSyllabus from "./components/TeacherDashMenu/Syllabus";
-import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
-*/
+import TeacherSyllabus from "./components/TeacherDashMenu/Syllabus";*/
 }
+import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
+
 import TeacherSettings from "./components/TeacherDashMenu/Settings";
 
 // Import the PrivateRoute component
@@ -74,12 +74,12 @@ function App() {
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />
       <Route path="/teacherdash" element={<TeacherDash />}>
-        <Route path="student-manage" element={<StudentManage />} />
+        {/*  <Route path="student-manage" element={<StudentManage />} />
         <Route path="subject-marks" element={<SubjectMarks />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="attendance-report" element={<AttendanceReport />} />
         <Route path="notifications" element={<TeacherNotifications />} />
-        <Route path="syllabus" element={<TeacherSyllabus />} />
+        <Route path="syllabus" element={<TeacherSyllabus />} />*/}
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
       </Route>
