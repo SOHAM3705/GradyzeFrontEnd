@@ -63,7 +63,7 @@ const TeacherLogin = () => {
         </form>
         <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
-          <Link to="/teacher-forgot-password" className={styles.TeacherLogin_a}>
+          <Link to="/teacher-forget-password" className={styles.TeacherLogin_a}>
             Forgot Password?
           </Link>
         </p>
