@@ -1,38 +1,46 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import styles from "./TeacherLogin.module.css";
-import { Link } from "react-router-dom";
 
 const TeacherLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    if (email.trim() === "" || password.trim() === "") {
+    if (!email.trim() || !password.trim()) {
       alert("Please enter both email and password.");
-    } else {
-      alert("Teacher Login Successful!");
-      setEmail("");
-      setPassword("");
+      return;
     }
+
+    try {
+      const response = await axios.post("/api/teacher/teacherRoute/login", {
+        email,
+        password,
+      });
+
+      localStorage.setItem("token", response.data.token);
+
+      navigate("/teacherdash"); // Redirect to Teacher Dashboard
+    } catch (error) {}
   };
 
   return (
     <div className={styles.teacherBg}>
       <div className={styles.loginContainer}>
-        {/* Back Button */}
         <Link to="/">
           <button className={styles.backButton_Tlogin}>
             <i className="fas fa-arrow-left"></i>
           </button>
         </Link>
         <h2>Teacher Login</h2>
-        <form id="teacherLoginForm" onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
             <input
               type="email"
-              id="teacherEmail"
               placeholder="Email"
               required
               value={email}
@@ -43,7 +51,6 @@ const TeacherLogin = () => {
             <i className="fas fa-lock"></i>
             <input
               type="password"
-              id="teacherPassword"
               placeholder="Password"
               required
               value={password}
@@ -56,9 +63,9 @@ const TeacherLogin = () => {
         </form>
         <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
-          <a href="#" className={styles.TeacherLogin_a}>
+          <Link to="/teacher-forgot-password" className={styles.TeacherLogin_a}>
             Forgot Password?
-          </a>
+          </Link>
         </p>
       </div>
     </div>

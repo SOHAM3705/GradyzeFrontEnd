@@ -10,6 +10,7 @@ import StudentLogin from "./Pages/StudentLogin/StudentLogin";
 import TeacherLogin from "./Pages/TeacherLogin/TeacherLogin";
 import PPSection from "./Pages/PPSection/PPSection";
 import Documentation from "./Pages/Documentation/Documentation";
+
 import AdminDash from "./Pages/AdminDash/AdminDash";
 import ProfileSettings from "./components/DashBoardMenu/Settings";
 import SyllabusManagement from "./components/DashBoardMenu/Syllabus";
@@ -24,6 +25,8 @@ import TeacherDash from "./Pages/TeacherDash/TeacherDash";
 import StudentDash from "./Pages/StudentDash/StudentDash";
 import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
 import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
+import teacherForgetPassword from "./Pages/TeacherLogin/teacherforgetpassword";
+import teacherchangePassword from "./Pages/TeacherLogin/teacherchangepassword";
 
 import StudentManage from "./components/TeacherDashMenu/StudentManage";
 {
@@ -35,7 +38,6 @@ import TeacherNotifications from "./components/TeacherDashMenu/Notifications";
 import TeacherSyllabus from "./components/TeacherDashMenu/Syllabus";*/
 }
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
-
 import TeacherSettings from "./components/TeacherDashMenu/Settings";
 
 // Import the PrivateRoute component
@@ -56,6 +58,14 @@ function App() {
       <Route path="/studentdash" element={<StudentDash />} />
       <Route path="/forgetpassword" element={<ForgetPassword />} />
       <Route path="/change-password" element={<ChangePassword />} />
+      <Route
+        path="/teacher-forgot-password"
+        element={<teacherForgetPassword />}
+      />
+      <Route
+        path="/teacher-change-password"
+        element={<teacherchangePassword />}
+      />
 
       {/* 🔹 Admin Routes */}
       <Route path="/adminlogin" element={<AdminLogin />} />
@@ -78,7 +88,14 @@ function App() {
       </Route>
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />
-      <Route path="/teacherdash" element={<TeacherDash />}>
+      <Route
+        path="/teacherdash"
+        element={
+          <PrivateRoute role="teacher">
+            <TeacherDash />
+          </PrivateRoute>
+        }
+      >
         <Route path="TeacherStudentManage" element={<StudentManage />} />
         {/*<Route path="subject-marks" element={<SubjectMarks />} />
         <Route path="analytics" element={<Analytics />} />

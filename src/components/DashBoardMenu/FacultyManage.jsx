@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const FacultyManagement = () => {
   const [faculty, setFaculty] = useState([]);
-  const [currentFacultyId, setCurrentFacultyId] = useState(0);
   const [isFacultyModalOpen, setIsFacultyModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [selectedFacultyId, setSelectedFacultyId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const subjectDatabase = {
     "Computer Science": {
@@ -198,7 +200,7 @@ const FacultyManagement = () => {
     }
   };
 
-  const createFaculty = (event) => {
+  const createFaculty = async (event) => {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
@@ -214,7 +216,6 @@ const FacultyManagement = () => {
     }
 
     const newFaculty = {
-      id: currentFacultyId + 1,
       name: formData.get("name"),
       email: formData.get("email"),
       department: formData.get("department"),
@@ -228,13 +229,21 @@ const FacultyManagement = () => {
       ],
     };
 
-    setFaculty([...faculty, newFaculty]);
-    closeFacultyModal();
-    form.reset();
-    updateStats();
+    try {
+      setLoading(true);
+      const response = await axios.post("/api/teacher/add", newFaculty);
+      setMessage(response.data.message);
+      fetchFaculty();
+    } catch (error) {
+      setMessage("Failed to add teacher.");
+    } finally {
+      setLoading(false);
+      closeFacultyModal();
+      form.reset();
+    }
   };
 
-  const addSubject = (event) => {
+  const addSubject = async (event) => {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
@@ -278,23 +287,85 @@ const FacultyManagement = () => {
       return;
     }
 
-    faculty[facultyIndex].subjects.push(newSubject);
-
-    closeSubjectModal();
-    setFaculty([...faculty]);
-    updateStats();
+    try {
+      setLoading(true);
+      const response = await axios.post("/api/teacher/add", {
+        email: faculty[facultyIndex].email,
+        subjects: [...faculty[facultyIndex].subjects, newSubject],
+      });
+      setMessage(response.data.message);
+      fetchFaculty();
+    } catch (error) {
+      setMessage("Failed to add subject.");
+    } finally {
+      setLoading(false);
+      closeSubjectModal();
+    }
   };
 
-  const updateStats = () => {
-    document.getElementById("totalFaculty").textContent = faculty.length;
-    document.getElementById("totalDepartments").textContent = new Set(
-      faculty.map((f) => f.department)
-    ).size;
-    document.getElementById("totalSubjects").textContent = faculty.reduce(
-      (total, f) => total + f.subjects.length,
-      0
-    );
+  const fetchFaculty = async () => {
+    try {
+      const response = await axios.get("/api/teacher/subjects");
+      setFaculty(response.data.subjects);
+    } catch (error) {
+      console.error("Failed to fetch faculty data:", error);
+    }
   };
+
+  const removeSubject = async (
+    facultyId,
+    subjectName,
+    year,
+    semester,
+    division
+  ) => {
+    try {
+      const response = await axios.post("/api/teacher/remove-subject", {
+        email: faculty[facultyId].email,
+        subjectName,
+        year,
+        semester,
+        division,
+      });
+      setMessage(response.data.message);
+      fetchFaculty();
+    } catch (error) {
+      setMessage("Failed to remove subject.");
+    }
+  };
+
+  useEffect(() => {
+    fetchFaculty();
+  }, []);
+
+  const groupFacultyByStructure = () => {
+    const grouped = {};
+    faculty.forEach((f) => {
+      f.subjects.forEach((subject) => {
+        if (!grouped[f.department]) {
+          grouped[f.department] = {};
+        }
+        if (!grouped[f.department][subject.year]) {
+          grouped[f.department][subject.year] = {};
+        }
+        if (!grouped[f.department][subject.year][subject.division]) {
+          grouped[f.department][subject.year][subject.division] = {};
+        }
+        if (
+          !grouped[f.department][subject.year][subject.division][subject.name]
+        ) {
+          grouped[f.department][subject.year][subject.division][subject.name] =
+            [];
+        }
+        grouped[f.department][subject.year][subject.division][
+          subject.name
+        ].push(f);
+      });
+    });
+    return grouped;
+  };
+
+  const groupedFaculty = groupFacultyByStructure();
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -309,7 +380,7 @@ const FacultyManagement = () => {
           </div>
           <button
             onClick={openFacultyModal}
-            className="bg-purple-700 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-800"
+            className="bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-800"
           >
             <i className="fas fa-plus-circle"></i>
             Add New Faculty
@@ -345,46 +416,77 @@ const FacultyManagement = () => {
           </div>
         </div>
 
-        {/* Faculty List */}
+        {/* Faculty List by Structure */}
         <div id="facultyList" className="space-y-4">
-          {faculty.map((f) => (
-            <div
-              key={f.id}
-              className="faculty-card bg-white p-6 rounded-lg shadow"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3>{f.name}</h3>
-                  <p>{f.email}</p>
-                  <p>Department: {f.department}</p>
+          {Object.keys(groupedFaculty).map((department) => (
+            <div key={department} className="department-section">
+              <h2 className="text-xl font-semibold mb-4">{department}</h2>
+              {Object.keys(groupedFaculty[department]).map((year) => (
+                <div key={year} className="year-section pl-4">
+                  <h3 className="text-lg font-semibold mb-2">{year} Year</h3>
+                  {Object.keys(groupedFaculty[department][year]).map(
+                    (division) => (
+                      <div key={division} className="division-section pl-4">
+                        <h4 className="text-md font-semibold mb-2">
+                          Division {division}
+                        </h4>
+                        {Object.keys(
+                          groupedFaculty[department][year][division]
+                        ).map((subject) => (
+                          <div
+                            key={subject}
+                            className="subject-section pl-4 mb-4"
+                          >
+                            <h5 className="text-md font-semibold mb-2">
+                              {subject}
+                            </h5>
+                            <div className="faculty-list space-y-2">
+                              {groupedFaculty[department][year][division][
+                                subject
+                              ].map((f) => (
+                                <div
+                                  key={f.id}
+                                  className="faculty-card bg-white p-4 rounded-lg shadow"
+                                >
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <h3>{f.name}</h3>
+                                      <p>{f.email}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => openSubjectModal(f.id)}
+                                        className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-600"
+                                      >
+                                        <i className="fas fa-plus"></i>
+                                        Add Subject
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          removeSubject(
+                                            f.id,
+                                            subject,
+                                            year,
+                                            f.subjects[0].semester,
+                                            division
+                                          )
+                                        }
+                                        className="text-red-500 hover:text-red-700"
+                                      >
+                                        <i className="fas fa-trash-alt"></i>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  )}
                 </div>
-                <button
-                  onClick={() => openSubjectModal(f.id)}
-                  className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-600"
-                >
-                  <i className="fas fa-plus"></i>
-                  Add Subject
-                </button>
-              </div>
-              <div className="subject-list mt-4">
-                <h4 className="flex items-center gap-2">
-                  Subjects Teaching{" "}
-                  <span className="badge bg-green-500 text-white px-2 py-1 rounded">
-                    {f.subjects.length}
-                  </span>
-                </h4>
-                <div className="tag-container flex flex-wrap gap-2 mt-2">
-                  {f.subjects.map((subject, index) => (
-                    <span
-                      key={index}
-                      className="subject-tag bg-gray-200 px-2 py-1 rounded"
-                    >
-                      {subject.name} ({subject.year}, Sem {subject.semester},
-                      Division {subject.division})
-                    </span>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
           ))}
         </div>
@@ -484,7 +586,7 @@ const FacultyManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
+                  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
                 >
                   Add Faculty
                 </button>
@@ -561,7 +663,7 @@ const FacultyManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
+                  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
                 >
                   Add Subject
                 </button>
@@ -577,6 +679,8 @@ const FacultyManagement = () => {
           </div>
         </div>
       )}
+
+      {message && <p className="text-gray-700 mt-3">{message}</p>}
     </div>
   );
 };
