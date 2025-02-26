@@ -306,9 +306,10 @@ const FacultyManagement = () => {
   const fetchFaculty = async () => {
     try {
       const response = await axios.get("/api/teacher/subjects");
-      setFaculty(response.data.subjects);
+      setFaculty(response.data.subjects || []); // Ensure we set an empty array if data.subjects is undefined
     } catch (error) {
       console.error("Failed to fetch faculty data:", error);
+      setFaculty([]); // Set faculty to empty array on error
     }
   };
 
@@ -340,7 +341,18 @@ const FacultyManagement = () => {
 
   const groupFacultyByStructure = () => {
     const grouped = {};
+
+    // Guard clause to prevent errors when faculty is undefined or empty
+    if (!faculty || faculty.length === 0) {
+      return grouped;
+    }
+
     faculty.forEach((f) => {
+      // Check if faculty has subjects property and it's an array
+      if (!f.subjects || !Array.isArray(f.subjects)) {
+        return; // Skip this faculty member if subjects is not an array
+      }
+
       f.subjects.forEach((subject) => {
         if (!grouped[f.department]) {
           grouped[f.department] = {};
@@ -410,7 +422,10 @@ const FacultyManagement = () => {
             <div className="stat-value flex items-center gap-2">
               <i className="fas fa-book"></i>
               <span id="totalSubjects">
-                {faculty.reduce((total, f) => total + f.subjects.length, 0)}
+                {faculty.reduce(
+                  (total, f) => total + (f.subjects?.length || 0),
+                  0
+                )}
               </span>
             </div>
           </div>
@@ -462,15 +477,24 @@ const FacultyManagement = () => {
                                         Add Subject
                                       </button>
                                       <button
-                                        onClick={() =>
-                                          removeSubject(
-                                            f.id,
-                                            subject,
-                                            year,
-                                            f.subjects[0].semester,
-                                            division
-                                          )
-                                        }
+                                        onClick={() => {
+                                          // Find the semester for this subject
+                                          const subjectData = f.subjects.find(
+                                            (s) =>
+                                              s.name === subject &&
+                                              s.year === year &&
+                                              s.division === division
+                                          );
+                                          if (subjectData) {
+                                            removeSubject(
+                                              f.id,
+                                              subject,
+                                              year,
+                                              subjectData.semester,
+                                              division
+                                            );
+                                          }
+                                        }}
                                         className="text-red-500 hover:text-red-700"
                                       >
                                         <i className="fas fa-trash-alt"></i>
@@ -545,6 +569,7 @@ const FacultyManagement = () => {
                   required
                   className="w-full p-2 border rounded"
                   onChange={updateSemesters}
+                  disabled
                 >
                   <option value="">Select Year</option>
                   <option value="First">First Year</option>
@@ -560,6 +585,7 @@ const FacultyManagement = () => {
                   required
                   className="w-full p-2 border rounded"
                   onChange={updateSubjects}
+                  disabled
                 >
                   <option value="">Select Semester</option>
                 </select>
@@ -570,6 +596,7 @@ const FacultyManagement = () => {
                   id="subject"
                   required
                   className="w-full p-2 border rounded"
+                  disabled
                 >
                   <option value="">Select Subject</option>
                 </select>
