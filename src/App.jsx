@@ -25,8 +25,8 @@ import TeacherDash from "./Pages/TeacherDash/TeacherDash";
 import StudentDash from "./Pages/StudentDash/StudentDash";
 import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
 import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
-import teacherForgetPassword from "./Pages/TeacherLogin/teacherforgetpassword";
-import teacherchangePassword from "./Pages/TeacherLogin/teacherchangepassword";
+import TeacherForgetPassword from "./Pages/TeacherLogin/teacherforgetpassword";
+import TeacherChangePassword from "./Pages/TeacherLogin/teacherchangepassword";
 
 import StudentManage from "./components/TeacherDashMenu/StudentManage";
 {
@@ -59,12 +59,12 @@ function App() {
       <Route path="/forgetpassword" element={<ForgetPassword />} />
       <Route path="/change-password" element={<ChangePassword />} />
       <Route
-        path="/teacher-forgot-password"
-        element={<teacherForgetPassword />}
+        path="/teacher-forget-password"
+        element={<TeacherForgetPassword />}
       />
       <Route
         path="/teacher-change-password"
-        element={<teacherchangePassword />}
+        element={<TeacherChangePassword />}
       />
 
       {/* 🔹 Admin Routes */}
