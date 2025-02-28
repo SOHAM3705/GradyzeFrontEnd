@@ -251,20 +251,11 @@ const FacultyManagement = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const facultyId = selectedFacultyId;
-    console.log("Faculty ID:", facultyId);
+    const facultyEmail = selectedFacultyEmail; // Use the selected faculty email
+    console.log("Adding subject for Faculty Email:", facultyEmail);
 
-    if (!facultyId) {
-      alert("Faculty ID is missing.");
-      return;
-    }
-
-    const facultyIndex = faculty.findIndex(
-      (f) => f.id.toString() === facultyId.toString()
-    );
-
-    if (facultyIndex === -1) {
-      alert("Invalid faculty selection.");
+    if (!facultyEmail) {
+      alert("Faculty Email is missing.");
       return;
     }
 
@@ -284,6 +275,14 @@ const FacultyManagement = () => {
       alert(
         "Please fill all required fields: Subject Name, Year, Semester, Division."
       );
+      return;
+    }
+
+    // Check for duplicate subjects
+    const facultyIndex = faculty.findIndex((f) => f.email === facultyEmail);
+
+    if (facultyIndex === -1) {
+      alert("Invalid faculty selection.");
       return;
     }
 
