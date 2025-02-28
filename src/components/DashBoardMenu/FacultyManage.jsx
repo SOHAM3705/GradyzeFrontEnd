@@ -207,6 +207,14 @@ const FacultyManagement = () => {
       return;
     }
 
+    // Retrieve adminId from local storage or another source
+    const adminId = localStorage.getItem("adminId");
+
+    if (!adminId) {
+      alert("Admin ID is missing.");
+      return;
+    }
+
     const newFaculty = {
       name: formData.get("name"),
       email: formData.get("email"),
@@ -219,6 +227,7 @@ const FacultyManagement = () => {
           division: divisionValue,
         },
       ],
+      adminId, // Include adminId in the payload
     };
 
     try {
