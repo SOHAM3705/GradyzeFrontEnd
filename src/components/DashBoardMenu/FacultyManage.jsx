@@ -358,6 +358,7 @@ const FacultyManagement = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`, // Include the token in headers
+            "X-Admin-ID": adminId, // ✅ Send Admin ID in headers
           },
         }
       );
@@ -366,31 +367,6 @@ const FacultyManagement = () => {
     } catch (error) {
       console.error("Failed to fetch faculty data:", error);
       setFaculty([]);
-    }
-  };
-
-  const removeSubject = async (
-    facultyId,
-    subjectName,
-    year,
-    semester,
-    division
-  ) => {
-    try {
-      const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
-        {
-          email: faculty[facultyId].email,
-          subjectName,
-          year,
-          semester,
-          division,
-        }
-      );
-      setMessage(response.data.message);
-      fetchFaculty();
-    } catch (error) {
-      setMessage("Failed to remove subject.");
     }
   };
 
