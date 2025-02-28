@@ -243,10 +243,15 @@ const FacultyManagement = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const facultyId = parseInt(formData.get("facultyId"));
-    const facultyIndex = faculty.findIndex((f) => f.id === facultyId);
+    const facultyId = String(formData.get("facultyId")); // 🔹 Ensure facultyId is a string
+    const facultyIndex = faculty.findIndex(
+      (f) => f.id.toString() === facultyId
+    );
 
-    if (facultyIndex === -1) return;
+    if (facultyIndex === -1) {
+      alert("Invalid faculty selection.");
+      return;
+    }
 
     const newSubject = {
       name: formData.get("subjectName"),
@@ -262,11 +267,12 @@ const FacultyManagement = () => {
       !newSubject.division
     ) {
       alert(
-        "Please fill all required fields: Subject Name, Year, Semester, Division"
+        "Please fill all required fields: Subject Name, Year, Semester, Division."
       );
       return;
     }
 
+    // 🔹 Check for duplicate subjects
     const isDuplicate = faculty[facultyIndex].subjects.some(
       (s) =>
         s.name === newSubject.name &&
@@ -277,7 +283,7 @@ const FacultyManagement = () => {
 
     if (isDuplicate) {
       alert(
-        "This subject with the same year, semester, and division is already assigned to this faculty"
+        "This subject with the same year, semester, and division is already assigned."
       );
       return;
     }
@@ -287,26 +293,50 @@ const FacultyManagement = () => {
 
       const token = localStorage.getItem("token");
 
+      // 🔹 Get `adminId` from localStorage or extract from `location.host`
+      let adminId = localStorage.getItem("adminId");
+
+      if (!adminId) {
+        const hostParts = location.host.split(".");
+        adminId = hostParts.length > 0 ? hostParts[0] : null; // Assuming `adminId` is in subdomain
+      }
+
+      if (!adminId) {
+        console.error("❌ Admin ID not found in localStorage or location.host");
+        alert("Admin ID is missing.");
+        setLoading(false);
+        return;
+      }
+
+      const updatedSubjects = [...faculty[facultyIndex].subjects, newSubject];
+
+      const payload = {
+        name: faculty[facultyIndex].name,
+        email: faculty[facultyIndex].email,
+        department: faculty[facultyIndex].department,
+        subjects: updatedSubjects,
+        adminId, // ✅ Pass adminId
+      };
+
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add",
-        {
-          name: faculty[facultyIndex].name,
-          email: faculty[facultyIndex].email,
-          department: faculty[facultyIndex].department,
-          subjects: [...faculty[facultyIndex].subjects, newSubject],
-        },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
+      console.log("✅ Response:", response.data);
       setMessage(response.data.message);
       fetchFaculty();
     } catch (error) {
-      console.error("Error adding subject:", error.response || error);
-      setMessage("Failed to add subject.");
+      console.error("❌ Error adding subject:", error.response?.data || error);
+      alert(
+        `Error: ${error.response?.data?.message || "Failed to add subject."}`
+      );
     } finally {
       setLoading(false);
       closeSubjectModal();
