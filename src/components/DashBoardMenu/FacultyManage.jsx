@@ -8,6 +8,7 @@ const FacultyManagement = () => {
   const [selectedFacultyId, setSelectedFacultyId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const subjectDatabase = {
     "Computer Science": {
@@ -134,13 +135,10 @@ const FacultyManagement = () => {
     const subjectSelect = document.getElementById("subject");
 
     yearSelect.disabled = !department;
-    semesterSelect.disabled = true;
+    semesterSelect.disabled = !department;
     subjectSelect.disabled = true;
 
-    if (department) {
-      yearSelect.disabled = false;
-      updateSemesters();
-    }
+    if (department) updateSemesters();
   };
 
   const updateSemesters = () => {
@@ -151,17 +149,15 @@ const FacultyManagement = () => {
     semesterSelect.innerHTML = '<option value="">Select Semester</option>';
     semesterSelect.disabled = !year;
 
-    if (year) {
-      const semesters =
-        year === "First"
-          ? ["1", "2"]
-          : year === "Second"
-          ? ["3", "4"]
-          : year === "Third"
-          ? ["5", "6"]
-          : ["7", "8"];
+    const semesterMap = {
+      First: ["1", "2"],
+      Second: ["3", "4"],
+      Third: ["5", "6"],
+      Fourth: ["7", "8"],
+    };
 
-      semesters.forEach((sem) => {
+    if (year && semesterMap[year]) {
+      semesterMap[year].forEach((sem) => {
         const option = document.createElement("option");
         option.value = sem;
         option.textContent = `Semester ${sem}`;
@@ -171,16 +167,12 @@ const FacultyManagement = () => {
   };
 
   const updateSubjects = () => {
-    const departmentSelect = document.querySelector(
+    const department = document.querySelector(
       'select[name="department"]'
-    );
-    const yearSelect = document.getElementById("year");
-    const semesterSelect = document.getElementById("semester");
+    ).value;
+    const year = document.getElementById("year").value;
+    const semester = document.getElementById("semester").value;
     const subjectSelect = document.getElementById("subject");
-
-    const department = departmentSelect.value;
-    const year = yearSelect.value;
-    const semester = semesterSelect.value;
 
     subjectSelect.innerHTML = '<option value="">Select Subject</option>';
     subjectSelect.disabled = !semester;
@@ -189,7 +181,7 @@ const FacultyManagement = () => {
       department &&
       year &&
       semester &&
-      subjectDatabase[department]?.[year]?.[semester]
+      subjectDatabase?.[department]?.[year]?.[semester]
     ) {
       subjectDatabase[department][year][semester].forEach((subject) => {
         const option = document.createElement("option");
@@ -245,6 +237,7 @@ const FacultyManagement = () => {
       form.reset();
     }
   };
+
   const addSubject = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -257,8 +250,8 @@ const FacultyManagement = () => {
 
     const newSubject = {
       name: formData.get("subjectName"),
-      year: formData.get("year"), // ✅ Convert to number
-      semester: parseInt(formData.get("semester")), // ✅ Convert to number
+      year: formData.get("year"),
+      semester: parseInt(formData.get("semester")),
       division: formData.get("division"),
     };
 
@@ -297,14 +290,14 @@ const FacultyManagement = () => {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add",
         {
-          name: faculty[facultyIndex].name, // 🔴 Include name
+          name: faculty[facultyIndex].name,
           email: faculty[facultyIndex].email,
-          department: faculty[facultyIndex].department, // 🔴 Include department
+          department: faculty[facultyIndex].department,
           subjects: [...faculty[facultyIndex].subjects, newSubject],
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Include authentication token
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -322,13 +315,21 @@ const FacultyManagement = () => {
 
   const fetchFaculty = async () => {
     try {
+      const adminId = localStorage.getItem("adminId");
+
+      if (!adminId) {
+        console.error("Admin ID not found");
+        return;
+      }
+
       const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/teacher/subjects"
+        `https://gradyzebackend.onrender.com/api/teacher/teacherslist?adminId=${adminId}`
       );
-      setFaculty(response.data.subjects || []); // Ensure we set an empty array if data.subjects is undefined
+
+      setFaculty(response.data.teachers || []);
     } catch (error) {
       console.error("Failed to fetch faculty data:", error);
-      setFaculty([]); // Set faculty to empty array on error
+      setFaculty([]);
     }
   };
 
@@ -364,15 +365,13 @@ const FacultyManagement = () => {
   const groupFacultyByStructure = () => {
     const grouped = {};
 
-    // Guard clause to prevent errors when faculty is undefined or empty
     if (!faculty || faculty.length === 0) {
       return grouped;
     }
 
     faculty.forEach((f) => {
-      // Check if faculty has subjects property and it's an array
       if (!f.subjects || !Array.isArray(f.subjects)) {
-        return; // Skip this faculty member if subjects is not an array
+        return;
       }
 
       f.subjects.forEach((subject) => {
@@ -396,13 +395,22 @@ const FacultyManagement = () => {
         ].push(f);
       });
     });
+
     return grouped;
   };
 
   const groupedFaculty = groupFacultyByStructure();
 
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const filteredFaculty = faculty.filter((f) =>
+    f.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-gray-100 p-8 admin-theme">
       <div className="container mx-auto">
         {/* Header */}
         <div className="header flex justify-between items-center mb-8">
@@ -414,12 +422,21 @@ const FacultyManagement = () => {
           </div>
           <button
             onClick={openFacultyModal}
-            className="bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-800"
+            className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
           >
             <i className="fas fa-plus-circle"></i>
             Add New Faculty
           </button>
         </div>
+
+        {/* Search Bar */}
+        <input
+          type="text"
+          placeholder="Search for a teacher..."
+          value={searchQuery}
+          onChange={handleSearch}
+          className="w-full p-2 border rounded mb-4"
+        />
 
         {/* Stats */}
         <div className="stats-container grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -480,51 +497,56 @@ const FacultyManagement = () => {
                             <div className="faculty-list space-y-2">
                               {groupedFaculty[department][year][division][
                                 subject
-                              ].map((f) => (
-                                <div
-                                  key={f.id}
-                                  className="faculty-card bg-white p-4 rounded-lg shadow"
-                                >
-                                  <div className="flex justify-between items-start">
-                                    <div>
-                                      <h3>{f.name}</h3>
-                                      <p>{f.email}</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <button
-                                        onClick={() => openSubjectModal(f.id)}
-                                        className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-600"
-                                      >
-                                        <i className="fas fa-plus"></i>
-                                        Add Subject
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          // Find the semester for this subject
-                                          const subjectData = f.subjects.find(
-                                            (s) =>
-                                              s.name === subject &&
-                                              s.year === year &&
-                                              s.division === division
-                                          );
-                                          if (subjectData) {
-                                            removeSubject(
-                                              f.id,
-                                              subject,
-                                              year,
-                                              subjectData.semester,
-                                              division
+                              ]
+                                .filter((f) =>
+                                  f.name
+                                    .toLowerCase()
+                                    .includes(searchQuery.toLowerCase())
+                                )
+                                .map((f) => (
+                                  <div
+                                    key={f.id}
+                                    className="faculty-card bg-white p-4 rounded-lg shadow"
+                                  >
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <h3>{f.name}</h3>
+                                        <p>{f.email}</p>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => openSubjectModal(f.id)}
+                                          className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
+                                        >
+                                          <i className="fas fa-plus"></i>
+                                          Add Subject
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            const subjectData = f.subjects.find(
+                                              (s) =>
+                                                s.name === subject &&
+                                                s.year === year &&
+                                                s.division === division
                                             );
-                                          }
-                                        }}
-                                        className="text-red-500 hover:text-red-700"
-                                      >
-                                        <i className="fas fa-trash-alt"></i>
-                                      </button>
+                                            if (subjectData) {
+                                              removeSubject(
+                                                f.id,
+                                                subject,
+                                                year,
+                                                subjectData.semester,
+                                                division
+                                              );
+                                            }
+                                          }}
+                                          className="text-red-500 hover:text-red-700"
+                                        >
+                                          <i className="fas fa-trash-alt"></i>
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
                             </div>
                           </div>
                         ))}
@@ -635,7 +657,7 @@ const FacultyManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
+                  className="bg-[#7c3aed] text-white px-4 py-2 rounded hover:bg-[#6d28d9]"
                 >
                   Add Faculty
                 </button>
@@ -712,7 +734,7 @@ const FacultyManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
+                  className="bg-[#7c3aed] text-white px-4 py-2 rounded hover:bg-[#6d28d9]"
                 >
                   Add Subject
                 </button>
