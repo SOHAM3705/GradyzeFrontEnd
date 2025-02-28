@@ -316,14 +316,20 @@ const FacultyManagement = () => {
   const fetchFaculty = async () => {
     try {
       const adminId = localStorage.getItem("adminId");
+      const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
 
-      if (!adminId) {
-        console.error("Admin ID not found");
+      if (!adminId || !token) {
+        console.error("Admin ID or Token not found");
         return;
       }
 
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teacher/teacherslist?adminId=${adminId}`
+        `https://gradyzebackend.onrender.com/api/teacher/teacherslist`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in headers
+          },
+        }
       );
 
       setFaculty(response.data.teachers || []);
