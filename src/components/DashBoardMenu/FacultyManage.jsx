@@ -231,7 +231,10 @@ const FacultyManagement = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post("/api/teacher/add", newFaculty);
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/add",
+        newFaculty
+      );
       setMessage(response.data.message);
       fetchFaculty();
     } catch (error) {
@@ -289,10 +292,13 @@ const FacultyManagement = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post("/api/teacher/add", {
-        email: faculty[facultyIndex].email,
-        subjects: [...faculty[facultyIndex].subjects, newSubject],
-      });
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/add",
+        {
+          email: faculty[facultyIndex].email,
+          subjects: [...faculty[facultyIndex].subjects, newSubject],
+        }
+      );
       setMessage(response.data.message);
       fetchFaculty();
     } catch (error) {
@@ -305,7 +311,9 @@ const FacultyManagement = () => {
 
   const fetchFaculty = async () => {
     try {
-      const response = await axios.get("/api/teacher/subjects");
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/teacher/subjects"
+      );
       setFaculty(response.data.subjects || []); // Ensure we set an empty array if data.subjects is undefined
     } catch (error) {
       console.error("Failed to fetch faculty data:", error);
@@ -321,13 +329,16 @@ const FacultyManagement = () => {
     division
   ) => {
     try {
-      const response = await axios.post("/api/teacher/remove-subject", {
-        email: faculty[facultyId].email,
-        subjectName,
-        year,
-        semester,
-        division,
-      });
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
+        {
+          email: faculty[facultyId].email,
+          subjectName,
+          year,
+          semester,
+          division,
+        }
+      );
       setMessage(response.data.message);
       fetchFaculty();
     } catch (error) {
