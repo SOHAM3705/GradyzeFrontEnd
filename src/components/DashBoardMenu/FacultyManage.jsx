@@ -245,7 +245,6 @@ const FacultyManagement = () => {
       form.reset();
     }
   };
-
   const addSubject = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -258,15 +257,15 @@ const FacultyManagement = () => {
 
     const newSubject = {
       name: formData.get("subjectName"),
-      year: formData.get("year"),
-      semester: formData.get("semester"),
+      year: parseInt(formData.get("year")), // ✅ Convert to number
+      semester: parseInt(formData.get("semester")), // ✅ Convert to number
       division: formData.get("division"),
     };
 
     if (
       !newSubject.name ||
-      !newSubject.year ||
-      !newSubject.semester ||
+      isNaN(newSubject.year) ||
+      isNaN(newSubject.semester) ||
       !newSubject.division
     ) {
       alert(
@@ -292,16 +291,28 @@ const FacultyManagement = () => {
 
     try {
       setLoading(true);
+
+      const token = localStorage.getItem("token");
+
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add",
         {
+          name: faculty[facultyIndex].name, // 🔴 Include name
           email: faculty[facultyIndex].email,
+          department: faculty[facultyIndex].department, // 🔴 Include department
           subjects: [...faculty[facultyIndex].subjects, newSubject],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include authentication token
+          },
         }
       );
+
       setMessage(response.data.message);
       fetchFaculty();
     } catch (error) {
+      console.error("Error adding subject:", error.response || error);
       setMessage("Failed to add subject.");
     } finally {
       setLoading(false);
