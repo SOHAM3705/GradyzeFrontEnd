@@ -257,14 +257,14 @@ const FacultyManagement = () => {
 
     const newSubject = {
       name: formData.get("subjectName"),
-      year: parseInt(formData.get("year")), // ✅ Convert to number
+      year: formData.get("year"), // ✅ Convert to number
       semester: parseInt(formData.get("semester")), // ✅ Convert to number
       division: formData.get("division"),
     };
 
     if (
       !newSubject.name ||
-      isNaN(newSubject.year) ||
+      !newSubject.year ||
       isNaN(newSubject.semester) ||
       !newSubject.division
     ) {
