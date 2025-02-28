@@ -252,9 +252,16 @@ const FacultyManagement = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const facultyId = String(formData.get("facultyId")); // 🔹 Ensure facultyId is a string
+    const facultyId = formData.get("facultyId"); // Retrieve facultyId
+    console.log("Faculty ID:", facultyId); // Log the facultyId for debugging
+
+    if (!facultyId) {
+      alert("Faculty ID is missing.");
+      return;
+    }
+
     const facultyIndex = faculty.findIndex(
-      (f) => f.id.toString() === facultyId
+      (f) => f.id.toString() === facultyId.toString() // Ensure both are strings
     );
 
     if (facultyIndex === -1) {
@@ -281,7 +288,7 @@ const FacultyManagement = () => {
       return;
     }
 
-    // 🔹 Check for duplicate subjects
+    // Check for duplicate subjects
     const isDuplicate = faculty[facultyIndex].subjects.some(
       (s) =>
         s.name === newSubject.name &&
@@ -301,17 +308,15 @@ const FacultyManagement = () => {
       setLoading(true);
 
       const token = localStorage.getItem("token");
-
-      // 🔹 Get `adminId` from localStorage or extract from `location.host`
       let adminId = localStorage.getItem("adminId");
 
       if (!adminId) {
         const hostParts = location.host.split(".");
-        adminId = hostParts.length > 0 ? hostParts[0] : null; // Assuming `adminId` is in subdomain
+        adminId = hostParts.length > 0 ? hostParts[0] : null;
       }
 
       if (!adminId) {
-        console.error("❌ Admin ID not found in localStorage or location.host");
+        console.error("Admin ID not found in localStorage or location.host");
         alert("Admin ID is missing.");
         setLoading(false);
         return;
@@ -324,7 +329,7 @@ const FacultyManagement = () => {
         email: faculty[facultyIndex].email,
         department: faculty[facultyIndex].department,
         subjects: updatedSubjects,
-        adminId, // ✅ Pass adminId
+        adminId,
       };
 
       const response = await axios.post(
@@ -338,17 +343,70 @@ const FacultyManagement = () => {
         }
       );
 
-      console.log("✅ Response:", response.data);
+      console.log("Response:", response.data);
       setMessage(response.data.message);
       fetchFaculty();
     } catch (error) {
-      console.error("❌ Error adding subject:", error.response?.data || error);
+      console.error("Error adding subject:", error.response?.data || error);
       alert(
         `Error: ${error.response?.data?.message || "Failed to add subject."}`
       );
     } finally {
       setLoading(false);
       closeSubjectModal();
+    }
+  };
+
+  const removeSubject = async (
+    facultyId,
+    subjectName,
+    year,
+    semester,
+    division
+  ) => {
+    try {
+      const token = localStorage.getItem("token"); // Get token
+      if (!token) {
+        console.error("No authentication token found.");
+        setMessage("Authentication error.");
+        return;
+      }
+
+      // ✅ Ensure faculty exists before accessing its email
+      if (!faculty[facultyId] || !faculty[facultyId].email) {
+        console.error("Invalid faculty data.");
+        setMessage("Error: Faculty not found.");
+        return;
+      }
+
+      console.log("Removing subject for:", faculty[facultyId].email);
+
+      // ✅ Make API call with token in headers
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
+        {
+          email: faculty[facultyId].email,
+          subjectName,
+          year,
+          semester,
+          division,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include authentication token
+          },
+        }
+      );
+
+      // ✅ Success message and refresh data
+      setMessage(response.data.message);
+      fetchFaculty(); // Refresh faculty list after removal
+    } catch (error) {
+      console.error(
+        "Failed to remove subject:",
+        error.response?.data || error.message
+      );
+      setMessage(error.response?.data?.message || "Failed to remove subject.");
     }
   };
 
@@ -544,19 +602,31 @@ const FacultyManagement = () => {
                                         </button>
                                         <button
                                           onClick={() => {
+                                            if (!f.subjects) {
+                                              console.error(
+                                                "No subjects found for this faculty."
+                                              );
+                                              return;
+                                            }
+
                                             const subjectData = f.subjects.find(
                                               (s) =>
                                                 s.name === subject &&
                                                 s.year === year &&
                                                 s.division === division
                                             );
+
                                             if (subjectData) {
                                               removeSubject(
-                                                f.id,
+                                                f.email, // 🔥 Use `f.email` instead of `f.id` if backend expects email
                                                 subject,
                                                 year,
                                                 subjectData.semester,
                                                 division
+                                              );
+                                            } else {
+                                              console.error(
+                                                "Subject not found for removal."
                                               );
                                             }
                                           }}
