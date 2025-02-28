@@ -207,7 +207,6 @@ const FacultyManagement = () => {
       return;
     }
 
-    // Retrieve adminId from local storage or another source
     const adminId = localStorage.getItem("adminId");
 
     if (!adminId) {
@@ -227,7 +226,7 @@ const FacultyManagement = () => {
           division: divisionValue,
         },
       ],
-      adminId, // Include adminId in the payload
+      adminId,
     };
 
     try {
@@ -252,8 +251,8 @@ const FacultyManagement = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const facultyId = formData.get("facultyId"); // Retrieve facultyId
-    console.log("Faculty ID:", facultyId); // Log the facultyId for debugging
+    const facultyId = selectedFacultyId;
+    console.log("Faculty ID:", facultyId);
 
     if (!facultyId) {
       alert("Faculty ID is missing.");
@@ -261,7 +260,7 @@ const FacultyManagement = () => {
     }
 
     const facultyIndex = faculty.findIndex(
-      (f) => f.id.toString() === facultyId.toString() // Ensure both are strings
+      (f) => f.id.toString() === facultyId.toString()
     );
 
     if (facultyIndex === -1) {
@@ -288,7 +287,6 @@ const FacultyManagement = () => {
       return;
     }
 
-    // Check for duplicate subjects
     const isDuplicate = faculty[facultyIndex].subjects.some(
       (s) =>
         s.name === newSubject.name &&
@@ -358,34 +356,26 @@ const FacultyManagement = () => {
   };
 
   const removeSubject = async (
-    facultyId,
+    facultyEmail,
     subjectName,
     year,
     semester,
     division
   ) => {
     try {
-      const token = localStorage.getItem("token"); // Get token
+      const token = localStorage.getItem("token");
       if (!token) {
         console.error("No authentication token found.");
         setMessage("Authentication error.");
         return;
       }
 
-      // ✅ Ensure faculty exists before accessing its email
-      if (!faculty[facultyId] || !faculty[facultyId].email) {
-        console.error("Invalid faculty data.");
-        setMessage("Error: Faculty not found.");
-        return;
-      }
+      console.log("Removing subject for:", facultyEmail);
 
-      console.log("Removing subject for:", faculty[facultyId].email);
-
-      // ✅ Make API call with token in headers
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
         {
-          email: faculty[facultyId].email,
+          email: facultyEmail,
           subjectName,
           year,
           semester,
@@ -393,14 +383,13 @@ const FacultyManagement = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Include authentication token
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      // ✅ Success message and refresh data
       setMessage(response.data.message);
-      fetchFaculty(); // Refresh faculty list after removal
+      fetchFaculty();
     } catch (error) {
       console.error(
         "Failed to remove subject:",
@@ -413,7 +402,7 @@ const FacultyManagement = () => {
   const fetchFaculty = async () => {
     try {
       const adminId = localStorage.getItem("adminId");
-      const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+      const token = localStorage.getItem("token");
 
       if (!adminId || !token) {
         console.error("Admin ID or Token not found");
@@ -424,8 +413,8 @@ const FacultyManagement = () => {
         `https://gradyzebackend.onrender.com/api/teacher/teacherslist`,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Include the token in headers
-            "X-Admin-ID": adminId, // ✅ Send Admin ID in headers
+            Authorization: `Bearer ${token}`,
+            "X-Admin-ID": adminId,
           },
         }
       );
@@ -491,7 +480,6 @@ const FacultyManagement = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-8 admin-theme">
       <div className="container mx-auto">
-        {/* Header */}
         <div className="header flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -508,7 +496,6 @@ const FacultyManagement = () => {
           </button>
         </div>
 
-        {/* Search Bar */}
         <input
           type="text"
           placeholder="Search for a teacher..."
@@ -517,7 +504,6 @@ const FacultyManagement = () => {
           className="w-full p-2 border rounded mb-4"
         />
 
-        {/* Stats */}
         <div className="stats-container grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="stat-card bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold">Total Faculty</h3>
@@ -549,7 +535,6 @@ const FacultyManagement = () => {
           </div>
         </div>
 
-        {/* Faculty List by Structure */}
         <div id="facultyList" className="space-y-4">
           {Object.keys(groupedFaculty).map((department) => (
             <div key={department} className="department-section">
@@ -618,7 +603,7 @@ const FacultyManagement = () => {
 
                                             if (subjectData) {
                                               removeSubject(
-                                                f.email, // 🔥 Use `f.email` instead of `f.id` if backend expects email
+                                                f.email,
                                                 subject,
                                                 year,
                                                 subjectData.semester,
@@ -651,7 +636,6 @@ const FacultyManagement = () => {
         </div>
       </div>
 
-      {/* Add Faculty Modal */}
       {isFacultyModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="modal-content bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
@@ -765,7 +749,6 @@ const FacultyManagement = () => {
         </div>
       )}
 
-      {/* Add Subject Modal */}
       {isSubjectModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="modal-content bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
