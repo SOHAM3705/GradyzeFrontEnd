@@ -16,15 +16,23 @@ const TeacherLogin = () => {
     }
 
     try {
-      const response = await axios.post("/api/teacher/teacherRoute/login", {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/login",
+        {
+          email,
+          password,
+        }
+      );
 
+      // Store the JWT token in local storage
       localStorage.setItem("token", response.data.token);
 
-      navigate("/teacherdash"); // Redirect to Teacher Dashboard
-    } catch (error) {}
+      // Redirect to Teacher Dashboard
+      navigate("/teacherdash");
+    } catch (error) {
+      // Handle login error (e.g., show an error message)
+      alert("Login failed. Please check your credentials.");
+    }
   };
 
   return (
