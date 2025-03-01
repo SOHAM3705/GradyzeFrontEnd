@@ -412,9 +412,10 @@ const FacultyManagement = () => {
   const fetchFaculty = async () => {
     try {
       const token = localStorage.getItem("token");
+      const adminId = localStorage.getItem("adminId"); // Get adminId from localStorage
 
-      if (!token) {
-        console.error("Token not found");
+      if (!token || !adminId) {
+        console.error("Token or Admin ID not found");
         return;
       }
 
@@ -428,6 +429,9 @@ const FacultyManagement = () => {
         }
       );
 
+      // Log the full response for debugging
+      console.log("Fetched faculty data:", response.data);
+
       // Format the fetched faculty data
       const formattedFaculty = response.data.teachers.map((teacher) => ({
         teacherId: teacher.teacherId,
@@ -435,7 +439,7 @@ const FacultyManagement = () => {
         email: teacher.email,
         department: teacher.department,
         subjects: teacher.subjects || [],
-        adminId: teacher.adminId,
+        adminId: teacher.adminId, // Ensure this field exists in your API response
       }));
 
       // Filter faculty by the specific adminId
@@ -443,9 +447,12 @@ const FacultyManagement = () => {
         (teacher) => teacher.adminId === adminId
       );
 
-      setFaculty(facultyForAdmin);
+      setFaculty(facultyForAdmin); // Update state with filtered faculty
     } catch (error) {
-      console.error("Failed to fetch faculty data:", error);
+      console.error(
+        "Failed to fetch faculty data:",
+        error.response || error.message
+      );
       alert("Failed to fetch faculty data. Please try again later.");
       setFaculty([]); // Set empty array on failure
     }
