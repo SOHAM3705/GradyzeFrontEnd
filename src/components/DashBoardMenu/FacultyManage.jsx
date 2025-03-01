@@ -409,7 +409,6 @@ const FacultyManagement = () => {
     }
   };
 
-  // Fetch faculty data
   const fetchFaculty = async () => {
     try {
       const adminId = localStorage.getItem("adminId");
@@ -454,14 +453,14 @@ const FacultyManagement = () => {
   };
 
   // Group faculty by structure: department, year, division, subject
-  const groupFacultyByStructure = () => {
+  const groupFacultyByStructure = (facultyData) => {
     const grouped = {};
 
-    if (!faculty || faculty.length === 0) {
+    if (!facultyData || facultyData.length === 0) {
       return grouped;
     }
 
-    faculty.forEach((f) => {
+    facultyData.forEach((f) => {
       if (!f.subjects || !Array.isArray(f.subjects)) {
         return;
       }
@@ -491,6 +490,12 @@ const FacultyManagement = () => {
     return grouped;
   };
 
+  // Memoize grouped faculty to avoid recalculating on every render
+  const groupedFaculty = useMemo(
+    () => groupFacultyByStructure(faculty),
+    [faculty]
+  );
+
   // Call fetchFaculty when the component mounts
   useEffect(() => {
     fetchFaculty();
@@ -501,14 +506,10 @@ const FacultyManagement = () => {
     setSearchQuery(event.target.value);
   };
 
-  // Filter faculty based on the search query
+  // Filter faculty based on the search query (applied to all faculty, not just grouped)
   const filteredFaculty = faculty.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Group faculty based on their structure
-  const groupedFaculty = groupFacultyByStructure();
-
   return (
     <div className="min-h-screen bg-gray-100 p-8 admin-theme">
       <div className="container mx-auto">
@@ -568,103 +569,110 @@ const FacultyManagement = () => {
         </div>
 
         <div id="facultyList" className="space-y-4">
-          {Object.keys(groupedFaculty).map((department) => (
-            <div key={department} className="department-section">
-              <h2 className="text-xl font-semibold mb-4">{department}</h2>
-              {Object.keys(groupedFaculty[department]).map((year) => (
-                <div key={year} className="year-section pl-4">
-                  <h3 className="text-lg font-semibold mb-2">{year} Year</h3>
-                  {Object.keys(groupedFaculty[department][year]).map(
-                    (division) => (
-                      <div key={division} className="division-section pl-4">
-                        <h4 className="text-md font-semibold mb-2">
-                          Division {division}
-                        </h4>
-                        {Object.keys(
-                          groupedFaculty[department][year][division]
-                        ).map((subject) => (
-                          <div
-                            key={subject}
-                            className="subject-section pl-4 mb-4"
-                          >
-                            <h5 className="text-md font-semibold mb-2">
-                              {subject}
-                            </h5>
-                            <div className="faculty-list space-y-2">
-                              {groupedFaculty[department][year][division][
-                                subject
-                              ]
-                                .filter((f) =>
-                                  f.name
-                                    .toLowerCase()
-                                    .includes(searchQuery.toLowerCase())
-                                )
-                                .map((f) => (
-                                  <div
-                                    key={f.id}
-                                    className="faculty-card bg-white p-4 rounded-lg shadow"
-                                  >
-                                    <div className="flex justify-between items-start">
-                                      <div>
-                                        <h3>{f.name}</h3>
-                                        <p>{f.email}</p>
-                                      </div>
-                                      <div className="flex gap-2">
-                                        <button
-                                          onClick={() => openSubjectModal(f.id)}
-                                          className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
-                                        >
-                                          <i className="fas fa-plus"></i>
-                                          Add Subject
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            if (!f.subjects) {
-                                              console.error(
-                                                "No subjects found for this faculty."
-                                              );
-                                              return;
-                                            }
+          {Object.keys(groupedFaculty).length === 0 ? (
+            <p>No faculty data available.</p> // Fallback message if no data
+          ) : (
+            Object.keys(groupedFaculty).map((department) => (
+              <div key={department} className="department-section">
+                <h2 className="text-xl font-semibold mb-4">{department}</h2>
+                {Object.keys(groupedFaculty[department]).map((year) => (
+                  <div key={year} className="year-section pl-4">
+                    <h3 className="text-lg font-semibold mb-2">{year} Year</h3>
+                    {Object.keys(groupedFaculty[department][year]).map(
+                      (division) => (
+                        <div key={division} className="division-section pl-4">
+                          <h4 className="text-md font-semibold mb-2">
+                            Division {division}
+                          </h4>
+                          {Object.keys(
+                            groupedFaculty[department][year][division]
+                          ).map((subject) => (
+                            <div
+                              key={subject}
+                              className="subject-section pl-4 mb-4"
+                            >
+                              <h5 className="text-md font-semibold mb-2">
+                                {subject}
+                              </h5>
+                              <div className="faculty-list space-y-2">
+                                {groupedFaculty[department][year][division][
+                                  subject
+                                ]
+                                  .filter((f) =>
+                                    f.name
+                                      .toLowerCase()
+                                      .includes(searchQuery.toLowerCase())
+                                  )
+                                  .map((f) => (
+                                    <div
+                                      key={f.teacherId} // Updated to teacherId
+                                      className="faculty-card bg-white p-4 rounded-lg shadow"
+                                    >
+                                      <div className="flex justify-between items-start">
+                                        <div>
+                                          <h3>{f.name}</h3>
+                                          <p>{f.email}</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <button
+                                            onClick={() =>
+                                              openSubjectModal(f.teacherId)
+                                            } // Updated to teacherId
+                                            className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
+                                          >
+                                            <i className="fas fa-plus"></i>
+                                            Add Subject
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              if (!f.subjects) {
+                                                console.error(
+                                                  "No subjects found for this faculty."
+                                                );
+                                                return;
+                                              }
 
-                                            const subjectData = f.subjects.find(
-                                              (s) =>
-                                                s.name === subject &&
-                                                s.year === year &&
-                                                s.division === division
-                                            );
+                                              const subjectData =
+                                                f.subjects.find(
+                                                  (s) =>
+                                                    s.name === subject &&
+                                                    s.year === year &&
+                                                    s.division === division
+                                                );
 
-                                            if (subjectData) {
-                                              removeSubject(
-                                                f.email,
-                                                subject,
-                                                year,
-                                                subjectData.semester,
-                                                division
-                                              );
-                                            } else {
-                                              console.error(
-                                                "Subject not found for removal."
-                                              );
-                                            }
-                                          }}
-                                          className="text-red-500 hover:text-red-700"
-                                        >
-                                          <i className="fas fa-trash-alt"></i>
-                                        </button>
+                                              if (subjectData) {
+                                                removeSubject(
+                                                  f.email,
+                                                  subject,
+                                                  year,
+                                                  subjectData.semester,
+                                                  division
+                                                );
+                                              } else {
+                                                console.error(
+                                                  "Subject not found for removal."
+                                                );
+                                              }
+                                            }}
+                                            className="text-red-500 hover:text-red-700"
+                                          >
+                                            <i className="fas fa-trash-alt"></i>
+                                          </button>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
+                          ))}
+                        </div>
+                      )
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))
+          )}
         </div>
       </div>
 
