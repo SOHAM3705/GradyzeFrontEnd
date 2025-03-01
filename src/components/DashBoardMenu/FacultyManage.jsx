@@ -264,8 +264,6 @@ const FacultyManagementSystem = () => {
       subjectSelect.disabled = false;
     }
   };
-
-  // In the addSubject function, there's an issue with how the faculty ID is being passed
   const addSubject = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -314,28 +312,9 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      // Find the selected faculty
-      const selectedFaculty = faculties.find(
-        (f) => f.teacherId === selectedFacultyId
-      );
-
-      if (!selectedFaculty) {
-        alert("Selected faculty not found.");
-        setLoading(false);
-        return;
-      }
-
-      // Log the selected faculty to debug
-      console.log("Selected Faculty:", selectedFaculty);
-      console.log("Selected Faculty ID:", selectedFacultyId);
-
       // Prepare the data according to your API structure
       const payload = {
         teacherId: selectedFacultyId,
-        name: selectedFaculty.name,
-        email: selectedFaculty.email,
-        department: selectedFaculty.department,
-        teacherType: "subjectTeacher", // Since we're adding a subject
         subjects: [newSubject],
         adminId,
       };
@@ -358,7 +337,7 @@ const FacultyManagementSystem = () => {
         // Update local state
         setFaculties((prev) =>
           prev.map((teacher) =>
-            teacher.teacherId === selectedFacultyId
+            teacher._id === selectedFacultyId
               ? {
                   ...teacher,
                   subjects: [...(teacher.subjects || []), newSubject],
@@ -984,14 +963,14 @@ const FacultyManagementSystem = () => {
         </div>
       )}
 
-      {isSubjectModalOpen && (
+      {isSubjectModalOpen && selectedFacultyId && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg">
                 Add Subject to:{" "}
-                {faculties.find((f) => f.teacherId === selectedFacultyId)
-                  ?.name || "Faculty"}
+                {faculties.find((f) => f._id === selectedFacultyId)?.name ||
+                  "Faculty"}
               </h3>
               <button className="text-gray-600" onClick={closeSubjectModal}>
                 &times;
