@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const FacultyManagement = () => {
@@ -476,92 +476,6 @@ const FacultyManagement = () => {
     }
   };
 
-  // Group faculty by structure: department, year, division, subject
-  const groupFacultyByStructure = (facultyData) => {
-    const grouped = {};
-
-    if (!facultyData || facultyData.length === 0) {
-      console.log("No faculty data to group");
-      return grouped;
-    }
-
-    console.log("Grouping faculty data:", facultyData);
-
-    // First, handle faculty with no subjects separately
-    const facultyWithoutSubjects = facultyData.filter(
-      (f) =>
-        !f.subjects || !Array.isArray(f.subjects) || f.subjects.length === 0
-    );
-
-    if (facultyWithoutSubjects.length > 0) {
-      if (!grouped["Unassigned"]) {
-        grouped["Unassigned"] = {
-          "No Year": { "No Division": { "No Subject": [] } },
-        };
-      }
-      grouped["Unassigned"]["No Year"]["No Division"]["No Subject"] =
-        facultyWithoutSubjects;
-    }
-
-    // Then group faculty with subjects
-    facultyData.forEach((f) => {
-      if (
-        !f.subjects ||
-        !Array.isArray(f.subjects) ||
-        f.subjects.length === 0
-      ) {
-        return;
-      }
-
-      f.subjects.forEach((subject) => {
-        if (!subject.name || !subject.year || !subject.division) {
-          console.log("Skipping subject with missing data:", subject);
-          return;
-        }
-
-        const department = f.department || "Unknown Department";
-
-        if (!grouped[department]) {
-          grouped[department] = {};
-        }
-        if (!grouped[department][subject.year]) {
-          grouped[department][subject.year] = {};
-        }
-        if (!grouped[department][subject.year][subject.division]) {
-          grouped[department][subject.year][subject.division] = {};
-        }
-        if (
-          !grouped[department][subject.year][subject.division][subject.name]
-        ) {
-          grouped[department][subject.year][subject.division][subject.name] =
-            [];
-        }
-
-        // Check if this faculty is already in the array
-        const alreadyExists = grouped[department][subject.year][
-          subject.division
-        ][subject.name].some(
-          (existingFaculty) => existingFaculty.teacherId === f.teacherId
-        );
-
-        if (!alreadyExists) {
-          grouped[department][subject.year][subject.division][
-            subject.name
-          ].push(f);
-        }
-      });
-    });
-
-    console.log("Grouped faculty structure:", grouped);
-    return grouped;
-  };
-
-  // Memoize grouped faculty to avoid recalculating on every render
-  const groupedFaculty = useMemo(
-    () => groupFacultyByStructure(faculty),
-    [faculty]
-  );
-
   // Call fetchFaculty when the component mounts
   useEffect(() => {
     fetchFaculty();
@@ -664,127 +578,6 @@ const FacultyManagement = () => {
                 </div>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* Structured faculty list */}
-        <h2 className="text-xl font-semibold mb-4">Faculty by Structure</h2>
-        <div id="facultyList" className="space-y-4">
-          {!isDataLoaded ? (
-            <p>Loading faculty data...</p>
-          ) : Object.keys(groupedFaculty).length === 0 ? (
-            <p>No faculty data available in structured view.</p>
-          ) : (
-            Object.keys(groupedFaculty).map((department) => (
-              <div
-                key={department}
-                className="department-section bg-white p-4 rounded-lg shadow mb-4"
-              >
-                <h2 className="text-xl font-semibold mb-4">{department}</h2>
-                {Object.keys(groupedFaculty[department]).map((year) => (
-                  <div key={year} className="year-section pl-4 mb-3">
-                    <h3 className="text-lg font-semibold mb-2">{year} Year</h3>
-                    {Object.keys(groupedFaculty[department][year]).map(
-                      (division) => (
-                        <div
-                          key={division}
-                          className="division-section pl-4 mb-3"
-                        >
-                          <h4 className="text-md font-semibold mb-2">
-                            Division {division}
-                          </h4>
-                          {Object.keys(
-                            groupedFaculty[department][year][division]
-                          ).map((subject) => (
-                            <div
-                              key={subject}
-                              className="subject-section pl-4 mb-4 bg-gray-50 p-3 rounded"
-                            >
-                              <h5 className="text-md font-semibold mb-2">
-                                {subject}
-                              </h5>
-                              <div className="faculty-list space-y-2">
-                                {groupedFaculty[department][year][division][
-                                  subject
-                                ]
-                                  .filter((f) =>
-                                    f.name
-                                      .toLowerCase()
-                                      .includes(searchQuery.toLowerCase())
-                                  )
-                                  .map((f) => (
-                                    <div
-                                      key={f.teacherId}
-                                      className="faculty-card bg-white p-4 rounded-lg shadow"
-                                    >
-                                      <div className="flex justify-between items-start">
-                                        <div>
-                                          <h3 className="font-medium">
-                                            {f.name}
-                                          </h3>
-                                          <p className="text-sm text-gray-600">
-                                            {f.email}
-                                          </p>
-                                        </div>
-                                        <div className="flex gap-2">
-                                          <button
-                                            onClick={() =>
-                                              openSubjectModal(f.teacherId)
-                                            }
-                                            className="bg-[#7c3aed] text-white px-2 py-1 rounded text-sm hover:bg-[#6d28d9]"
-                                          >
-                                            <i className="fas fa-plus mr-1"></i>
-                                            Add Subject
-                                          </button>
-                                          <button
-                                            onClick={() => {
-                                              if (!f.subjects) {
-                                                console.error(
-                                                  "No subjects found for this faculty."
-                                                );
-                                                return;
-                                              }
-
-                                              const subjectData =
-                                                f.subjects.find(
-                                                  (s) =>
-                                                    s.name === subject &&
-                                                    s.year === year &&
-                                                    s.division === division
-                                                );
-
-                                              if (subjectData) {
-                                                removeSubject(
-                                                  f.email,
-                                                  subject,
-                                                  year,
-                                                  subjectData.semester,
-                                                  division
-                                                );
-                                              } else {
-                                                console.error(
-                                                  "Subject not found for removal."
-                                                );
-                                              }
-                                            }}
-                                            className="text-red-500 hover:text-red-700 px-2 py-1"
-                                          >
-                                            <i className="fas fa-trash-alt"></i>
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))
           )}
         </div>
       </div>
@@ -925,7 +718,6 @@ const FacultyManagement = () => {
                   className="w-full p-2 border rounded"
                 >
                   <option value="">Select Year</option>
-
                   <option value="First">First Year</option>
                   <option value="Second">Second Year</option>
                   <option value="Third">Third Year</option>
