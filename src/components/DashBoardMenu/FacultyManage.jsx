@@ -354,7 +354,6 @@ const FacultyManagementSystem = () => {
       form.reset();
     }
   };
-
   const removeSubject = async (
     facultyEmail,
     subjectName,
@@ -366,26 +365,22 @@ const FacultyManagementSystem = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         console.error("No authentication token found.");
-        setMessage("Authentication error.");
+        alert("Authentication error.");
         return;
       }
 
-      console.log("Removing subject for:", facultyEmail);
+      console.log("Removing subject:", {
+        facultyEmail,
+        subjectName,
+        year,
+        semester,
+        division,
+      });
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
-        {
-          email: facultyEmail,
-          subjectName,
-          year,
-          semester,
-          division,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { email: facultyEmail, subjectName, year, semester, division },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.status === 200) {
@@ -396,18 +391,20 @@ const FacultyManagementSystem = () => {
               ? {
                   ...teacher,
                   subjects: teacher.subjects.filter(
-                    (s) => s.name !== subjectName
+                    (s) =>
+                      s.name.trim().toLowerCase() !==
+                      subjectName.trim().toLowerCase()
                   ),
                 }
               : teacher
           )
         );
       } else {
-        alert("Failed to remove subject.");
+        alert(response.data?.message || "Failed to remove subject.");
       }
     } catch (error) {
       console.error(
-        "Failed to remove subject:",
+        "Error removing subject:",
         error.response?.data || error.message
       );
       alert(error.response?.data?.message || "Failed to remove subject.");
