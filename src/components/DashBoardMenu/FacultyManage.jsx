@@ -237,7 +237,7 @@ const FacultyManagementSystem = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add",
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
         newFaculty
       );
 
@@ -320,7 +320,7 @@ const FacultyManagementSystem = () => {
       console.log("Sending payload:", payload); // Add for debugging
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-subject",
+        "https://gradyzebackend.onrender.com/api/teacher/add-teachersubject",
         payload,
         {
           headers: {
