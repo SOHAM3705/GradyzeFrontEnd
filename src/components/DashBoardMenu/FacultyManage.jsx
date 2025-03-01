@@ -432,13 +432,19 @@ const FacultyManagement = () => {
       // Log the full response for debugging
       console.log("Fetched faculty data:", response.data);
 
+      // Check if the response contains teachers data
+      if (!response.data || !response.data.teachers) {
+        console.error("No teachers found in response.");
+        return;
+      }
+
       // Format the fetched faculty data
       const formattedFaculty = response.data.teachers.map((teacher) => ({
-        teacherId: teacher.teacherId,
+        teacherId: teacher.teacherId || teacher._id, // Use teacherId or _id if teacherId is missing
         name: teacher.name,
         email: teacher.email,
         department: teacher.department,
-        subjects: teacher.subjects || [],
+        subjects: teacher.subjects || [], // Ensure subjects is an array
         adminId: teacher.adminId, // Ensure this field exists in your API response
       }));
 
@@ -447,6 +453,9 @@ const FacultyManagement = () => {
         (teacher) => teacher.adminId === adminId
       );
 
+      console.log("Filtered faculty for admin:", facultyForAdmin);
+
+      // Update state with filtered faculty
       setFaculty(facultyForAdmin); // Update state with filtered faculty
     } catch (error) {
       console.error(
@@ -467,11 +476,17 @@ const FacultyManagement = () => {
     }
 
     facultyData.forEach((f) => {
-      if (!f.subjects || !Array.isArray(f.subjects)) {
+      // Ensure subjects is an array and is defined
+      if (!Array.isArray(f.subjects)) {
         return;
       }
 
       f.subjects.forEach((subject) => {
+        // Ensure subject has required properties: year, division, name
+        if (!subject.year || !subject.division || !subject.name) {
+          return;
+        }
+
         if (!grouped[f.department]) {
           grouped[f.department] = {};
         }
@@ -517,9 +532,47 @@ const FacultyManagement = () => {
       )
   );
 
-  useEffect(() => {
-    fetchFaculty();
-  }, []);
+  // Optional: If you want to filter grouped data based on search query
+  const filteredGroupedFaculty = useMemo(() => {
+    const filteredGroup = {};
+
+    // Iterate through the grouped data and filter based on the search query
+    Object.keys(groupedFaculty).forEach((department) => {
+      const yearGroup = groupedFaculty[department];
+      filteredGroup[department] = {};
+
+      Object.keys(yearGroup).forEach((year) => {
+        const divisionGroup = yearGroup[year];
+        filteredGroup[department][year] = {};
+
+        Object.keys(divisionGroup).forEach((division) => {
+          const subjectGroup = divisionGroup[division];
+          filteredGroup[department][year][division] = {};
+
+          Object.keys(subjectGroup).forEach((subjectName) => {
+            const facultyForSubject = subjectGroup[subjectName];
+            const filteredFacultyForSubject = facultyForSubject.filter(
+              (f) =>
+                f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                f.department
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase()) ||
+                f.subjects.some((subject) =>
+                  subject.name.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+            );
+
+            if (filteredFacultyForSubject.length > 0) {
+              filteredGroup[department][year][division][subjectName] =
+                filteredFacultyForSubject;
+            }
+          });
+        });
+      });
+    });
+
+    return filteredGroup;
+  }, [groupedFaculty, searchQuery]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-8 admin-theme">
@@ -580,36 +633,28 @@ const FacultyManagement = () => {
         </div>
 
         <div id="facultyList" className="space-y-4">
-          {Object.keys(groupedFaculty).length === 0 ? (
-            <p>No faculty data available.</p> // Fallback message if no data
+          {Object.keys(filteredGroupedFaculty).length === 0 ? (
+            <p>No faculty data available.</p>
           ) : (
-            Object.keys(groupedFaculty).map((department) => (
+            Object.keys(filteredGroupedFaculty).map((department) => (
               <div key={department} className="department-section">
                 <h2 className="text-xl font-semibold mb-4">{department}</h2>
-                {Object.keys(groupedFaculty[department]).map((year) => (
+                {Object.keys(filteredGroupedFaculty[department]).map((year) => (
                   <div key={year} className="year-section pl-4">
                     <h3 className="text-lg font-semibold mb-2">{year} Year</h3>
-                    {Object.keys(groupedFaculty[department][year]).map(
+                    {Object.keys(filteredGroupedFaculty[department][year]).map(
                       (division) => (
                         <div key={division} className="division-section pl-4">
                           <h4 className="text-md font-semibold mb-2">
                             Division {division}
                           </h4>
                           {Object.keys(
-                            groupedFaculty[department][year][division]
+                            filteredGroupedFaculty[department][year][division]
                           ).map((subject) => {
                             const facultyForSubject =
-                              groupedFaculty[department][year][division][
-                                subject
-                              ];
-
-                            // Filter faculty based on search query before rendering
-                            const filteredFaculty = facultyForSubject.filter(
-                              (f) =>
-                                f.name
-                                  .toLowerCase()
-                                  .includes(searchQuery.toLowerCase())
-                            );
+                              filteredGroupedFaculty[department][year][
+                                division
+                              ][subject];
 
                             return (
                               <div
@@ -620,12 +665,12 @@ const FacultyManagement = () => {
                                   {subject}
                                 </h5>
                                 <div className="faculty-list space-y-2">
-                                  {filteredFaculty.length === 0 ? (
+                                  {facultyForSubject.length === 0 ? (
                                     <p>No faculty found for this subject</p>
                                   ) : (
-                                    filteredFaculty.map((f) => (
+                                    facultyForSubject.map((f) => (
                                       <div
-                                        key={f.teacherId} // Updated to teacherId for uniqueness
+                                        key={f.teacherId}
                                         className="faculty-card bg-white p-4 rounded-lg shadow"
                                       >
                                         <div className="flex justify-between items-start">
@@ -637,43 +682,15 @@ const FacultyManagement = () => {
                                             <button
                                               onClick={() =>
                                                 openSubjectModal(f.teacherId)
-                                              } // Use teacherId
-                                              className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
+                                              }
+                                              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
                                             >
                                               <i className="fas fa-plus"></i>
-                                              Add Subject
                                             </button>
                                             <button
-                                              onClick={() => {
-                                                if (!f.subjects) {
-                                                  console.error(
-                                                    "No subjects found for this faculty."
-                                                  );
-                                                  return;
-                                                }
-
-                                                const subjectData =
-                                                  f.subjects.find(
-                                                    (s) =>
-                                                      s.name === subject &&
-                                                      s.year === year &&
-                                                      s.division === division
-                                                  );
-
-                                                if (subjectData) {
-                                                  removeSubject(
-                                                    f.email,
-                                                    subject,
-                                                    year,
-                                                    subjectData.semester,
-                                                    division
-                                                  );
-                                                } else {
-                                                  console.error(
-                                                    "Subject not found for removal."
-                                                  );
-                                                }
-                                              }}
+                                              onClick={() =>
+                                                handleRemoveSubject(f)
+                                              }
                                               className="text-red-500 hover:text-red-700"
                                             >
                                               <i className="fas fa-trash-alt"></i>
