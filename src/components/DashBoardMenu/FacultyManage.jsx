@@ -253,9 +253,7 @@ const FacultyManagementSystem = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const facultyId = selectedFacultyId;
-
-    if (!facultyId) {
+    if (!selectedFacultyId) {
       alert("Faculty selection is missing.");
       return;
     }
@@ -263,23 +261,30 @@ const FacultyManagementSystem = () => {
     const newSubject = {
       name: formData.get("subjectName"),
       year: formData.get("year"),
-      semester: parseInt(formData.get("semester")),
+      semester: parseInt(formData.get("semester")) || 0, // Ensure valid number
       division: formData.get("division"),
     };
 
     if (
       !newSubject.name ||
       !newSubject.year ||
-      isNaN(newSubject.semester) ||
+      newSubject.semester === 0 ||
       !newSubject.division
     ) {
       alert(
-        "Please fill all required fields: Subject Name, Year, Semester, Division."
+        "Please fill all required fields: Subject Name, Year, Semester, and Division."
       );
       return;
     }
 
-    const facultyIndex = faculties.findIndex((f) => f.teacherId === facultyId);
+    if (!faculties || faculties.length === 0) {
+      alert("No faculties found.");
+      return;
+    }
+
+    const facultyIndex = faculties.findIndex(
+      (f) => f.teacherId === selectedFacultyId
+    );
 
     if (facultyIndex === -1) {
       alert("Invalid faculty selection.");
@@ -313,8 +318,14 @@ const FacultyManagementSystem = () => {
         return;
       }
 
+      if (!token) {
+        alert("Authorization token is missing. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
-        teacherId: facultyId,
+        teacherId: selectedFacultyId,
         subject: newSubject,
         adminId,
       };
@@ -334,13 +345,13 @@ const FacultyManagementSystem = () => {
         alert("Subject added successfully!");
         setFaculties((prev) =>
           prev.map((teacher) =>
-            teacher.teacherId === facultyId
+            teacher.teacherId === selectedFacultyId
               ? { ...teacher, subjects: [...teacher.subjects, newSubject] }
               : teacher
           )
-        ); // Update state directly
+        );
       } else {
-        alert("Failed to add subject.");
+        alert("Failed to add subject. Please try again.");
       }
     } catch (error) {
       console.error("Error adding subject:", error.response?.data || error);
@@ -350,6 +361,7 @@ const FacultyManagementSystem = () => {
     } finally {
       setLoading(false);
       closeSubjectModal();
+      form.reset(); // Reset the form after submission
     }
   };
 
