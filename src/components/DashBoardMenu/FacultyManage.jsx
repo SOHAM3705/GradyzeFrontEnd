@@ -381,7 +381,7 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      // Convert semester to a number if it's a string like "Semester X"
+      // Ensure semester is correctly formatted
       let semesterValue = semester;
       if (
         typeof semester === "string" &&
@@ -389,6 +389,14 @@ const FacultyManagementSystem = () => {
       ) {
         semesterValue = parseInt(semester.replace(/[^0-9]/g, ""));
       }
+
+      // Log the values before sending the request
+      console.log("🟢 Faculty Email:", facultyEmail);
+      console.log("🟢 Subject Name:", subjectName);
+      console.log("🟢 Year:", year);
+      console.log("🟢 Semester:", semesterValue);
+      console.log("🟢 Division:", division);
+      console.log("🟢 Admin ID:", adminId);
 
       // Validate required fields
       if (
@@ -427,25 +435,6 @@ const FacultyManagementSystem = () => {
 
       if (response.status === 200) {
         alert("Subject removed successfully!");
-        setFaculties((prev) =>
-          prev.map((teacher) => {
-            if (teacher.email.toLowerCase() === facultyEmail.toLowerCase()) {
-              return {
-                ...teacher,
-                subjects: teacher.subjects.filter(
-                  (s) =>
-                    !(
-                      s.name.toLowerCase() === subjectName.toLowerCase() &&
-                      s.year.toLowerCase() === year.toLowerCase() &&
-                      Number(s.semester) === Number(semesterValue) &&
-                      s.division.toLowerCase() === division.toLowerCase()
-                    )
-                ),
-              };
-            }
-            return teacher;
-          })
-        );
       } else {
         alert(response.data?.message || "Failed to remove subject.");
       }
@@ -963,7 +952,7 @@ const FacultyManagementSystem = () => {
         </div>
       )}
 
-      {isSubjectModalOpen && selectedFacultyId && (
+      {isSubjectModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
