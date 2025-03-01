@@ -440,7 +440,7 @@ const FacultyManagementSystem = () => {
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
+        "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
