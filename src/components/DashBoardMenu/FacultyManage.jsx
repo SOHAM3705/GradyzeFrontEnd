@@ -265,7 +265,7 @@ const FacultyManagementSystem = () => {
     }
   };
 
-  // Update the addSubject function
+  // In the addSubject function, there's an issue with how the faculty ID is being passed
   const addSubject = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -319,12 +319,22 @@ const FacultyManagementSystem = () => {
         (f) => f.teacherId === selectedFacultyId
       );
 
+      if (!selectedFaculty) {
+        alert("Selected faculty not found.");
+        setLoading(false);
+        return;
+      }
+
+      // Log the selected faculty to debug
+      console.log("Selected Faculty:", selectedFaculty);
+      console.log("Selected Faculty ID:", selectedFacultyId);
+
       // Prepare the data according to your API structure
       const payload = {
         teacherId: selectedFacultyId,
-        name: selectedFaculty?.name,
-        email: selectedFaculty?.email,
-        department: selectedFaculty?.department,
+        name: selectedFaculty.name,
+        email: selectedFaculty.email,
+        department: selectedFaculty.department,
         teacherType: "subjectTeacher", // Since we're adding a subject
         subjects: [newSubject],
         adminId,
@@ -351,7 +361,7 @@ const FacultyManagementSystem = () => {
             teacher.teacherId === selectedFacultyId
               ? {
                   ...teacher,
-                  subjects: [...teacher.subjects, newSubject],
+                  subjects: [...(teacher.subjects || []), newSubject],
                 }
               : teacher
           )
@@ -370,7 +380,6 @@ const FacultyManagementSystem = () => {
       form.reset();
     }
   };
-
   // Update removeSubject function
   const removeSubject = async (
     facultyEmail,
@@ -430,7 +439,6 @@ const FacultyManagementSystem = () => {
       );
 
       const payload = {
-        teacherId: faculty.teacherId,
         name: faculty.name,
         email: faculty.email,
         department: faculty.department,
@@ -979,7 +987,11 @@ const FacultyManagementSystem = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg">Add Subject</h3>
+              <h3 className="text-lg">
+                Add Subject to:{" "}
+                {faculties.find((f) => f.teacherId === selectedFacultyId)
+                  ?.name || "Faculty"}
+              </h3>
               <button className="text-gray-600" onClick={closeSubjectModal}>
                 &times;
               </button>
