@@ -380,6 +380,7 @@ const FacultyManagementSystem = () => {
       form.reset();
     }
   };
+
   const removeSubject = async (
     facultyEmail,
     subjectName,
@@ -401,34 +402,39 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      // Convert semester if it's a string like "Semester X"
+      // Convert semester to a number if it's a string like "Semester X"
       let semesterValue = semester;
       if (
         typeof semester === "string" &&
         semester.toLowerCase().includes("semester")
       ) {
-        semesterValue = parseInt(semester.replace(/[^0-9]/g, "")); // Extract numbers
+        semesterValue = parseInt(semester.replace(/[^0-9]/g, ""));
       }
 
-      console.log("Trying to remove subject:", {
-        email: facultyEmail.trim().toLowerCase(),
-        subjectName: subjectName.trim().toLowerCase(),
-        year: year.trim(),
-        semester: semesterValue,
-        division: division.trim().toLowerCase(),
-      });
+      // Validate required fields
+      if (
+        !facultyEmail ||
+        !subjectName ||
+        !year ||
+        semesterValue === undefined ||
+        !division
+      ) {
+        alert("One or more required fields are missing.");
+        return;
+      }
 
-      // Construct payload with trimmed and lowercase values
+      // Construct payload
       const payload = {
         email: facultyEmail.trim().toLowerCase(),
         subjectName: subjectName.trim().toLowerCase(),
-        year: year.trim(),
+        year: year.trim().toLowerCase(),
         semester: semesterValue,
         division: division.trim().toLowerCase(),
         adminId,
       };
 
-      // API Call
+      console.log("🚀 Sending payload:", payload);
+
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
         payload,
@@ -442,24 +448,18 @@ const FacultyManagementSystem = () => {
 
       if (response.status === 200) {
         alert("Subject removed successfully!");
-
-        // Update local state to reflect changes
         setFaculties((prev) =>
           prev.map((teacher) => {
-            if (
-              teacher.email.toLowerCase() === facultyEmail.trim().toLowerCase()
-            ) {
+            if (teacher.email.toLowerCase() === facultyEmail.toLowerCase()) {
               return {
                 ...teacher,
                 subjects: teacher.subjects.filter(
                   (s) =>
                     !(
-                      s.name.trim().toLowerCase() ===
-                        subjectName.trim().toLowerCase() &&
-                      s.year.trim() === year.trim() &&
-                      s.semester === semesterValue &&
-                      s.division.trim().toLowerCase() ===
-                        division.trim().toLowerCase()
+                      s.name.toLowerCase() === subjectName.toLowerCase() &&
+                      s.year.toLowerCase() === year.toLowerCase() &&
+                      Number(s.semester) === Number(semesterValue) &&
+                      s.division.toLowerCase() === division.toLowerCase()
                     )
                 ),
               };
