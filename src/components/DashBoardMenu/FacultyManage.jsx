@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
@@ -419,6 +420,7 @@ const FacultyManagement = () => {
         return;
       }
 
+      // Fetch faculty data associated with the specific admin ID
       const response = await axios.get(
         "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
         {
@@ -429,33 +431,28 @@ const FacultyManagement = () => {
         }
       );
 
+      // Format the fetched faculty data
       const formattedFaculty = response.data.teachers.map((teacher) => ({
         teacherId: teacher.teacherId,
         name: teacher.name,
         email: teacher.email,
         department: teacher.department,
         subjects: teacher.subjects || [],
-        adminId: teacher.adminId,
+        adminId: teacher.adminId, // Ensure adminId is included
       }));
 
+      // Filter faculty by the specific adminId
       const facultyForAdmin = formattedFaculty.filter(
         (teacher) => teacher.adminId === adminId
       );
 
-      setFaculty(facultyForAdmin); // Ensure the state is updated correctly
+      setFaculty(facultyForAdmin);
     } catch (error) {
       console.error("Failed to fetch faculty data:", error);
       setFaculty([]); // Set empty array on failure
     }
   };
 
-  useEffect(() => {
-    fetchFaculty();
-  }, []); // The effect should run once when the component mounts
-
-  if (!faculty || faculty.length === 0) {
-    return <p>No faculty data available.</p>; // Handle empty data gracefully
-  }
   // Group faculty by structure: department, year, division, subject
   const groupFacultyByStructure = (facultyData) => {
     const grouped = {};
@@ -499,6 +496,11 @@ const FacultyManagement = () => {
     () => groupFacultyByStructure(faculty),
     [faculty]
   );
+
+  // Call fetchFaculty when the component mounts
+  useEffect(() => {
+    fetchFaculty();
+  }, []);
 
   // Handle search query
   const handleSearch = (event) => {
