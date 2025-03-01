@@ -150,25 +150,44 @@ const FacultyManagementSystem = () => {
       });
     }
   };
-
+  // In updateSubjects function, there's a problem with how semesters are being mapped to numbers
   const updateSubjects = () => {
     const department = document.querySelector(
       'select[name="department"]'
     ).value;
-    const year = document.getElementById("year").value;
-    const semester = document.getElementById("semester").value;
+    const yearSelect = document.getElementById("year");
+    const semesterSelect = document.getElementById("semester");
     const subjectSelect = document.getElementById("subject");
 
+    const year = yearSelect.value;
+    const semesterValue = semesterSelect.value;
+    // Extract semester number from the text (e.g., "Semester 1" -> 1)
+    const semesterNumber = semesterValue
+      ? parseInt(semesterValue.replace("Semester ", ""))
+      : null;
+
     subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-    subjectSelect.disabled = !semester;
+    subjectSelect.disabled = !semesterValue;
+
+    // Map year names to keys in subjectsData
+    const yearMap = {
+      "First Year": "First",
+      "Second Year": "Second",
+      "Third Year": "Third",
+      "Fourth Year": "Fourth",
+    };
+
+    const yearKey = yearMap[year];
 
     if (
       department &&
-      year &&
-      semester &&
-      subjectsData?.[department]?.[year]?.[semester]
+      yearKey &&
+      semesterNumber &&
+      subjectsData[department] &&
+      subjectsData[department][yearKey] &&
+      subjectsData[department][yearKey][semesterNumber]
     ) {
-      subjectsData[department][year][semester].forEach((subject) => {
+      subjectsData[department][yearKey][semesterNumber].forEach((subject) => {
         const option = document.createElement("option");
         option.value = subject;
         option.textContent = subject;
@@ -260,6 +279,7 @@ const FacultyManagementSystem = () => {
       division: formData.get("division"),
     };
 
+    // Validate that all fields are filled
     if (
       !newSubject.name ||
       !newSubject.year ||
@@ -268,30 +288,6 @@ const FacultyManagementSystem = () => {
     ) {
       alert(
         "Please fill all required fields: Subject Name, Year, Semester, and Division."
-      );
-      return;
-    }
-
-    const facultyIndex = faculties.findIndex(
-      (f) => f.teacherId === selectedFacultyId
-    );
-
-    if (facultyIndex === -1) {
-      alert("Invalid faculty selection.");
-      return;
-    }
-
-    const isDuplicate = faculties[facultyIndex].subjects.some(
-      (s) =>
-        s.name === newSubject.name &&
-        s.year === newSubject.year &&
-        s.semester === newSubject.semester &&
-        s.division === newSubject.division
-    );
-
-    if (isDuplicate) {
-      alert(
-        "This subject with the same year, semester, and division is already assigned."
       );
       return;
     }
@@ -314,11 +310,14 @@ const FacultyManagementSystem = () => {
         return;
       }
 
+      // Make sure the teacherId is correctly passed in the payload
       const payload = {
-        teacherId: selectedFacultyId,
+        teacherId: selectedFacultyId, // Make sure this matches expected key on server
         subject: newSubject,
-        adminId,
+        adminId: adminId,
       };
+
+      console.log("Sending payload:", payload); // Add for debugging
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-subject",
@@ -333,6 +332,7 @@ const FacultyManagementSystem = () => {
 
       if (response.status === 200) {
         alert("Subject added successfully!");
+        // Update local state
         setFaculties((prev) =>
           prev.map((teacher) =>
             teacher.teacherId === selectedFacultyId
@@ -354,6 +354,7 @@ const FacultyManagementSystem = () => {
       form.reset();
     }
   };
+
   const removeSubject = async (
     facultyEmail,
     subjectName,
@@ -369,35 +370,53 @@ const FacultyManagementSystem = () => {
         return;
       }
 
+      // Convert semester value if it's a string like "Semester X"
+      let semesterValue = semester;
+      if (typeof semester === "string" && semester.includes("Semester")) {
+        semesterValue = parseInt(semester.replace("Semester ", ""));
+      }
+
       console.log("Removing subject:", {
         facultyEmail,
         subjectName,
         year,
-        semester,
+        semesterValue,
         division,
       });
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
-        { email: facultyEmail, subjectName, year, semester, division },
+        {
+          email: facultyEmail,
+          subjectName,
+          year,
+          semester: semesterValue,
+          division,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.status === 200) {
         alert("Subject removed successfully!");
+        // Update local state to reflect the change
         setFaculties((prev) =>
-          prev.map((teacher) =>
-            teacher.email === facultyEmail
-              ? {
-                  ...teacher,
-                  subjects: teacher.subjects.filter(
-                    (s) =>
-                      s.name.trim().toLowerCase() !==
-                      subjectName.trim().toLowerCase()
-                  ),
-                }
-              : teacher
-          )
+          prev.map((teacher) => {
+            if (teacher.email === facultyEmail) {
+              return {
+                ...teacher,
+                subjects: teacher.subjects.filter(
+                  (s) =>
+                    !(
+                      s.name === subjectName &&
+                      s.year === year &&
+                      s.division === division &&
+                      (s.semester === semesterValue || s.semester === semester)
+                    )
+                ),
+              };
+            }
+            return teacher;
+          })
         );
       } else {
         alert(response.data?.message || "Failed to remove subject.");
@@ -662,7 +681,7 @@ const FacultyManagementSystem = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <header className="bg-purple-700 text-white p-4 rounded-lg shadow-md mb-8 text-center">
+      <header className="bg-purple-700 text-black p-4 rounded-lg shadow-md mb-8 text-center">
         <h1 className="text-2xl">Faculty Management System</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
           <div className="bg-white p-4 rounded-lg shadow-md">
