@@ -98,7 +98,6 @@ const FacultyManagementSystem = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState(new FormData());
 
-  const openFacultyModal = () => setIsFacultyModalOpen(true);
   const closeFacultyModal = () => setIsFacultyModalOpen(false);
 
   const openSubjectModal = (facultyId) => {
@@ -126,31 +125,98 @@ const FacultyManagementSystem = () => {
     if (department) updateSemesters();
   };
 
-  const updateSemesters = () => {
-    const yearSelect = document.getElementById("year");
-    const semesterSelect = document.getElementById("semester");
-    const year = yearSelect.value;
+  // Updates for createFaculty function
+  const createFaculty = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
 
-    semesterSelect.innerHTML = '<option value="">Select Semester</option>';
-    semesterSelect.disabled = !year;
+    // Get values from form
+    const nameValue = formData.get("name");
+    const emailValue = formData.get("email");
+    const departmentValue = formData.get("department");
+    const roleValue = formData.get("role");
+    const divisionValue = formData.get("division");
 
-    const semesterMap = {
-      "First Year": ["Semester 1", "Semester 2"],
-      "Second Year": ["Semester 3", "Semester 4"],
-      "Third Year": ["Semester 5", "Semester 6"],
-      "Fourth Year": ["Semester 7", "Semester 8"],
-    };
+    // Get subject info if subject teacher
+    let subjectsList = [];
+    if (roleValue === "Subject Teacher") {
+      const yearValue = document.getElementById("year").value;
+      const semesterText = document.getElementById("semester").value;
+      const subjectName = document.getElementById("subject").value;
 
-    if (year && semesterMap[year]) {
-      semesterMap[year].forEach((sem) => {
-        const option = document.createElement("option");
-        option.value = sem;
-        option.textContent = sem;
-        semesterSelect.appendChild(option);
+      // Extract semester number from text
+      const semesterNumber = semesterText
+        ? parseInt(semesterText.replace("Semester ", ""))
+        : null;
+
+      if (!yearValue || !semesterText || !subjectName || !divisionValue) {
+        alert("Please fill in all subject details");
+        return;
+      }
+
+      subjectsList.push({
+        name: subjectName,
+        year: yearValue,
+        semester: semesterNumber,
+        division: divisionValue,
       });
     }
+
+    // Map role values to the expected teacherType in the backend
+    const teacherTypeMapping = {
+      "Subject Teacher": "subjectTeacher",
+      "Class Teacher": "classTeacher",
+    };
+
+    const adminId = localStorage.getItem("adminId");
+    if (!adminId) {
+      alert("Admin ID is missing.");
+      return;
+    }
+
+    // Structure the data according to your API's expected format
+    const teacherData = {
+      name: nameValue,
+      email: emailValue,
+      department: departmentValue,
+      teacherType: teacherTypeMapping[roleValue],
+      division: roleValue === "Class Teacher" ? divisionValue : undefined,
+      subjects: roleValue === "Subject Teacher" ? subjectsList : undefined,
+      adminId,
+    };
+
+    console.log("Sending teacher data:", teacherData);
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
+        teacherData
+      );
+
+      if (response.status === 201 || response.status === 200) {
+        setMessage(response.data.message);
+        setFaculties((prev) => [...prev, response.data.teacher]);
+        alert(response.data.message || "Teacher added successfully!");
+      } else {
+        setMessage("Failed to add teacher. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+      setMessage("Failed to add teacher.");
+      alert(
+        "Failed to add teacher: " +
+          (error.response?.data?.message || error.message)
+      );
+    } finally {
+      setLoading(false);
+      closeFacultyModal();
+      form.reset();
+    }
   };
-  // In updateSubjects function, there's a problem with how semesters are being mapped to numbers
+
+  // Update the subject related functions
   const updateSubjects = () => {
     const department = document.querySelector(
       'select[name="department"]'
@@ -160,14 +226,14 @@ const FacultyManagementSystem = () => {
     const subjectSelect = document.getElementById("subject");
 
     const year = yearSelect.value;
-    const semesterValue = semesterSelect.value;
-    // Extract semester number from the text (e.g., "Semester 1" -> 1)
-    const semesterNumber = semesterValue
-      ? parseInt(semesterValue.replace("Semester ", ""))
+    const semesterText = semesterSelect.value;
+    // Extract semester number from the text
+    const semesterNumber = semesterText
+      ? parseInt(semesterText.replace("Semester ", ""))
       : null;
 
     subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-    subjectSelect.disabled = !semesterValue;
+    subjectSelect.disabled = !semesterText;
 
     // Map year names to keys in subjectsData
     const yearMap = {
@@ -193,75 +259,13 @@ const FacultyManagementSystem = () => {
         option.textContent = subject;
         subjectSelect.appendChild(option);
       });
+
+      // Enable the subject dropdown now that options are loaded
+      subjectSelect.disabled = false;
     }
   };
 
-  const createFaculty = async (event) => {
-    event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
-
-    const subjectName = document.getElementById("subject").value;
-    const yearValue = document.getElementById("year").value;
-    const semesterValue = document.getElementById("semester").value;
-    const divisionValue = formData.get("division");
-
-    if (!subjectName || !yearValue || !semesterValue || !divisionValue) {
-      alert("Please fill in all required fields including Division");
-      return;
-    }
-
-    const adminId = localStorage.getItem("adminId");
-
-    if (!adminId) {
-      alert("Admin ID is missing.");
-      return;
-    }
-
-    const newFaculty = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      department: formData.get("department"),
-      role: formData.get("role"),
-      subjects: [
-        {
-          name: subjectName,
-          year: yearValue,
-          semester: semesterValue,
-          division: divisionValue,
-        },
-      ],
-      adminId,
-    };
-
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
-        newFaculty
-      );
-
-      if (response.status === 201) {
-        setMessage(response.data.message);
-        setFaculties((prev) => [...prev, response.data.teacher]);
-        alert("Teacher added successfully!");
-      } else {
-        setMessage("Failed to add teacher. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error:", error.response?.data || error.message);
-      setMessage("Failed to add teacher.");
-      alert(
-        "Failed to add teacher: " +
-          (error.response?.data?.message || error.message)
-      );
-    } finally {
-      setLoading(false);
-      closeFacultyModal();
-      form.reset();
-    }
-  };
-
+  // Update the addSubject function
   const addSubject = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -272,25 +276,25 @@ const FacultyManagementSystem = () => {
       return;
     }
 
-    const newSubject = {
-      name: formData.get("subjectName"),
-      year: formData.get("year"),
-      semester: parseInt(formData.get("semester")),
-      division: formData.get("division"),
-    };
+    const subjectName = formData.get("subjectName");
+    const yearValue = formData.get("year");
+    const semesterNumber = parseInt(formData.get("semester"));
+    const divisionValue = formData.get("division");
 
     // Validate that all fields are filled
-    if (
-      !newSubject.name ||
-      !newSubject.year ||
-      isNaN(newSubject.semester) ||
-      !newSubject.division
-    ) {
+    if (!subjectName || !yearValue || isNaN(semesterNumber) || !divisionValue) {
       alert(
         "Please fill all required fields: Subject Name, Year, Semester, and Division."
       );
       return;
     }
+
+    const newSubject = {
+      name: subjectName,
+      year: yearValue,
+      semester: semesterNumber,
+      division: divisionValue,
+    };
 
     try {
       setLoading(true);
@@ -310,17 +314,26 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      // Make sure the teacherId is correctly passed in the payload
+      // Find the selected faculty
+      const selectedFaculty = faculties.find(
+        (f) => f.teacherId === selectedFacultyId
+      );
+
+      // Prepare the data according to your API structure
       const payload = {
-        teacherId: selectedFacultyId, // Make sure this matches expected key on server
-        subject: newSubject,
-        adminId: adminId,
+        teacherId: selectedFacultyId,
+        name: selectedFaculty?.name,
+        email: selectedFaculty?.email,
+        department: selectedFaculty?.department,
+        teacherType: "subjectTeacher", // Since we're adding a subject
+        subjects: [newSubject],
+        adminId,
       };
 
-      console.log("Sending payload:", payload); // Add for debugging
+      console.log("Sending subject payload:", payload);
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teachersubject",
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
         payload,
         {
           headers: {
@@ -330,13 +343,16 @@ const FacultyManagementSystem = () => {
         }
       );
 
-      if (response.status === 200) {
-        alert("Subject added successfully!");
+      if (response.status === 200 || response.status === 201) {
+        alert(response.data.message || "Subject added successfully!");
         // Update local state
         setFaculties((prev) =>
           prev.map((teacher) =>
             teacher.teacherId === selectedFacultyId
-              ? { ...teacher, subjects: [...teacher.subjects, newSubject] }
+              ? {
+                  ...teacher,
+                  subjects: [...teacher.subjects, newSubject],
+                }
               : teacher
           )
         );
@@ -355,6 +371,7 @@ const FacultyManagementSystem = () => {
     }
   };
 
+  // Update removeSubject function
   const removeSubject = async (
     facultyEmail,
     subjectName,
@@ -364,9 +381,23 @@ const FacultyManagementSystem = () => {
   ) => {
     try {
       const token = localStorage.getItem("token");
+      const adminId = localStorage.getItem("adminId");
+
       if (!token) {
         console.error("No authentication token found.");
         alert("Authentication error.");
+        return;
+      }
+
+      if (!adminId) {
+        alert("Admin ID is missing.");
+        return;
+      }
+
+      // Find the faculty by email
+      const faculty = faculties.find((f) => f.email === facultyEmail);
+      if (!faculty) {
+        alert("Faculty not found");
         return;
       }
 
@@ -377,6 +408,7 @@ const FacultyManagementSystem = () => {
       }
 
       console.log("Removing subject:", {
+        facultyId: faculty.teacherId,
         facultyEmail,
         subjectName,
         year,
@@ -384,16 +416,35 @@ const FacultyManagementSystem = () => {
         division,
       });
 
+      // Since the backend doesn't have a dedicated endpoint for removing subjects,
+      // we need to get the current subjects, filter out the one to remove, and update
+      const currentSubjects = faculty.subjects || [];
+      const updatedSubjects = currentSubjects.filter(
+        (s) =>
+          !(
+            s.name === subjectName &&
+            s.year === year &&
+            (s.semester === semesterValue || s.semester === semester) &&
+            s.division === division
+          )
+      );
+
+      const payload = {
+        teacherId: faculty.teacherId,
+        name: faculty.name,
+        email: faculty.email,
+        department: faculty.department,
+        teacherType: "subjectTeacher",
+        subjects: updatedSubjects,
+        adminId,
+      };
+
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
+        payload,
         {
-          email: facultyEmail,
-          subjectName,
-          year,
-          semester: semesterValue,
-          division,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       if (response.status === 200) {
@@ -404,15 +455,7 @@ const FacultyManagementSystem = () => {
             if (teacher.email === facultyEmail) {
               return {
                 ...teacher,
-                subjects: teacher.subjects.filter(
-                  (s) =>
-                    !(
-                      s.name === subjectName &&
-                      s.year === year &&
-                      s.division === division &&
-                      (s.semester === semesterValue || s.semester === semester)
-                    )
-                ),
+                subjects: updatedSubjects,
               };
             }
             return teacher;
@@ -430,6 +473,61 @@ const FacultyManagementSystem = () => {
     }
   };
 
+  // Update the updateSemesters function to call updateSubjects
+  const updateSemesters = () => {
+    const yearSelect = document.getElementById("year");
+    const semesterSelect = document.getElementById("semester");
+    const year = yearSelect.value;
+
+    semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+    semesterSelect.disabled = !year;
+
+    const semesterMap = {
+      "First Year": ["Semester 1", "Semester 2"],
+      "Second Year": ["Semester 3", "Semester 4"],
+      "Third Year": ["Semester 5", "Semester 6"],
+      "Fourth Year": ["Semester 7", "Semester 8"],
+    };
+
+    if (year && semesterMap[year]) {
+      semesterMap[year].forEach((sem) => {
+        const option = document.createElement("option");
+        option.value = sem;
+        option.textContent = sem;
+        semesterSelect.appendChild(option);
+      });
+    }
+
+    // Clear any previously selected subject
+    const subjectSelect = document.getElementById("subject");
+    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+    subjectSelect.disabled = true;
+  };
+
+  // Add event listener to semester select to update subjects when changed
+  const attachSemesterListener = () => {
+    const semesterSelect = document.getElementById("semester");
+    if (semesterSelect) {
+      semesterSelect.addEventListener("change", updateSubjects);
+    }
+  };
+
+  // Call this after opening the faculty modal
+  const setupFormListeners = () => {
+    const semesterSelect = document.getElementById("semester");
+    if (semesterSelect) {
+      semesterSelect.addEventListener("change", updateSubjects);
+    }
+  };
+
+  // Update openFacultyModal to include setup
+  const openFacultyModal = () => {
+    setIsFacultyModalOpen(true);
+    // Use setTimeout to ensure the modal is rendered before setting up listeners
+    setTimeout(() => {
+      setupFormListeners();
+    }, 100);
+  };
   const fetchFaculty = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -681,7 +779,7 @@ const FacultyManagementSystem = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <header className="bg-purple-700 text-black p-4 rounded-lg shadow-md mb-8 text-center">
+      <header className="bg-purple-500 text-black p-4 rounded-lg shadow-md mb-8 text-center">
         <h1 className="text-2xl">Faculty Management System</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
           <div className="bg-white p-4 rounded-lg shadow-md">
