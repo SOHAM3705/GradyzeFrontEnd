@@ -191,6 +191,7 @@ const FacultyManagement = () => {
       });
     }
   };
+
   const createFaculty = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -235,10 +236,9 @@ const FacultyManagement = () => {
         newFaculty
       );
 
-      // Check if the response status is 201 (Created)
       if (response.status === 201) {
         setMessage(response.data.message);
-        fetchFaculty(); // Update the faculty list after successful add
+        fetchFaculty();
         alert("Teacher added successfully!");
       } else {
         setMessage("Failed to add teacher. Please try again.");
@@ -262,7 +262,7 @@ const FacultyManagement = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const facultyId = selectedFacultyId; // ✅ Use teacherId instead of email
+    const facultyId = selectedFacultyId;
     console.log("Adding subject for Faculty ID:", facultyId);
 
     if (!facultyId) {
@@ -289,7 +289,6 @@ const FacultyManagement = () => {
       return;
     }
 
-    // ✅ Find the selected faculty using `teacherId`
     const facultyIndex = faculty.findIndex((f) => f.teacherId === facultyId);
 
     if (facultyIndex === -1) {
@@ -297,7 +296,6 @@ const FacultyManagement = () => {
       return;
     }
 
-    // ✅ Check for duplicate subjects
     const isDuplicate = faculty[facultyIndex].subjects.some(
       (s) =>
         s.name === newSubject.name &&
@@ -333,10 +331,9 @@ const FacultyManagement = () => {
 
       const updatedSubjects = [...faculty[facultyIndex].subjects, newSubject];
 
-      // ✅ Updated payload: Use `teacherId` instead of email
       const payload = {
-        teacherId: facultyId, // ✅ Send teacherId
-        subjects: updatedSubjects, // ✅ Updated subjects list
+        teacherId: facultyId,
+        subjects: updatedSubjects,
         adminId,
       };
 
@@ -412,14 +409,13 @@ const FacultyManagement = () => {
   const fetchFaculty = async () => {
     try {
       const token = localStorage.getItem("token");
-      const adminId = localStorage.getItem("adminId"); // Get adminId from localStorage
+      const adminId = localStorage.getItem("adminId");
 
       if (!token || !adminId) {
         console.error("Token or Admin ID not found");
         return;
       }
 
-      // Fetch faculty data associated with the specific admin ID
       const response = await axios.get(
         "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
         {
@@ -429,45 +425,39 @@ const FacultyManagement = () => {
         }
       );
 
-      // Log the full response for debugging
       console.log("Fetched faculty data:", response.data);
 
-      // Check if the response contains teachers data
       if (!response.data || !response.data.teachers) {
         console.error("No teachers found in response.");
         return;
       }
 
-      // Format the fetched faculty data
       const formattedFaculty = response.data.teachers.map((teacher) => ({
-        teacherId: teacher.teacherId || teacher._id, // Use teacherId or _id if teacherId is missing
+        teacherId: teacher.teacherId || teacher._id,
         name: teacher.name,
         email: teacher.email,
         department: teacher.department,
-        subjects: teacher.subjects || [], // Ensure subjects is an array
-        adminId: teacher.adminId, // Ensure this field exists in your API response
+        subjects: teacher.subjects || [],
+        adminId: teacher.adminId,
       }));
 
-      // Filter faculty by the specific adminId
       const facultyForAdmin = formattedFaculty.filter(
         (teacher) => teacher.adminId === adminId
       );
 
       console.log("Filtered faculty for admin:", facultyForAdmin);
 
-      // Update state with filtered faculty
-      setFaculty(facultyForAdmin); // Update state with filtered faculty
+      setFaculty(facultyForAdmin);
     } catch (error) {
       console.error(
         "Failed to fetch faculty data:",
         error.response || error.message
       );
       alert("Failed to fetch faculty data. Please try again later.");
-      setFaculty([]); // Set empty array on failure
+      setFaculty([]);
     }
   };
 
-  // Group faculty by structure: department, year, division, subject
   const groupFacultyByStructure = (facultyData) => {
     const grouped = {};
 
@@ -476,13 +466,11 @@ const FacultyManagement = () => {
     }
 
     facultyData.forEach((f) => {
-      // Ensure subjects is an array and is defined
       if (!Array.isArray(f.subjects)) {
         return;
       }
 
       f.subjects.forEach((subject) => {
-        // Ensure subject has required properties: year, division, name
         if (!subject.year || !subject.division || !subject.name) {
           return;
         }
@@ -511,18 +499,15 @@ const FacultyManagement = () => {
     return grouped;
   };
 
-  // Memoize grouped faculty to avoid recalculating on every render
   const groupedFaculty = useMemo(
     () => groupFacultyByStructure(faculty),
     [faculty]
   );
 
-  // Handle search query
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  // Filter faculty based on the search query (applied to all faculty, not just grouped)
   const filteredFaculty = faculty.filter(
     (f) =>
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -532,11 +517,9 @@ const FacultyManagement = () => {
       )
   );
 
-  // Optional: If you want to filter grouped data based on search query
   const filteredGroupedFaculty = useMemo(() => {
     const filteredGroup = {};
 
-    // Iterate through the grouped data and filter based on the search query
     Object.keys(groupedFaculty).forEach((department) => {
       const yearGroup = groupedFaculty[department];
       filteredGroup[department] = {};
@@ -689,7 +672,12 @@ const FacultyManagement = () => {
                                             </button>
                                             <button
                                               onClick={() =>
-                                                handleRemoveSubject(f)
+                                                removeSubject(
+                                                  f.email,
+                                                  subject,
+                                                  year,
+                                                  division
+                                                )
                                               }
                                               className="text-red-500 hover:text-red-700"
                                             >
