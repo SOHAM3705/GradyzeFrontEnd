@@ -409,8 +409,12 @@ const FacultyManage = () => {
       const token = localStorage.getItem("token");
       const adminId = localStorage.getItem("adminId");
 
+      console.log("Admin ID from localStorage:", adminId);
+      console.log("Token from localStorage:", token);
+
       if (!token || !adminId) {
         console.error("Token or Admin ID not found");
+        alert("Authentication error: Please log in again.");
         return;
       }
 
@@ -419,35 +423,21 @@ const FacultyManage = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
+          params: { adminId }, // Send adminId as a query parameter
         }
       );
 
-      if (!response.data || !response.data.teachers) {
-        console.error("No teachers found in response.");
-        return;
-      }
+      console.log("Response Data:", response.data);
 
-      const formattedFaculty = response.data.teachers.map((teacher) => ({
-        teacherId: teacher.teacherId || teacher._id,
-        name: teacher.name,
-        email: teacher.email,
-        department: teacher.department,
-        subjects: teacher.subjects || [],
-        adminId: String(teacher.adminId), // Ensure consistency in comparison
-      }));
-
-      const facultyForAdmin = formattedFaculty.filter(
-        (teacher) => teacher.adminId === String(adminId)
-      );
-
-      setFaculties(facultyForAdmin);
+      setFaculties(response.data.teachers);
     } catch (error) {
       console.error(
         "Failed to fetch faculty data:",
         error.response || error.message
       );
-      alert("Failed to fetch faculty data. Please try again later.");
+      alert(error.response?.data?.message || "Failed to fetch faculty data.");
       setFaculties([]);
     }
   };
