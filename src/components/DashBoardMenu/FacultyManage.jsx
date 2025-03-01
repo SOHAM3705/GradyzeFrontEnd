@@ -562,12 +562,15 @@ const FacultyManage = () => {
       >
         <div
           className="bg-gray-200 p-4 flex justify-between items-center cursor-pointer"
-          onClick={() => toggleCollapse(`department-${department}`)}
+          onClick={() =>
+            toggleCollapse(`department-${department.replace(/\s/g, "-")}`)
+          }
         >
           <span>{department}</span>
           <button className="text-gray-600">▼</button>
         </div>
-        {Object.keys(filteredGroupedFaculty[department]).map((year) => (
+
+        {Object.keys(filteredGroupedFaculty[department] || {}).map((year) => (
           <div key={year} className="border-t">
             <div
               className="p-4 flex justify-between items-center cursor-pointer"
@@ -576,20 +579,25 @@ const FacultyManage = () => {
               <span>Year: {year}</span>
               <button className="text-gray-600">▼</button>
             </div>
+
             <div id={`year-${department}-${year}`} className="p-4 grid gap-4">
-              {filteredGroupedFaculty[department][year].map((division) => (
+              {Object.keys(
+                filteredGroupedFaculty[department]?.[year] || {}
+              ).map((division) => (
                 <div key={division} className="border rounded-lg shadow-md p-4">
                   <div className="text-xl font-semibold">
                     Division {division}
                   </div>
+
                   {Object.keys(
-                    filteredGroupedFaculty[department][year][division]
+                    filteredGroupedFaculty[department]?.[year]?.[division] || {}
                   ).map((subjectName) => (
                     <div key={subjectName} className="mt-4 border-t pt-4">
                       <div className="text-lg font-semibold">{subjectName}</div>
-                      {filteredGroupedFaculty[department][year][division][
+
+                      {filteredGroupedFaculty[department]?.[year]?.[division]?.[
                         subjectName
-                      ].map((faculty) => (
+                      ]?.map((faculty) => (
                         <div
                           key={faculty.teacherId}
                           className="bg-white p-4 rounded-lg shadow-md mt-4"
@@ -614,6 +622,7 @@ const FacultyManage = () => {
                                     faculty.email,
                                     subjectName,
                                     year,
+                                    faculty.semester, // Ensure semester is passed
                                     division
                                   )
                                 }
@@ -697,7 +706,7 @@ const FacultyManage = () => {
       </div>
 
       {isFacultyModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg">Add New Faculty</h3>
@@ -723,6 +732,31 @@ const FacultyManage = () => {
                   required
                   className="w-full p-2 border rounded"
                 />
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Role</label>
+                <div className="flex gap-4">
+                  <div>
+                    <input
+                      type="radio"
+                      id="subjectTeacher"
+                      name="role"
+                      value="Subject Teacher"
+                      required
+                    />
+                    <label htmlFor="subjectTeacher">Subject Teacher</label>
+                  </div>
+                  <div>
+                    <input
+                      type="radio"
+                      id="classTeacher"
+                      name="role"
+                      value="Class Teacher"
+                      required
+                    />
+                    <label htmlFor="classTeacher">Class Teacher</label>
+                  </div>
+                </div>
               </div>
               <div className="form-group">
                 <label className="block text-gray-700">Department</label>
@@ -756,10 +790,10 @@ const FacultyManage = () => {
                   disabled
                 >
                   <option value="">Select Year</option>
-                  <option value="First">First Year</option>
-                  <option value="Second">Second Year</option>
-                  <option value="Third">Third Year</option>
-                  <option value="Fourth">Fourth Year</option>
+                  <option value="First Year">First Year</option>
+                  <option value="Second Year">Second Year</option>
+                  <option value="Third Year">Third Year</option>
+                  <option value="Fourth Year">Fourth Year</option>
                 </select>
               </div>
               <div className="form-group">
@@ -774,17 +808,19 @@ const FacultyManage = () => {
                   <option value="">Select Semester</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Subject</label>
-                <select
-                  id="subject"
-                  required
-                  className="w-full p-2 border rounded"
-                  disabled
-                >
-                  <option value="">Select Subject</option>
-                </select>
-              </div>
+              {formData.get("role") !== "Class Teacher" && (
+                <div className="form-group">
+                  <label className="block text-gray-700">Subject</label>
+                  <select
+                    id="subject"
+                    required
+                    className="w-full p-2 border rounded"
+                    disabled
+                  >
+                    <option value="">Select Subject</option>
+                  </select>
+                </div>
+              )}
               <div className="form-group">
                 <label className="block text-gray-700">Division</label>
                 <input
@@ -815,7 +851,7 @@ const FacultyManage = () => {
       )}
 
       {isSubjectModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg">Add Subject</h3>
@@ -842,10 +878,10 @@ const FacultyManage = () => {
                   className="w-full p-2 border rounded"
                 >
                   <option value="">Select Year</option>
-                  <option value="First">First Year</option>
-                  <option value="Second">Second Year</option>
-                  <option value="Third">Third Year</option>
-                  <option value="Fourth">Fourth Year</option>
+                  <option value="First Year">First Year</option>
+                  <option value="Second Year">Second Year</option>
+                  <option value="Third Year">Third Year</option>
+                  <option value="Fourth Year">Fourth Year</option>
                 </select>
               </div>
               <div className="form-group">
@@ -900,4 +936,4 @@ const FacultyManage = () => {
   );
 };
 
-export default FacultyManage;
+export default FacultyManagementSystem;
