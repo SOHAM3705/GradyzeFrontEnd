@@ -191,7 +191,6 @@ const FacultyManagement = () => {
       });
     }
   };
-
   const createFaculty = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -235,10 +234,22 @@ const FacultyManagement = () => {
         "https://gradyzebackend.onrender.com/api/teacher/add",
         newFaculty
       );
-      setMessage(response.data.message);
-      fetchFaculty();
+
+      // Check if the response status is 201 (Created)
+      if (response.status === 201) {
+        setMessage(response.data.message);
+        fetchFaculty(); // Update the faculty list after successful add
+        alert("Teacher added successfully!");
+      } else {
+        setMessage("Failed to add teacher. Please try again.");
+      }
     } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
       setMessage("Failed to add teacher.");
+      alert(
+        "Failed to add teacher: " +
+          (error.response?.data?.message || error.message)
+      );
     } finally {
       setLoading(false);
       closeFacultyModal();
@@ -330,7 +341,7 @@ const FacultyManagement = () => {
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/addSubject",
+        "https://gradyzebackend.onrender.com/api/teacher/add",
         payload,
         {
           headers: {
@@ -414,6 +425,7 @@ const FacultyManagement = () => {
           return;
         }
 
+        // Ensure that the API fetches faculty associated with the specific admin ID
         const response = await axios.get(
           "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
           {
@@ -424,23 +436,28 @@ const FacultyManagement = () => {
           }
         );
 
-        // ✅ Ensure the response data contains teachers and extract required fields
+        // Ensure the response contains the expected data structure
         const formattedFaculty = response.data.teachers.map((teacher) => ({
-          teacherId: teacher.teacherId, // ✅ Ensure `teacherId` is included
+          teacherId: teacher.teacherId,
           name: teacher.name,
           email: teacher.email,
           department: teacher.department,
-          subjects: teacher.subjects || [], // ✅ Ensure subjects are included
+          subjects: teacher.subjects || [],
         }));
 
-        setFaculty(formattedFaculty);
+        // Optionally, you could validate that the fetched teachers belong to the given adminId if needed
+        const facultyForAdmin = formattedFaculty.filter(
+          (teacher) => teacher.adminId === adminId
+        );
+
+        setFaculty(facultyForAdmin);
       } catch (error) {
         console.error("Failed to fetch faculty data:", error);
         setFaculty([]); // Set empty array on failure
       }
     };
 
-    // ✅ Fetch data when the component mounts
+    // Fetch data when the component mounts
     useEffect(() => {
       fetchFaculty();
     }, []);
