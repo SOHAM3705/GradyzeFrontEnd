@@ -251,11 +251,11 @@ const FacultyManagement = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const facultyEmail = selectedFacultyEmail; // Use the selected faculty email
-    console.log("Adding subject for Faculty Email:", facultyEmail);
+    const facultyId = selectedFacultyId; // ✅ Use teacherId instead of email
+    console.log("Adding subject for Faculty ID:", facultyId);
 
-    if (!facultyEmail) {
-      alert("Faculty Email is missing.");
+    if (!facultyId) {
+      alert("Faculty selection is missing.");
       return;
     }
 
@@ -278,14 +278,15 @@ const FacultyManagement = () => {
       return;
     }
 
-    // Check for duplicate subjects
-    const facultyIndex = faculty.findIndex((f) => f.email === facultyEmail);
+    // ✅ Find the selected faculty using `teacherId`
+    const facultyIndex = faculty.findIndex((f) => f.teacherId === facultyId);
 
     if (facultyIndex === -1) {
       alert("Invalid faculty selection.");
       return;
     }
 
+    // ✅ Check for duplicate subjects
     const isDuplicate = faculty[facultyIndex].subjects.some(
       (s) =>
         s.name === newSubject.name &&
@@ -321,16 +322,15 @@ const FacultyManagement = () => {
 
       const updatedSubjects = [...faculty[facultyIndex].subjects, newSubject];
 
+      // ✅ Updated payload: Use `teacherId` instead of email
       const payload = {
-        name: faculty[facultyIndex].name,
-        email: faculty[facultyIndex].email,
-        department: faculty[facultyIndex].department,
-        subjects: updatedSubjects,
+        teacherId: facultyId, // ✅ Send teacherId
+        subjects: updatedSubjects, // ✅ Updated subjects list
         adminId,
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add",
+        "https://gradyzebackend.onrender.com/api/teacher/addSubject",
         payload,
         {
           headers: {
@@ -398,43 +398,52 @@ const FacultyManagement = () => {
     }
   };
 
-  const fetchFaculty = async () => {
-    try {
-      const adminId = localStorage.getItem("adminId");
-      const token = localStorage.getItem("token");
-
-      if (!adminId || !token) {
-        console.error("Admin ID or Token not found");
-        return;
-      }
-
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teacher/teacherslist`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "X-Admin-ID": adminId,
-          },
-        }
-      );
-
-      setFaculty(response.data.teachers || []);
-    } catch (error) {
-      console.error("Failed to fetch faculty data:", error);
-      setFaculty([]);
-    }
-  };
-
-  useEffect(() => {
-    fetchFaculty();
-  }, []);
-
   const groupFacultyByStructure = () => {
     const grouped = {};
 
     if (!faculty || faculty.length === 0) {
       return grouped;
     }
+    const fetchFaculty = async () => {
+      try {
+        const adminId = localStorage.getItem("adminId");
+        const token = localStorage.getItem("token");
+
+        if (!adminId || !token) {
+          console.error("Admin ID or Token not found");
+          return;
+        }
+
+        const response = await axios.get(
+          "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "X-Admin-ID": adminId,
+            },
+          }
+        );
+
+        // ✅ Ensure the response data contains teachers and extract required fields
+        const formattedFaculty = response.data.teachers.map((teacher) => ({
+          teacherId: teacher.teacherId, // ✅ Ensure `teacherId` is included
+          name: teacher.name,
+          email: teacher.email,
+          department: teacher.department,
+          subjects: teacher.subjects || [], // ✅ Ensure subjects are included
+        }));
+
+        setFaculty(formattedFaculty);
+      } catch (error) {
+        console.error("Failed to fetch faculty data:", error);
+        setFaculty([]); // Set empty array on failure
+      }
+    };
+
+    // ✅ Fetch data when the component mounts
+    useEffect(() => {
+      fetchFaculty();
+    }, []);
 
     faculty.forEach((f) => {
       if (!f.subjects || !Array.isArray(f.subjects)) {

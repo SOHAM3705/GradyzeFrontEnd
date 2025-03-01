@@ -7,14 +7,17 @@ const TeacherLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Loading state
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+    setLoading(true);
 
     if (!email.trim() || !password.trim()) {
       setError("Please enter both email and password.");
+      setLoading(false);
       return;
     }
 
@@ -33,6 +36,8 @@ const TeacherLogin = () => {
     } catch (error) {
       console.error("Login Error:", error);
       setError("Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false); // Stop loading after the attempt
     }
   };
 
@@ -67,8 +72,12 @@ const TeacherLogin = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button type="submit" className={styles.Tlogin_but}>
-            Login
+          <button
+            type="submit"
+            className={styles.Tlogin_but}
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"} {/* Conditional Text */}
           </button>
         </form>
         <p>Don't have an account? Contact Your College/School Admin</p>
