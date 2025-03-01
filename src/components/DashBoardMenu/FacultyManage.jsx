@@ -191,6 +191,7 @@ const FacultyManagement = () => {
       });
     }
   };
+
   const createFaculty = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -419,7 +420,6 @@ const FacultyManagement = () => {
         return;
       }
 
-      // Fetch faculty data associated with the specific admin ID
       const response = await axios.get(
         "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
         {
@@ -430,27 +430,33 @@ const FacultyManagement = () => {
         }
       );
 
-      // Format the fetched faculty data
       const formattedFaculty = response.data.teachers.map((teacher) => ({
         teacherId: teacher.teacherId,
         name: teacher.name,
         email: teacher.email,
         department: teacher.department,
         subjects: teacher.subjects || [],
-        adminId: teacher.adminId, // Ensure adminId is included
+        adminId: teacher.adminId,
       }));
 
-      // Filter faculty by the specific adminId
       const facultyForAdmin = formattedFaculty.filter(
         (teacher) => teacher.adminId === adminId
       );
 
-      setFaculty(facultyForAdmin);
+      setFaculty(facultyForAdmin); // Ensure the state is updated correctly
     } catch (error) {
       console.error("Failed to fetch faculty data:", error);
       setFaculty([]); // Set empty array on failure
     }
   };
+
+  useEffect(() => {
+    fetchFaculty();
+  }, []); // The effect should run once when the component mounts
+
+  if (!faculty || faculty.length === 0) {
+    return <p>No faculty data available.</p>; // Handle empty data gracefully
+  }
 
   // Group faculty by structure: department, year, division, subject
   const groupFacultyByStructure = (facultyData) => {
@@ -496,11 +502,6 @@ const FacultyManagement = () => {
     [faculty]
   );
 
-  // Call fetchFaculty when the component mounts
-  useEffect(() => {
-    fetchFaculty();
-  }, []);
-
   // Handle search query
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
@@ -510,6 +511,7 @@ const FacultyManagement = () => {
   const filteredFaculty = faculty.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   return (
     <div className="min-h-screen bg-gray-100 p-8 admin-theme">
       <div className="container mx-auto">
