@@ -88,7 +88,7 @@ const subjectsData = {
   },
 };
 
-const FacultyManage = () => {
+const FacultyManagementSystem = () => {
   const [faculties, setFaculties] = useState([]);
   const [isFacultyModalOpen, setIsFacultyModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
@@ -134,17 +134,17 @@ const FacultyManage = () => {
     semesterSelect.disabled = !year;
 
     const semesterMap = {
-      First: ["1", "2"],
-      Second: ["3", "4"],
-      Third: ["5", "6"],
-      Fourth: ["7", "8"],
+      "First Year": ["Semester 1", "Semester 2"],
+      "Second Year": ["Semester 3", "Semester 4"],
+      "Third Year": ["Semester 5", "Semester 6"],
+      "Fourth Year": ["Semester 7", "Semester 8"],
     };
 
     if (year && semesterMap[year]) {
       semesterMap[year].forEach((sem) => {
         const option = document.createElement("option");
         option.value = sem;
-        option.textContent = `Semester ${sem}`;
+        option.textContent = sem;
         semesterSelect.appendChild(option);
       });
     }
@@ -202,6 +202,7 @@ const FacultyManage = () => {
       name: formData.get("name"),
       email: formData.get("email"),
       department: formData.get("department"),
+      role: formData.get("role"),
       subjects: [
         {
           name: subjectName,
@@ -216,18 +217,20 @@ const FacultyManage = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
+        "https://gradyzebackend.onrender.com/api/teacher/add",
         newFaculty
       );
 
       if (response.status === 201) {
-        alert("Teacher added successfully!");
+        setMessage(response.data.message);
         setFaculties((prev) => [...prev, response.data.teacher]); // Update state directly
+        alert("Teacher added successfully!");
       } else {
-        alert("Failed to add teacher. Please try again.");
+        setMessage("Failed to add teacher. Please try again.");
       }
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
+      setMessage("Failed to add teacher.");
       alert(
         "Failed to add teacher: " +
           (error.response?.data?.message || error.message)
@@ -311,7 +314,7 @@ const FacultyManage = () => {
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
+        "https://gradyzebackend.onrender.com/api/teacher/add-subject",
         payload,
         {
           headers: {
@@ -353,10 +356,9 @@ const FacultyManage = () => {
   ) => {
     try {
       const token = localStorage.getItem("token");
-
       if (!token) {
         console.error("No authentication token found.");
-        alert("Authentication error.");
+        setMessage("Authentication error.");
         return;
       }
 
@@ -569,8 +571,7 @@ const FacultyManage = () => {
           <span>{department}</span>
           <button className="text-gray-600">▼</button>
         </div>
-
-        {Object.keys(filteredGroupedFaculty[department] || {}).map((year) => (
+        {Object.keys(filteredGroupedFaculty[department]).map((year) => (
           <div key={year} className="border-t">
             <div
               className="p-4 flex justify-between items-center cursor-pointer"
@@ -579,65 +580,67 @@ const FacultyManage = () => {
               <span>Year: {year}</span>
               <button className="text-gray-600">▼</button>
             </div>
-
             <div id={`year-${department}-${year}`} className="p-4 grid gap-4">
-              {Object.keys(
-                filteredGroupedFaculty[department]?.[year] || {}
-              ).map((division) => (
-                <div key={division} className="border rounded-lg shadow-md p-4">
-                  <div className="text-xl font-semibold">
-                    Division {division}
-                  </div>
-
-                  {Object.keys(
-                    filteredGroupedFaculty[department]?.[year]?.[division] || {}
-                  ).map((subjectName) => (
-                    <div key={subjectName} className="mt-4 border-t pt-4">
-                      <div className="text-lg font-semibold">{subjectName}</div>
-
-                      {filteredGroupedFaculty[department]?.[year]?.[division]?.[
-                        subjectName
-                      ]?.map((faculty) => (
-                        <div
-                          key={faculty.teacherId}
-                          className="bg-white p-4 rounded-lg shadow-md mt-4"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3>{faculty.name}</h3>
-                              <p>{faculty.email}</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() =>
-                                  openSubjectModal(faculty.teacherId)
-                                }
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
-                              >
-                                <i className="fas fa-plus"></i>
-                              </button>
-                              <button
-                                onClick={() =>
-                                  removeSubject(
-                                    faculty.email,
-                                    subjectName,
-                                    year,
-                                    faculty.semester, // Ensure semester is passed
-                                    division
-                                  )
-                                }
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <i className="fas fa-trash-alt"></i>
-                              </button>
+              {Object.keys(filteredGroupedFaculty[department][year]).map(
+                (division) => (
+                  <div
+                    key={division}
+                    className="border rounded-lg shadow-md p-4"
+                  >
+                    <div className="text-xl font-semibold">
+                      Division {division}
+                    </div>
+                    {Object.keys(
+                      filteredGroupedFaculty[department][year][division]
+                    ).map((subjectName) => (
+                      <div key={subjectName} className="mt-4 border-t pt-4">
+                        <div className="text-lg font-semibold">
+                          {subjectName}
+                        </div>
+                        {filteredGroupedFaculty[department][year][division][
+                          subjectName
+                        ].map((faculty) => (
+                          <div
+                            key={faculty.teacherId}
+                            className="bg-white p-4 rounded-lg shadow-md mt-4"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3>{faculty.name}</h3>
+                                <p>{faculty.email}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() =>
+                                    openSubjectModal(faculty.teacherId)
+                                  }
+                                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                >
+                                  <i className="fas fa-plus"></i>
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    removeSubject(
+                                      faculty.email,
+                                      subjectName,
+                                      year,
+                                      faculty.semester,
+                                      division
+                                    )
+                                  }
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <i className="fas fa-trash-alt"></i>
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              ))}
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
             </div>
           </div>
         ))}
@@ -936,4 +939,4 @@ const FacultyManage = () => {
   );
 };
 
-export default FacultyManage;
+export default FacultyManagementSystem;
