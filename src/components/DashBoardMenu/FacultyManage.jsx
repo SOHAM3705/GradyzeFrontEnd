@@ -216,20 +216,18 @@ const FacultyManage = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add",
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
         newFaculty
       );
 
       if (response.status === 201) {
-        setMessage(response.data.message);
-        fetchFaculty();
         alert("Teacher added successfully!");
+        setFaculties((prev) => [...prev, response.data.teacher]); // Update state directly
       } else {
-        setMessage("Failed to add teacher. Please try again.");
+        alert("Failed to add teacher. Please try again.");
       }
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
-      setMessage("Failed to add teacher.");
       alert(
         "Failed to add teacher: " +
           (error.response?.data?.message || error.message)
@@ -247,7 +245,6 @@ const FacultyManage = () => {
     const formData = new FormData(form);
 
     const facultyId = selectedFacultyId;
-    console.log("Adding subject for Faculty ID:", facultyId);
 
     if (!facultyId) {
       alert("Faculty selection is missing.");
@@ -299,30 +296,22 @@ const FacultyManage = () => {
       setLoading(true);
 
       const token = localStorage.getItem("token");
-      let adminId = localStorage.getItem("adminId");
+      const adminId = localStorage.getItem("adminId");
 
       if (!adminId) {
-        const hostParts = location.host.split(".");
-        adminId = hostParts.length > 0 ? hostParts[0] : null;
-      }
-
-      if (!adminId) {
-        console.error("Admin ID not found in localStorage or location.host");
         alert("Admin ID is missing.");
         setLoading(false);
         return;
       }
 
-      const updatedSubjects = [...faculties[facultyIndex].subjects, newSubject];
-
       const payload = {
         teacherId: facultyId,
-        subjects: updatedSubjects,
+        subject: newSubject,
         adminId,
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add",
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
         payload,
         {
           headers: {
@@ -332,9 +321,18 @@ const FacultyManage = () => {
         }
       );
 
-      console.log("Response:", response.data);
-      setMessage(response.data.message);
-      fetchFaculty();
+      if (response.status === 200) {
+        alert("Subject added successfully!");
+        setFaculties((prev) =>
+          prev.map((teacher) =>
+            teacher.teacherId === facultyId
+              ? { ...teacher, subjects: [...teacher.subjects, newSubject] }
+              : teacher
+          )
+        ); // Update state directly
+      } else {
+        alert("Failed to add subject.");
+      }
     } catch (error) {
       console.error("Error adding subject:", error.response?.data || error);
       alert(
@@ -355,9 +353,10 @@ const FacultyManage = () => {
   ) => {
     try {
       const token = localStorage.getItem("token");
+
       if (!token) {
         console.error("No authentication token found.");
-        setMessage("Authentication error.");
+        alert("Authentication error.");
         return;
       }
 
@@ -379,14 +378,29 @@ const FacultyManage = () => {
         }
       );
 
-      setMessage(response.data.message);
-      fetchFaculty();
+      if (response.status === 200) {
+        alert("Subject removed successfully!");
+        setFaculties((prev) =>
+          prev.map((teacher) =>
+            teacher.email === facultyEmail
+              ? {
+                  ...teacher,
+                  subjects: teacher.subjects.filter(
+                    (s) => s.name !== subjectName
+                  ),
+                }
+              : teacher
+          )
+        ); // Update state directly
+      } else {
+        alert("Failed to remove subject.");
+      }
     } catch (error) {
       console.error(
         "Failed to remove subject:",
         error.response?.data || error.message
       );
-      setMessage(error.response?.data?.message || "Failed to remove subject.");
+      alert(error.response?.data?.message || "Failed to remove subject.");
     }
   };
 
@@ -409,8 +423,6 @@ const FacultyManage = () => {
         }
       );
 
-      console.log("Fetched faculty data:", response.data);
-
       if (!response.data || !response.data.teachers) {
         console.error("No teachers found in response.");
         return;
@@ -422,14 +434,12 @@ const FacultyManage = () => {
         email: teacher.email,
         department: teacher.department,
         subjects: teacher.subjects || [],
-        adminId: teacher.adminId,
+        adminId: String(teacher.adminId), // Ensure consistency in comparison
       }));
 
       const facultyForAdmin = formattedFaculty.filter(
-        (teacher) => teacher.adminId === adminId
+        (teacher) => teacher.adminId === String(adminId)
       );
-
-      console.log("Filtered faculty for admin:", facultyForAdmin);
 
       setFaculties(facultyForAdmin);
     } catch (error) {
