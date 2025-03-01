@@ -9,6 +9,7 @@ const FacultyManagement = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const subjectDatabase = {
     "Computer Science": {
@@ -191,6 +192,7 @@ const FacultyManagement = () => {
       });
     }
   };
+
   const createFaculty = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -262,7 +264,7 @@ const FacultyManagement = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const facultyId = selectedFacultyId; // ✅ Use teacherId instead of email
+    const facultyId = selectedFacultyId;
     console.log("Adding subject for Faculty ID:", facultyId);
 
     if (!facultyId) {
@@ -289,30 +291,6 @@ const FacultyManagement = () => {
       return;
     }
 
-    // ✅ Find the selected faculty using `teacherId`
-    const facultyIndex = faculty.findIndex((f) => f.teacherId === facultyId);
-
-    if (facultyIndex === -1) {
-      alert("Invalid faculty selection.");
-      return;
-    }
-
-    // ✅ Check for duplicate subjects
-    const isDuplicate = faculty[facultyIndex].subjects.some(
-      (s) =>
-        s.name === newSubject.name &&
-        s.year === newSubject.year &&
-        s.semester === newSubject.semester &&
-        s.division === newSubject.division
-    );
-
-    if (isDuplicate) {
-      alert(
-        "This subject with the same year, semester, and division is already assigned."
-      );
-      return;
-    }
-
     try {
       setLoading(true);
 
@@ -331,14 +309,25 @@ const FacultyManagement = () => {
         return;
       }
 
-      const updatedSubjects = [...faculty[facultyIndex].subjects, newSubject];
+      // Find the selected faculty
+      const selectedFaculty = faculty.find((f) => f.teacherId === facultyId);
 
-      // ✅ Updated payload: Use `teacherId` instead of email
+      if (!selectedFaculty) {
+        alert("Faculty not found.");
+        setLoading(false);
+        return;
+      }
+
+      // Create a new array of subjects
+      const updatedSubjects = [...(selectedFaculty.subjects || []), newSubject];
+
       const payload = {
-        teacherId: facultyId, // ✅ Send teacherId
-        subjects: updatedSubjects, // ✅ Updated subjects list
+        teacherId: facultyId,
+        subjects: updatedSubjects,
         adminId,
       };
+
+      console.log("Sending payload for subject update:", payload);
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add",
@@ -353,7 +342,19 @@ const FacultyManagement = () => {
 
       console.log("Response:", response.data);
       setMessage(response.data.message);
+      // Immediate update of local state while waiting for fetch
+      const newFaculty = [...faculty];
+      const facultyIndex = newFaculty.findIndex(
+        (f) => f.teacherId === facultyId
+      );
+      if (facultyIndex !== -1) {
+        newFaculty[facultyIndex].subjects = updatedSubjects;
+        setFaculty(newFaculty);
+      }
+
+      // Then fetch fresh data
       fetchFaculty();
+      alert("Subject added successfully!");
     } catch (error) {
       console.error("Error adding subject:", error.response?.data || error);
       alert(
@@ -411,13 +412,18 @@ const FacultyManagement = () => {
 
   const fetchFaculty = async () => {
     try {
+      setLoading(true);
+
       const adminId = localStorage.getItem("adminId");
       const token = localStorage.getItem("token");
 
       if (!adminId || !token) {
         console.error("Admin ID or Token not found");
+        setIsDataLoaded(true);
         return;
       }
+
+      console.log("Fetching faculty with adminId:", adminId);
 
       // Fetch faculty data associated with the specific admin ID
       const response = await axios.get(
@@ -430,25 +436,43 @@ const FacultyManagement = () => {
         }
       );
 
+      console.log("API Response:", response.data);
+
+      // Verify that teachers array exists
+      if (!response.data.teachers || !Array.isArray(response.data.teachers)) {
+        console.error("Invalid response structure - teachers array missing");
+        setFaculty([]);
+        setIsDataLoaded(true);
+        return;
+      }
+
       // Format the fetched faculty data
       const formattedFaculty = response.data.teachers.map((teacher) => ({
-        teacherId: teacher.teacherId,
+        teacherId: teacher._id || teacher.teacherId, // Handle both _id and teacherId
         name: teacher.name,
         email: teacher.email,
         department: teacher.department,
-        subjects: teacher.subjects || [],
+        subjects: Array.isArray(teacher.subjects) ? teacher.subjects : [],
         adminId: teacher.adminId, // Ensure adminId is included
       }));
+
+      console.log("Formatted faculty data:", formattedFaculty);
 
       // Filter faculty by the specific adminId
       const facultyForAdmin = formattedFaculty.filter(
         (teacher) => teacher.adminId === adminId
       );
 
+      console.log("Filtered faculty for admin:", facultyForAdmin);
+
       setFaculty(facultyForAdmin);
+      setIsDataLoaded(true);
     } catch (error) {
       console.error("Failed to fetch faculty data:", error);
       setFaculty([]); // Set empty array on failure
+      setIsDataLoaded(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -457,36 +481,78 @@ const FacultyManagement = () => {
     const grouped = {};
 
     if (!facultyData || facultyData.length === 0) {
+      console.log("No faculty data to group");
       return grouped;
     }
 
+    console.log("Grouping faculty data:", facultyData);
+
+    // First, handle faculty with no subjects separately
+    const facultyWithoutSubjects = facultyData.filter(
+      (f) =>
+        !f.subjects || !Array.isArray(f.subjects) || f.subjects.length === 0
+    );
+
+    if (facultyWithoutSubjects.length > 0) {
+      if (!grouped["Unassigned"]) {
+        grouped["Unassigned"] = {
+          "No Year": { "No Division": { "No Subject": [] } },
+        };
+      }
+      grouped["Unassigned"]["No Year"]["No Division"]["No Subject"] =
+        facultyWithoutSubjects;
+    }
+
+    // Then group faculty with subjects
     facultyData.forEach((f) => {
-      if (!f.subjects || !Array.isArray(f.subjects)) {
+      if (
+        !f.subjects ||
+        !Array.isArray(f.subjects) ||
+        f.subjects.length === 0
+      ) {
         return;
       }
 
       f.subjects.forEach((subject) => {
-        if (!grouped[f.department]) {
-          grouped[f.department] = {};
+        if (!subject.name || !subject.year || !subject.division) {
+          console.log("Skipping subject with missing data:", subject);
+          return;
         }
-        if (!grouped[f.department][subject.year]) {
-          grouped[f.department][subject.year] = {};
+
+        const department = f.department || "Unknown Department";
+
+        if (!grouped[department]) {
+          grouped[department] = {};
         }
-        if (!grouped[f.department][subject.year][subject.division]) {
-          grouped[f.department][subject.year][subject.division] = {};
+        if (!grouped[department][subject.year]) {
+          grouped[department][subject.year] = {};
+        }
+        if (!grouped[department][subject.year][subject.division]) {
+          grouped[department][subject.year][subject.division] = {};
         }
         if (
-          !grouped[f.department][subject.year][subject.division][subject.name]
+          !grouped[department][subject.year][subject.division][subject.name]
         ) {
-          grouped[f.department][subject.year][subject.division][subject.name] =
+          grouped[department][subject.year][subject.division][subject.name] =
             [];
         }
-        grouped[f.department][subject.year][subject.division][
-          subject.name
-        ].push(f);
+
+        // Check if this faculty is already in the array
+        const alreadyExists = grouped[department][subject.year][
+          subject.division
+        ][subject.name].some(
+          (existingFaculty) => existingFaculty.teacherId === f.teacherId
+        );
+
+        if (!alreadyExists) {
+          grouped[department][subject.year][subject.division][
+            subject.name
+          ].push(f);
+        }
       });
     });
 
+    console.log("Grouped faculty structure:", grouped);
     return grouped;
   };
 
@@ -506,10 +572,11 @@ const FacultyManagement = () => {
     setSearchQuery(event.target.value);
   };
 
-  // Filter faculty based on the search query (applied to all faculty, not just grouped)
+  // Filter faculty based on the search query
   const filteredFaculty = faculty.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   return (
     <div className="min-h-screen bg-gray-100 p-8 admin-theme">
       <div className="container mx-auto">
@@ -568,19 +635,61 @@ const FacultyManagement = () => {
           </div>
         </div>
 
+        {/* Simple faculty list to verify data */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">All Faculty</h2>
+          {loading ? (
+            <p>Loading faculty data...</p>
+          ) : isDataLoaded && filteredFaculty.length === 0 ? (
+            <p>No faculty found. Try adding a new faculty member.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredFaculty.map((f) => (
+                <div
+                  key={f.teacherId}
+                  className="bg-white p-4 rounded-lg shadow"
+                >
+                  <h3 className="font-semibold">{f.name}</h3>
+                  <p>{f.email}</p>
+                  <p>Department: {f.department}</p>
+                  <p>Subjects: {f.subjects?.length || 0}</p>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={() => openSubjectModal(f.teacherId)}
+                      className="bg-[#7c3aed] text-white px-3 py-1 rounded text-sm hover:bg-[#6d28d9]"
+                    >
+                      Add Subject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Structured faculty list */}
+        <h2 className="text-xl font-semibold mb-4">Faculty by Structure</h2>
         <div id="facultyList" className="space-y-4">
-          {Object.keys(groupedFaculty).length === 0 ? (
-            <p>No faculty data available.</p> // Fallback message if no data
+          {!isDataLoaded ? (
+            <p>Loading faculty data...</p>
+          ) : Object.keys(groupedFaculty).length === 0 ? (
+            <p>No faculty data available in structured view.</p>
           ) : (
             Object.keys(groupedFaculty).map((department) => (
-              <div key={department} className="department-section">
+              <div
+                key={department}
+                className="department-section bg-white p-4 rounded-lg shadow mb-4"
+              >
                 <h2 className="text-xl font-semibold mb-4">{department}</h2>
                 {Object.keys(groupedFaculty[department]).map((year) => (
-                  <div key={year} className="year-section pl-4">
+                  <div key={year} className="year-section pl-4 mb-3">
                     <h3 className="text-lg font-semibold mb-2">{year} Year</h3>
                     {Object.keys(groupedFaculty[department][year]).map(
                       (division) => (
-                        <div key={division} className="division-section pl-4">
+                        <div
+                          key={division}
+                          className="division-section pl-4 mb-3"
+                        >
                           <h4 className="text-md font-semibold mb-2">
                             Division {division}
                           </h4>
@@ -589,7 +698,7 @@ const FacultyManagement = () => {
                           ).map((subject) => (
                             <div
                               key={subject}
-                              className="subject-section pl-4 mb-4"
+                              className="subject-section pl-4 mb-4 bg-gray-50 p-3 rounded"
                             >
                               <h5 className="text-md font-semibold mb-2">
                                 {subject}
@@ -605,22 +714,26 @@ const FacultyManagement = () => {
                                   )
                                   .map((f) => (
                                     <div
-                                      key={f.teacherId} // Updated to teacherId
+                                      key={f.teacherId}
                                       className="faculty-card bg-white p-4 rounded-lg shadow"
                                     >
                                       <div className="flex justify-between items-start">
                                         <div>
-                                          <h3>{f.name}</h3>
-                                          <p>{f.email}</p>
+                                          <h3 className="font-medium">
+                                            {f.name}
+                                          </h3>
+                                          <p className="text-sm text-gray-600">
+                                            {f.email}
+                                          </p>
                                         </div>
                                         <div className="flex gap-2">
                                           <button
                                             onClick={() =>
                                               openSubjectModal(f.teacherId)
-                                            } // Updated to teacherId
-                                            className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
+                                            }
+                                            className="bg-[#7c3aed] text-white px-2 py-1 rounded text-sm hover:bg-[#6d28d9]"
                                           >
-                                            <i className="fas fa-plus"></i>
+                                            <i className="fas fa-plus mr-1"></i>
                                             Add Subject
                                           </button>
                                           <button
@@ -654,7 +767,7 @@ const FacultyManagement = () => {
                                                 );
                                               }
                                             }}
-                                            className="text-red-500 hover:text-red-700"
+                                            className="text-red-500 hover:text-red-700 px-2 py-1"
                                           >
                                             <i className="fas fa-trash-alt"></i>
                                           </button>
@@ -812,6 +925,7 @@ const FacultyManagement = () => {
                   className="w-full p-2 border rounded"
                 >
                   <option value="">Select Year</option>
+
                   <option value="First">First Year</option>
                   <option value="Second">Second Year</option>
                   <option value="Third">Third Year</option>
