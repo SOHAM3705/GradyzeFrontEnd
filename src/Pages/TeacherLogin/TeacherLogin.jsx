@@ -6,7 +6,6 @@ import styles from "./TeacherLogin.module.css";
 const TeacherLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -19,26 +18,21 @@ const TeacherLogin = () => {
       return;
     }
 
-    setLoading(true);
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/login",
         { email, password }
       );
 
-      // Store the JWT token securely (Consider HTTP-only cookies for better security)
       localStorage.setItem("token", response.data.token);
+      localStorage.setItem("teacherId", response.data.teacher._id); // Store teacherId
+      localStorage.setItem("teacherName", response.data.teacher.name); // Store teacherName
 
       // Redirect to Teacher Dashboard
       navigate("/teacherdash");
     } catch (error) {
-      if (error.response) {
-        setError(error.response.data.message || "Login failed. Try again.");
-      } else {
-        setError("Network error. Please check your internet connection.");
-      }
-    } finally {
-      setLoading(false);
+      console.error("Login Error:", error);
+      setError("Login failed. Please check your credentials.");
     }
   };
 
@@ -51,9 +45,7 @@ const TeacherLogin = () => {
           </button>
         </Link>
         <h2>Teacher Login</h2>
-
         {error && <p className={styles.errorMessage}>{error}</p>}
-
         <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
@@ -75,15 +67,10 @@ const TeacherLogin = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button
-            type="submit"
-            className={styles.Tlogin_but}
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
+          <button type="submit" className={styles.Tlogin_but}>
+            Login
           </button>
         </form>
-
         <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
           <Link to="/teacher-forget-password" className={styles.TeacherLogin_a}>
