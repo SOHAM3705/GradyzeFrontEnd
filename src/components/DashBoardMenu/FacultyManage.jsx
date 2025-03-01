@@ -723,7 +723,7 @@ const FacultyManagementSystem = () => {
                                       faculty.email,
                                       subjectName,
                                       year,
-                                      faculty.semester,
+                                      subject.semester, // ✅ Make sure it refers to the correct object
                                       division
                                     )
                                   }
