@@ -936,4 +936,4 @@ const FacultyManage = () => {
   );
 };
 
-export default FacultyManagementSystem;
+export default FacultyManage;
