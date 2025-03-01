@@ -191,7 +191,6 @@ const FacultyManagement = () => {
       });
     }
   };
-
   const createFaculty = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -457,7 +456,6 @@ const FacultyManagement = () => {
   if (!faculty || faculty.length === 0) {
     return <p>No faculty data available.</p>; // Handle empty data gracefully
   }
-
   // Group faculty by structure: department, year, division, subject
   const groupFacultyByStructure = (facultyData) => {
     const grouped = {};
@@ -511,7 +509,6 @@ const FacultyManagement = () => {
   const filteredFaculty = faculty.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   return (
     <div className="min-h-screen bg-gray-100 p-8 admin-theme">
       <div className="container mx-auto">
