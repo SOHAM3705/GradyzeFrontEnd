@@ -392,56 +392,43 @@ const FacultyManagementSystem = () => {
       const adminId = localStorage.getItem("adminId");
 
       if (!token) {
-        console.error("No authentication token found.");
-        alert("Authentication error.");
+        alert("Authentication error. Please log in again.");
         return;
       }
 
       if (!adminId) {
-        alert("Admin ID is missing.");
+        alert("Admin ID is missing. Please refresh and try again.");
         return;
       }
 
-      // Find the faculty by email
-      const faculty = faculties.find((f) => f.email === facultyEmail);
-      if (!faculty) {
-        alert("Faculty not found");
-        return;
-      }
-
-      // Convert semester value if it's a string like "Semester X"
+      // Convert semester if it's a string like "Semester X"
       let semesterValue = semester;
-      if (typeof semester === "string" && semester.includes("Semester")) {
-        semesterValue = parseInt(semester.replace("Semester ", ""));
+      if (
+        typeof semester === "string" &&
+        semester.toLowerCase().includes("semester")
+      ) {
+        semesterValue = parseInt(semester.replace(/[^0-9]/g, "")); // Extract numbers
       }
 
-      console.log("Removing subject:", {
-        facultyEmail,
-        subjectName,
-        year,
-        semesterValue,
-        division,
-      });
-
-      // For debugging - log what we're sending
       console.log("Trying to remove subject:", {
-        email: facultyEmail,
-        subjectName: subjectName,
-        year: year,
+        email: facultyEmail.trim().toLowerCase(),
+        subjectName: subjectName.trim().toLowerCase(),
+        year: year.trim(),
         semester: semesterValue,
-        division: division,
+        division: division.trim().toLowerCase(),
       });
 
-      // Construct the proper payload as expected by the backend
+      // Construct payload with trimmed and lowercase values
       const payload = {
-        email: facultyEmail,
-        subjectName: subjectName,
-        year: year,
+        email: facultyEmail.trim().toLowerCase(),
+        subjectName: subjectName.trim().toLowerCase(),
+        year: year.trim(),
         semester: semesterValue,
-        division: division,
+        division: division.trim().toLowerCase(),
         adminId,
       };
 
+      // API Call
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
         payload,
@@ -456,24 +443,25 @@ const FacultyManagementSystem = () => {
       if (response.status === 200) {
         alert("Subject removed successfully!");
 
-        // Update local state to reflect the change
+        // Update local state to reflect changes
         setFaculties((prev) =>
           prev.map((teacher) => {
-            if (teacher.email === facultyEmail) {
-              // Filter out the removed subject
-              const updatedSubjects = teacher.subjects.filter(
-                (s) =>
-                  !(
-                    s.name === subjectName &&
-                    s.year === year &&
-                    (s.semester === semesterValue || s.semester === semester) &&
-                    s.division === division
-                  )
-              );
-
+            if (
+              teacher.email.toLowerCase() === facultyEmail.trim().toLowerCase()
+            ) {
               return {
                 ...teacher,
-                subjects: updatedSubjects,
+                subjects: teacher.subjects.filter(
+                  (s) =>
+                    !(
+                      s.name.trim().toLowerCase() ===
+                        subjectName.trim().toLowerCase() &&
+                      s.year.trim() === year.trim() &&
+                      s.semester === semesterValue &&
+                      s.division.trim().toLowerCase() ===
+                        division.trim().toLowerCase()
+                    )
+                ),
               };
             }
             return teacher;
@@ -487,7 +475,10 @@ const FacultyManagementSystem = () => {
         "Error removing subject:",
         error.response?.data || error.message
       );
-      alert(error.response?.data?.message || "Failed to remove subject.");
+      alert(
+        error.response?.data?.message ||
+          "Failed to remove subject. Please try again."
+      );
     }
   };
 
