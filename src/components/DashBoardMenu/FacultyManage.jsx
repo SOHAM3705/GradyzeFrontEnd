@@ -409,58 +409,57 @@ const FacultyManagement = () => {
     }
   };
 
+  // Fetch faculty data
+  const fetchFaculty = async () => {
+    try {
+      const adminId = localStorage.getItem("adminId");
+      const token = localStorage.getItem("token");
+
+      if (!adminId || !token) {
+        console.error("Admin ID or Token not found");
+        return;
+      }
+
+      // Fetch faculty data associated with the specific admin ID
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Admin-ID": adminId,
+          },
+        }
+      );
+
+      // Format the fetched faculty data
+      const formattedFaculty = response.data.teachers.map((teacher) => ({
+        teacherId: teacher.teacherId,
+        name: teacher.name,
+        email: teacher.email,
+        department: teacher.department,
+        subjects: teacher.subjects || [],
+        adminId: teacher.adminId, // Ensure adminId is included
+      }));
+
+      // Filter faculty by the specific adminId
+      const facultyForAdmin = formattedFaculty.filter(
+        (teacher) => teacher.adminId === adminId
+      );
+
+      setFaculty(facultyForAdmin);
+    } catch (error) {
+      console.error("Failed to fetch faculty data:", error);
+      setFaculty([]); // Set empty array on failure
+    }
+  };
+
+  // Group faculty by structure: department, year, division, subject
   const groupFacultyByStructure = () => {
     const grouped = {};
 
     if (!faculty || faculty.length === 0) {
       return grouped;
     }
-    const fetchFaculty = async () => {
-      try {
-        const adminId = localStorage.getItem("adminId");
-        const token = localStorage.getItem("token");
-
-        if (!adminId || !token) {
-          console.error("Admin ID or Token not found");
-          return;
-        }
-
-        // Ensure that the API fetches faculty associated with the specific admin ID
-        const response = await axios.get(
-          "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "X-Admin-ID": adminId,
-            },
-          }
-        );
-
-        // Ensure the response contains the expected data structure
-        const formattedFaculty = response.data.teachers.map((teacher) => ({
-          teacherId: teacher.teacherId,
-          name: teacher.name,
-          email: teacher.email,
-          department: teacher.department,
-          subjects: teacher.subjects || [],
-        }));
-
-        // Optionally, you could validate that the fetched teachers belong to the given adminId if needed
-        const facultyForAdmin = formattedFaculty.filter(
-          (teacher) => teacher.adminId === adminId
-        );
-
-        setFaculty(facultyForAdmin);
-      } catch (error) {
-        console.error("Failed to fetch faculty data:", error);
-        setFaculty([]); // Set empty array on failure
-      }
-    };
-
-    // Fetch data when the component mounts
-    useEffect(() => {
-      fetchFaculty();
-    }, []);
 
     faculty.forEach((f) => {
       if (!f.subjects || !Array.isArray(f.subjects)) {
@@ -492,15 +491,23 @@ const FacultyManagement = () => {
     return grouped;
   };
 
-  const groupedFaculty = groupFacultyByStructure();
+  // Call fetchFaculty when the component mounts
+  useEffect(() => {
+    fetchFaculty();
+  }, []);
 
+  // Handle search query
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
   };
 
+  // Filter faculty based on the search query
   const filteredFaculty = faculty.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Group faculty based on their structure
+  const groupedFaculty = groupFacultyByStructure();
 
   return (
     <div className="min-h-screen bg-gray-100 p-8 admin-theme">
