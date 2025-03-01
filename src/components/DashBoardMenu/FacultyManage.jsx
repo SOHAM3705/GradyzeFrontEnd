@@ -97,6 +97,7 @@ const FacultyManagementSystem = () => {
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState(new FormData());
+
   const openFacultyModal = () => setIsFacultyModalOpen(true);
   const closeFacultyModal = () => setIsFacultyModalOpen(false);
 
@@ -178,19 +179,12 @@ const FacultyManagementSystem = () => {
 
   const createFaculty = async (event) => {
     event.preventDefault();
-
-    const form = formRef.current;
-    if (!form) {
-      console.error("Form not found");
-      alert("An error occurred. Please try again.");
-      return;
-    }
-
+    const form = event.target;
     const formData = new FormData(form);
 
-    const subjectName = formData.get("subject");
-    const yearValue = formData.get("year");
-    const semesterValue = formData.get("semester");
+    const subjectName = document.getElementById("subject").value;
+    const yearValue = document.getElementById("year").value;
+    const semesterValue = document.getElementById("semester").value;
     const divisionValue = formData.get("division");
 
     if (!subjectName || !yearValue || !semesterValue || !divisionValue) {
@@ -199,6 +193,7 @@ const FacultyManagementSystem = () => {
     }
 
     const adminId = localStorage.getItem("adminId");
+
     if (!adminId) {
       alert("Admin ID is missing.");
       return;
@@ -231,7 +226,6 @@ const FacultyManagementSystem = () => {
         setMessage(response.data.message);
         setFaculties((prev) => [...prev, response.data.teacher]);
         alert("Teacher added successfully!");
-        form.reset(); // Reset form after successful submission
       } else {
         setMessage("Failed to add teacher. Please try again.");
       }
@@ -245,6 +239,7 @@ const FacultyManagementSystem = () => {
     } finally {
       setLoading(false);
       closeFacultyModal();
+      form.reset();
     }
   };
 
@@ -261,24 +256,19 @@ const FacultyManagementSystem = () => {
     const newSubject = {
       name: formData.get("subjectName"),
       year: formData.get("year"),
-      semester: parseInt(formData.get("semester")) || 0, // Ensure valid number
+      semester: parseInt(formData.get("semester")),
       division: formData.get("division"),
     };
 
     if (
       !newSubject.name ||
       !newSubject.year ||
-      newSubject.semester === 0 ||
+      isNaN(newSubject.semester) ||
       !newSubject.division
     ) {
       alert(
         "Please fill all required fields: Subject Name, Year, Semester, and Division."
       );
-      return;
-    }
-
-    if (!faculties || faculties.length === 0) {
-      alert("No faculties found.");
       return;
     }
 
@@ -361,7 +351,7 @@ const FacultyManagementSystem = () => {
     } finally {
       setLoading(false);
       closeSubjectModal();
-      form.reset(); // Reset the form after submission
+      form.reset();
     }
   };
 
@@ -411,7 +401,7 @@ const FacultyManagementSystem = () => {
                 }
               : teacher
           )
-        ); // Update state directly
+        );
       } else {
         alert("Failed to remove subject.");
       }
@@ -445,7 +435,7 @@ const FacultyManagementSystem = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          params: { adminId }, // Send adminId as a query parameter
+          params: { adminId },
         }
       );
 
