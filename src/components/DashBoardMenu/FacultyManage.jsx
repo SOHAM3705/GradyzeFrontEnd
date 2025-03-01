@@ -380,7 +380,6 @@ const FacultyManagementSystem = () => {
       form.reset();
     }
   };
-  // Update removeSubject function
   const removeSubject = async (
     facultyEmail,
     subjectName,
@@ -417,7 +416,6 @@ const FacultyManagementSystem = () => {
       }
 
       console.log("Removing subject:", {
-        facultyId: faculty.teacherId,
         facultyEmail,
         subjectName,
         year,
@@ -425,25 +423,22 @@ const FacultyManagementSystem = () => {
         division,
       });
 
-      // Since the backend doesn't have a dedicated endpoint for removing subjects,
-      // we need to get the current subjects, filter out the one to remove, and update
-      const currentSubjects = faculty.subjects || [];
-      const updatedSubjects = currentSubjects.filter(
-        (s) =>
-          !(
-            s.name === subjectName &&
-            s.year === year &&
-            (s.semester === semesterValue || s.semester === semester) &&
-            s.division === division
-          )
-      );
+      // For debugging - log what we're sending
+      console.log("Trying to remove subject:", {
+        email: facultyEmail,
+        subjectName: subjectName,
+        year: year,
+        semester: semesterValue,
+        division: division,
+      });
 
+      // Construct the proper payload as expected by the backend
       const payload = {
-        name: faculty.name,
-        email: faculty.email,
-        department: faculty.department,
-        teacherType: "subjectTeacher",
-        subjects: updatedSubjects,
+        email: facultyEmail,
+        subjectName: subjectName,
+        year: year,
+        semester: semesterValue,
+        division: division,
         adminId,
       };
 
@@ -451,16 +446,31 @@ const FacultyManagementSystem = () => {
         "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
         payload,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
 
       if (response.status === 200) {
         alert("Subject removed successfully!");
+
         // Update local state to reflect the change
         setFaculties((prev) =>
           prev.map((teacher) => {
             if (teacher.email === facultyEmail) {
+              // Filter out the removed subject
+              const updatedSubjects = teacher.subjects.filter(
+                (s) =>
+                  !(
+                    s.name === subjectName &&
+                    s.year === year &&
+                    (s.semester === semesterValue || s.semester === semester) &&
+                    s.division === division
+                  )
+              );
+
               return {
                 ...teacher,
                 subjects: updatedSubjects,
