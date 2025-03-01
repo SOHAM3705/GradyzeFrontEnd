@@ -556,8 +556,13 @@ const FacultyManagementSystem = () => {
       }
 
       f.subjects.forEach((subject) => {
-        if (!subject.year || !subject.division || !subject.name) {
-          return;
+        if (
+          !subject.year ||
+          !subject.division ||
+          !subject.name ||
+          !subject.semester
+        ) {
+          return; // ✅ Now we check if semester is present
         }
 
         if (!grouped[f.department]) {
@@ -575,15 +580,19 @@ const FacultyManagementSystem = () => {
           grouped[f.department][subject.year][subject.division][subject.name] =
             [];
         }
+
+        // ✅ Push the faculty along with the semester
         grouped[f.department][subject.year][subject.division][
           subject.name
-        ].push(f);
+        ].push({
+          ...f,
+          semester: subject.semester, // ✅ Now semester is stored
+        });
       });
     });
 
     return grouped;
   };
-
   const groupedFaculty = useMemo(
     () => groupFacultyByStructure(faculties),
     [faculties]
@@ -723,7 +732,7 @@ const FacultyManagementSystem = () => {
                                       faculty.email,
                                       subjectName,
                                       year,
-                                      semester,
+                                      faculty.semester,
                                       division
                                     )
                                   }
