@@ -1,117 +1,101 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
-const FacultyManagement = () => {
-  const [faculty, setFaculty] = useState([]);
+const subjectsData = {
+  "Computer Science": {
+    First: {
+      1: ["Programming Fundamentals", "Mathematics I", "Physics"],
+      2: ["Object Oriented Programming", "Mathematics II", "Digital Logic"],
+    },
+    Second: {
+      3: ["Data Structures", "Computer Architecture", "Statistics"],
+      4: ["Operating Systems", "Database Systems", "Theory of Computation"],
+    },
+    Third: {
+      5: ["Software Engineering", "Computer Networks", "AI"],
+      6: ["Web Development", "Distributed Systems", "Information Security"],
+    },
+    Fourth: {
+      7: ["Cloud Computing", "Machine Learning", "Project Management"],
+      8: ["Big Data Analytics", "Blockchain", "Natural Language Processing"],
+    },
+  },
+  "Mechanical Engineering": {
+    First: {
+      1: ["Engineering Graphics", "Mathematics I", "Physics"],
+      2: ["Engineering Mechanics", "Mathematics II", "Chemistry"],
+    },
+    Second: {
+      3: ["Thermodynamics", "Material Science", "Manufacturing Processes"],
+      4: ["Fluid Mechanics", "Kinematics", "Heat Transfer"],
+    },
+    Third: {
+      5: ["Machine Design", "Industrial Engineering", "Robotics"],
+      6: ["Automation", "CAD/CAM", "Quality Engineering"],
+    },
+    Fourth: {
+      7: ["Advanced Manufacturing", "Mechatronics", "Project Management"],
+      8: ["Automotive Engineering", "Power Plants", "Industrial Management"],
+    },
+  },
+  "Electronics & Telecommunication": {
+    First: {
+      1: ["Basic Electronics", "Mathematics I", "Physics"],
+      2: ["Circuit Theory", "Mathematics II", "Digital Systems"],
+    },
+    Second: {
+      3: ["Analog Electronics", "Signals and Systems", "Control Systems"],
+      4: ["Digital Communication", "Microprocessors", "Electromagnetic Theory"],
+    },
+    Third: {
+      5: ["Communication Systems", "VLSI Design", "Digital Signal Processing"],
+      6: ["Wireless Communication", "Antenna Theory", "Embedded Systems"],
+    },
+    Fourth: {
+      7: [
+        "Mobile Communication",
+        "Optical Communication",
+        "Project Management",
+      ],
+      8: ["Satellite Communication", "IoT", "Advanced Communication"],
+    },
+  },
+  "Civil Engineering": {
+    First: {
+      1: ["Engineering Drawing", "Mathematics I", "Physics"],
+      2: ["Surveying", "Mathematics II", "Chemistry"],
+    },
+    Second: {
+      3: ["Structural Mechanics", "Building Materials", "Soil Mechanics"],
+      4: ["Construction Technology", "Hydraulics", "Environmental Engineering"],
+    },
+    Third: {
+      5: [
+        "Structural Analysis",
+        "Transportation Engineering",
+        "Geotechnical Engineering",
+      ],
+      6: ["Design of Structures", "Water Resources", "Construction Management"],
+    },
+    Fourth: {
+      7: ["Advanced Structures", "Urban Planning", "Project Management"],
+      8: [
+        "Bridge Engineering",
+        "Earthquake Engineering",
+        "Construction Economics",
+      ],
+    },
+  },
+};
+
+const FacultyManage = () => {
+  const [faculties, setFaculties] = useState([]);
   const [isFacultyModalOpen, setIsFacultyModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [selectedFacultyId, setSelectedFacultyId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  const subjectDatabase = {
-    "Computer Science": {
-      First: {
-        1: ["Programming Fundamentals", "Mathematics I", "Physics"],
-        2: ["Object Oriented Programming", "Mathematics II", "Digital Logic"],
-      },
-      Second: {
-        3: ["Data Structures", "Computer Architecture", "Statistics"],
-        4: ["Operating Systems", "Database Systems", "Theory of Computation"],
-      },
-      Third: {
-        5: ["Software Engineering", "Computer Networks", "AI"],
-        6: ["Web Development", "Distributed Systems", "Information Security"],
-      },
-      Fourth: {
-        7: ["Cloud Computing", "Machine Learning", "Project Management"],
-        8: ["Big Data Analytics", "Blockchain", "Natural Language Processing"],
-      },
-    },
-    "Mechanical Engineering": {
-      First: {
-        1: ["Engineering Graphics", "Mathematics I", "Physics"],
-        2: ["Engineering Mechanics", "Mathematics II", "Chemistry"],
-      },
-      Second: {
-        3: ["Thermodynamics", "Material Science", "Manufacturing Processes"],
-        4: ["Fluid Mechanics", "Kinematics", "Heat Transfer"],
-      },
-      Third: {
-        5: ["Machine Design", "Industrial Engineering", "Robotics"],
-        6: ["Automation", "CAD/CAM", "Quality Engineering"],
-      },
-      Fourth: {
-        7: ["Advanced Manufacturing", "Mechatronics", "Project Management"],
-        8: ["Automotive Engineering", "Power Plants", "Industrial Management"],
-      },
-    },
-    "Electronics & Telecommunication": {
-      First: {
-        1: ["Basic Electronics", "Mathematics I", "Physics"],
-        2: ["Circuit Theory", "Mathematics II", "Digital Systems"],
-      },
-      Second: {
-        3: ["Analog Electronics", "Signals and Systems", "Control Systems"],
-        4: [
-          "Digital Communication",
-          "Microprocessors",
-          "Electromagnetic Theory",
-        ],
-      },
-      Third: {
-        5: [
-          "Communication Systems",
-          "VLSI Design",
-          "Digital Signal Processing",
-        ],
-        6: ["Wireless Communication", "Antenna Theory", "Embedded Systems"],
-      },
-      Fourth: {
-        7: [
-          "Mobile Communication",
-          "Optical Communication",
-          "Project Management",
-        ],
-        8: ["Satellite Communication", "IoT", "Advanced Communication"],
-      },
-    },
-    "Civil Engineering": {
-      First: {
-        1: ["Engineering Drawing", "Mathematics I", "Physics"],
-        2: ["Surveying", "Mathematics II", "Chemistry"],
-      },
-      Second: {
-        3: ["Structural Mechanics", "Building Materials", "Soil Mechanics"],
-        4: [
-          "Construction Technology",
-          "Hydraulics",
-          "Environmental Engineering",
-        ],
-      },
-      Third: {
-        5: [
-          "Structural Analysis",
-          "Transportation Engineering",
-          "Geotechnical Engineering",
-        ],
-        6: [
-          "Design of Structures",
-          "Water Resources",
-          "Construction Management",
-        ],
-      },
-      Fourth: {
-        7: ["Advanced Structures", "Urban Planning", "Project Management"],
-        8: [
-          "Bridge Engineering",
-          "Earthquake Engineering",
-          "Construction Economics",
-        ],
-      },
-    },
-  };
 
   const openFacultyModal = () => setIsFacultyModalOpen(true);
   const closeFacultyModal = () => setIsFacultyModalOpen(false);
@@ -181,9 +165,9 @@ const FacultyManagement = () => {
       department &&
       year &&
       semester &&
-      subjectDatabase?.[department]?.[year]?.[semester]
+      subjectsData?.[department]?.[year]?.[semester]
     ) {
-      subjectDatabase[department][year][semester].forEach((subject) => {
+      subjectsData[department][year][semester].forEach((subject) => {
         const option = document.createElement("option");
         option.value = subject;
         option.textContent = subject;
@@ -289,14 +273,14 @@ const FacultyManagement = () => {
       return;
     }
 
-    const facultyIndex = faculty.findIndex((f) => f.teacherId === facultyId);
+    const facultyIndex = faculties.findIndex((f) => f.teacherId === facultyId);
 
     if (facultyIndex === -1) {
       alert("Invalid faculty selection.");
       return;
     }
 
-    const isDuplicate = faculty[facultyIndex].subjects.some(
+    const isDuplicate = faculties[facultyIndex].subjects.some(
       (s) =>
         s.name === newSubject.name &&
         s.year === newSubject.year &&
@@ -329,7 +313,7 @@ const FacultyManagement = () => {
         return;
       }
 
-      const updatedSubjects = [...faculty[facultyIndex].subjects, newSubject];
+      const updatedSubjects = [...faculties[facultyIndex].subjects, newSubject];
 
       const payload = {
         teacherId: facultyId,
@@ -354,7 +338,7 @@ const FacultyManagement = () => {
     } catch (error) {
       console.error("Error adding subject:", error.response?.data || error);
       alert(
-        `Error: ${error.response?.data?.message || "Failed to add subject."}`
+        "Error: " + (error.response?.data?.message || "Failed to add subject.")
       );
     } finally {
       setLoading(false);
@@ -447,14 +431,14 @@ const FacultyManagement = () => {
 
       console.log("Filtered faculty for admin:", facultyForAdmin);
 
-      setFaculty(facultyForAdmin);
+      setFaculties(facultyForAdmin);
     } catch (error) {
       console.error(
         "Failed to fetch faculty data:",
         error.response || error.message
       );
       alert("Failed to fetch faculty data. Please try again later.");
-      setFaculty([]);
+      setFaculties([]);
     }
   };
 
@@ -500,15 +484,15 @@ const FacultyManagement = () => {
   };
 
   const groupedFaculty = useMemo(
-    () => groupFacultyByStructure(faculty),
-    [faculty]
+    () => groupFacultyByStructure(faculties),
+    [faculties]
   );
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  const filteredFaculty = faculty.filter(
+  const filteredFaculty = faculties.filter(
     (f) =>
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -557,25 +541,151 @@ const FacultyManagement = () => {
     return filteredGroup;
   }, [groupedFaculty, searchQuery]);
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-8 admin-theme">
-      <div className="container mx-auto">
-        <div className="header flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Faculty Management
-            </h1>
-            <p className="text-gray-600">Manage faculty and their subjects</p>
+  useEffect(() => {
+    fetchFaculty();
+  }, []);
+
+  const renderFaculties = () => {
+    if (filteredFaculty.length === 0) {
+      return (
+        <div className="text-center p-8 text-gray-500">
+          <div>No faculty data available</div>
+          <p>Click on "Add Faculty" to get started</p>
+        </div>
+      );
+    }
+
+    return Object.keys(filteredGroupedFaculty).map((department) => (
+      <div
+        key={department}
+        className="border rounded-lg shadow-md mb-4 overflow-hidden"
+      >
+        <div
+          className="bg-gray-200 p-4 flex justify-between items-center cursor-pointer"
+          onClick={() => toggleCollapse(`department-${department}`)}
+        >
+          <span>{department}</span>
+          <button className="text-gray-600">▼</button>
+        </div>
+        {Object.keys(filteredGroupedFaculty[department]).map((year) => (
+          <div key={year} className="border-t">
+            <div
+              className="p-4 flex justify-between items-center cursor-pointer"
+              onClick={() => toggleCollapse(`year-${department}-${year}`)}
+            >
+              <span>Year: {year}</span>
+              <button className="text-gray-600">▼</button>
+            </div>
+            <div id={`year-${department}-${year}`} className="p-4 grid gap-4">
+              {filteredGroupedFaculty[department][year].map((division) => (
+                <div key={division} className="border rounded-lg shadow-md p-4">
+                  <div className="text-xl font-semibold">
+                    Division {division}
+                  </div>
+                  {Object.keys(
+                    filteredGroupedFaculty[department][year][division]
+                  ).map((subjectName) => (
+                    <div key={subjectName} className="mt-4 border-t pt-4">
+                      <div className="text-lg font-semibold">{subjectName}</div>
+                      {filteredGroupedFaculty[department][year][division][
+                        subjectName
+                      ].map((faculty) => (
+                        <div
+                          key={faculty.teacherId}
+                          className="bg-white p-4 rounded-lg shadow-md mt-4"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3>{faculty.name}</h3>
+                              <p>{faculty.email}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  openSubjectModal(faculty.teacherId)
+                                }
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
+                              >
+                                <i className="fas fa-plus"></i>
+                              </button>
+                              <button
+                                onClick={() =>
+                                  removeSubject(
+                                    faculty.email,
+                                    subjectName,
+                                    year,
+                                    division
+                                  )
+                                }
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <i className="fas fa-trash-alt"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
+        ))}
+      </div>
+    ));
+  };
+
+  const toggleCollapse = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.classList.toggle("hidden");
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <header className="bg-purple-700 text-white p-4 rounded-lg shadow-md mb-8 text-center">
+        <h1 className="text-2xl">Faculty Management System</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-lg">Total Faculty</h3>
+            <div className="flex items-center mt-2">
+              <i className="fas fa-chalkboard-teacher text-gray-600"></i>
+              <span className="ml-2">{faculties.length}</span>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-lg">Departments</h3>
+            <div className="flex items-center mt-2">
+              <i className="fas fa-building text-gray-600"></i>
+              <span className="ml-2">
+                {new Set(faculties.map((f) => f.department)).size}
+              </span>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-lg">Total Subjects</h3>
+            <div className="flex items-center mt-2">
+              <i className="fas fa-book text-gray-600"></i>
+              <span className="ml-2">
+                {faculties.reduce((total, f) => total + f.subjects.length, 0)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="bg-white p-4 rounded-lg shadow-md mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl">Faculty Directory</h2>
           <button
+            className="bg-purple-600 text-white px-4 py-2 rounded"
             onClick={openFacultyModal}
-            className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
           >
-            <i className="fas fa-plus-circle"></i>
-            Add New Faculty
+            Add Faculty
           </button>
         </div>
-
         <input
           type="text"
           placeholder="Search for a teacher..."
@@ -583,130 +693,18 @@ const FacultyManagement = () => {
           onChange={handleSearch}
           className="w-full p-2 border rounded mb-4"
         />
-
-        <div className="stats-container grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="stat-card bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold">Total Faculty</h3>
-            <div className="stat-value flex items-center gap-2">
-              <i className="fas fa-chalkboard-teacher"></i>
-              <span id="totalFaculty">{faculty.length}</span>
-            </div>
-          </div>
-          <div className="stat-card bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold">Departments</h3>
-            <div className="stat-value flex items-center gap-2">
-              <i className="fas fa-building"></i>
-              <span id="totalDepartments">
-                {new Set(faculty.map((f) => f.department)).size}
-              </span>
-            </div>
-          </div>
-          <div className="stat-card bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold">Total Subjects</h3>
-            <div className="stat-value flex items-center gap-2">
-              <i className="fas fa-book"></i>
-              <span id="totalSubjects">
-                {faculty.reduce(
-                  (total, f) => total + (f.subjects?.length || 0),
-                  0
-                )}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div id="facultyList" className="space-y-4">
-          {Object.keys(filteredGroupedFaculty).length === 0 ? (
-            <p>No faculty data available.</p>
-          ) : (
-            Object.keys(filteredGroupedFaculty).map((department) => (
-              <div key={department} className="department-section">
-                <h2 className="text-xl font-semibold mb-4">{department}</h2>
-                {Object.keys(filteredGroupedFaculty[department]).map((year) => (
-                  <div key={year} className="year-section pl-4">
-                    <h3 className="text-lg font-semibold mb-2">{year} Year</h3>
-                    {Object.keys(filteredGroupedFaculty[department][year]).map(
-                      (division) => (
-                        <div key={division} className="division-section pl-4">
-                          <h4 className="text-md font-semibold mb-2">
-                            Division {division}
-                          </h4>
-                          {Object.keys(
-                            filteredGroupedFaculty[department][year][division]
-                          ).map((subject) => {
-                            const facultyForSubject =
-                              filteredGroupedFaculty[department][year][
-                                division
-                              ][subject];
-
-                            return (
-                              <div
-                                key={subject}
-                                className="subject-section pl-4 mb-4"
-                              >
-                                <h5 className="text-md font-semibold mb-2">
-                                  {subject}
-                                </h5>
-                                <div className="faculty-list space-y-2">
-                                  {facultyForSubject.length === 0 ? (
-                                    <p>No faculty found for this subject</p>
-                                  ) : (
-                                    facultyForSubject.map((f) => (
-                                      <div
-                                        key={f.teacherId}
-                                        className="faculty-card bg-white p-4 rounded-lg shadow"
-                                      >
-                                        <div className="flex justify-between items-start">
-                                          <div>
-                                            <h3>{f.name}</h3>
-                                            <p>{f.email}</p>
-                                          </div>
-                                          <div className="flex gap-2">
-                                            <button
-                                              onClick={() =>
-                                                openSubjectModal(f.teacherId)
-                                              }
-                                              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
-                                            >
-                                              <i className="fas fa-plus"></i>
-                                            </button>
-                                            <button
-                                              onClick={() =>
-                                                removeSubject(
-                                                  f.email,
-                                                  subject,
-                                                  year,
-                                                  division
-                                                )
-                                              }
-                                              className="text-red-500 hover:text-red-700"
-                                            >
-                                              <i className="fas fa-trash-alt"></i>
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))
-          )}
-        </div>
+        <div id="facultyContainer">{renderFaculties()}</div>
       </div>
 
       {isFacultyModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="modal-content bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Add New Faculty</h2>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg">Add New Faculty</h3>
+              <button className="text-gray-600" onClick={closeFacultyModal}>
+                &times;
+              </button>
+            </div>
             <form onSubmit={createFaculty} className="space-y-4">
               <div className="form-group">
                 <label className="block text-gray-700">Name</label>
@@ -799,7 +797,7 @@ const FacultyManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-[#7c3aed] text-white px-4 py-2 rounded hover:bg-[#6d28d9]"
+                  className="bg-purple-600 text-white px-4 py-2 rounded"
                 >
                   Add Faculty
                 </button>
@@ -817,9 +815,14 @@ const FacultyManagement = () => {
       )}
 
       {isSubjectModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="modal-content bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Add Subject</h2>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg">Add Subject</h3>
+              <button className="text-gray-600" onClick={closeSubjectModal}>
+                &times;
+              </button>
+            </div>
             <form onSubmit={addSubject} className="space-y-4">
               <input type="hidden" name="facultyId" value={selectedFacultyId} />
               <div className="form-group">
@@ -875,7 +878,7 @@ const FacultyManagement = () => {
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="bg-[#7c3aed] text-white px-4 py-2 rounded hover:bg-[#6d28d9]"
+                  className="bg-purple-600 text-white px-4 py-2 rounded"
                 >
                   Add Subject
                 </button>
@@ -897,4 +900,4 @@ const FacultyManagement = () => {
   );
 };
 
-export default FacultyManagement;
+export default FacultyManage;
