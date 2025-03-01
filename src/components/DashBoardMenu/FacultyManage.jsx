@@ -96,7 +96,7 @@ const FacultyManagementSystem = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [formData, setFormData] = useState(new FormData());
   const openFacultyModal = () => setIsFacultyModalOpen(true);
   const closeFacultyModal = () => setIsFacultyModalOpen(false);
 
@@ -178,12 +178,19 @@ const FacultyManagementSystem = () => {
 
   const createFaculty = async (event) => {
     event.preventDefault();
-    const form = event.target;
+
+    const form = formRef.current;
+    if (!form) {
+      console.error("Form not found");
+      alert("An error occurred. Please try again.");
+      return;
+    }
+
     const formData = new FormData(form);
 
-    const subjectName = document.getElementById("subject").value;
-    const yearValue = document.getElementById("year").value;
-    const semesterValue = document.getElementById("semester").value;
+    const subjectName = formData.get("subject");
+    const yearValue = formData.get("year");
+    const semesterValue = formData.get("semester");
     const divisionValue = formData.get("division");
 
     if (!subjectName || !yearValue || !semesterValue || !divisionValue) {
@@ -192,7 +199,6 @@ const FacultyManagementSystem = () => {
     }
 
     const adminId = localStorage.getItem("adminId");
-
     if (!adminId) {
       alert("Admin ID is missing.");
       return;
@@ -223,8 +229,9 @@ const FacultyManagementSystem = () => {
 
       if (response.status === 201) {
         setMessage(response.data.message);
-        setFaculties((prev) => [...prev, response.data.teacher]); // Update state directly
+        setFaculties((prev) => [...prev, response.data.teacher]);
         alert("Teacher added successfully!");
+        form.reset(); // Reset form after successful submission
       } else {
         setMessage("Failed to add teacher. Please try again.");
       }
@@ -238,7 +245,6 @@ const FacultyManagementSystem = () => {
     } finally {
       setLoading(false);
       closeFacultyModal();
-      form.reset();
     }
   };
 
