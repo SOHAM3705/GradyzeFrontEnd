@@ -10,7 +10,6 @@ const FacultyManagement = () => {
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDataLoaded, setIsDataLoaded] = useState(false);
-
   const subjectDatabase = {
     "Computer Science": {
       First: {
