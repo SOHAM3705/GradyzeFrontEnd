@@ -411,11 +411,10 @@ const FacultyManagement = () => {
 
   const fetchFaculty = async () => {
     try {
-      const adminId = localStorage.getItem("adminId");
       const token = localStorage.getItem("token");
 
-      if (!adminId || !token) {
-        console.error("Admin ID or Token not found");
+      if (!token) {
+        console.error("Token not found");
         return;
       }
 
@@ -425,7 +424,6 @@ const FacultyManagement = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "X-Admin-ID": adminId,
           },
         }
       );
@@ -437,7 +435,7 @@ const FacultyManagement = () => {
         email: teacher.email,
         department: teacher.department,
         subjects: teacher.subjects || [],
-        adminId: teacher.adminId, // Ensure adminId is included
+        adminId: teacher.adminId,
       }));
 
       // Filter faculty by the specific adminId
@@ -448,6 +446,7 @@ const FacultyManagement = () => {
       setFaculty(facultyForAdmin);
     } catch (error) {
       console.error("Failed to fetch faculty data:", error);
+      alert("Failed to fetch faculty data. Please try again later.");
       setFaculty([]); // Set empty array on failure
     }
   };
@@ -496,20 +495,25 @@ const FacultyManagement = () => {
     [faculty]
   );
 
-  // Call fetchFaculty when the component mounts
-  useEffect(() => {
-    fetchFaculty();
-  }, []);
-
   // Handle search query
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
   };
 
   // Filter faculty based on the search query (applied to all faculty, not just grouped)
-  const filteredFaculty = faculty.filter((f) =>
-    f.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFaculty = faculty.filter(
+    (f) =>
+      f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.subjects.some((subject) =>
+        subject.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
+
+  useEffect(() => {
+    fetchFaculty();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 p-8 admin-theme">
       <div className="container mx-auto">
@@ -586,85 +590,96 @@ const FacultyManagement = () => {
                           </h4>
                           {Object.keys(
                             groupedFaculty[department][year][division]
-                          ).map((subject) => (
-                            <div
-                              key={subject}
-                              className="subject-section pl-4 mb-4"
-                            >
-                              <h5 className="text-md font-semibold mb-2">
-                                {subject}
-                              </h5>
-                              <div className="faculty-list space-y-2">
-                                {groupedFaculty[department][year][division][
-                                  subject
-                                ]
-                                  .filter((f) =>
-                                    f.name
-                                      .toLowerCase()
-                                      .includes(searchQuery.toLowerCase())
-                                  )
-                                  .map((f) => (
-                                    <div
-                                      key={f.teacherId} // Updated to teacherId
-                                      className="faculty-card bg-white p-4 rounded-lg shadow"
-                                    >
-                                      <div className="flex justify-between items-start">
-                                        <div>
-                                          <h3>{f.name}</h3>
-                                          <p>{f.email}</p>
-                                        </div>
-                                        <div className="flex gap-2">
-                                          <button
-                                            onClick={() =>
-                                              openSubjectModal(f.teacherId)
-                                            } // Updated to teacherId
-                                            className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
-                                          >
-                                            <i className="fas fa-plus"></i>
-                                            Add Subject
-                                          </button>
-                                          <button
-                                            onClick={() => {
-                                              if (!f.subjects) {
-                                                console.error(
-                                                  "No subjects found for this faculty."
-                                                );
-                                                return;
-                                              }
+                          ).map((subject) => {
+                            const facultyForSubject =
+                              groupedFaculty[department][year][division][
+                                subject
+                              ];
 
-                                              const subjectData =
-                                                f.subjects.find(
-                                                  (s) =>
-                                                    s.name === subject &&
-                                                    s.year === year &&
-                                                    s.division === division
-                                                );
+                            // Filter faculty based on search query before rendering
+                            const filteredFaculty = facultyForSubject.filter(
+                              (f) =>
+                                f.name
+                                  .toLowerCase()
+                                  .includes(searchQuery.toLowerCase())
+                            );
 
-                                              if (subjectData) {
-                                                removeSubject(
-                                                  f.email,
-                                                  subject,
-                                                  year,
-                                                  subjectData.semester,
-                                                  division
-                                                );
-                                              } else {
-                                                console.error(
-                                                  "Subject not found for removal."
-                                                );
-                                              }
-                                            }}
-                                            className="text-red-500 hover:text-red-700"
-                                          >
-                                            <i className="fas fa-trash-alt"></i>
-                                          </button>
+                            return (
+                              <div
+                                key={subject}
+                                className="subject-section pl-4 mb-4"
+                              >
+                                <h5 className="text-md font-semibold mb-2">
+                                  {subject}
+                                </h5>
+                                <div className="faculty-list space-y-2">
+                                  {filteredFaculty.length === 0 ? (
+                                    <p>No faculty found for this subject</p>
+                                  ) : (
+                                    filteredFaculty.map((f) => (
+                                      <div
+                                        key={f.teacherId} // Updated to teacherId for uniqueness
+                                        className="faculty-card bg-white p-4 rounded-lg shadow"
+                                      >
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <h3>{f.name}</h3>
+                                            <p>{f.email}</p>
+                                          </div>
+                                          <div className="flex gap-2">
+                                            <button
+                                              onClick={() =>
+                                                openSubjectModal(f.teacherId)
+                                              } // Use teacherId
+                                              className="bg-[#7c3aed] text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-[#6d28d9]"
+                                            >
+                                              <i className="fas fa-plus"></i>
+                                              Add Subject
+                                            </button>
+                                            <button
+                                              onClick={() => {
+                                                if (!f.subjects) {
+                                                  console.error(
+                                                    "No subjects found for this faculty."
+                                                  );
+                                                  return;
+                                                }
+
+                                                const subjectData =
+                                                  f.subjects.find(
+                                                    (s) =>
+                                                      s.name === subject &&
+                                                      s.year === year &&
+                                                      s.division === division
+                                                  );
+
+                                                if (subjectData) {
+                                                  removeSubject(
+                                                    f.email,
+                                                    subject,
+                                                    year,
+                                                    subjectData.semester,
+                                                    division
+                                                  );
+                                                } else {
+                                                  console.error(
+                                                    "Subject not found for removal."
+                                                  );
+                                                }
+                                              }}
+                                              className="text-red-500 hover:text-red-700"
+                                            >
+                                              <i className="fas fa-trash-alt"></i>
+                                            </button>
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                    ))
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )
                     )}
