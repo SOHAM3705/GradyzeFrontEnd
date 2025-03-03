@@ -8,22 +8,10 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#7c3aed',
+          DEFAULT: '#6d28d9',
           light: '#a87aff',
           dark: '#5b21b6',
         },
-      },
-    },
-  },
-  plugins: [],
-};
-
-// tailwind.config.js
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        primary: '#6d28d9',
         secondary: '#5b21b6',
         success: '#059669',
         danger: '#dc2626',
