@@ -449,6 +449,20 @@ const FacultyManagementSystem = () => {
 
       if (response.status === 200) {
         alert("Subject removed successfully!");
+        setFaculties((prev) =>
+          prev.map((teacher) => ({
+            ...teacher,
+            subjects: teacher.subjects.filter(
+              (subject) =>
+                !(
+                  subject.name === subjectName &&
+                  subject.year === year &&
+                  subject.semester === semesterValue &&
+                  subject.division === division
+                )
+            ),
+          }))
+        );
       } else {
         alert(response.data?.message || "Failed to remove subject.");
       }
@@ -697,9 +711,23 @@ const FacultyManagementSystem = () => {
           <h4 className="text-md font-semibold mb-2">Assigned Subjects:</h4>
           <ul className="list-disc pl-5">
             {faculty.subjects.map((subject, index) => (
-              <li key={index} className="mb-1">
+              <li key={index} className="mb-1 flex items-center">
                 {subject.name} (Year: {subject.year}, Semester:{" "}
                 {subject.semester}, Division: {subject.division})
+                <button
+                  onClick={() =>
+                    removeSubject(
+                      faculty.email,
+                      subject.name,
+                      subject.year,
+                      subject.semester,
+                      subject.division
+                    )
+                  }
+                  className="text-red-500 hover:text-red-700 ml-2"
+                >
+                  <i className="fas fa-trash-alt"></i>
+                </button>
               </li>
             ))}
           </ul>
@@ -978,9 +1006,25 @@ const FacultyManagementSystem = () => {
                     {faculties
                       .find((f) => f._id === selectedFacultyId)
                       ?.subjects.map((subject, index) => (
-                        <li key={index}>
+                        <li key={index} className="flex items-center mb-1">
                           {subject.name} (Year: {subject.year}, Semester:{" "}
                           {subject.semester}, Division: {subject.division})
+                          <button
+                            onClick={() =>
+                              removeSubject(
+                                faculties.find(
+                                  (f) => f._id === selectedFacultyId
+                                )?.email,
+                                subject.name,
+                                subject.year,
+                                subject.semester,
+                                subject.division
+                              )
+                            }
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            <i className="fas fa-trash-alt"></i>
+                          </button>
                         </li>
                       ))}
                   </ul>
