@@ -92,6 +92,7 @@ const FacultyManagementSystem = () => {
   const [faculties, setFaculties] = useState([]);
   const [isFacultyModalOpen, setIsFacultyModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
+  const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
   const [selectedFacultyId, setSelectedFacultyId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -107,6 +108,16 @@ const FacultyManagementSystem = () => {
 
   const closeSubjectModal = () => {
     setIsSubjectModalOpen(false);
+    setSelectedFacultyId(null);
+  };
+
+  const openModifyModal = (facultyId) => {
+    setSelectedFacultyId(facultyId);
+    setIsModifyModalOpen(true);
+  };
+
+  const closeModifyModal = () => {
+    setIsModifyModalOpen(false);
     setSelectedFacultyId(null);
   };
 
@@ -133,36 +144,7 @@ const FacultyManagementSystem = () => {
     const nameValue = formData.get("name");
     const emailValue = formData.get("email");
     const departmentValue = formData.get("department");
-    const roleValue = formData.get("role");
     const divisionValue = formData.get("division");
-
-    let subjectsList = [];
-    if (roleValue === "Subject Teacher") {
-      const yearValue = document.getElementById("year").value;
-      const semesterText = document.getElementById("semester").value;
-      const subjectName = document.getElementById("subject").value;
-
-      const semesterNumber = semesterText
-        ? parseInt(semesterText.replace("Semester ", ""))
-        : null;
-
-      if (!yearValue || !semesterText || !subjectName || !divisionValue) {
-        alert("Please fill in all subject details");
-        return;
-      }
-
-      subjectsList.push({
-        name: subjectName,
-        year: yearValue,
-        semester: semesterNumber,
-        division: divisionValue,
-      });
-    }
-
-    const teacherTypeMapping = {
-      "Subject Teacher": "subjectTeacher",
-      "Class Teacher": "classTeacher",
-    };
 
     const adminId = localStorage.getItem("adminId");
     if (!adminId) {
@@ -174,9 +156,9 @@ const FacultyManagementSystem = () => {
       name: nameValue,
       email: emailValue,
       department: departmentValue,
-      teacherType: teacherTypeMapping[roleValue],
-      division: roleValue === "Class Teacher" ? divisionValue : undefined,
-      subjects: roleValue === "Subject Teacher" ? subjectsList : undefined,
+      teacherType: "subjectTeacher",
+      division: divisionValue,
+      subjects: [],
       adminId,
     };
 
@@ -201,6 +183,61 @@ const FacultyManagementSystem = () => {
       setMessage("Failed to add teacher.");
       alert(
         "Failed to add teacher: " +
+          (error.response?.data?.message || error.message)
+      );
+    } finally {
+      setLoading(false);
+      closeFacultyModal();
+      form.reset();
+    }
+  };
+
+  const addClassTeacher = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const nameValue = formData.get("name");
+    const emailValue = formData.get("email");
+    const departmentValue = formData.get("department");
+    const divisionValue = formData.get("division");
+
+    const adminId = localStorage.getItem("adminId");
+    if (!adminId) {
+      alert("Admin ID is missing.");
+      return;
+    }
+
+    const teacherData = {
+      name: nameValue,
+      email: emailValue,
+      department: departmentValue,
+      teacherType: "classTeacher",
+      division: divisionValue,
+      adminId,
+    };
+
+    console.log("Sending teacher data:", teacherData);
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
+        teacherData
+      );
+
+      if (response.status === 201 || response.status === 200) {
+        setMessage(response.data.message);
+        setFaculties((prev) => [...prev, response.data.teacher]);
+        alert(response.data.message || "Class Teacher added successfully!");
+      } else {
+        setMessage("Failed to add class teacher. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+      setMessage("Failed to add class teacher.");
+      alert(
+        "Failed to add class teacher: " +
           (error.response?.data?.message || error.message)
       );
     } finally {
@@ -708,6 +745,14 @@ const FacultyManagementSystem = () => {
                               >
                                 <i className="fas fa-trash-alt"></i>
                               </button>
+                              <button
+                                onClick={() =>
+                                  openModifyModal(faculty.teacherId)
+                                }
+                                className="btn btn-warning"
+                              >
+                                <i className="fas fa-edit"></i>
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -768,9 +813,14 @@ const FacultyManagementSystem = () => {
       <div className="card">
         <div className="flex justify-between items-center mb-4">
           <h2>Faculty Directory</h2>
-          <button className="btn" onClick={openFacultyModal}>
-            Add Faculty
-          </button>
+          <div>
+            <button className="btn" onClick={openFacultyModal}>
+              Add Faculty
+            </button>
+            <button className="btn btn-warning ml-2" onClick={addClassTeacher}>
+              Add Class Teacher
+            </button>
+          </div>
         </div>
         <input
           type="text"
@@ -809,31 +859,6 @@ const FacultyManagementSystem = () => {
                   required
                   className="form-control"
                 />
-              </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Role</label>
-                <div className="radio-group">
-                  <div className="radio-option">
-                    <input
-                      type="radio"
-                      id="subjectTeacher"
-                      name="role"
-                      value="Subject Teacher"
-                      required
-                    />
-                    <label htmlFor="subjectTeacher">Subject Teacher</label>
-                  </div>
-                  <div className="radio-option">
-                    <input
-                      type="radio"
-                      id="classTeacher"
-                      name="role"
-                      value="Class Teacher"
-                      required
-                    />
-                    <label htmlFor="classTeacher">Class Teacher</label>
-                  </div>
-                </div>
               </div>
               <div className="form-group">
                 <label className="block text-gray-700">Department</label>
@@ -885,19 +910,6 @@ const FacultyManagementSystem = () => {
                   <option value="">Select Semester</option>
                 </select>
               </div>
-              {formData.get("role") !== "Class Teacher" && (
-                <div className="form-group">
-                  <label className="block text-gray-700">Subject</label>
-                  <select
-                    id="subject"
-                    required
-                    className="form-control"
-                    disabled
-                  >
-                    <option value="">Select Subject</option>
-                  </select>
-                </div>
-              )}
               <div className="form-group">
                 <label className="block text-gray-700">Division</label>
                 <input
@@ -994,6 +1006,41 @@ const FacultyManagementSystem = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isModifyModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Modify Subjects</h3>
+              <button className="close" onClick={closeModifyModal}>
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              {selectedFacultyId && (
+                <div>
+                  <h4>Current Subjects:</h4>
+                  <ul>
+                    {faculties
+                      .find((f) => f._id === selectedFacultyId)
+                      ?.subjects.map((subject, index) => (
+                        <li key={index}>
+                          {subject.name} (Year: {subject.year}, Semester:{" "}
+                          {subject.semester}, Division: {subject.division})
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button type="button" onClick={closeModifyModal} className="btn">
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

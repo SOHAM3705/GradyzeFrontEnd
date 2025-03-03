@@ -17,3 +17,23 @@ module.exports = {
   },
   plugins: [],
 };
+
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#6d28d9',
+        secondary: '#5b21b6',
+        success: '#059669',
+        danger: '#dc2626',
+        light: '#ede9fe',
+        dark: '#1e1b4b',
+      },
+      borderRadius: {
+        'custom': '12px',
+      },
+    },
+  },
+  plugins: [],
+};
