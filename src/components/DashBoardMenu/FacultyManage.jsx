@@ -694,12 +694,6 @@ const FacultyManagementSystem = () => {
           <h3 className="text-lg font-semibold">{faculty.name}</h3>
           <div className="flex gap-2">
             <button
-              onClick={() => openSubjectModal(faculty._id)}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              <i className="fas fa-plus"></i>
-            </button>
-            <button
               onClick={() => openModifyModal(faculty._id)}
               className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-700"
             >
@@ -714,20 +708,6 @@ const FacultyManagementSystem = () => {
               <li key={index} className="mb-1 flex items-center">
                 {subject.name} (Year: {subject.year}, Semester:{" "}
                 {subject.semester}, Division: {subject.division})
-                <button
-                  onClick={() =>
-                    removeSubject(
-                      faculty.email,
-                      subject.name,
-                      subject.year,
-                      subject.semester,
-                      subject.division
-                    )
-                  }
-                  className="text-red-500 hover:text-red-700 ml-2"
-                >
-                  <i className="fas fa-trash-alt"></i>
-                </button>
               </li>
             ))}
           </ul>
@@ -1028,6 +1008,12 @@ const FacultyManagementSystem = () => {
                         </li>
                       ))}
                   </ul>
+                  <button
+                    onClick={openSubjectModal}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4"
+                  >
+                    <i className="fas fa-plus"></i> Add Subject
+                  </button>
                 </div>
               )}
             </div>
