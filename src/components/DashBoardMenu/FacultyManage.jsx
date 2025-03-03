@@ -125,27 +125,23 @@ const FacultyManagementSystem = () => {
     if (department) updateSemesters();
   };
 
-  // Updates for createFaculty function
   const createFaculty = async (event) => {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
 
-    // Get values from form
     const nameValue = formData.get("name");
     const emailValue = formData.get("email");
     const departmentValue = formData.get("department");
     const roleValue = formData.get("role");
     const divisionValue = formData.get("division");
 
-    // Get subject info if subject teacher
     let subjectsList = [];
     if (roleValue === "Subject Teacher") {
       const yearValue = document.getElementById("year").value;
       const semesterText = document.getElementById("semester").value;
       const subjectName = document.getElementById("subject").value;
 
-      // Extract semester number from text
       const semesterNumber = semesterText
         ? parseInt(semesterText.replace("Semester ", ""))
         : null;
@@ -163,7 +159,6 @@ const FacultyManagementSystem = () => {
       });
     }
 
-    // Map role values to the expected teacherType in the backend
     const teacherTypeMapping = {
       "Subject Teacher": "subjectTeacher",
       "Class Teacher": "classTeacher",
@@ -175,7 +170,6 @@ const FacultyManagementSystem = () => {
       return;
     }
 
-    // Structure the data according to your API's expected format
     const teacherData = {
       name: nameValue,
       email: emailValue,
@@ -216,7 +210,6 @@ const FacultyManagementSystem = () => {
     }
   };
 
-  // Update the subject related functions
   const updateSubjects = () => {
     const department = document.querySelector(
       'select[name="department"]'
@@ -227,7 +220,6 @@ const FacultyManagementSystem = () => {
 
     const year = yearSelect.value;
     const semesterText = semesterSelect.value;
-    // Extract semester number from the text
     const semesterNumber = semesterText
       ? parseInt(semesterText.replace("Semester ", ""))
       : null;
@@ -235,7 +227,6 @@ const FacultyManagementSystem = () => {
     subjectSelect.innerHTML = '<option value="">Select Subject</option>';
     subjectSelect.disabled = !semesterText;
 
-    // Map year names to keys in subjectsData
     const yearMap = {
       "First Year": "First",
       "Second Year": "Second",
@@ -260,10 +251,10 @@ const FacultyManagementSystem = () => {
         subjectSelect.appendChild(option);
       });
 
-      // Enable the subject dropdown now that options are loaded
       subjectSelect.disabled = false;
     }
   };
+
   const addSubject = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -279,7 +270,6 @@ const FacultyManagementSystem = () => {
     const semesterNumber = parseInt(formData.get("semester"));
     const divisionValue = formData.get("division");
 
-    // Validate that all fields are filled
     if (!subjectName || !yearValue || isNaN(semesterNumber) || !divisionValue) {
       alert(
         "Please fill all required fields: Subject Name, Year, Semester, and Division."
@@ -312,7 +302,6 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      // Prepare the data according to your API structure
       const payload = {
         teacherId: selectedFacultyId,
         subjects: [newSubject],
@@ -334,7 +323,6 @@ const FacultyManagementSystem = () => {
 
       if (response.status === 200 || response.status === 201) {
         alert(response.data.message || "Subject added successfully!");
-        // Update local state
         setFaculties((prev) =>
           prev.map((teacher) =>
             teacher._id === selectedFacultyId
@@ -381,7 +369,6 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      // Ensure semester is correctly formatted
       let semesterValue = semester;
       if (
         typeof semester === "string" &&
@@ -390,15 +377,6 @@ const FacultyManagementSystem = () => {
         semesterValue = parseInt(semester.replace(/[^0-9]/g, ""));
       }
 
-      // Log the values before sending the request
-      console.log("🟢 Faculty Email:", facultyEmail);
-      console.log("🟢 Subject Name:", subjectName);
-      console.log("🟢 Year:", year);
-      console.log("🟢 Semester:", semesterValue);
-      console.log("🟢 Division:", division);
-      console.log("🟢 Admin ID:", adminId);
-
-      // Validate required fields
       if (
         !facultyEmail ||
         !subjectName ||
@@ -410,7 +388,6 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      // Construct payload
       const payload = {
         email: facultyEmail.trim().toLowerCase(),
         subjectName: subjectName.trim().toLowerCase(),
@@ -450,7 +427,6 @@ const FacultyManagementSystem = () => {
     }
   };
 
-  // Update the updateSemesters function to call updateSubjects
   const updateSemesters = () => {
     const yearSelect = document.getElementById("year");
     const semesterSelect = document.getElementById("semester");
@@ -475,13 +451,11 @@ const FacultyManagementSystem = () => {
       });
     }
 
-    // Clear any previously selected subject
     const subjectSelect = document.getElementById("subject");
     subjectSelect.innerHTML = '<option value="">Select Subject</option>';
     subjectSelect.disabled = true;
   };
 
-  // Add event listener to semester select to update subjects when changed
   const attachSemesterListener = () => {
     const semesterSelect = document.getElementById("semester");
     if (semesterSelect) {
@@ -489,7 +463,6 @@ const FacultyManagementSystem = () => {
     }
   };
 
-  // Call this after opening the faculty modal
   const setupFormListeners = () => {
     const semesterSelect = document.getElementById("semester");
     if (semesterSelect) {
@@ -497,14 +470,13 @@ const FacultyManagementSystem = () => {
     }
   };
 
-  // Update openFacultyModal to include setup
   const openFacultyModal = () => {
     setIsFacultyModalOpen(true);
-    // Use setTimeout to ensure the modal is rendered before setting up listeners
     setTimeout(() => {
       setupFormListeners();
     }, 100);
   };
+
   const fetchFaculty = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -562,7 +534,7 @@ const FacultyManagementSystem = () => {
           !subject.name ||
           !subject.semester
         ) {
-          return; // ✅ Now we check if semester is present
+          return;
         }
 
         if (!grouped[f.department]) {
@@ -581,18 +553,18 @@ const FacultyManagementSystem = () => {
             [];
         }
 
-        // ✅ Push the faculty along with the semester
         grouped[f.department][subject.year][subject.division][
           subject.name
         ].push({
           ...f,
-          semester: subject.semester, // ✅ Now semester is stored
+          semester: subject.semester,
         });
       });
     });
 
     return grouped;
   };
+
   const groupedFaculty = useMemo(
     () => groupFacultyByStructure(faculties),
     [faculties]
@@ -658,7 +630,7 @@ const FacultyManagementSystem = () => {
   const renderFaculties = () => {
     if (filteredFaculty.length === 0) {
       return (
-        <div className="text-center p-8 text-gray-500">
+        <div className="empty-state">
           <div>No faculty data available</div>
           <p>Click on "Add Faculty" to get started</p>
         </div>
@@ -666,81 +638,76 @@ const FacultyManagementSystem = () => {
     }
 
     return Object.keys(filteredGroupedFaculty).map((department) => (
-      <div
-        key={department}
-        className="border rounded-lg shadow-md mb-4 overflow-hidden"
-      >
+      <div key={department} className="department-container">
         <div
-          className="bg-gray-200 p-4 flex justify-between items-center cursor-pointer"
+          className="department-header"
           onClick={() =>
             toggleCollapse(`department-${department.replace(/\s/g, "-")}`)
           }
         >
           <span>{department}</span>
-          <button className="text-gray-600">▼</button>
+          <button className="toggle-btn">▼</button>
         </div>
         {Object.keys(filteredGroupedFaculty[department]).map((year) => (
-          <div key={year} className="border-t">
+          <div key={year} className="year-container">
             <div
-              className="p-4 flex justify-between items-center cursor-pointer"
+              className="year-header"
               onClick={() => toggleCollapse(`year-${department}-${year}`)}
             >
               <span>Year: {year}</span>
-              <button className="text-gray-600">▼</button>
+              <button className="toggle-btn">▼</button>
             </div>
-            <div id={`year-${department}-${year}`} className="p-4 grid gap-4">
+            <div
+              id={`year-${department}-${year}`}
+              className="faculty-cards-container"
+            >
               {Object.keys(filteredGroupedFaculty[department][year]).map(
                 (division) => (
-                  <div
-                    key={division}
-                    className="border rounded-lg shadow-md p-4"
-                  >
-                    <div className="text-xl font-semibold">
-                      Division {division}
-                    </div>
+                  <div key={division} className="faculty-card">
+                    <div className="faculty-name">Division {division}</div>
                     {Object.keys(
                       filteredGroupedFaculty[department][year][division]
                     ).map((subjectName) => (
-                      <div key={subjectName} className="mt-4 border-t pt-4">
-                        <div className="text-lg font-semibold">
-                          {subjectName}
-                        </div>
+                      <div key={subjectName} className="subject-list">
+                        <div className="subject-name">{subjectName}</div>
                         {filteredGroupedFaculty[department][year][division][
                           subjectName
                         ].map((faculty) => (
-                          <div
-                            key={faculty.teacherId}
-                            className="bg-white p-4 rounded-lg shadow-md mt-4"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3>{faculty.name}</h3>
-                                <p>{faculty.email}</p>
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() =>
-                                    openSubjectModal(faculty.teacherId)
-                                  }
-                                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
-                                >
-                                  <i className="fas fa-plus"></i>
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    removeSubject(
-                                      faculty.email,
-                                      subjectName,
-                                      year,
-                                      faculty.semester,
-                                      division
-                                    )
-                                  }
-                                  className="text-red-500 hover:text-red-700"
-                                >
-                                  <i className="fas fa-trash-alt"></i>
-                                </button>
-                              </div>
+                          <div key={faculty.teacherId} className="faculty-card">
+                            <div className="faculty-name">{faculty.name}</div>
+                            <div className="faculty-email">{faculty.email}</div>
+                            <div
+                              className={`faculty-role ${
+                                faculty.role === "Class Teacher"
+                                  ? "role-class"
+                                  : "role-subject"
+                              }`}
+                            >
+                              {faculty.role}
+                            </div>
+                            <div className="faculty-actions">
+                              <button
+                                onClick={() =>
+                                  openSubjectModal(faculty.teacherId)
+                                }
+                                className="btn btn-success"
+                              >
+                                <i className="fas fa-plus"></i>
+                              </button>
+                              <button
+                                onClick={() =>
+                                  removeSubject(
+                                    faculty.email,
+                                    subjectName,
+                                    year,
+                                    faculty.semester,
+                                    division
+                                  )
+                                }
+                                className="btn btn-danger"
+                              >
+                                <i className="fas fa-trash-alt"></i>
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -759,36 +726,38 @@ const FacultyManagementSystem = () => {
   const toggleCollapse = (id) => {
     const element = document.getElementById(id);
     if (element) {
-      element.classList.toggle("hidden");
+      element.classList.toggle("collapsed");
+      const toggleBtn = element.parentElement.querySelector(".toggle-btn");
+      toggleBtn.textContent = element.classList.contains("collapsed")
+        ? "▶"
+        : "▼";
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <header className="bg-purple-500 text-black p-4 rounded-lg shadow-md mb-8 text-center">
+    <div className="container">
+      <header className="bg-secondary text-white p-4 rounded-lg shadow-md mb-8 text-center">
         <h1 className="text-2xl">Faculty Management System</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg">Total Faculty</h3>
-            <div className="flex items-center mt-2">
-              <i className="fas fa-chalkboard-teacher text-gray-600"></i>
-              <span className="ml-2">{faculties.length}</span>
+        <div className="stats-container">
+          <div className="stat-card">
+            <h3>Total Faculty</h3>
+            <div className="stat-value">
+              <i className="fas fa-chalkboard-teacher"></i>
+              <span>{faculties.length}</span>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg">Departments</h3>
-            <div className="flex items-center mt-2">
-              <i className="fas fa-building text-gray-600"></i>
-              <span className="ml-2">
-                {new Set(faculties.map((f) => f.department)).size}
-              </span>
+          <div className="stat-card">
+            <h3>Departments</h3>
+            <div className="stat-value">
+              <i className="fas fa-building"></i>
+              <span>{new Set(faculties.map((f) => f.department)).size}</span>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg">Total Subjects</h3>
-            <div className="flex items-center mt-2">
-              <i className="fas fa-book text-gray-600"></i>
-              <span className="ml-2">
+          <div className="stat-card">
+            <h3>Total Subjects</h3>
+            <div className="stat-value">
+              <i className="fas fa-book"></i>
+              <span>
                 {faculties.reduce((total, f) => total + f.subjects.length, 0)}
               </span>
             </div>
@@ -796,13 +765,10 @@ const FacultyManagementSystem = () => {
         </div>
       </header>
 
-      <div className="bg-white p-4 rounded-lg shadow-md mb-8">
+      <div className="card">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl">Faculty Directory</h2>
-          <button
-            className="bg-purple-600 text-white px-4 py-2 rounded"
-            onClick={openFacultyModal}
-          >
+          <h2>Faculty Directory</h2>
+          <button className="btn" onClick={openFacultyModal}>
             Add Faculty
           </button>
         </div>
@@ -811,17 +777,17 @@ const FacultyManagementSystem = () => {
           placeholder="Search for a teacher..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border rounded mb-4"
+          className="form-control mb-4"
         />
         <div id="facultyContainer">{renderFaculties()}</div>
       </div>
 
       {isFacultyModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg">Add New Faculty</h3>
-              <button className="text-gray-600" onClick={closeFacultyModal}>
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Add New Faculty</h3>
+              <button className="close" onClick={closeFacultyModal}>
                 &times;
               </button>
             </div>
@@ -832,7 +798,7 @@ const FacultyManagementSystem = () => {
                   type="text"
                   name="name"
                   required
-                  className="w-full p-2 border rounded"
+                  className="form-control"
                 />
               </div>
               <div className="form-group">
@@ -841,13 +807,13 @@ const FacultyManagementSystem = () => {
                   type="email"
                   name="email"
                   required
-                  className="w-full p-2 border rounded"
+                  className="form-control"
                 />
               </div>
               <div className="form-group">
                 <label className="block text-gray-700">Role</label>
-                <div className="flex gap-4">
-                  <div>
+                <div className="radio-group">
+                  <div className="radio-option">
                     <input
                       type="radio"
                       id="subjectTeacher"
@@ -857,7 +823,7 @@ const FacultyManagementSystem = () => {
                     />
                     <label htmlFor="subjectTeacher">Subject Teacher</label>
                   </div>
-                  <div>
+                  <div className="radio-option">
                     <input
                       type="radio"
                       id="classTeacher"
@@ -874,7 +840,7 @@ const FacultyManagementSystem = () => {
                 <select
                   name="department"
                   required
-                  className="w-full p-2 border rounded"
+                  className="form-control"
                   onChange={updateFields}
                 >
                   <option value="">Select Department</option>
@@ -896,7 +862,7 @@ const FacultyManagementSystem = () => {
                 <select
                   id="year"
                   required
-                  className="w-full p-2 border rounded"
+                  className="form-control"
                   onChange={updateSemesters}
                   disabled
                 >
@@ -912,7 +878,7 @@ const FacultyManagementSystem = () => {
                 <select
                   id="semester"
                   required
-                  className="w-full p-2 border rounded"
+                  className="form-control"
                   onChange={updateSubjects}
                   disabled
                 >
@@ -925,7 +891,7 @@ const FacultyManagementSystem = () => {
                   <select
                     id="subject"
                     required
-                    className="w-full p-2 border rounded"
+                    className="form-control"
                     disabled
                   >
                     <option value="">Select Subject</option>
@@ -938,20 +904,17 @@ const FacultyManagementSystem = () => {
                   type="text"
                   name="division"
                   required
-                  className="w-full p-2 border rounded"
+                  className="form-control"
                 />
               </div>
               <div className="flex justify-end gap-4">
-                <button
-                  type="submit"
-                  className="bg-purple-600 text-white px-4 py-2 rounded"
-                >
+                <button type="submit" className="btn btn-success">
                   Add Faculty
                 </button>
                 <button
                   type="button"
                   onClick={closeFacultyModal}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                  className="btn"
                 >
                   Cancel
                 </button>
@@ -962,15 +925,15 @@ const FacultyManagementSystem = () => {
       )}
 
       {isSubjectModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg">
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>
                 Add Subject to:{" "}
                 {faculties.find((f) => f._id === selectedFacultyId)?.name ||
                   "Faculty"}
               </h3>
-              <button className="text-gray-600" onClick={closeSubjectModal}>
+              <button className="close" onClick={closeSubjectModal}>
                 &times;
               </button>
             </div>
@@ -982,16 +945,12 @@ const FacultyManagementSystem = () => {
                   type="text"
                   name="subjectName"
                   required
-                  className="w-full p-2 border rounded"
+                  className="form-control"
                 />
               </div>
               <div className="form-group">
                 <label className="block text-gray-700">Year</label>
-                <select
-                  name="year"
-                  required
-                  className="w-full p-2 border rounded"
-                >
+                <select name="year" required className="form-control">
                   <option value="">Select Year</option>
                   <option value="First Year">First Year</option>
                   <option value="Second Year">Second Year</option>
@@ -1001,11 +960,7 @@ const FacultyManagementSystem = () => {
               </div>
               <div className="form-group">
                 <label className="block text-gray-700">Semester</label>
-                <select
-                  name="semester"
-                  required
-                  className="w-full p-2 border rounded"
-                >
+                <select name="semester" required className="form-control">
                   <option value="">Select Semester</option>
                   <option value="1">Semester 1</option>
                   <option value="2">Semester 2</option>
@@ -1023,20 +978,17 @@ const FacultyManagementSystem = () => {
                   type="text"
                   name="division"
                   required
-                  className="w-full p-2 border rounded"
+                  className="form-control"
                 />
               </div>
               <div className="flex justify-end gap-4">
-                <button
-                  type="submit"
-                  className="bg-purple-600 text-white px-4 py-2 rounded"
-                >
+                <button type="submit" className="btn btn-success">
                   Add Subject
                 </button>
                 <button
                   type="button"
                   onClick={closeSubjectModal}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                  className="btn"
                 >
                   Cancel
                 </button>
