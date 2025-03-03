@@ -674,110 +674,38 @@ const FacultyManagementSystem = () => {
       );
     }
 
-    return Object.keys(filteredGroupedFaculty).map((department) => (
-      <div
-        key={department}
-        className="border rounded-lg shadow-md mb-4 overflow-hidden"
-      >
-        <div
-          className="bg-gray-200 p-4 flex justify-between items-center cursor-pointer"
-          onClick={() =>
-            toggleCollapse(`department-${department.replace(/\s/g, "-")}`)
-          }
-        >
-          <span>{department}</span>
-          <button className="text-gray-600">▼</button>
-        </div>
-        {Object.keys(filteredGroupedFaculty[department]).map((year) => (
-          <div key={year} className="border-t">
-            <div
-              className="p-4 flex justify-between items-center cursor-pointer"
-              onClick={() => toggleCollapse(`year-${department}-${year}`)}
+    return filteredFaculty.map((faculty) => (
+      <div key={faculty._id} className="border rounded-lg shadow-md mb-4 p-4">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-semibold">{faculty.name}</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => openSubjectModal(faculty._id)}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
-              <span>Year: {year}</span>
-              <button className="text-gray-600">▼</button>
-            </div>
-            <div id={`year-${department}-${year}`} className="p-4 grid gap-4">
-              {Object.keys(filteredGroupedFaculty[department][year]).map(
-                (division) => (
-                  <div
-                    key={division}
-                    className="border rounded-lg shadow-md p-4"
-                  >
-                    <div className="text-xl font-semibold">
-                      Division {division}
-                    </div>
-                    {Object.keys(
-                      filteredGroupedFaculty[department][year][division]
-                    ).map((subjectName) => (
-                      <div key={subjectName} className="mt-4 border-t pt-4">
-                        <div className="text-lg font-semibold">
-                          {subjectName}
-                        </div>
-                        {filteredGroupedFaculty[department][year][division][
-                          subjectName
-                        ].map((faculty) => (
-                          <div
-                            key={faculty.teacherId}
-                            className="bg-white p-4 rounded-lg shadow-md mt-4"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3>{faculty.name}</h3>
-                                <p>{faculty.email}</p>
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() =>
-                                    openSubjectModal(faculty.teacherId)
-                                  }
-                                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
-                                >
-                                  <i className="fas fa-plus"></i>
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    removeSubject(
-                                      faculty.email,
-                                      subjectName,
-                                      year,
-                                      faculty.semester,
-                                      division
-                                    )
-                                  }
-                                  className="text-red-500 hover:text-red-700"
-                                >
-                                  <i className="fas fa-trash-alt"></i>
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    openModifyModal(faculty.teacherId)
-                                  }
-                                  className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-700"
-                                >
-                                  <i className="fas fa-edit"></i>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                )
-              )}
-            </div>
+              <i className="fas fa-plus"></i>
+            </button>
+            <button
+              onClick={() => openModifyModal(faculty._id)}
+              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-700"
+            >
+              <i className="fas fa-edit"></i>
+            </button>
           </div>
-        ))}
+        </div>
+        <div className="mt-4">
+          <h4 className="text-md font-semibold mb-2">Assigned Subjects:</h4>
+          <ul className="list-disc pl-5">
+            {faculty.subjects.map((subject, index) => (
+              <li key={index} className="mb-1">
+                {subject.name} (Year: {subject.year}, Semester:{" "}
+                {subject.semester}, Division: {subject.division})
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     ));
-  };
-
-  const toggleCollapse = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.classList.toggle("hidden");
-    }
   };
 
   return (
