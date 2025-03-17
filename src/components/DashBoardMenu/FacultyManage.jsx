@@ -123,13 +123,9 @@ const FacultyManagementSystem = () => {
   };
 
   const openAddSubjectModal = (facultyId) => {
+    setIsModifyModalOpen(false); // Close Modify Modal
     setSelectedFacultyId(facultyId);
-    setIsAddSubjectModalOpen(true);
-  };
-
-  const closeModifyModal = () => {
-    setIsModifyModalOpen(false);
-    setSelectedFacultyId(null);
+    setIsAddSubjectModalOpen(true); // Open Add Subject Modal
   };
 
   const openDeleteModal = (teacherId) => {
@@ -346,12 +342,14 @@ const FacultyManagementSystem = () => {
       return;
     }
 
-    const subjectName = formData.get("subjectName");
-    const yearValue = formData.get("year");
-    const semesterNumber = parseInt(formData.get("semester"));
-    const divisionValue = formData.get("division");
+    // Extract form values
+    const subjectName = formData.get("subjectName")?.trim();
+    const yearValue = formData.get("year")?.trim();
+    const semesterValue = parseInt(formData.get("semester"));
+    const divisionValue = formData.get("division")?.trim();
 
-    if (!subjectName || !yearValue || isNaN(semesterNumber) || !divisionValue) {
+    // Check if any field is empty
+    if (!subjectName || !yearValue || isNaN(semesterValue) || !divisionValue) {
       alert(
         "Please fill all required fields: Subject Name, Year, Semester, and Division."
       );
@@ -361,24 +359,17 @@ const FacultyManagementSystem = () => {
     const newSubject = {
       name: subjectName,
       year: yearValue,
-      semester: semesterNumber,
+      semester: semesterValue,
       division: divisionValue,
     };
 
     try {
       setLoading(true);
-
       const token = localStorage.getItem("token");
       const adminId = localStorage.getItem("adminId");
 
-      if (!adminId) {
-        alert("Admin ID is missing.");
-        setLoading(false);
-        return;
-      }
-
-      if (!token) {
-        alert("Authorization token is missing. Please log in again.");
+      if (!adminId || !token) {
+        alert("Authentication error. Please log in again.");
         setLoading(false);
         return;
       }
@@ -414,6 +405,7 @@ const FacultyManagementSystem = () => {
               : teacher
           )
         );
+        setIsAddSubjectModalOpen(false); // Close Add Subject Modal on success
       } else {
         alert("Failed to add subject. Please try again.");
       }
@@ -422,8 +414,6 @@ const FacultyManagementSystem = () => {
       alert(error.response?.data?.message || "Failed to add subject.");
     } finally {
       setLoading(false);
-      closeSubjectModal();
-      form.reset();
     }
   };
 
