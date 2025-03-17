@@ -166,7 +166,14 @@ const FacultyManagementSystem = () => {
       email: emailValue,
       department: departmentValue,
       teacherType: "subjectTeacher",
-      subjects: [{ name: subjectName, division: divisionValue }], // ✅ Correct placement
+      subjects: [
+        {
+          name: subjectName,
+          year: yearValue, // ✅ Required
+          semester: semesterValue, // ✅ Required
+          division: divisionValue, // ✅ Required
+        },
+      ],
       adminId,
     };
 
@@ -231,7 +238,10 @@ const FacultyManagementSystem = () => {
       email: emailValue,
       department: departmentValue,
       teacherType: "classTeacher",
-      assignedClass: { year: yearValue, division: divisionValue }, // ✅ Correct format
+      assignedClass: {
+        year: yearValue,
+        division: divisionValue,
+      },
       adminId,
     };
 
