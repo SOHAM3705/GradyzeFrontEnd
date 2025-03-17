@@ -146,18 +146,20 @@ const FacultyManagementSystem = () => {
     const emailValue = formData.get("email");
     const departmentValue = formData.get("department");
     const divisionValue = formData.get("division");
+    const yearValue = formData.get("year"); // ✅ Fix: Retrieve year
+    const semesterValue = parseInt(formData.get("semester")); // ✅ Fix: Parse semester as number
     const subjectName = formData.get("subject");
+
+    if (!yearValue || isNaN(semesterValue)) {
+      alert("Please select a valid year and semester.");
+      return;
+    }
 
     const adminId = localStorage.getItem("adminId");
     const token = localStorage.getItem("token");
 
-    if (!adminId) {
-      alert("Admin ID is missing.");
-      return;
-    }
-
-    if (!token) {
-      alert("Authorization token is missing. Please log in again.");
+    if (!adminId || !token) {
+      alert("Authentication error. Please log in again.");
       return;
     }
 
@@ -169,39 +171,31 @@ const FacultyManagementSystem = () => {
       subjects: [
         {
           name: subjectName,
-          year: yearValue, // ✅ Required
-          semester: semesterValue, // ✅ Required
-          division: divisionValue, // ✅ Required
+          year: yearValue,
+          semester: semesterValue,
+          division: divisionValue,
         },
       ],
       adminId,
     };
-
-    console.log("Sending teacher data:", teacherData);
 
     try {
       setLoading(true);
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
         teacherData,
-        {
-          headers: { Authorization: `Bearer ${token}` }, // ✅ Added token
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (response.status === 201 || response.status === 200) {
-        setMessage(response.data.message);
+      if (response.status === 201) {
+        alert("Teacher added successfully!");
         setFaculties((prev) => [...prev, response.data.teacher]);
-        alert(response.data.message || "Teacher added successfully!");
       } else {
-        setMessage("Failed to add teacher. Please try again.");
+        alert("Failed to add teacher.");
       }
     } catch (error) {
-      console.error("Error:", error.response?.data || error.message);
-      alert(
-        "Failed to add teacher: " +
-          (error.response?.data?.message || error.message)
-      );
+      console.error("Error adding faculty:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to add teacher.");
     } finally {
       setLoading(false);
       closeFacultyModal();
@@ -382,7 +376,7 @@ const FacultyManagementSystem = () => {
         payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // ✅ Token included
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -405,9 +399,7 @@ const FacultyManagementSystem = () => {
       }
     } catch (error) {
       console.error("Error adding subject:", error.response?.data || error);
-      alert(
-        "Error: " + (error.response?.data?.message || "Failed to add subject.")
-      );
+      alert(error.response?.data?.message || "Failed to add subject.");
     } finally {
       setLoading(false);
       closeSubjectModal();
@@ -505,6 +497,50 @@ const FacultyManagementSystem = () => {
         error.response?.data?.message ||
           "Failed to remove subject. Please try again."
       );
+    }
+  };
+
+  const deleteTeacher = async (teacherId) => {
+    if (!window.confirm("Are you sure you want to delete this teacher?")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const adminId = localStorage.getItem("adminId");
+
+      if (!token) {
+        alert("Authentication error. Please log in again.");
+        return;
+      }
+
+      if (!adminId) {
+        alert("Admin ID is missing. Please refresh and try again.");
+        return;
+      }
+
+      const response = await axios.delete(
+        `https://gradyzebackend.onrender.com/api/teacher/delete/${teacherId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          data: { adminId }, // Pass adminId in request body
+        }
+      );
+
+      if (response.status === 200) {
+        alert("Teacher deleted successfully!");
+        setFaculties((prev) =>
+          prev.filter((faculty) => faculty._id !== teacherId)
+        );
+      } else {
+        alert(response.data?.message || "Failed to delete teacher.");
+      }
+    } catch (error) {
+      console.error("Error deleting teacher:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to delete teacher.");
     }
   };
 
@@ -730,25 +766,50 @@ const FacultyManagementSystem = () => {
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-semibold">{faculty.name}</h3>
           <div className="flex gap-2">
+            {/* Modify Button */}
             <button
               onClick={() => openModifyModal(faculty._id)}
               className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-700"
             >
               <i className="fas fa-edit"></i>
             </button>
+
+            {/* Delete Button */}
+            <button
+              onClick={() => deleteTeacher(faculty._id)}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              <i className="fas fa-trash-alt"></i> Delete
+            </button>
           </div>
         </div>
-        <div className="mt-4">
-          <h4 className="text-md font-semibold mb-2">Assigned Subjects:</h4>
-          <ul className="list-disc pl-5">
-            {faculty.subjects.map((subject, index) => (
-              <li key={index} className="mb-1 flex items-center">
-                {subject.name} (Year: {subject.year}, Semester:{" "}
-                {subject.semester}, Division: {subject.division})
-              </li>
-            ))}
-          </ul>
-        </div>
+
+        {/* Assigned Subjects (For Subject Teachers) */}
+        {faculty.teacherType === "subjectTeacher" &&
+          faculty.subjects.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-md font-semibold mb-2">Assigned Subjects:</h4>
+              <ul className="list-disc pl-5">
+                {faculty.subjects.map((subject, index) => (
+                  <li key={index} className="mb-1 flex items-center">
+                    {subject.name} (Year: {subject.year}, Semester:{" "}
+                    {subject.semester}, Division: {subject.division})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+        {/* Assigned Class (For Class Teachers) */}
+        {faculty.teacherType === "classTeacher" && faculty.assignedClass && (
+          <div className="mt-4">
+            <h4 className="text-md font-semibold mb-2">Assigned Class:</h4>
+            <p className="text-gray-700">
+              {faculty.assignedClass.year} - Division{" "}
+              {faculty.assignedClass.division}
+            </p>
+          </div>
+        )}
       </div>
     ));
   };
