@@ -91,15 +91,16 @@ const subjectsData = {
 const FacultyManagementSystem = () => {
   const [faculties, setFaculties] = useState([]);
   const [isFacultyModalOpen, setIsFacultyModalOpen] = useState(false);
+  const [isClassTeacherModalOpen, setIsClassTeacherModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
   const [selectedFacultyId, setSelectedFacultyId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [formData, setFormData] = useState(new FormData());
 
   const closeFacultyModal = () => setIsFacultyModalOpen(false);
+  const closeClassTeacherModal = () => setIsClassTeacherModalOpen(false);
 
   const openSubjectModal = (facultyId) => {
     setSelectedFacultyId(facultyId);
@@ -145,6 +146,7 @@ const FacultyManagementSystem = () => {
     const emailValue = formData.get("email");
     const departmentValue = formData.get("department");
     const divisionValue = formData.get("division");
+    const subjectName = formData.get("subject");
 
     const adminId = localStorage.getItem("adminId");
     if (!adminId) {
@@ -158,7 +160,7 @@ const FacultyManagementSystem = () => {
       department: departmentValue,
       teacherType: "subjectTeacher",
       division: divisionValue,
-      subjects: [],
+      subjects: [{ name: subjectName }],
       adminId,
     };
 
@@ -201,6 +203,8 @@ const FacultyManagementSystem = () => {
     const emailValue = formData.get("email");
     const departmentValue = formData.get("department");
     const divisionValue = formData.get("division");
+    const yearValue = formData.get("year");
+    const semesterValue = formData.get("semester");
 
     const adminId = localStorage.getItem("adminId");
     if (!adminId) {
@@ -214,6 +218,8 @@ const FacultyManagementSystem = () => {
       department: departmentValue,
       teacherType: "classTeacher",
       division: divisionValue,
+      year: yearValue,
+      semester: semesterValue,
       adminId,
     };
 
@@ -242,7 +248,7 @@ const FacultyManagementSystem = () => {
       );
     } finally {
       setLoading(false);
-      closeFacultyModal();
+      closeClassTeacherModal();
       form.reset();
     }
   };
@@ -528,6 +534,13 @@ const FacultyManagementSystem = () => {
     }, 100);
   };
 
+  const openClassTeacherModal = () => {
+    setIsClassTeacherModalOpen(true);
+    setTimeout(() => {
+      setupFormListeners();
+    }, 100);
+  };
+
   const fetchFaculty = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -761,7 +774,7 @@ const FacultyManagementSystem = () => {
             </button>
             <button
               className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
-              onClick={addClassTeacher}
+              onClick={openClassTeacherModal}
             >
               Add Class Teacher
             </button>
@@ -856,6 +869,18 @@ const FacultyManagementSystem = () => {
                 </select>
               </div>
               <div className="form-group">
+                <label className="block text-gray-700">Subject</label>
+                <select
+                  id="subject"
+                  name="subject"
+                  required
+                  className="w-full p-2 border rounded"
+                  disabled
+                >
+                  <option value="">Select Subject</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label className="block text-gray-700">Division</label>
                 <input
                   type="text"
@@ -874,6 +899,120 @@ const FacultyManagementSystem = () => {
                 <button
                   type="button"
                   onClick={closeFacultyModal}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isClassTeacherModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg">Add New Class Teacher</h3>
+              <button
+                className="text-gray-600"
+                onClick={closeClassTeacherModal}
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={addClassTeacher} className="space-y-4">
+              <div className="form-group">
+                <label className="block text-gray-700">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Department</label>
+                <select
+                  name="department"
+                  required
+                  className="w-full p-2 border rounded"
+                  onChange={updateFields}
+                >
+                  <option value="">Select Department</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Information Technology">
+                    Information Technology
+                  </option>
+                  <option value="Mechanical Engineering">
+                    Mechanical Engineering
+                  </option>
+                  <option value="Electronics & Telecommunication">
+                    Electronics & Telecommunication
+                  </option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Year</label>
+                <select
+                  name="year"
+                  required
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select Year</option>
+                  <option value="First Year">First Year</option>
+                  <option value="Second Year">Second Year</option>
+                  <option value="Third Year">Third Year</option>
+                  <option value="Fourth Year">Fourth Year</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Semester</label>
+                <select
+                  name="semester"
+                  required
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select Semester</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                  <option value="3">Semester 3</option>
+                  <option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option>
+                  <option value="6">Semester 6</option>
+                  <option value="7">Semester 7</option>
+                  <option value="8">Semester 8</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Division</label>
+                <input
+                  type="text"
+                  name="division"
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="submit"
+                  className="bg-purple-600 text-white px-4 py-2 rounded"
+                >
+                  Add Class Teacher
+                </button>
+                <button
+                  type="button"
+                  onClick={closeClassTeacherModal}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
                 >
                   Cancel
@@ -1009,7 +1148,10 @@ const FacultyManagementSystem = () => {
                       ))}
                   </ul>
                   <button
-                    onClick={openSubjectModal}
+                    onClick={() => {
+                      closeModifyModal();
+                      openSubjectModal(selectedFacultyId);
+                    }}
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4"
                   >
                     <i className="fas fa-plus"></i> Add Subject
