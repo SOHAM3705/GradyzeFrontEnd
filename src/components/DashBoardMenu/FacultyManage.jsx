@@ -219,74 +219,6 @@ const FacultyManagementSystem = () => {
     }
   };
 
-  const addClassTeacher = async (event) => {
-    event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
-
-    const nameValue = formData.get("name");
-    const emailValue = formData.get("email");
-    const departmentValue = formData.get("department");
-    const divisionValue = formData.get("division");
-    const yearValue = formData.get("year");
-
-    const adminId = localStorage.getItem("adminId");
-    const token = localStorage.getItem("token");
-
-    if (!adminId) {
-      alert("Admin ID is missing.");
-      return;
-    }
-
-    if (!token) {
-      alert("Authorization token is missing. Please log in again.");
-      return;
-    }
-
-    const teacherData = {
-      name: nameValue,
-      email: emailValue,
-      department: departmentValue,
-      teacherType: "classTeacher",
-      assignedClass: {
-        year: yearValue,
-        division: divisionValue,
-      },
-      adminId,
-    };
-
-    console.log("Sending teacher data:", teacherData);
-
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
-        teacherData,
-        {
-          headers: { Authorization: `Bearer ${token}` }, // ✅ Added token
-        }
-      );
-
-      if (response.status === 201 || response.status === 200) {
-        setMessage(response.data.message);
-        setFaculties((prev) => [...prev, response.data.teacher]);
-        alert(response.data.message || "Class Teacher added successfully!");
-      } else {
-        setMessage("Failed to add class teacher. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error:", error.response?.data || error.message);
-      alert(
-        "Failed to add class teacher: " +
-          (error.response?.data?.message || error.message)
-      );
-    } finally {
-      setLoading(false);
-      closeClassTeacherModal();
-      form.reset();
-    }
-  };
-
   const updateSubjects = () => {
     const department = document.querySelector(
       'select[name="department"]'
@@ -331,64 +263,52 @@ const FacultyManagementSystem = () => {
       subjectSelect.disabled = false;
     }
   };
-
   const addSubject = async (event) => {
     event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
 
-    if (!selectedFacultyId) {
-      alert("Faculty selection is missing.");
-      return;
-    }
-
-    // Extract form values
+    const formData = new FormData(event.target);
     const subjectName = formData.get("subjectName")?.trim();
     const yearValue = formData.get("year")?.trim();
     const semesterValue = parseInt(formData.get("semester"));
     const divisionValue = formData.get("division")?.trim();
+    const teacherId = selectedFacultyId; // Ensure teacher ID is properly set
 
-    // Check if any field is empty
+    if (!teacherId) {
+      alert("Teacher ID is missing. Please select a teacher.");
+      return;
+    }
+
     if (!subjectName || !yearValue || isNaN(semesterValue) || !divisionValue) {
       alert(
-        "Please fill all required fields: Subject Name, Year, Semester, and Division."
+        "All fields are required: Subject Name, Year, Semester, and Division."
       );
       return;
     }
 
-    const newSubject = {
-      name: subjectName,
-      year: yearValue,
-      semester: semesterValue,
-      division: divisionValue,
+    // ✅ Define subjectData properly
+    const subjectData = {
+      teacherId: teacherId,
+      subjects: [
+        {
+          name: subjectName,
+          year: yearValue,
+          semester: semesterValue,
+          division: divisionValue,
+        },
+      ],
+      adminId: localStorage.getItem("adminId"),
     };
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const adminId = localStorage.getItem("adminId");
-
-      if (!adminId || !token) {
-        alert("Authentication error. Please log in again.");
-        setLoading(false);
-        return;
-      }
-
-      const payload = {
-        teacherId: selectedFacultyId,
-        subjects: [newSubject],
-        adminId,
-      };
-
-      console.log("🚀 Sending subject payload:", payload);
+      console.log("🚀 Sending subject payload:", subjectData);
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-subject",
         subjectData,
-        payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
             "Content-Type": "application/json",
           },
         }
@@ -398,17 +318,20 @@ const FacultyManagementSystem = () => {
         alert(response.data.message || "Subject added successfully!");
         setFaculties((prev) =>
           prev.map((teacher) =>
-            teacher._id === selectedFacultyId
+            teacher._id === teacherId
               ? {
                   ...teacher,
-                  subjects: [...(teacher.subjects || []), newSubject],
+                  subjects: [
+                    ...(teacher.subjects || []),
+                    subjectData.subjects[0],
+                  ],
                 }
               : teacher
           )
         );
-        setIsAddSubjectModalOpen(false); // Close Add Subject Modal on success
+        setIsAddSubjectModalOpen(false); // ✅ Close modal on success
       } else {
-        alert("Failed to add subject. Please try again.");
+        alert(response.data?.message || "Failed to add subject.");
       }
     } catch (error) {
       console.error("Error adding subject:", error.response?.data || error);
@@ -991,7 +914,7 @@ const FacultyManagementSystem = () => {
               <h3 className="text-lg">Add New Class Teacher</h3>
               <button
                 className="text-gray-600"
-                onClick={closeClassTeacherModal}
+                onClick={() => setIsClassTeacherModalOpen(false)}
               >
                 &times;
               </button>
@@ -1021,7 +944,6 @@ const FacultyManagementSystem = () => {
                   name="department"
                   required
                   className="w-full p-2 border rounded"
-                  onChange={updateFields}
                 >
                   <option value="">Select Department</option>
                   <option value="Computer Science">Computer Science</option>
@@ -1052,24 +974,6 @@ const FacultyManagementSystem = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label className="block text-gray-700">Semester</label>
-                <select
-                  name="semester"
-                  required
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Semester</option>
-                  <option value="1">Semester 1</option>
-                  <option value="2">Semester 2</option>
-                  <option value="3">Semester 3</option>
-                  <option value="4">Semester 4</option>
-                  <option value="5">Semester 5</option>
-                  <option value="6">Semester 6</option>
-                  <option value="7">Semester 7</option>
-                  <option value="8">Semester 8</option>
-                </select>
-              </div>
-              <div className="form-group">
                 <label className="block text-gray-700">Division</label>
                 <input
                   type="text"
@@ -1087,7 +991,7 @@ const FacultyManagementSystem = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={closeClassTeacherModal}
+                  onClick={() => setIsClassTeacherModalOpen(false)}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
                 >
                   Cancel
