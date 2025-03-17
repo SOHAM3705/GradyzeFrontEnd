@@ -158,64 +158,99 @@ const FacultyManagementSystem = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const nameValue = formData.get("name");
-    const emailValue = formData.get("email");
-    const departmentValue = formData.get("department");
-    const divisionValue = formData.get("division");
-    const yearValue = formData.get("year"); // ✅ Fix: Retrieve year
-    const semesterValue = parseInt(formData.get("semester")); // ✅ Fix: Parse semester as number
-    const subjectName = formData.get("subject");
+    const nameValue = formData.get("name")?.trim();
+    const emailValue = formData.get("email")?.trim();
+    const departmentValue = formData.get("department")?.trim();
+    const divisionValue = formData.get("division")?.trim();
+    const yearValue = formData.get("year")?.trim();
+    const semesterValue = formData.get("semester")
+      ? parseInt(formData.get("semester"))
+      : null;
+    const subjectName = formData.get("subject")?.trim();
+    const isClassTeacher = formData.get("isClassTeacher") === "on"; // Checkbox value
+    const isSubjectTeacher = formData.get("isSubjectTeacher") === "on"; // Checkbox value
 
-    if (!yearValue || isNaN(semesterValue)) {
-      alert("Please select a valid year and semester.");
+    if (!nameValue || !emailValue || !departmentValue) {
+      alert("Please fill in all required fields: Name, Email, and Department.");
       return;
     }
 
-    const adminId = localStorage.getItem("adminId");
-    const token = localStorage.getItem("token");
-
-    if (!adminId || !token) {
-      alert("Authentication error. Please log in again.");
+    if (!isClassTeacher && !isSubjectTeacher) {
+      alert(
+        "Please select at least one role: Class Teacher or Subject Teacher."
+      );
       return;
     }
 
-    const teacherData = {
+    let facultyData = {
       name: nameValue,
       email: emailValue,
       department: departmentValue,
-      teacherType: "subjectTeacher",
-      subjects: [
+      adminId: localStorage.getItem("adminId"),
+    };
+
+    // ✅ If the faculty is a Class Teacher, add class details
+    if (isClassTeacher) {
+      if (!yearValue || !divisionValue) {
+        alert("Class Teachers must have a Year and Division.");
+        return;
+      }
+
+      facultyData.isClassTeacher = true;
+      facultyData.assignedClass = {
+        year: yearValue,
+        division: divisionValue,
+      };
+    }
+
+    // ✅ If the faculty is a Subject Teacher, add subject details
+    if (isSubjectTeacher) {
+      if (
+        !subjectName ||
+        !yearValue ||
+        isNaN(semesterValue) ||
+        !divisionValue
+      ) {
+        alert(
+          "Subject Teachers must have a Subject, Year, Semester, and Division."
+        );
+        return;
+      }
+
+      facultyData.isSubjectTeacher = true;
+      facultyData.subjects = [
         {
           name: subjectName,
           year: yearValue,
           semester: semesterValue,
           division: divisionValue,
         },
-      ],
-      adminId,
-    };
+      ];
+    }
 
     try {
       setLoading(true);
+      console.log("🚀 Sending Faculty Data:", facultyData);
+
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
-        teacherData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        facultyData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      if (response.status === 201) {
-        alert("Teacher added successfully!");
-        setFaculties((prev) => [...prev, response.data.teacher]);
-      } else {
-        alert("Failed to add teacher.");
-      }
+      alert(response.data.message);
+      setFaculties([...faculties, response.data.teacher]);
+      setIsFacultyModalOpen(false); // ✅ Close modal on success
     } catch (error) {
+      alert(error.response?.data?.message || "Failed to add faculty.");
       console.error("Error adding faculty:", error.response?.data || error);
-      alert(error.response?.data?.message || "Failed to add teacher.");
     } finally {
       setLoading(false);
-      closeFacultyModal();
-      form.reset();
     }
   };
 
@@ -227,7 +262,6 @@ const FacultyManagementSystem = () => {
       name: formData.get("name"),
       email: formData.get("email"),
       department: formData.get("department"),
-      teacherType: "classTeacher",
       assignedClass: {
         year: formData.get("year"),
         division: formData.get("division"),
@@ -241,9 +275,10 @@ const FacultyManagementSystem = () => {
         "https://gradyzebackend.onrender.com/api/teacher/add-class-teacher",
         classTeacherData
       );
+
       alert(response.data.message);
       setFaculties([...faculties, response.data.teacher]);
-      setIsClassTeacherModalOpen(false); // Close the modal after adding
+      setIsClassTeacherModalOpen(false); // ✅ Close the modal after adding
     } catch (error) {
       alert(error.response?.data?.message || "Failed to add class teacher.");
     } finally {
@@ -295,38 +330,18 @@ const FacultyManagementSystem = () => {
       subjectSelect.disabled = false;
     }
   };
-
   const addSubject = async (event) => {
     event.preventDefault();
-
     const formData = new FormData(event.target);
-    const subjectName = formData.get("subjectName")?.trim();
-    const yearValue = formData.get("year")?.trim();
-    const semesterValue = parseInt(formData.get("semester"));
-    const divisionValue = formData.get("division")?.trim();
-    const teacherId = selectedFacultyId; // Ensure teacher ID is properly set
 
-    if (!teacherId) {
-      alert("Teacher ID is missing. Please select a teacher.");
-      return;
-    }
-
-    if (!subjectName || !yearValue || isNaN(semesterValue) || !divisionValue) {
-      alert(
-        "All fields are required: Subject Name, Year, Semester, and Division."
-      );
-      return;
-    }
-
-    // ✅ Define subjectData properly
     const subjectData = {
-      teacherId: teacherId,
+      teacherId: selectedFacultyId,
       subjects: [
         {
-          name: subjectName,
-          year: yearValue,
-          semester: semesterValue,
-          division: divisionValue,
+          name: formData.get("subjectName"),
+          year: formData.get("year"),
+          semester: parseInt(formData.get("semester")),
+          division: formData.get("division"),
         },
       ],
       adminId: localStorage.getItem("adminId"),
@@ -351,13 +366,14 @@ const FacultyManagementSystem = () => {
         alert(response.data.message || "Subject added successfully!");
         setFaculties((prev) =>
           prev.map((teacher) =>
-            teacher._id === teacherId
+            teacher._id === selectedFacultyId
               ? {
                   ...teacher,
                   subjects: [
                     ...(teacher.subjects || []),
                     subjectData.subjects[0],
                   ],
+                  isSubjectTeacher: true,
                 }
               : teacher
           )
@@ -826,7 +842,10 @@ const FacultyManagementSystem = () => {
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg">Add New Faculty</h3>
-              <button className="text-gray-600" onClick={closeFacultyModal}>
+              <button
+                className="text-gray-600"
+                onClick={() => setIsFacultyModalOpen(false)}
+              >
                 &times;
               </button>
             </div>
@@ -855,7 +874,6 @@ const FacultyManagementSystem = () => {
                   name="department"
                   required
                   className="w-full p-2 border rounded"
-                  onChange={updateFields}
                 >
                   <option value="">Select Department</option>
                   <option value="Computer Science">Computer Science</option>
@@ -871,55 +889,75 @@ const FacultyManagementSystem = () => {
                   <option value="Civil Engineering">Civil Engineering</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Year</label>
-                <select
-                  id="year"
-                  required
-                  className="w-full p-2 border rounded"
-                  onChange={updateSemesters}
-                  disabled
-                >
-                  <option value="">Select Year</option>
-                  <option value="First Year">First Year</option>
-                  <option value="Second Year">Second Year</option>
-                  <option value="Third Year">Third Year</option>
-                  <option value="Fourth Year">Fourth Year</option>
-                </select>
+
+              {/* ✅ Checkboxes to Select Teacher Role */}
+              <div className="flex items-center gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="isClassTeacher"
+                    className="mr-2"
+                  />
+                  Class Teacher
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="isSubjectTeacher"
+                    className="mr-2"
+                  />
+                  Subject Teacher
+                </label>
               </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Semester</label>
-                <select
-                  id="semester"
-                  required
-                  className="w-full p-2 border rounded"
-                  onChange={updateSubjects}
-                  disabled
-                >
-                  <option value="">Select Semester</option>
-                </select>
+
+              {/* ✅ Class Teacher Fields (Year & Division) */}
+              <div id="classTeacherFields" className="hidden">
+                <div className="form-group">
+                  <label className="block text-gray-700">Year</label>
+                  <select name="year" className="w-full p-2 border rounded">
+                    <option value="">Select Year</option>
+                    <option value="First Year">First Year</option>
+                    <option value="Second Year">Second Year</option>
+                    <option value="Third Year">Third Year</option>
+                    <option value="Fourth Year">Fourth Year</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="block text-gray-700">Division</label>
+                  <input
+                    type="text"
+                    name="division"
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
               </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Subject</label>
-                <select
-                  id="subject"
-                  name="subject"
-                  required
-                  className="w-full p-2 border rounded"
-                  disabled
-                >
-                  <option value="">Select Subject</option>
-                </select>
+
+              {/* ✅ Subject Teacher Fields (Subject, Semester, Division) */}
+              <div id="subjectTeacherFields" className="hidden">
+                <div className="form-group">
+                  <label className="block text-gray-700">Subject</label>
+                  <input
+                    type="text"
+                    name="subject"
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="block text-gray-700">Semester</label>
+                  <select name="semester" className="w-full p-2 border rounded">
+                    <option value="">Select Semester</option>
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                    <option value="3">Semester 3</option>
+                    <option value="4">Semester 4</option>
+                    <option value="5">Semester 5</option>
+                    <option value="6">Semester 6</option>
+                    <option value="7">Semester 7</option>
+                    <option value="8">Semester 8</option>
+                  </select>
+                </div>
               </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Division</label>
-                <input
-                  type="text"
-                  name="division"
-                  required
-                  className="w-full p-2 border rounded"
-                />
-              </div>
+
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
@@ -929,7 +967,7 @@ const FacultyManagementSystem = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={closeFacultyModal}
+                  onClick={() => setIsFacultyModalOpen(false)}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
                 >
                   Cancel
