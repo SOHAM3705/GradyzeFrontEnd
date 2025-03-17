@@ -94,7 +94,7 @@ const FacultyManagementSystem = () => {
   const [isClassTeacherModalOpen, setIsClassTeacherModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
-  const [selectedFacultyId, setSelectedFacultyId] = useState(null);
+  const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
