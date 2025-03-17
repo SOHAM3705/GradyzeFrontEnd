@@ -219,6 +219,38 @@ const FacultyManagementSystem = () => {
     }
   };
 
+  const addClassTeacher = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+
+    const classTeacherData = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      department: formData.get("department"),
+      teacherType: "classTeacher",
+      assignedClass: {
+        year: formData.get("year"),
+        division: formData.get("division"),
+      },
+      adminId: localStorage.getItem("adminId"),
+    };
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/add-class-teacher",
+        classTeacherData
+      );
+      alert(response.data.message);
+      setFaculties([...faculties, response.data.teacher]);
+      setIsClassTeacherModalOpen(false); // Close the modal after adding
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to add class teacher.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateSubjects = () => {
     const department = document.querySelector(
       'select[name="department"]'
@@ -263,6 +295,7 @@ const FacultyManagementSystem = () => {
       subjectSelect.disabled = false;
     }
   };
+
   const addSubject = async (event) => {
     event.preventDefault();
 
