@@ -98,9 +98,10 @@ const FacultyManagementSystem = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
   const closeFacultyModal = () => setIsFacultyModalOpen(false);
   const closeClassTeacherModal = () => setIsClassTeacherModalOpen(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [teacherToDelete, setTeacherToDelete] = useState(null);
 
   const openSubjectModal = (facultyId) => {
     setSelectedFacultyId(facultyId);
@@ -120,6 +121,16 @@ const FacultyManagementSystem = () => {
   const closeModifyModal = () => {
     setIsModifyModalOpen(false);
     setSelectedFacultyId(null);
+  };
+
+  const openDeleteModal = (teacherId) => {
+    setTeacherToDelete(teacherId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setTeacherToDelete(null);
   };
 
   const updateFields = () => {
@@ -408,7 +419,7 @@ const FacultyManagementSystem = () => {
   };
 
   const removeSubject = async (
-    facultyEmail,
+    facultyId,
     subjectName,
     year,
     semester,
@@ -428,35 +439,28 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      let semesterValue = semester;
-      if (
-        typeof semester === "string" &&
-        semester.toLowerCase().includes("semester")
-      ) {
-        semesterValue = parseInt(semester.replace(/[^0-9]/g, ""));
+      // Ensure semester is a number
+      let semesterValue = parseInt(semester);
+      if (isNaN(semesterValue)) {
+        alert("Invalid semester value.");
+        return;
       }
 
-      if (
-        !facultyEmail ||
-        !subjectName ||
-        !year ||
-        semesterValue === undefined ||
-        !division
-      ) {
+      if (!facultyId || !subjectName || !year || !division) {
         alert("One or more required fields are missing.");
         return;
       }
 
       const payload = {
-        email: facultyEmail.trim().toLowerCase(),
-        subjectName: subjectName.trim().toLowerCase(),
-        year: year.trim().toLowerCase(),
+        teacherId: facultyId,
+        subjectName: subjectName.trim(),
+        year: year.trim(),
         semester: semesterValue,
-        division: division.trim().toLowerCase(),
+        division: division.trim(),
         adminId,
       };
 
-      console.log("🚀 Sending payload:", payload);
+      console.log("🚀 Sending subject removal payload:", payload);
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
@@ -476,12 +480,10 @@ const FacultyManagementSystem = () => {
             ...teacher,
             subjects: teacher.subjects.filter(
               (subject) =>
-                !(
-                  subject.name === subjectName &&
-                  subject.year === year &&
-                  subject.semester === semesterValue &&
-                  subject.division === division
-                )
+                subject.name !== subjectName ||
+                subject.year !== year ||
+                subject.semester !== semesterValue ||
+                subject.division !== division
             ),
           }))
         );
@@ -489,38 +491,25 @@ const FacultyManagementSystem = () => {
         alert(response.data?.message || "Failed to remove subject.");
       }
     } catch (error) {
-      console.error(
-        "Error removing subject:",
-        error.response?.data || error.message
-      );
-      alert(
-        error.response?.data?.message ||
-          "Failed to remove subject. Please try again."
-      );
+      console.error("Error removing subject:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to remove subject.");
     }
   };
 
-  const deleteTeacher = async (teacherId) => {
-    if (!window.confirm("Are you sure you want to delete this teacher?")) {
-      return;
-    }
+  const deleteTeacher = async () => {
+    if (!teacherToDelete) return;
 
     try {
       const token = localStorage.getItem("token");
       const adminId = localStorage.getItem("adminId");
 
-      if (!token) {
+      if (!token || !adminId) {
         alert("Authentication error. Please log in again.");
         return;
       }
 
-      if (!adminId) {
-        alert("Admin ID is missing. Please refresh and try again.");
-        return;
-      }
-
       const response = await axios.delete(
-        `https://gradyzebackend.onrender.com/api/teacher/delete/${teacherId}`,
+        `https://gradyzebackend.onrender.com/api/teacher/delete/${teacherToDelete}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -533,7 +522,7 @@ const FacultyManagementSystem = () => {
       if (response.status === 200) {
         alert("Teacher deleted successfully!");
         setFaculties((prev) =>
-          prev.filter((faculty) => faculty._id !== teacherId)
+          prev.filter((faculty) => faculty._id !== teacherToDelete)
         );
       } else {
         alert(response.data?.message || "Failed to delete teacher.");
@@ -541,6 +530,8 @@ const FacultyManagementSystem = () => {
     } catch (error) {
       console.error("Error deleting teacher:", error.response?.data || error);
       alert(error.response?.data?.message || "Failed to delete teacher.");
+    } finally {
+      closeDeleteModal();
     }
   };
 
@@ -774,9 +765,8 @@ const FacultyManagementSystem = () => {
               <i className="fas fa-edit"></i>
             </button>
 
-            {/* Delete Button */}
             <button
-              onClick={() => deleteTeacher(faculty._id)}
+              onClick={() => openDeleteModal(faculty._id)}
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
             >
               <i className="fas fa-trash-alt"></i> Delete
@@ -1193,6 +1183,33 @@ const FacultyManagementSystem = () => {
         </div>
       )}
 
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+            <p className="text-gray-700">
+              Are you sure you want to delete this teacher? This action cannot
+              be undone.
+            </p>
+
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                onClick={closeDeleteModal}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteTeacher}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-800"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isModifyModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
@@ -1216,9 +1233,7 @@ const FacultyManagementSystem = () => {
                           <button
                             onClick={() =>
                               removeSubject(
-                                faculties.find(
-                                  (f) => f._id === selectedFacultyId
-                                )?.email,
+                                selectedFacultyId,
                                 subject.name,
                                 subject.year,
                                 subject.semester,
