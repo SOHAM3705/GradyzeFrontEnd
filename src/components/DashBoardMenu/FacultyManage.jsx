@@ -380,7 +380,7 @@ const FacultyManagementSystem = () => {
         adminId,
       };
 
-      console.log("Sending subject payload:", payload);
+      console.log("🚀 Sending subject payload:", payload);
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
@@ -1213,61 +1213,89 @@ const FacultyManagementSystem = () => {
       {isModifyModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg">Modify Subjects</h3>
-              <button className="text-gray-600" onClick={closeModifyModal}>
-                &times;
-              </button>
+            <h3 className="text-lg">Modify Subjects</h3>
+
+            <div>
+              <h4>Current Subjects:</h4>
+              <ul>
+                {faculties
+                  .find((f) => f._id === selectedFacultyId)
+                  ?.subjects.map((subject, index) => (
+                    <li key={index} className="flex items-center mb-1">
+                      {subject.name} (Year: {subject.year}, Semester:{" "}
+                      {subject.semester}, Division: {subject.division})
+                    </li>
+                  ))}
+              </ul>
             </div>
-            <div className="modal-body">
-              {selectedFacultyId && (
-                <div>
-                  <h4>Current Subjects:</h4>
-                  <ul>
-                    {faculties
-                      .find((f) => f._id === selectedFacultyId)
-                      ?.subjects.map((subject, index) => (
-                        <li key={index} className="flex items-center mb-1">
-                          {subject.name} (Year: {subject.year}, Semester:{" "}
-                          {subject.semester}, Division: {subject.division})
-                          <button
-                            onClick={() =>
-                              removeSubject(
-                                selectedFacultyId,
-                                subject.name,
-                                subject.year,
-                                subject.semester,
-                                subject.division
-                              )
-                            }
-                            className="text-red-500 hover:text-red-700 ml-2"
-                          >
-                            <i className="fas fa-trash-alt"></i>
-                          </button>
-                        </li>
-                      ))}
-                  </ul>
-                  <button
-                    onClick={() => {
-                      closeModifyModal();
-                      openSubjectModal(selectedFacultyId);
-                    }}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4"
-                  >
-                    <i className="fas fa-plus"></i> Add Subject
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                onClick={closeModifyModal}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-              >
-                Close
-              </button>
-            </div>
+
+            <form onSubmit={addSubject} className="space-y-4 mt-4">
+              <div className="form-group">
+                <label className="block text-gray-700">Subject Name</label>
+                <input
+                  type="text"
+                  name="subjectName"
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Year</label>
+                <select
+                  name="year"
+                  required
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select Year</option>
+                  <option value="First Year">First Year</option>
+                  <option value="Second Year">Second Year</option>
+                  <option value="Third Year">Third Year</option>
+                  <option value="Fourth Year">Fourth Year</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Semester</label>
+                <select
+                  name="semester"
+                  required
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select Semester</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                  <option value="3">Semester 3</option>
+                  <option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option>
+                  <option value="6">Semester 6</option>
+                  <option value="7">Semester 7</option>
+                  <option value="8">Semester 8</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="block text-gray-700">Division</label>
+                <input
+                  type="text"
+                  name="division"
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="submit"
+                  className="bg-purple-600 text-white px-4 py-2 rounded"
+                >
+                  Add Subject
+                </button>
+                <button
+                  type="button"
+                  onClick={closeModifyModal}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
