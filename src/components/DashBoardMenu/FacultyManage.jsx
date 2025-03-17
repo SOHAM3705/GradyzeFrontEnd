@@ -98,6 +98,7 @@ const FacultyManagementSystem = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddSubjectModalOpen, setIsAddSubjectModalOpen] = useState(false);
   const closeFacultyModal = () => setIsFacultyModalOpen(false);
   const closeClassTeacherModal = () => setIsClassTeacherModalOpen(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -114,8 +115,14 @@ const FacultyManagementSystem = () => {
   };
 
   const openModifyModal = (facultyId) => {
-    setSelectedFacultyId(facultyId);
+    const faculty = faculties.find((f) => f._id === facultyId);
+    setSelectedFaculty(faculty); // ✅ Store teacher details
     setIsModifyModalOpen(true);
+  };
+
+  const openAddSubjectModal = (facultyId) => {
+    setSelectedFacultyId(facultyId);
+    setIsAddSubjectModalOpen(true);
   };
 
   const closeModifyModal = () => {
@@ -1210,26 +1217,43 @@ const FacultyManagementSystem = () => {
         </div>
       )}
 
-      {isModifyModalOpen && (
+      {selectedFacultyId && (
+        <div>
+          <h4>Current Subjects:</h4>
+          <ul>
+            {faculties
+              .find((f) => f._id === selectedFacultyId)
+              ?.subjects.map((subject, index) => (
+                <li key={index} className="flex items-center mb-1">
+                  {subject.name} (Year: {subject.year}, Semester:{" "}
+                  {subject.semester}, Division: {subject.division})
+                  <button
+                    onClick={() =>
+                      removeSubject(
+                        selectedFacultyId,
+                        subject.name,
+                        subject.year,
+                        subject.semester,
+                        subject.division
+                      )
+                    }
+                    className="text-red-500 hover:text-red-700 ml-2"
+                  >
+                    <i className="fas fa-trash-alt"></i> Delete
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+      {isAddSubjectModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <h3 className="text-lg">Modify Subjects</h3>
-
-            <div>
-              <h4>Current Subjects:</h4>
-              <ul>
-                {faculties
-                  .find((f) => f._id === selectedFacultyId)
-                  ?.subjects.map((subject, index) => (
-                    <li key={index} className="flex items-center mb-1">
-                      {subject.name} (Year: {subject.year}, Semester:{" "}
-                      {subject.semester}, Division: {subject.division})
-                    </li>
-                  ))}
-              </ul>
-            </div>
+            <h3 className="text-lg font-semibold">Add Subject</h3>
 
             <form onSubmit={addSubject} className="space-y-4 mt-4">
+              <input type="hidden" name="teacherId" value={selectedFacultyId} />
+
               <div className="form-group">
                 <label className="block text-gray-700">Subject Name</label>
                 <input
@@ -1280,22 +1304,68 @@ const FacultyManagementSystem = () => {
                   className="w-full p-2 border rounded"
                 />
               </div>
-              <div className="flex justify-end gap-4">
+
+              <div className="flex justify-end gap-4 mt-4">
                 <button
                   type="submit"
-                  className="bg-purple-600 text-white px-4 py-2 rounded"
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
                 >
                   Add Subject
                 </button>
                 <button
                   type="button"
-                  onClick={closeModifyModal}
+                  onClick={() => setIsAddSubjectModalOpen(false)}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
                 >
                   Cancel
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isModifyModalOpen && selectedFaculty && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold">
+              Modify Subjects for {selectedFaculty.name}
+            </h3>
+
+            <div>
+              <h4>Current Subjects:</h4>
+              <ul>
+                {selectedFaculty.subjects.map((subject, index) => (
+                  <li key={index} className="flex items-center mb-1">
+                    {subject.name} (Year: {subject.year}, Semester:{" "}
+                    {subject.semester}, Division: {subject.division})
+                    <button
+                      onClick={() =>
+                        removeSubject(
+                          selectedFaculty._id,
+                          subject.name,
+                          subject.year,
+                          subject.semester,
+                          subject.division
+                        )
+                      }
+                      className="text-red-500 hover:text-red-700 ml-2"
+                    >
+                      <i className="fas fa-trash-alt"></i> Delete
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex justify-end gap-4 mt-4">
+              <button
+                onClick={() => setIsModifyModalOpen(false)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
