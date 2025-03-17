@@ -198,7 +198,7 @@ const FacultyManagementSystem = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
         teacherData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -260,7 +260,7 @@ const FacultyManagementSystem = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
+        "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
         teacherData,
         {
           headers: { Authorization: `Bearer ${token}` }, // ✅ Added token
@@ -383,7 +383,8 @@ const FacultyManagementSystem = () => {
       console.log("🚀 Sending subject payload:", payload);
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
+        "https://gradyzebackend.onrender.com/api/teacher/add-subject",
+        subjectData,
         payload,
         {
           headers: {
