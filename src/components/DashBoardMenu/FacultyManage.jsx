@@ -149,8 +149,15 @@ const FacultyManagementSystem = () => {
     const subjectName = formData.get("subject");
 
     const adminId = localStorage.getItem("adminId");
+    const token = localStorage.getItem("token");
+
     if (!adminId) {
       alert("Admin ID is missing.");
+      return;
+    }
+
+    if (!token) {
+      alert("Authorization token is missing. Please log in again.");
       return;
     }
 
@@ -159,8 +166,7 @@ const FacultyManagementSystem = () => {
       email: emailValue,
       department: departmentValue,
       teacherType: "subjectTeacher",
-      division: divisionValue,
-      subjects: [{ name: subjectName }],
+      subjects: [{ name: subjectName, division: divisionValue }], // ✅ Correct placement
       adminId,
     };
 
@@ -170,7 +176,10 @@ const FacultyManagementSystem = () => {
       setLoading(true);
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
-        teacherData
+        teacherData,
+        {
+          headers: { Authorization: `Bearer ${token}` }, // ✅ Added token
+        }
       );
 
       if (response.status === 201 || response.status === 200) {
@@ -182,7 +191,6 @@ const FacultyManagementSystem = () => {
       }
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
-      setMessage("Failed to add teacher.");
       alert(
         "Failed to add teacher: " +
           (error.response?.data?.message || error.message)
@@ -204,11 +212,17 @@ const FacultyManagementSystem = () => {
     const departmentValue = formData.get("department");
     const divisionValue = formData.get("division");
     const yearValue = formData.get("year");
-    const semesterValue = formData.get("semester");
 
     const adminId = localStorage.getItem("adminId");
+    const token = localStorage.getItem("token");
+
     if (!adminId) {
       alert("Admin ID is missing.");
+      return;
+    }
+
+    if (!token) {
+      alert("Authorization token is missing. Please log in again.");
       return;
     }
 
@@ -217,9 +231,7 @@ const FacultyManagementSystem = () => {
       email: emailValue,
       department: departmentValue,
       teacherType: "classTeacher",
-      division: divisionValue,
-      year: yearValue,
-      semester: semesterValue,
+      assignedClass: { year: yearValue, division: divisionValue }, // ✅ Correct format
       adminId,
     };
 
@@ -229,7 +241,10 @@ const FacultyManagementSystem = () => {
       setLoading(true);
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-teacher-subject",
-        teacherData
+        teacherData,
+        {
+          headers: { Authorization: `Bearer ${token}` }, // ✅ Added token
+        }
       );
 
       if (response.status === 201 || response.status === 200) {
@@ -241,7 +256,6 @@ const FacultyManagementSystem = () => {
       }
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
-      setMessage("Failed to add class teacher.");
       alert(
         "Failed to add class teacher: " +
           (error.response?.data?.message || error.message)
@@ -358,7 +372,7 @@ const FacultyManagementSystem = () => {
         payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // ✅ Token included
             "Content-Type": "application/json",
           },
         }
