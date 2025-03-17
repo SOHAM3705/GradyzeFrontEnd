@@ -117,7 +117,8 @@ const FacultyManagementSystem = () => {
 
   const openModifyModal = (facultyId) => {
     const faculty = faculties.find((f) => f._id === facultyId);
-    setSelectedFaculty(faculty); // ✅ Store teacher details
+    setSelectedFaculty(faculty);
+    setSelectedFacultyId(facultyId); // Ensure facultyId is set
     setIsModifyModalOpen(true);
   };
 
@@ -1359,7 +1360,14 @@ const FacultyManagementSystem = () => {
               </ul>
             </div>
 
-            <div className="flex justify-end gap-4 mt-4">
+            {/* Add Subject Button */}
+            <div className="mt-4 flex justify-end gap-4">
+              <button
+                onClick={() => openAddSubjectModal(selectedFacultyId)}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Add Subject
+              </button>
               <button
                 onClick={() => setIsModifyModalOpen(false)}
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
