@@ -1437,7 +1437,7 @@ const FacultyManagementSystem = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <h3 className="text-lg font-semibold">
-              Modify Subjects for {selectedFaculty.name}
+              Modify Subjects for {selectedFaculty?.name || "Unknown Faculty"}
             </h3>
 
             <div>
