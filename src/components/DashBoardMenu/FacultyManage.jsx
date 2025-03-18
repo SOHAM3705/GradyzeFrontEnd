@@ -892,12 +892,13 @@ const FacultyManagementSystem = () => {
           <div className="mt-4">
             <h4 className="text-md font-semibold mb-2">Assigned Subjects:</h4>
             <ul className="list-disc pl-5">
-              {faculty.subjects.map((subject, index) => (
-                <li key={index} className="mb-1">
-                  {subject.name} (Year: {subject.year}, Semester:{" "}
-                  {subject.semester}, Division: {subject.division})
-                </li>
-              ))}
+              {Array.isArray(faculty.subjects) &&
+                faculty.subjects.map((subject, index) => (
+                  <li key={index} className="mb-1">
+                    {subject.name} (Year: {subject.year}, Semester:{" "}
+                    {subject.semester}, Division: {subject.division})
+                  </li>
+                ))}
             </ul>
           </div>
         )}
@@ -1443,26 +1444,27 @@ const FacultyManagementSystem = () => {
             <div>
               <h4>Current Subjects:</h4>
               <ul>
-                {selectedFaculty.subjects.map((subject, index) => (
-                  <li key={index} className="flex items-center mb-1">
-                    {subject.name} (Year: {subject.year}, Semester:{" "}
-                    {subject.semester}, Division: {subject.division})
-                    <button
-                      onClick={() =>
-                        removeSubject(
-                          selectedFaculty._id,
-                          subject.name,
-                          subject.year,
-                          subject.semester,
-                          subject.division
-                        )
-                      }
-                      className="text-red-500 hover:text-red-700 ml-2"
-                    >
-                      <i className="fas fa-trash-alt"></i> Delete
-                    </button>
-                  </li>
-                ))}
+                {Array.isArray(selectedFaculty?.subjects) &&
+                  selectedFaculty.subjects.map((subject, index) => (
+                    <li key={index} className="flex items-center mb-1">
+                      {subject.name} (Year: {subject.year}, Semester:{" "}
+                      {subject.semester}, Division: {subject.division})
+                      <button
+                        onClick={() =>
+                          removeSubject(
+                            selectedFaculty._id,
+                            subject.name,
+                            subject.year,
+                            subject.semester,
+                            subject.division
+                          )
+                        }
+                        className="text-red-500 hover:text-red-700 ml-2"
+                      >
+                        <i className="fas fa-trash-alt"></i> Delete
+                      </button>
+                    </li>
+                  ))}
               </ul>
             </div>
 
