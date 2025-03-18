@@ -1355,14 +1355,20 @@ const FacultyManagementSystem = () => {
           </ul>
         </div>
       )}
-      {isAddSubjectModalOpen && (
+      {isAddSubjectModalOpen && selectedFacultyId && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <h3 className="text-lg font-semibold">Add Subject</h3>
+            <h3 className="text-lg font-semibold">
+              Add Subject to{" "}
+              {faculties.find((f) => f._id === selectedFacultyId)?.name ||
+                "Faculty"}
+            </h3>
 
             <form onSubmit={addSubject} className="space-y-4 mt-4">
+              {/* Hidden input to store selected teacher ID */}
               <input type="hidden" name="teacherId" value={selectedFacultyId} />
 
+              {/* Subject Name Field */}
               <div className="form-group">
                 <label className="block text-gray-700">Subject Name</label>
                 <input
@@ -1372,6 +1378,8 @@ const FacultyManagementSystem = () => {
                   className="w-full p-2 border rounded"
                 />
               </div>
+
+              {/* Year Selection */}
               <div className="form-group">
                 <label className="block text-gray-700">Year</label>
                 <select
@@ -1386,6 +1394,8 @@ const FacultyManagementSystem = () => {
                   <option value="Fourth Year">Fourth Year</option>
                 </select>
               </div>
+
+              {/* Semester Selection */}
               <div className="form-group">
                 <label className="block text-gray-700">Semester</label>
                 <select
@@ -1394,16 +1404,15 @@ const FacultyManagementSystem = () => {
                   className="w-full p-2 border rounded"
                 >
                   <option value="">Select Semester</option>
-                  <option value="1">Semester 1</option>
-                  <option value="2">Semester 2</option>
-                  <option value="3">Semester 3</option>
-                  <option value="4">Semester 4</option>
-                  <option value="5">Semester 5</option>
-                  <option value="6">Semester 6</option>
-                  <option value="7">Semester 7</option>
-                  <option value="8">Semester 8</option>
+                  {[...Array(8)].map((_, i) => (
+                    <option key={i} value={i + 1}>
+                      Semester {i + 1}
+                    </option>
+                  ))}
                 </select>
               </div>
+
+              {/* Division Field */}
               <div className="form-group">
                 <label className="block text-gray-700">Division</label>
                 <input
@@ -1414,6 +1423,7 @@ const FacultyManagementSystem = () => {
                 />
               </div>
 
+              {/* Action Buttons */}
               <div className="flex justify-end gap-4 mt-4">
                 <button
                   type="submit"
