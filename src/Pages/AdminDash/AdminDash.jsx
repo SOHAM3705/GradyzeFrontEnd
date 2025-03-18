@@ -24,28 +24,20 @@ function AdminDash() {
   };
 
   const menuItems = [
-    { icon: "🏠", label: "Overview", path: "/admindash" },
+    { icon: "🏠", label: "Overview", path: "/admindash/adminoverview" },
     {
       icon: "👨‍🏫",
       label: "Faculty Management",
       path: "/admindash/FacultyManage",
     },
-    {
-      icon: "📊",
-      label: "Faculty Analytics",
-      path: "/admindash/FacultyAnalysis",
-    },
+
     {
       icon: "👥",
       label: "Student Management",
       path: "/admindash/AdminStudentManage",
     },
     { icon: "📝", label: "Students' Marks", path: "/admindash/students-marks" },
-    {
-      icon: "📊",
-      label: "Students' Analytics",
-      path: "/admindash/StudentAnalysis",
-    },
+
     {
       icon: "📅",
       label: "Attendance Reports",

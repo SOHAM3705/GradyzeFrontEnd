@@ -20,6 +20,7 @@ import SubscriptionPlan from "./components/DashBoardMenu/SubscriptionPlan";
 import StudentManagement from "./components/DashBoardMenu/StudentManage";
 import FacultyManagement from "./components/DashBoardMenu/FacultyManage";
 import AdminStudentMarks from "./components/DashBoardMenu/StudentsMarks";
+import AdminOverview from "./components/DashBoardMenu/Overview";
 
 import TeacherDash from "./Pages/TeacherDash/TeacherDash";
 import StudentDash from "./Pages/StudentDash/StudentDash";
@@ -85,6 +86,7 @@ function App() {
         <Route path="AdminStudentManage" element={<StudentManagement />} />
         <Route path="FacultyManage" element={<FacultyManagement />} />
         <Route path="students-marks" element={<AdminStudentMarks />} />
+        <Route path="adminoverview" element={<AdminOverview />} />
       </Route>
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />

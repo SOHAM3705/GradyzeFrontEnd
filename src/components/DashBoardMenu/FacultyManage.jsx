@@ -463,6 +463,19 @@ const FacultyManagementSystem = () => {
     ));
   };
 
+  const toggleFields = (event) => {
+    const isClassTeacher =
+      event.target.name === "isClassTeacher" && event.target.checked;
+    const isSubjectTeacher =
+      event.target.name === "isSubjectTeacher" && event.target.checked;
+
+    document.getElementById("classTeacherFields").style.display = isClassTeacher
+      ? "block"
+      : "none";
+    document.getElementById("subjectTeacherFields").style.display =
+      isSubjectTeacher ? "block" : "none";
+  };
+
   return (
     <div className="container mx-auto p-4">
       <header className="bg-purple-500 text-black p-4 rounded-lg shadow-md mb-8 text-center">
@@ -576,6 +589,7 @@ const FacultyManagementSystem = () => {
                     type="checkbox"
                     name="isClassTeacher"
                     className="mr-2"
+                    onChange={toggleFields}
                   />
                   Class Teacher
                 </label>
@@ -584,11 +598,12 @@ const FacultyManagementSystem = () => {
                     type="checkbox"
                     name="isSubjectTeacher"
                     className="mr-2"
+                    onChange={toggleFields}
                   />
                   Subject Teacher
                 </label>
               </div>
-              <div id="classTeacherFields" className="hidden">
+              <div id="classTeacherFields" style={{ display: "none" }}>
                 <div className="form-group">
                   <label className="block text-gray-700">Year</label>
                   <select name="year" className="w-full p-2 border rounded">
@@ -608,7 +623,7 @@ const FacultyManagementSystem = () => {
                   />
                 </div>
               </div>
-              <div id="subjectTeacherFields" className="hidden">
+              <div id="subjectTeacherFields" style={{ display: "none" }}>
                 <div className="form-group">
                   <label className="block text-gray-700">Subject</label>
                   <input

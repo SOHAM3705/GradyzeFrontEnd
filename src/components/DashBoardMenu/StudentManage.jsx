@@ -2,6 +2,28 @@ import React, { useState } from "react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+// Define helper functions first
+const createDivisionData = () => ({
+  id: Math.floor(Math.random() * 10000),
+  students: [], // Add student data if needed
+});
+
+const createYearData = () => ({
+  divisions: {
+    A: createDivisionData(),
+    B: createDivisionData(),
+  },
+});
+
+const createDepartmentData = () => ({
+  years: {
+    "First Year": createYearData(),
+    "Second Year": createYearData(),
+    "Third Year": createYearData(),
+    "Fourth Year": createYearData(),
+  },
+});
+
 const StudentManagement = () => {
   const [structuredData] = useState({
     departments: {
@@ -14,33 +36,6 @@ const StudentManagement = () => {
   });
 
   const [expandedSections, setExpandedSections] = useState({});
-
-  const createDepartmentData = () => {
-    return {
-      years: {
-        "First Year": createYearData(),
-        "Second Year": createYearData(),
-        "Third Year": createYearData(),
-        "Fourth Year": createYearData(),
-      },
-    };
-  };
-
-  const createYearData = () => {
-    return {
-      divisions: {
-        A: createDivisionData(),
-        B: createDivisionData(),
-      },
-    };
-  };
-
-  const createDivisionData = () => {
-    return {
-      id: Math.floor(Math.random() * 10000),
-      students: [], // Add student data here if needed
-    };
-  };
 
   const toggleContainer = (id) => {
     setExpandedSections((prevState) => ({
@@ -103,14 +98,10 @@ const StudentManagement = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="header mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Structured Student Management
-          </h1>
-          <p className="text-gray-600">
-            Organize by Department, Year, and Division
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">Student Management</h1>
+        <p className="text-gray-600">
+          Organize by Department, Year, and Division
+        </p>
       </div>
 
       <div id="hierarchicalContainer">
