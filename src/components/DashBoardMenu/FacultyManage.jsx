@@ -91,124 +91,28 @@ const subjectsData = {
 const FacultyManagementSystem = () => {
   const [faculties, setFaculties] = useState([]);
   const [isFacultyModalOpen, setIsFacultyModalOpen] = useState(false);
-  const [isClassTeacherModalOpen, setIsClassTeacherModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
-  const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedFacultyId, setSelectedFacultyId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAddSubjectModalOpen, setIsAddSubjectModalOpen] = useState(false);
-  setIsFacultyModalOpen(false);
-
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState(null);
 
-  const openSubjectModal = (facultyId) => {
-    setSelectedFacultyId(facultyId);
-    setIsSubjectModalOpen(true);
-  };
-
-  const closeFacultyModal = () => {
-    setIsFacultyModalOpen(false);
-
-    // ✅ Reset form fields after closing the modal
-    setTimeout(() => {
-      document.getElementById("facultyForm")?.reset();
-    }, 100);
-  };
-
-  const closeClassTeacherModal = () => {
-    setIsClassTeacherModalOpen(false);
-
-    // ✅ Reset form fields after closing the modal
-    setTimeout(() => {
-      document.getElementById("classTeacherForm")?.reset();
-    }, 100);
-  };
-
-  const closeAddSubjectModal = () => {
-    setIsAddSubjectModalOpen(false);
-    setSelectedFacultyId(null); // ✅ Reset selected faculty ID
-
-    // ✅ Reset form fields after closing the modal
-    setTimeout(() => {
-      document.getElementById("addSubjectForm")?.reset();
-    }, 100);
-  };
-
-  const closeModifyModal = () => {
-    setIsModifyModalOpen(false);
-    setSelectedFaculty(null); // ✅ Reset selected faculty
-
-    // ✅ Reset form fields after closing the modal
-    setTimeout(() => {
-      document.getElementById("modifyFacultyForm")?.reset();
-    }, 100);
-  };
-
-  const closeSubjectModal = () => {
-    setIsSubjectModalOpen(false);
-    setSelectedFacultyId(null);
-  };
-
-  const openModifyModal = (facultyId) => {
-    const faculty = faculties.find((f) => f._id === facultyId);
-
-    if (!faculty) {
-      alert("Faculty not found.");
-      return;
+  const fetchFaculty = async () => {
+    try {
+      const adminId = localStorage.getItem("adminId");
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
+        {
+          params: { adminId },
+        }
+      );
+      setFaculties(response.data.teachers);
+    } catch (error) {
+      console.error("Error fetching faculty:", error);
     }
-
-    setSelectedFaculty(faculty);
-    setSelectedFacultyId(facultyId); // Ensure facultyId is set
-    setIsModifyModalOpen(true);
-  };
-
-  const openAddSubjectModal = (facultyId) => {
-    const faculty = faculties.find((f) => f._id === facultyId);
-
-    if (!faculty) {
-      alert("Faculty not found.");
-      return;
-    }
-
-    setSelectedFacultyId(facultyId);
-    setIsModifyModalOpen(false); // Close Modify Modal if open
-    setIsAddSubjectModalOpen(true); // Open Add Subject Modal
-  };
-
-  const openDeleteModal = (teacherId) => {
-    const faculty = faculties.find((f) => f._id === teacherId);
-
-    if (!faculty) {
-      alert("Faculty not found.");
-      return;
-    }
-
-    setTeacherToDelete(teacherId);
-    setIsDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setTeacherToDelete(null); // ✅ Reset teacher ID
-  };
-
-  const updateFields = () => {
-    const department = document.querySelector(
-      'select[name="department"]'
-    ).value;
-    const yearSelect = document.getElementById("year");
-    const semesterSelect = document.getElementById("semester");
-    const subjectSelect = document.getElementById("subject");
-
-    yearSelect.disabled = !department;
-    semesterSelect.disabled = !department;
-    subjectSelect.disabled = true;
-
-    if (department) updateSemesters();
   };
 
   const createFaculty = async (event) => {
@@ -216,14 +120,14 @@ const FacultyManagementSystem = () => {
     const form = event.target;
     const formData = new FormData(form);
 
-    const nameValue = formData.get("name")?.trim();
-    const emailValue = formData.get("email")?.trim();
-    const departmentValue = formData.get("department")?.trim();
-    const isClassTeacher = formData.get("isClassTeacher") === "on"; // Checkbox value
-    const isSubjectTeacher = formData.get("isSubjectTeacher") === "on"; // Checkbox value
+    const name = formData.get("name")?.trim();
+    const email = formData.get("email")?.trim();
+    const department = formData.get("department")?.trim();
+    const isClassTeacher = formData.get("isClassTeacher") === "on";
+    const isSubjectTeacher = formData.get("isSubjectTeacher") === "on";
     const adminId = localStorage.getItem("adminId");
 
-    if (!nameValue || !emailValue || !departmentValue) {
+    if (!name || !email || !department) {
       alert("Please fill in all required fields: Name, Email, and Department.");
       return;
     }
@@ -236,63 +140,44 @@ const FacultyManagementSystem = () => {
     }
 
     let facultyData = {
-      name: nameValue,
-      email: emailValue,
-      department: departmentValue,
+      name,
+      email,
+      department,
       adminId,
       isClassTeacher,
       isSubjectTeacher,
     };
 
-    // ✅ If the faculty is a Class Teacher, add class details
     if (isClassTeacher) {
-      const yearValue = formData.get("year")?.trim();
-      const divisionValue = formData.get("division")?.trim();
+      const year = formData.get("year")?.trim();
+      const division = formData.get("division")?.trim();
 
-      if (!yearValue || !divisionValue) {
+      if (!year || !division) {
         alert("Class Teachers must have a Year and Division.");
         return;
       }
 
-      facultyData.assignedClass = {
-        year: yearValue,
-        division: divisionValue,
-      };
+      facultyData.assignedClass = { year, division };
     }
 
-    // ✅ If the faculty is a Subject Teacher, add subject details
     if (isSubjectTeacher) {
       const subjectName = formData.get("subject")?.trim();
-      const yearValue = formData.get("year")?.trim();
-      const semesterValue = parseInt(formData.get("semester"), 10);
-      const divisionValue = formData.get("division")?.trim();
+      const year = formData.get("year")?.trim();
+      const semester = parseInt(formData.get("semester"), 10);
+      const division = formData.get("division")?.trim();
 
-      if (
-        !subjectName ||
-        !yearValue ||
-        isNaN(semesterValue) ||
-        !divisionValue
-      ) {
+      if (!subjectName || !year || isNaN(semester) || !division) {
         alert(
           "Subject Teachers must have a Subject, Year, Semester, and Division."
         );
         return;
       }
 
-      facultyData.subjects = [
-        {
-          name: subjectName,
-          year: yearValue,
-          semester: semesterValue,
-          division: divisionValue,
-        },
-      ];
+      facultyData.subjects = [{ name: subjectName, year, semester, division }];
     }
 
     try {
       setLoading(true);
-      console.log("🚀 Sending Faculty Data:", facultyData);
-
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
         facultyData,
@@ -306,7 +191,7 @@ const FacultyManagementSystem = () => {
 
       alert(response.data.message);
       setFaculties([...faculties, response.data.teacher]);
-      setIsFacultyModalOpen(false); // ✅ Close modal on success
+      setIsFacultyModalOpen(false);
     } catch (error) {
       alert(error.response?.data?.message || "Failed to add faculty.");
       console.error("Error adding faculty:", error.response?.data || error);
@@ -315,128 +200,17 @@ const FacultyManagementSystem = () => {
     }
   };
 
-  const addClassTeacher = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-
-    const name = formData.get("name")?.trim();
-    const email = formData.get("email")?.trim();
-    const department = formData.get("department")?.trim();
-    const year = formData.get("year")?.trim();
-    const division = formData.get("division")?.trim();
-    const adminId = localStorage.getItem("adminId");
-
-    if (!name || !email || !department || !year || !division) {
-      alert(
-        "All fields (Name, Email, Department, Year, and Division) are required."
-      );
-      return;
-    }
-
-    const classTeacherData = {
-      name,
-      email,
-      department,
-      isClassTeacher: true,
-      assignedClass: { year, division },
-      adminId,
-    };
-
-    try {
-      setLoading(true);
-      console.log("🚀 Sending Class Teacher Data:", classTeacherData);
-
-      const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-class-teacher",
-        classTeacherData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      alert(response.data.message);
-      setFaculties([...faculties, response.data.teacher]);
-      setIsClassTeacherModalOpen(false); // ✅ Close the modal after adding
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to add class teacher.");
-      console.error(
-        "Error adding class teacher:",
-        error.response?.data || error
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateSubjects = () => {
-    const department = document.querySelector(
-      'select[name="department"]'
-    ).value;
-    const yearSelect = document.getElementById("year");
-    const semesterSelect = document.getElementById("semester");
-    const subjectSelect = document.getElementById("subject");
-
-    const year = yearSelect.value;
-    const semesterText = semesterSelect.value;
-    const semesterNumber = semesterText
-      ? parseInt(semesterText.replace("Semester ", ""), 10)
-      : null;
-
-    // ✅ Disable subject selection if required fields are missing
-    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-    subjectSelect.disabled = !semesterText;
-
-    if (!department || !year || isNaN(semesterNumber)) {
-      return;
-    }
-
-    const yearMap = {
-      "First Year": "First",
-      "Second Year": "Second",
-      "Third Year": "Third",
-      "Fourth Year": "Fourth",
-    };
-
-    const yearKey = yearMap[year];
-
-    if (
-      subjectsData[department] &&
-      subjectsData[department][yearKey] &&
-      subjectsData[department][yearKey][semesterNumber]
-    ) {
-      subjectsData[department][yearKey][semesterNumber].forEach((subject) => {
-        const option = document.createElement("option");
-        option.value = subject;
-        option.textContent = subject;
-        subjectSelect.appendChild(option);
-      });
-
-      subjectSelect.disabled = false; // ✅ Enable dropdown once subjects are loaded
-    }
-  };
-
   const addSubject = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
 
-    const teacherId = selectedFacultyId;
     const subjectName = formData.get("subjectName")?.trim();
     const year = formData.get("year")?.trim();
     const semester = parseInt(formData.get("semester"), 10);
     const division = formData.get("division")?.trim();
     const adminId = localStorage.getItem("adminId");
 
-    if (
-      !teacherId ||
-      !subjectName ||
-      !year ||
-      isNaN(semester) ||
-      !division ||
-      !adminId
-    ) {
+    if (!subjectName || !year || isNaN(semester) || !division) {
       alert(
         "All fields (Subject Name, Year, Semester, Division) are required."
       );
@@ -444,22 +218,13 @@ const FacultyManagementSystem = () => {
     }
 
     const subjectData = {
-      teacherId,
-      subjects: [
-        {
-          name: subjectName,
-          year,
-          semester,
-          division,
-        },
-      ],
+      teacherId: selectedFacultyId,
+      subjects: [{ name: subjectName, year, semester, division }],
       adminId,
     };
 
     try {
       setLoading(true);
-      console.log("🚀 Sending subject payload:", subjectData);
-
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/add-subject",
         subjectData,
@@ -473,24 +238,21 @@ const FacultyManagementSystem = () => {
 
       if (response.status === 200 || response.status === 201) {
         alert(response.data.message || "Subject added successfully!");
-
-        // ✅ Update the UI without refetching all faculties
         setFaculties((prev) =>
           prev.map((teacher) =>
-            teacher._id === teacherId
+            teacher._id === selectedFacultyId
               ? {
                   ...teacher,
                   subjects: [
                     ...(teacher.subjects || []),
                     subjectData.subjects[0],
                   ],
-                  isSubjectTeacher: true, // Ensure teacher is marked as Subject Teacher
+                  isSubjectTeacher: true,
                 }
               : teacher
           )
         );
-
-        setIsAddSubjectModalOpen(false); // ✅ Close modal on success
+        setIsSubjectModalOpen(false);
       } else {
         alert(response.data?.message || "Failed to add subject.");
       }
@@ -502,13 +264,7 @@ const FacultyManagementSystem = () => {
     }
   };
 
-  const removeSubject = async (
-    facultyId,
-    subjectName,
-    year,
-    semester,
-    division
-  ) => {
+  const removeSubject = async (subjectName, year, semester, division) => {
     try {
       const token = localStorage.getItem("token");
       const adminId = localStorage.getItem("adminId");
@@ -523,28 +279,14 @@ const FacultyManagementSystem = () => {
         return;
       }
 
-      // Ensure semester is a number
-      let semesterValue = parseInt(semester);
-      if (isNaN(semesterValue)) {
-        alert("Invalid semester value.");
-        return;
-      }
-
-      if (!facultyId || !subjectName || !year || !division) {
-        alert("One or more required fields are missing.");
-        return;
-      }
-
       const payload = {
-        teacherId: facultyId,
-        subjectName: subjectName.trim(),
-        year: year.trim(),
-        semester: semesterValue,
-        division: division.trim(),
+        teacherId: selectedFacultyId,
+        subjectName,
+        year,
+        semester: parseInt(semester, 10),
+        division,
         adminId,
       };
-
-      console.log("🚀 Sending subject removal payload:", payload);
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
@@ -559,23 +301,21 @@ const FacultyManagementSystem = () => {
 
       if (response.status === 200) {
         alert("Subject removed successfully!");
-
-        // ✅ Update the UI without refetching all faculties
         setFaculties((prev) =>
           prev.map((teacher) => {
-            if (teacher._id === facultyId) {
+            if (teacher._id === selectedFacultyId) {
               const updatedSubjects = teacher.subjects.filter(
                 (subject) =>
                   subject.name !== subjectName ||
                   subject.year !== year ||
-                  subject.semester !== semesterValue ||
+                  subject.semester !== semester ||
                   subject.division !== division
               );
 
               return {
                 ...teacher,
                 subjects: updatedSubjects,
-                isSubjectTeacher: updatedSubjects.length > 0, // ✅ If no subjects left, set isSubjectTeacher to false
+                isSubjectTeacher: updatedSubjects.length > 0,
               };
             }
             return teacher;
@@ -609,14 +349,12 @@ const FacultyManagementSystem = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          data: { adminId }, // ✅ Pass adminId in request body
+          data: { adminId },
         }
       );
 
       if (response.status === 200) {
         alert("Teacher deleted successfully!");
-
-        // ✅ Update the UI without refetching all faculties
         setFaculties((prev) =>
           prev.filter((faculty) => faculty._id !== teacherToDelete)
         );
@@ -627,229 +365,25 @@ const FacultyManagementSystem = () => {
       console.error("Error deleting teacher:", error.response?.data || error);
       alert(error.response?.data?.message || "Failed to delete teacher.");
     } finally {
-      closeDeleteModal();
+      setIsDeleteModalOpen(false);
+      setTeacherToDelete(null);
     }
   };
-
-  const updateSemesters = () => {
-    const yearSelect = document.getElementById("year");
-    const semesterSelect = document.getElementById("semester");
-    const subjectSelect = document.getElementById("subject");
-
-    const year = yearSelect.value;
-
-    // ✅ Reset semester dropdown
-    semesterSelect.innerHTML = '<option value="">Select Semester</option>';
-    semesterSelect.disabled = !year;
-
-    // ✅ Reset subject dropdown as well
-    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-    subjectSelect.disabled = true;
-
-    const semesterMap = {
-      "First Year": ["Semester 1", "Semester 2"],
-      "Second Year": ["Semester 3", "Semester 4"],
-      "Third Year": ["Semester 5", "Semester 6"],
-      "Fourth Year": ["Semester 7", "Semester 8"],
-    };
-
-    if (year && semesterMap[year]) {
-      semesterMap[year].forEach((sem) => {
-        const option = document.createElement("option");
-        option.value = sem;
-        option.textContent = sem;
-        semesterSelect.appendChild(option);
-      });
-
-      semesterSelect.disabled = false; // ✅ Enable dropdown once semesters are loaded
-    }
-  };
-
-  const attachSemesterListener = () => {
-    const semesterSelect = document.getElementById("semester");
-
-    if (semesterSelect) {
-      // ✅ Remove any existing listener to prevent duplicates
-      semesterSelect.removeEventListener("change", updateSubjects);
-      semesterSelect.addEventListener("change", updateSubjects);
-    }
-  };
-
-  const setupFormListeners = () => {
-    const semesterSelect = document.getElementById("semester");
-
-    if (semesterSelect) {
-      // ✅ Remove any existing listener to prevent duplicates
-      semesterSelect.removeEventListener("change", updateSubjects);
-      semesterSelect.addEventListener("change", updateSubjects);
-    }
-
-    // ✅ Also ensure the semester listener is always attached
-    attachSemesterListener();
-  };
-
-  const openFacultyModal = () => {
-    setIsFacultyModalOpen(true);
-
-    setTimeout(() => {
-      setupFormListeners();
-    }, 100);
-  };
-
-  const openClassTeacherModal = () => {
-    setIsClassTeacherModalOpen(true);
-
-    setTimeout(() => {
-      setupFormListeners();
-    }, 100);
-  };
-
-  const fetchSubjects = async (teacherEmail) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        alert("Authentication error. Please log in again.");
-        return;
-      }
-
-      const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/teacher/subjects",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        const { subjects, assignedClass } = response.data;
-
-        console.log("🚀 Fetched Subjects & Assigned Class:", response.data);
-
-        // ✅ Update UI with fetched subjects & assigned class
-        setSelectedFaculty((prev) => ({
-          ...prev,
-          subjects: subjects || [],
-          assignedClass: assignedClass || null,
-        }));
-      } else {
-        alert(response.data?.message || "Failed to fetch subjects.");
-      }
-    } catch (error) {
-      console.error("Error fetching subjects:", error.response?.data || error);
-      alert(error.response?.data?.message || "Failed to fetch subjects.");
-    }
-  };
-
-  const groupFacultyByStructure = (facultyData) => {
-    const grouped = {};
-
-    if (!facultyData || facultyData.length === 0) {
-      return grouped;
-    }
-
-    facultyData.forEach((f) => {
-      if (!Array.isArray(f.subjects)) {
-        return;
-      }
-
-      f.subjects.forEach((subject) => {
-        if (
-          !subject.year ||
-          !subject.division ||
-          !subject.name ||
-          !subject.semester
-        ) {
-          return;
-        }
-
-        if (!grouped[f.department]) {
-          grouped[f.department] = {};
-        }
-        if (!grouped[f.department][subject.year]) {
-          grouped[f.department][subject.year] = {};
-        }
-        if (!grouped[f.department][subject.year][subject.division]) {
-          grouped[f.department][subject.year][subject.division] = {};
-        }
-        if (
-          !grouped[f.department][subject.year][subject.division][subject.name]
-        ) {
-          grouped[f.department][subject.year][subject.division][subject.name] =
-            [];
-        }
-
-        grouped[f.department][subject.year][subject.division][
-          subject.name
-        ].push({
-          ...f,
-          semester: subject.semester,
-        });
-      });
-    });
-
-    return grouped;
-  };
-
-  const groupedFaculty = useMemo(
-    () => groupFacultyByStructure(faculties),
-    [faculties]
-  );
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  const filteredFaculty = faculties.filter(
-    (f) =>
-      f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      f.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      f.subjects.some((subject) =>
-        subject.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-  );
-
-  const filteredGroupedFaculty = useMemo(() => {
-    const filteredGroup = {};
-
-    Object.keys(groupedFaculty).forEach((department) => {
-      const yearGroup = groupedFaculty[department];
-      filteredGroup[department] = {};
-
-      Object.keys(yearGroup).forEach((year) => {
-        const divisionGroup = yearGroup[year];
-        filteredGroup[department][year] = {};
-
-        Object.keys(divisionGroup).forEach((division) => {
-          const subjectGroup = divisionGroup[division];
-          filteredGroup[department][year][division] = {};
-
-          Object.keys(subjectGroup).forEach((subjectName) => {
-            const facultyForSubject = subjectGroup[subjectName];
-            const filteredFacultyForSubject = facultyForSubject.filter(
-              (f) =>
-                f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                f.department
-                  .toLowerCase()
-                  .includes(searchQuery.toLowerCase()) ||
-                f.subjects.some((subject) =>
-                  subject.name.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-            );
-
-            if (filteredFacultyForSubject.length > 0) {
-              filteredGroup[department][year][division][subjectName] =
-                filteredFacultyForSubject;
-            }
-          });
-        });
-      });
-    });
-
-    return filteredGroup;
-  }, [groupedFaculty, searchQuery]);
+  const filteredFaculty = useMemo(() => {
+    return faculties.filter(
+      (f) =>
+        f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.subjects.some((subject) =>
+          subject.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+    );
+  }, [faculties, searchQuery]);
 
   useEffect(() => {
     fetchFaculty();
@@ -865,45 +399,57 @@ const FacultyManagementSystem = () => {
       );
     }
 
-    return faculties.map((faculty) => (
+    return filteredFaculty.map((faculty) => (
       <div key={faculty._id} className="border rounded-lg shadow-md mb-4 p-4">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-semibold">{faculty.name}</h3>
           <div className="flex gap-2">
-            {/* Modify Button */}
             <button
-              onClick={() => openModifyModal(faculty._id)}
+              onClick={() => {
+                setSelectedFacultyId(faculty._id);
+                setIsModifyModalOpen(true);
+              }}
               className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-700"
             >
               <i className="fas fa-edit"></i>
             </button>
-
             <button
-              onClick={() => openDeleteModal(faculty._id)}
+              onClick={() => {
+                setTeacherToDelete(faculty._id);
+                setIsDeleteModalOpen(true);
+              }}
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
             >
               <i className="fas fa-trash-alt"></i> Delete
             </button>
           </div>
         </div>
-
-        {/* ✅ Display Assigned Subjects (if Subject Teacher) */}
         {faculty.isSubjectTeacher && faculty.subjects?.length > 0 && (
           <div className="mt-4">
             <h4 className="text-md font-semibold mb-2">Assigned Subjects:</h4>
             <ul className="list-disc pl-5">
-              {Array.isArray(faculty.subjects) &&
-                faculty.subjects.map((subject, index) => (
-                  <li key={index} className="mb-1">
-                    {subject.name} (Year: {subject.year}, Semester:{" "}
-                    {subject.semester}, Division: {subject.division})
-                  </li>
-                ))}
+              {faculty.subjects.map((subject, index) => (
+                <li key={index} className="mb-1">
+                  {subject.name} (Year: {subject.year}, Semester:{" "}
+                  {subject.semester}, Division: {subject.division})
+                  <button
+                    onClick={() =>
+                      removeSubject(
+                        subject.name,
+                        subject.year,
+                        subject.semester,
+                        subject.division
+                      )
+                    }
+                    className="text-red-500 hover:text-red-700 ml-2"
+                  >
+                    <i className="fas fa-trash-alt"></i> Delete
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
         )}
-
-        {/* ✅ Display Assigned Class (if Class Teacher) */}
         {faculty.isClassTeacher && faculty.assignedClass && (
           <div className="mt-4">
             <h4 className="text-md font-semibold mb-2">Assigned Class:</h4>
@@ -956,15 +502,9 @@ const FacultyManagementSystem = () => {
           <div>
             <button
               className="bg-purple-600 text-white px-4 py-2 rounded"
-              onClick={openFacultyModal}
+              onClick={() => setIsFacultyModalOpen(true)}
             >
               Add Faculty
-            </button>
-            <button
-              className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
-              onClick={openClassTeacherModal}
-            >
-              Add Class Teacher
             </button>
           </div>
         </div>
@@ -1030,8 +570,6 @@ const FacultyManagementSystem = () => {
                   <option value="Civil Engineering">Civil Engineering</option>
                 </select>
               </div>
-
-              {/* ✅ Checkboxes to Select Teacher Role */}
               <div className="flex items-center gap-4">
                 <label className="flex items-center">
                   <input
@@ -1050,8 +588,6 @@ const FacultyManagementSystem = () => {
                   Subject Teacher
                 </label>
               </div>
-
-              {/* ✅ Class Teacher Fields (Year & Division) */}
               <div id="classTeacherFields" className="hidden">
                 <div className="form-group">
                   <label className="block text-gray-700">Year</label>
@@ -1072,8 +608,6 @@ const FacultyManagementSystem = () => {
                   />
                 </div>
               </div>
-
-              {/* ✅ Subject Teacher Fields (Subject, Semester, Division) */}
               <div id="subjectTeacherFields" className="hidden">
                 <div className="form-group">
                   <label className="block text-gray-700">Subject</label>
@@ -1098,7 +632,6 @@ const FacultyManagementSystem = () => {
                   </select>
                 </div>
               </div>
-
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
@@ -1119,101 +652,6 @@ const FacultyManagementSystem = () => {
         </div>
       )}
 
-      {isClassTeacherModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg">Add New Class Teacher</h3>
-              <button
-                className="text-gray-600"
-                onClick={() => setIsClassTeacherModalOpen(false)}
-              >
-                &times;
-              </button>
-            </div>
-            <form onSubmit={addClassTeacher} className="space-y-4">
-              <div className="form-group">
-                <label className="block text-gray-700">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Department</label>
-                <select
-                  name="department"
-                  required
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Department</option>
-                  <option value="Computer Science">Computer Science</option>
-                  <option value="Information Technology">
-                    Information Technology
-                  </option>
-                  <option value="Mechanical Engineering">
-                    Mechanical Engineering
-                  </option>
-                  <option value="Electronics & Telecommunication">
-                    Electronics & Telecommunication
-                  </option>
-                  <option value="Civil Engineering">Civil Engineering</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Year</label>
-                <select
-                  name="year"
-                  required
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Year</option>
-                  <option value="First Year">First Year</option>
-                  <option value="Second Year">Second Year</option>
-                  <option value="Third Year">Third Year</option>
-                  <option value="Fourth Year">Fourth Year</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="block text-gray-700">Division</label>
-                <input
-                  type="text"
-                  name="division"
-                  required
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div className="flex justify-end gap-4">
-                <button
-                  type="submit"
-                  className="bg-purple-600 text-white px-4 py-2 rounded"
-                >
-                  Add Class Teacher
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsClassTeacherModalOpen(false)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {isSubjectModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
@@ -1223,7 +661,10 @@ const FacultyManagementSystem = () => {
                 {faculties.find((f) => f._id === selectedFacultyId)?.name ||
                   "Faculty"}
               </h3>
-              <button className="text-gray-600" onClick={closeSubjectModal}>
+              <button
+                className="text-gray-600"
+                onClick={() => setIsSubjectModalOpen(false)}
+              >
                 &times;
               </button>
             </div>
@@ -1288,7 +729,7 @@ const FacultyManagementSystem = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={closeSubjectModal}
+                  onClick={() => setIsSubjectModalOpen(false)}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
                 >
                   Cancel
@@ -1307,10 +748,9 @@ const FacultyManagementSystem = () => {
               Are you sure you want to delete this teacher? This action cannot
               be undone.
             </p>
-
             <div className="flex justify-end gap-4 mt-6">
               <button
-                onClick={closeDeleteModal}
+                onClick={() => setIsDeleteModalOpen(false)}
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
               >
                 Cancel
@@ -1326,143 +766,26 @@ const FacultyManagementSystem = () => {
         </div>
       )}
 
-      {selectedFacultyId && (
-        <div>
-          <h4>Current Subjects:</h4>
-          <ul>
-            {faculties
-              .find((f) => f._id === selectedFacultyId)
-              ?.subjects.map((subject, index) => (
-                <li key={index} className="flex items-center mb-1">
-                  {subject.name} (Year: {subject.year}, Semester:{" "}
-                  {subject.semester}, Division: {subject.division})
-                  <button
-                    onClick={() =>
-                      removeSubject(
-                        selectedFacultyId,
-                        subject.name,
-                        subject.year,
-                        subject.semester,
-                        subject.division
-                      )
-                    }
-                    className="text-red-500 hover:text-red-700 ml-2"
-                  >
-                    <i className="fas fa-trash-alt"></i> Delete
-                  </button>
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
-      {isAddSubjectModalOpen && selectedFacultyId && (
+      {isModifyModalOpen && selectedFacultyId && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <h3 className="text-lg font-semibold">
-              Add Subject to{" "}
+              Modify Subjects for{" "}
               {faculties.find((f) => f._id === selectedFacultyId)?.name ||
-                "Faculty"}
+                "Unknown Faculty"}
             </h3>
-
-            <form onSubmit={addSubject} className="space-y-4 mt-4">
-              {/* Hidden input to store selected teacher ID */}
-              <input type="hidden" name="teacherId" value={selectedFacultyId} />
-
-              {/* Subject Name Field */}
-              <div className="form-group">
-                <label className="block text-gray-700">Subject Name</label>
-                <input
-                  type="text"
-                  name="subjectName"
-                  required
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-
-              {/* Year Selection */}
-              <div className="form-group">
-                <label className="block text-gray-700">Year</label>
-                <select
-                  name="year"
-                  required
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Year</option>
-                  <option value="First Year">First Year</option>
-                  <option value="Second Year">Second Year</option>
-                  <option value="Third Year">Third Year</option>
-                  <option value="Fourth Year">Fourth Year</option>
-                </select>
-              </div>
-
-              {/* Semester Selection */}
-              <div className="form-group">
-                <label className="block text-gray-700">Semester</label>
-                <select
-                  name="semester"
-                  required
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Semester</option>
-                  {[...Array(8)].map((_, i) => (
-                    <option key={i} value={i + 1}>
-                      Semester {i + 1}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Division Field */}
-              <div className="form-group">
-                <label className="block text-gray-700">Division</label>
-                <input
-                  type="text"
-                  name="division"
-                  required
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-4 mt-4">
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded"
-                >
-                  Add Subject
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAddSubjectModalOpen(false)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {isModifyModalOpen && selectedFaculty && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <h3 className="text-lg font-semibold">
-              Modify Subjects for {selectedFaculty?.name || "Unknown Faculty"}
-            </h3>
-
             <div>
               <h4>Current Subjects:</h4>
               <ul>
-                {Array.isArray(selectedFaculty?.subjects) &&
-                  selectedFaculty.subjects.map((subject, index) => (
+                {faculties
+                  .find((f) => f._id === selectedFacultyId)
+                  ?.subjects.map((subject, index) => (
                     <li key={index} className="flex items-center mb-1">
                       {subject.name} (Year: {subject.year}, Semester:{" "}
                       {subject.semester}, Division: {subject.division})
                       <button
                         onClick={() =>
                           removeSubject(
-                            selectedFaculty._id,
                             subject.name,
                             subject.year,
                             subject.semester,
@@ -1477,11 +800,12 @@ const FacultyManagementSystem = () => {
                   ))}
               </ul>
             </div>
-
-            {/* Add Subject Button */}
             <div className="mt-4 flex justify-end gap-4">
               <button
-                onClick={() => openAddSubjectModal(selectedFacultyId)}
+                onClick={() => {
+                  setIsModifyModalOpen(false);
+                  setIsSubjectModalOpen(true);
+                }}
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
               >
                 Add Subject
