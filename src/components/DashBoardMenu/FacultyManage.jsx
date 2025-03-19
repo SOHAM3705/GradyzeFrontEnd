@@ -162,18 +162,25 @@ const FacultyManagementSystem = () => {
 
     if (isSubjectTeacher) {
       const subjectName = formData.get("subject")?.trim();
-      const year = formData.get("year")?.trim();
+      const subjectYear = formData.get("subjectYear")?.trim();
       const semester = parseInt(formData.get("semester"), 10);
-      const division = formData.get("division")?.trim();
+      const subjectDivision = formData.get("subjectDivision")?.trim();
 
-      if (!subjectName || !year || isNaN(semester) || !division) {
+      if (!subjectName || !subjectYear || isNaN(semester) || !subjectDivision) {
         alert(
           "Subject Teachers must have a Subject, Year, Semester, and Division."
         );
         return;
       }
 
-      facultyData.subjects = [{ name: subjectName, year, semester, division }];
+      facultyData.subjects = [
+        {
+          name: subjectName,
+          year: subjectYear,
+          semester,
+          division: subjectDivision,
+        },
+      ];
     }
 
     try {
@@ -432,19 +439,6 @@ const FacultyManagementSystem = () => {
                 <li key={index} className="mb-1">
                   {subject.name} (Year: {subject.year}, Semester:{" "}
                   {subject.semester}, Division: {subject.division})
-                  <button
-                    onClick={() =>
-                      removeSubject(
-                        subject.name,
-                        subject.year,
-                        subject.semester,
-                        subject.division
-                      )
-                    }
-                    className="text-red-500 hover:text-red-700 ml-2"
-                  >
-                    <i className="fas fa-trash-alt"></i> Delete
-                  </button>
                 </li>
               ))}
             </ul>
