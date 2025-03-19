@@ -86,7 +86,7 @@ function App() {
         <Route path="AdminStudentManage" element={<StudentManagement />} />
         <Route path="FacultyManage" element={<FacultyManagement />} />
         <Route path="students-marks" element={<AdminStudentMarks />} />
-        <Route path="/admindash" element={<AdminOverview />} />
+        <Route path="admindash" element={<AdminOverview />} />
       </Route>
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />
@@ -100,7 +100,6 @@ function App() {
       >
         <Route path="TeacherStudentManage" element={<StudentManage />} />
         {/*<Route path="subject-marks" element={<SubjectMarks />} />
-        <Route path="analytics" element={<Analytics />} />
         <Route path="attendance-report" element={<AttendanceReport />} />
         <Route path="notifications" element={<TeacherNotifications />} />
         <Route path="syllabus" element={<TeacherSyllabus />} />*/}
