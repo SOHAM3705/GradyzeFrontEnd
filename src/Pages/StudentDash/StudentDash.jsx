@@ -27,11 +27,6 @@ function StudentDash() {
     { icon: "🏠", label: "Overview", path: "/studentdash" },
     { icon: "📝", label: "Results", path: "/studentdash/results" },
     {
-      icon: "📊",
-      label: "Results Analytics",
-      path: "/studentdash/results-analytics",
-    },
-    {
       icon: "📅",
       label: "Attendance Reports",
       path: "/studentdash/attendance-reports",

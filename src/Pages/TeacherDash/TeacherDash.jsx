@@ -31,7 +31,6 @@ function TeacherDash() {
       path: "/teacherdash/TeacherStudentManage",
     },
     { icon: "📝", label: "Subject Marks", path: "/teacherdash/subject-marks" },
-    { icon: "📊", label: "Analytics", path: "/teacherdash/analytics" },
     {
       icon: "📅",
       label: "Attendance Report",
