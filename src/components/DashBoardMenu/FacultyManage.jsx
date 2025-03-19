@@ -396,6 +396,53 @@ const FacultyManagementSystem = () => {
     fetchFaculty();
   }, []);
 
+  const removeClass = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const adminId = localStorage.getItem("adminId");
+
+      if (!token) {
+        alert("Authentication error. Please log in again.");
+        return;
+      }
+
+      if (!adminId) {
+        alert("Admin ID is missing. Please refresh and try again.");
+        return;
+      }
+
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teacher/remove-class",
+        {
+          teacherId: selectedFacultyId,
+          adminId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        alert("Class removed successfully!");
+        setFaculties((prev) =>
+          prev.map((teacher) =>
+            teacher._id === selectedFacultyId
+              ? { ...teacher, assignedClass: null, isClassTeacher: false }
+              : teacher
+          )
+        );
+      } else {
+        alert(response.data?.message || "Failed to remove class.");
+      }
+    } catch (error) {
+      console.error("Error removing class:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to remove class.");
+    }
+  };
+
   const renderFaculties = () => {
     if (faculties.length === 0) {
       return (
@@ -800,7 +847,7 @@ const FacultyManagementSystem = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
             <h3 className="text-lg font-semibold">
-              Modify Subjects for{" "}
+              Modify Subjects and Class for{" "}
               {faculties.find((f) => f._id === selectedFacultyId)?.name ||
                 "Unknown Faculty"}
             </h3>
@@ -830,6 +877,30 @@ const FacultyManagementSystem = () => {
                   ))}
               </ul>
             </div>
+            {faculties.find((f) => f._id === selectedFacultyId)
+              ?.isClassTeacher && (
+              <div className="mt-4">
+                <h4>Assigned Class:</h4>
+                <p>
+                  Year:{" "}
+                  {
+                    faculties.find((f) => f._id === selectedFacultyId)
+                      ?.assignedClass.year
+                  }
+                  , Division:{" "}
+                  {
+                    faculties.find((f) => f._id === selectedFacultyId)
+                      ?.assignedClass.division
+                  }
+                </p>
+                <button
+                  onClick={() => removeClass()}
+                  className="text-red-500 hover:text-red-700 mt-2"
+                >
+                  <i className="fas fa-trash-alt"></i> Delete Class
+                </button>
+              </div>
+            )}
             <div className="mt-4 flex justify-end gap-4">
               <button
                 onClick={() => {
