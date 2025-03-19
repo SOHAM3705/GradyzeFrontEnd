@@ -1,48 +1,110 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const SyllabusManagement = () => {
   const [syllabusData, setSyllabusData] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [stream, setStream] = useState("");
+  const [pattern, setPattern] = useState("");
+  const [year, setYear] = useState("");
+  const [file, setFile] = useState(null);
+  const [isSending, setIsSending] = useState(false);
 
-  const streamInputRef = useRef(null);
-  const patternInputRef = useRef(null);
-  const yearInputRef = useRef(null);
-  const syllabusFileRef = useRef(null);
+  // Options for Stream, Pattern, and Year
+  const streamOptions = [
+    { value: "computer", label: "Computer" },
+    { value: "it", label: "IT" },
+    { value: "mechanical", label: "Mechanical" },
+    { value: "electrical", label: "Electrical" },
+    { value: "civil", label: "Civil" },
+  ];
 
-  const openModal = () => setModalOpen(true);
-  const closeModal = () => setModalOpen(false);
+  const patternOptions = [
+    { value: "2024", label: "2024" },
+    { value: "2019", label: "2019" },
+  ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const yearOptions = [
+    { value: "FE", label: "FE" },
+    { value: "SE", label: "SE" },
+    { value: "TE", label: "TE" },
+    { value: "BE", label: "BE" },
+  ];
 
-    if (
-      !streamInputRef.current.value ||
-      !patternInputRef.current.value ||
-      !yearInputRef.current.value ||
-      !syllabusFileRef.current.files.length
-    ) {
-      alert("Some form fields are missing!");
+  // Fetch syllabus data from the backend
+  useEffect(() => {
+    const fetchSyllabi = async () => {
+      try {
+        const response = await axios.get("/api/syllabi");
+        console.log("Received syllabus data from API:", response.data);
+
+        if (Array.isArray(response.data)) {
+          const sortedSyllabi = response.data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setSyllabusData(sortedSyllabi);
+        } else {
+          console.error("API did not return an array:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching syllabi:", error);
+      }
+    };
+
+    fetchSyllabi();
+  }, []);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleSubmit = async () => {
+    if (!stream || !pattern || !year || !file) {
+      alert("All fields are required!");
       return;
     }
 
-    const stream = streamInputRef.current.value;
-    const pattern = patternInputRef.current.value;
-    const year = yearInputRef.current.value;
-    const fileInput = syllabusFileRef.current;
+    setIsSending(true);
 
-    if (!fileInput.files.length) {
-      alert("Please select a syllabus file.");
+    try {
+      // Upload the file
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const fileResponse = await axios.post("/api/syllabus/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const { fileID } = fileResponse.data;
+
+      // Create syllabus
+      const syllabusData = {
+        stream,
+        pattern,
+        year,
+        fileId: fileID,
+      };
+
+      const response = await axios.post("/api/syllabi", syllabusData);
+
+      setSyllabusData((prevData) => [response.data, ...prevData]); // Add the new syllabus at the top
+      setIsOpen(false); // Close the modal after submission
+    } catch (error) {
+      console.error("Error submitting syllabus:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleDownload = (fileId) => {
+    if (!fileId) {
+      alert("No file available for download.");
       return;
     }
 
-    const file = fileInput.files[0];
-    const fileSize = (file.size / 1024 / 1024).toFixed(2) + " MB";
-
-    setSyllabusData([
-      ...syllabusData,
-      { stream, pattern, year, size: fileSize, file },
-    ]);
-    closeModal();
+    window.open(`/api/syllabus/files/${fileId}`, "_blank");
   };
 
   const formatStream = (stream) => {
@@ -82,27 +144,6 @@ const SyllabusManagement = () => {
     );
   };
 
-  const handleDownload = (file, stream, pattern, year) => {
-    const url = URL.createObjectURL(file);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${formatStream(stream)}_${pattern}_${formatYear(
-      year
-    )}_Syllabus.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 1000); // Delay URL revoke
-  };
-
-  const handleDelete = (index) => {
-    const updatedSyllabusData = [...syllabusData];
-    updatedSyllabusData.splice(index, 1);
-    setSyllabusData(updatedSyllabusData);
-  };
-
   return (
     <div className="container mx-auto p-4">
       <div className="header flex justify-between items-center mb-4">
@@ -111,7 +152,7 @@ const SyllabusManagement = () => {
         </h1>
         <button
           className="bg-purple-700 text-white px-6 py-3 rounded hover:bg-purple-800 text-lg"
-          onClick={openModal}
+          onClick={() => setIsOpen(true)}
         >
           Add New Syllabus
         </button>
@@ -163,12 +204,6 @@ const SyllabusManagement = () => {
             key={index}
             className="syllabus-card p-4 bg-white rounded shadow relative"
           >
-            <button
-              className="delete-btn absolute top-2 right-2 text-red-500 hover:text-red-700 text-2xl px-3 py-2"
-              onClick={() => handleDelete(index)}
-            >
-              &times;
-            </button>
             <div className="syllabus-header mb-2">
               <div className="syllabus-title text-lg font-semibold">
                 {formatStream(entry.stream)}
@@ -178,45 +213,49 @@ const SyllabusManagement = () => {
               </div>
             </div>
             <div className="syllabus-info flex justify-between items-center mt-4 pt-4 border-t">
-              <span className="syllabus-size text-gray-600">{entry.size}</span>
-              <button
-                className="download-btn bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800 text-lg"
-                onClick={() =>
-                  handleDownload(
-                    entry.file,
-                    entry.stream,
-                    entry.pattern,
-                    entry.year
-                  )
-                }
-              >
-                Download
-              </button>
+              {/* If the syllabus contains a file, show the download button */}
+              {entry.fileId && (
+                <div className="mt-3">
+                  <p className="font-semibold text-gray-600">Attached File:</p>
+                  <button
+                    onClick={() => handleDownload(entry.fileId)}
+                    className="text-blue-500 hover:underline"
+                  >
+                    Download File
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
 
-      {modalOpen && (
+      {isOpen && (
         <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="modal-content bg-white p-6 rounded shadow-lg w-full max-w-md">
             <div className="modal-header flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Add New Syllabus</h2>
               <button
                 className="close-btn text-gray-600 text-xl"
-                onClick={closeModal}
+                onClick={() => setIsOpen(false)}
               >
                 &times;
               </button>
             </div>
-            <form id="syllabusForm" onSubmit={handleSubmit}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+            >
               <div className="form-group mb-4">
                 <label htmlFor="streamInput" className="block text-gray-700">
                   Stream
                 </label>
                 <select
                   id="streamInput"
-                  ref={streamInputRef}
+                  value={stream}
+                  onChange={(e) => setStream(e.target.value)}
                   required
                   className="w-full p-2 border rounded"
                 >
@@ -236,7 +275,8 @@ const SyllabusManagement = () => {
                 </label>
                 <select
                   id="patternInput"
-                  ref={patternInputRef}
+                  value={pattern}
+                  onChange={(e) => setPattern(e.target.value)}
                   required
                   className="w-full p-2 border rounded"
                 >
@@ -251,7 +291,8 @@ const SyllabusManagement = () => {
                 </label>
                 <select
                   id="yearInput"
-                  ref={yearInputRef}
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
                   required
                   className="w-full p-2 border rounded"
                 >
@@ -269,8 +310,8 @@ const SyllabusManagement = () => {
                 <input
                   type="file"
                   id="syllabusFile"
-                  ref={syllabusFileRef}
                   accept=".pdf"
+                  onChange={handleFileChange}
                   required
                   className="w-full p-2 border rounded"
                 />
@@ -279,7 +320,7 @@ const SyllabusManagement = () => {
                 <button
                   type="button"
                   className="cancel-btn px-6 py-3 border rounded text-lg"
-                  onClick={closeModal}
+                  onClick={() => setIsOpen(false)}
                 >
                   Cancel
                 </button>
