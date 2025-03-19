@@ -24,7 +24,7 @@ function AdminDash() {
   };
 
   const menuItems = [
-    { icon: "🏠", label: "Overview", path: "/admindash/adminoverview" },
+    { icon: "🏠", label: "Overview", path: "/admindash" },
     {
       icon: "👨‍🏫",
       label: "Faculty Management",

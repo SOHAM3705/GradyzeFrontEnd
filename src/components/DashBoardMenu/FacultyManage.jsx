@@ -625,6 +625,19 @@ const FacultyManagementSystem = () => {
               </div>
               <div id="subjectTeacherFields" style={{ display: "none" }}>
                 <div className="form-group">
+                  <label className="block text-gray-700">Year</label>
+                  <select
+                    name="subjectYear"
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select Year</option>
+                    <option value="First Year">First Year</option>
+                    <option value="Second Year">Second Year</option>
+                    <option value="Third Year">Third Year</option>
+                    <option value="Fourth Year">Fourth Year</option>
+                  </select>
+                </div>
+                <div className="form-group">
                   <label className="block text-gray-700">Subject</label>
                   <input
                     type="text"
@@ -645,6 +658,14 @@ const FacultyManagementSystem = () => {
                     <option value="7">Semester 7</option>
                     <option value="8">Semester 8</option>
                   </select>
+                </div>
+                <div className="form-group">
+                  <label className="block text-gray-700">Division</label>
+                  <input
+                    type="text"
+                    name="subjectDivision"
+                    className="w-full p-2 border rounded"
+                  />
                 </div>
               </div>
               <div className="flex justify-end gap-4">
