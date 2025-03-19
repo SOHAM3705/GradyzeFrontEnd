@@ -232,6 +232,19 @@ const AdminStudentMarks = () => {
                                             >
                                               Unit Test
                                             </button>
+
+                                            <button
+                                              className="block w-full px-3 py-2 text-left"
+                                              onClick={() =>
+                                                showMarks(
+                                                  divisionData.id,
+                                                  "reunitTest"
+                                                )
+                                              }
+                                            >
+                                              Re-Unit Test
+                                            </button>
+
                                             <button
                                               className="block w-full px-3 py-2 text-left"
                                               onClick={() =>
@@ -242,6 +255,18 @@ const AdminStudentMarks = () => {
                                               }
                                             >
                                               Prelims
+                                            </button>
+
+                                            <button
+                                              className="block w-full px-3 py-2 text-left"
+                                              onClick={() =>
+                                                showMarks(
+                                                  divisionData.id,
+                                                  "reprelims"
+                                                )
+                                              }
+                                            >
+                                              Re-Prelims
                                             </button>
                                           </div>
                                         )}
