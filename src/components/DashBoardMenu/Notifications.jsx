@@ -17,7 +17,7 @@ const Notification = () => {
 
   useEffect(() => {
     axios
-      .get("/api/notifications")
+      .get("https://gradyzebackend.onrender.com/api/notifications")
       .then((response) => {
         console.log("Fetched Notifications:", response.data);
 
@@ -54,7 +54,7 @@ const Notification = () => {
         formData.append("file", file);
 
         const fileResponse = await axios.post(
-          "/api/notifications/upload",
+          "https://gradyzebackend.onrender.com/api/notifications/upload",
           formData,
           {
             headers: {
@@ -66,11 +66,14 @@ const Notification = () => {
         fileId = fileResponse.data.fileID; // Store the file's ID
       }
 
-      const response = await axios.post("/api/notifications", {
-        message: message.trim(),
-        audience,
-        fileId, // Include fileId if a file was uploaded
-      });
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/notifications",
+        {
+          message: message.trim(),
+          audience,
+          fileId, // Include fileId if a file was uploaded
+        }
+      );
 
       const newNotification = response.data;
       setNotifications((prev) => [newNotification, ...prev]);
@@ -97,7 +100,7 @@ const Notification = () => {
 
   // Function to get the file URL if fileId is provided
   const getFileUrl = (fileId) => {
-    return `/api/notifications/files/${fileId}`;
+    return `https://gradyzebackend.onrender.com/api/notifications/files/${fileId}`;
   };
 
   // Function to trigger file download

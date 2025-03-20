@@ -35,7 +35,9 @@ const SyllabusManagement = () => {
   useEffect(() => {
     const fetchSyllabi = async () => {
       try {
-        const response = await axios.get("/api/syllabi");
+        const response = await axios.get(
+          "https://gradyzebackend.onrender.com/api/syllabi"
+        );
         console.log("Received syllabus data from API:", response.data);
 
         if (Array.isArray(response.data)) {
@@ -71,11 +73,15 @@ const SyllabusManagement = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const fileResponse = await axios.post("/api/syllabus/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const fileResponse = await axios.post(
+        "https://gradyzebackend.onrender.com/api/syllabus/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       const { fileID } = fileResponse.data;
 
@@ -87,7 +93,10 @@ const SyllabusManagement = () => {
         fileId: fileID,
       };
 
-      const response = await axios.post("/api/syllabi", syllabusData);
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/syllabi",
+        syllabusData
+      );
 
       setSyllabusData((prevData) => [response.data, ...prevData]); // Add the new syllabus at the top
       setIsOpen(false); // Close the modal after submission
@@ -104,7 +113,10 @@ const SyllabusManagement = () => {
       return;
     }
 
-    window.open(`/api/syllabus/files/${fileId}`, "_blank");
+    window.open(
+      `https://gradyzebackend.onrender.com/api/syllabus/files/${fileId}`,
+      "_blank"
+    );
   };
 
   const formatStream = (stream) => {

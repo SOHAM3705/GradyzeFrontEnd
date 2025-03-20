@@ -33,7 +33,6 @@ import StudentManage from "./components/TeacherDashMenu/StudentManage";
 {
   /*
 import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
-import Analytics from "./components/TeacherDashMenu/Analytics";
 import AttendanceReport from "./components/TeacherDashMenu/AttendanceReport";
 import TeacherNotifications from "./components/TeacherDashMenu/Notifications";
 import TeacherSyllabus from "./components/TeacherDashMenu/Syllabus";*/
