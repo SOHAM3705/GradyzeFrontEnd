@@ -26,7 +26,7 @@ const Notification = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/notifications/${adminId}`
+          `https://gradyzebackend.onrender.com/api/notifications/getnotificationlist/${adminId}`
         );
 
         console.log("Fetched Notifications:", response.data);
@@ -87,7 +87,7 @@ const Notification = () => {
       }
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/notifications",
+        "https://gradyzebackend.onrender.com/api/notifications/createnotification",
         {
           message: message.trim(),
           audience,

@@ -99,7 +99,7 @@ function App() {
         }
       >
         <Route path="TeacherStudentManage" element={<StudentManage />} />
-        <Route path="teacherdash" element={<TeacherOverview />} />
+        <Route path="" element={<TeacherOverview />} />
         {/*<Route path="subject-marks" element={<SubjectMarks />} />
         <Route path="attendance-report" element={<AttendanceReport />} />*/}
         <Route path="notifications" element={<TeacherNotifications />} />
