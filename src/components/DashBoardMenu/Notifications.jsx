@@ -16,9 +16,19 @@ const Notification = () => {
   ];
 
   useEffect(() => {
-    axios
-      .get("https://gradyzebackend.onrender.com/api/notifications")
-      .then((response) => {
+    const fetchNotifications = async () => {
+      try {
+        const adminId = localStorage.getItem("adminId"); // ✅ Get logged-in admin ID
+
+        if (!adminId) {
+          console.error("Admin ID not found in localStorage");
+          return;
+        }
+
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/notifications/${adminId}`
+        );
+
         console.log("Fetched Notifications:", response.data);
 
         // Ensure sorted by newest first in case backend sorting fails
@@ -27,10 +37,12 @@ const Notification = () => {
         );
 
         setNotifications(sortedNotifications);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching notifications:", error);
-      });
+      }
+    };
+
+    fetchNotifications();
   }, []);
 
   const getAudienceLabel = (value) => {
@@ -62,8 +74,16 @@ const Notification = () => {
             },
           }
         );
+
         console.log(fileResponse.data);
         fileId = fileResponse.data.fileID; // Store the file's ID
+      }
+
+      const adminId = localStorage.getItem("adminId"); // ✅ Get logged-in admin ID
+
+      if (!adminId) {
+        alert("Admin ID not found. Please log in again.");
+        return;
       }
 
       const response = await axios.post(
@@ -72,6 +92,7 @@ const Notification = () => {
           message: message.trim(),
           audience,
           fileId, // Include fileId if a file was uploaded
+          adminId, // ✅ Include admin ID
         }
       );
 

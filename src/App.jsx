@@ -39,6 +39,7 @@ import TeacherSyllabus from "./components/TeacherDashMenu/Syllabus";*/
 }
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
 import TeacherSettings from "./components/TeacherDashMenu/Settings";
+import TeacherOverview from "./components/TeacherDashMenu/teacherOverview";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
@@ -98,6 +99,7 @@ function App() {
         }
       >
         <Route path="TeacherStudentManage" element={<StudentManage />} />
+        <Route path="" element={<TeacherOverview />} />
         {/*<Route path="subject-marks" element={<SubjectMarks />} />
         <Route path="attendance-report" element={<AttendanceReport />} />
         <Route path="notifications" element={<TeacherNotifications />} />

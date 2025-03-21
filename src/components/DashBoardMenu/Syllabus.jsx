@@ -31,13 +31,21 @@ const SyllabusManagement = () => {
     { value: "BE", label: "BE" },
   ];
 
-  // Fetch syllabus data from the backend
+  // Fetch syllabus data from the backend for the logged-in admin
   useEffect(() => {
     const fetchSyllabi = async () => {
       try {
+        const adminId = localStorage.getItem("adminId"); // ✅ Retrieve admin ID
+
+        if (!adminId) {
+          console.error("Admin ID not found in localStorage");
+          return;
+        }
+
         const response = await axios.get(
-          "https://gradyzebackend.onrender.com/api/syllabi"
+          `https://gradyzebackend.onrender.com/api/syllabi/${adminId}` // ✅ Fetch only admin's syllabi
         );
+
         console.log("Received syllabus data from API:", response.data);
 
         if (Array.isArray(response.data)) {
@@ -69,6 +77,13 @@ const SyllabusManagement = () => {
     setIsSending(true);
 
     try {
+      const adminId = localStorage.getItem("adminId"); // ✅ Include adminId
+
+      if (!adminId) {
+        alert("Admin ID not found. Please log in again.");
+        return;
+      }
+
       // Upload the file
       const formData = new FormData();
       formData.append("file", file);
@@ -91,6 +106,7 @@ const SyllabusManagement = () => {
         pattern,
         year,
         fileId: fileID,
+        adminId, // ✅ Send adminId with the request
       };
 
       const response = await axios.post(
