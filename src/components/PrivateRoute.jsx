@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 
 const PrivateRoute = ({ children, role }) => {
   // Dynamically get the stored role from localStorage
-  const userId = localStorage.getItem(`${role}Id`); // Use role dynamically
+  const userId = sessionStorage.getItem(`${role}Id`); // Use role dynamically
 
   // Check if userId exists for the specified role
   if (!userId) {
