@@ -141,7 +141,6 @@ const Notification = () => {
       const blob = new Blob([response.data], { type: "application/pdf" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "syllabus.pdf"; // ✅ Set default filename
       document.body.appendChild(link);
       link.click(); // ✅ Trigger file download
       document.body.removeChild(link); // ✅ Clean up
