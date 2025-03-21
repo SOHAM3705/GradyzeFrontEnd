@@ -62,16 +62,30 @@ const TeacherSyllabusView = () => {
     fetchSyllabi();
   }, []);
 
-  const handleDownload = (fileId) => {
+  const handleDownload = async (fileId) => {
     if (!fileId) {
       alert("No file available for download.");
       return;
     }
 
-    window.open(
-      `https://gradyzebackend.onrender.com/api/teachersyllabi/files/${fileId}`,
-      "_blank"
-    );
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachersyllabi/files/${fileId}`,
+        { responseType: "blob" } // ✅ Ensures binary file download
+      );
+
+      // ✅ Create a downloadable blob
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "syllabus.pdf"; // ✅ Set default filename
+      document.body.appendChild(link);
+      link.click(); // ✅ Trigger file download
+      document.body.removeChild(link); // ✅ Clean up
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert("Failed to download the syllabus. Please try again.");
+    }
   };
 
   const formatStream = (stream) => {
