@@ -41,7 +41,7 @@ const TeacherSyllabusView = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/syllabi/teacher/${teacherId}/${adminId}`
+          `https://gradyzebackend.onrender.com/api/teachersyllabi/teacher/${teacherId}/${adminId}`
         );
 
         console.log("Received syllabus data from API:", response.data);
@@ -69,7 +69,7 @@ const TeacherSyllabusView = () => {
     }
 
     window.open(
-      `https://gradyzebackend.onrender.com/api/syllabus/files/${fileId}`,
+      `https://gradyzebackend.onrender.com/api/teachersyllabi/files/${fileId}`,
       "_blank"
     );
   };

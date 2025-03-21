@@ -43,7 +43,7 @@ const SyllabusManagement = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/syllabi/getsyllabi/:adminId` // ✅ Fetch only admin's syllabi
+          `https://gradyzebackend.onrender.com/api/syllabi//getsyllabi/:adminId` // ✅ Fetch only admin's syllabi
         );
 
         console.log("Received syllabus data from API:", response.data);
@@ -89,7 +89,7 @@ const SyllabusManagement = () => {
       formData.append("file", file);
 
       const fileResponse = await axios.post(
-        "https://gradyzebackend.onrender.com/api/syllabus/upload",
+        "https://gradyzebackend.onrender.com/api/syllabi/upload",
         formData,
         {
           headers: {
@@ -110,7 +110,7 @@ const SyllabusManagement = () => {
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/syllabi/putsysllabus",
+        "https://gradyzebackend.onrender.com/api/syllabi/putsyllabi",
         syllabusData
       );
 
