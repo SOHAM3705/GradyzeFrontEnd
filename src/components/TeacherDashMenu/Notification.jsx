@@ -20,7 +20,7 @@ const TeacherNotification = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/notifications/teacher/${teacherId}/${adminId}`
+          `https://gradyzebackend.onrender.com/api/teachernotification/teacher/${teacherId}/${adminId}`
         );
 
         console.log("Fetched Notifications:", response.data);
@@ -54,7 +54,7 @@ const TeacherNotification = () => {
         formData.append("file", file);
 
         const fileResponse = await axios.post(
-          "https://gradyzebackend.onrender.com/api/notifications/upload",
+          "https://gradyzebackend.onrender.com/api/teachernotification/upload",
           formData,
           {
             headers: {
@@ -75,7 +75,7 @@ const TeacherNotification = () => {
       }
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/notifications/teacher",
+        "https://gradyzebackend.onrender.com/api/teachernotification/teacher",
         {
           message: message.trim(),
           audience: "students",
