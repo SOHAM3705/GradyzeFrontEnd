@@ -125,15 +125,31 @@ const Notification = () => {
   };
 
   // Function to trigger file download
-  const handleDownload = (fileId) => {
-    const fileUrl = getFileUrl(fileId);
-    const link = document.createElement("a");
-    link.href = fileUrl;
-    link.target = "_blank";
-    link.download = true; // This will prompt the file to download
-    link.click();
-  };
+  const handleDownload = async (fileId) => {
+    if (!fileId) {
+      alert("No file available for download.");
+      return;
+    }
 
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/notifications/files/${fileId}`,
+        { responseType: "blob" } // ✅ Ensures binary file download
+      );
+
+      // ✅ Create a downloadable blob
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "syllabus.pdf"; // ✅ Set default filename
+      document.body.appendChild(link);
+      link.click(); // ✅ Trigger file download
+      document.body.removeChild(link); // ✅ Clean up
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert("Failed to download the syllabus. Please try again.");
+    }
+  };
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-100 p-5">
       {/* Button to create a new notification */}
