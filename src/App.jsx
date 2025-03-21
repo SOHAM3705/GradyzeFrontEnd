@@ -33,10 +33,10 @@ import StudentManage from "./components/TeacherDashMenu/StudentManage";
 {
   /*
 import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
-import AttendanceReport from "./components/TeacherDashMenu/AttendanceReport";
-import TeacherNotifications from "./components/TeacherDashMenu/Notifications";
-import TeacherSyllabus from "./components/TeacherDashMenu/Syllabus";*/
+import AttendanceReport from "./components/TeacherDashMenu/AttendanceReport";*/
 }
+import TeacherNotifications from "./components/TeacherDashMenu/Notification";
+import TeacherSyllabusView from "./components/TeacherDashMenu/Syllabus";
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
 import TeacherSettings from "./components/TeacherDashMenu/Settings";
 import TeacherOverview from "./components/TeacherDashMenu/teacherOverview";
@@ -99,11 +99,11 @@ function App() {
         }
       >
         <Route path="TeacherStudentManage" element={<StudentManage />} />
-        <Route path="" element={<TeacherOverview />} />
+        <Route path="teacherdash" element={<TeacherOverview />} />
         {/*<Route path="subject-marks" element={<SubjectMarks />} />
-        <Route path="attendance-report" element={<AttendanceReport />} />
+        <Route path="attendance-report" element={<AttendanceReport />} />*/}
         <Route path="notifications" element={<TeacherNotifications />} />
-        <Route path="syllabus" element={<TeacherSyllabus />} />*/}
+        <Route path="syllabus" element={<TeacherSyllabusView />} />
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
       </Route>

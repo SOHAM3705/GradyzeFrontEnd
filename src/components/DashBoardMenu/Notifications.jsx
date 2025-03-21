@@ -243,8 +243,9 @@ const Notification = () => {
               >
                 <div className="flex justify-between items-start mb-4">
                   <span className="text-sm text-gray-500">
-                    {notification.timestamp}
+                    {new Date(notification.createdAt).toLocaleString()}
                   </span>
+
                   <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
                     {getAudienceLabel(notification.audience)}
                   </span>
