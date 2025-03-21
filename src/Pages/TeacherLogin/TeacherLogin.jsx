@@ -27,7 +27,7 @@ const TeacherLogin = () => {
         { email, password }
       );
 
-      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("adminId", response.data.token);
       localStorage.setItem("teacherId", response.data.teacher._id); // Store teacherId
       localStorage.setItem("teacherName", response.data.teacher.name); // Store teacherName
 
