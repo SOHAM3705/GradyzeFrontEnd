@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "@fortawesome/fontawesome-free/css/all.min.css"; // Ensure FontAwesome is loaded
 
-const teacherForgetPassword = () => {
+const TeacherForgetPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -22,11 +22,11 @@ const teacherForgetPassword = () => {
       setMessage("📩 " + response.data.message);
     } catch (error) {
       setMessage(
-        "❌ " + (error?.response?.data?.message ?? "Something went wrong.")
+        "❌ " + (error.response?.data?.message || "Something went wrong.")
       );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleBack = () => {
@@ -85,4 +85,4 @@ const teacherForgetPassword = () => {
   );
 };
 
-export default teacherForgetPassword;
+export default TeacherForgetPassword;

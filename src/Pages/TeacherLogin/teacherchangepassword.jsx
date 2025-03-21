@@ -26,7 +26,7 @@ const ChangePassword = () => {
     setMessage("");
 
     if (!token) {
-      setMessage("❌ Invalid token.");
+      setMessage("❌ Invalid or missing token.");
       setLoading(false);
       return;
     }
@@ -39,21 +39,19 @@ const ChangePassword = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/password/teacherpassword/change-password",
+        "https://gradyzebackend.onrender.com/api/password/teacherpassword/change-password", // Ensure correct URL
         { token, newPassword, confirmPassword }
       );
 
-      if (response.data?.message) {
-        setMessage("✅ " + response.data.message);
-        setTimeout(() => {
-          navigate("/teacherlogin"); // Redirects after successful password reset
-        }, 2000);
-      } else {
-        setMessage("⚠ Unexpected response from the server.");
-      }
+      setMessage("✅ " + response.data.message);
+      setTimeout(() => {
+        navigate("/teacherlogin"); // Redirect after successful password reset
+      }, 2000);
     } catch (error) {
       setMessage(
-        "❌ " + (error.response?.data?.message || "Something went wrong.")
+        "❌ " +
+          (error.response?.data?.message ||
+            "An error occurred while updating your password. Please try again.")
       );
     } finally {
       setLoading(false);
