@@ -28,20 +28,20 @@ const TeacherSyllabusView = () => {
     { value: "BE", label: "BE" },
   ];
 
-  // Fetch syllabus data from the backend for the logged-in teacher
   useEffect(() => {
     const fetchSyllabi = async () => {
       try {
-        const adminId = localStorage.getItem("adminId"); // Retrieve admin ID
-        const teacherId = localStorage.getItem("teacherId"); // Retrieve teacher ID
+        const adminId = sessionStorage.getItem("adminId"); // ✅ Use sessionStorage
+        const teacherId = sessionStorage.getItem("teacherId"); // ✅ Use sessionStorage
 
         if (!adminId || !teacherId) {
-          console.error("Admin ID or Teacher ID not found in localStorage");
+          console.error("Admin ID or Teacher ID not found in sessionStorage");
           return;
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachersyllabi/teacher/${teacherId}/${adminId}`
+          `https://gradyzebackend.onrender.com/api/teachersyllabi/teacher/${teacherId}/${adminId}`,
+          { withCredentials: true } // ✅ Ensures token is sent with the request
         );
 
         console.log("Received syllabus data from API:", response.data);
