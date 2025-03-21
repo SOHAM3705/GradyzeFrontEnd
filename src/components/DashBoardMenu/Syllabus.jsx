@@ -131,7 +131,7 @@ const SyllabusManagement = () => {
 
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachersyllabi/files/${fileId}`,
+        `https://gradyzebackend.onrender.com/api/syllabi/files/${fileId}`,
         { responseType: "blob" } // ✅ Ensures binary file download
       );
 
