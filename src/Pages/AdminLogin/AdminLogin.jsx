@@ -27,9 +27,9 @@ const AdminLogin = () => {
       );
 
       // Store Token, ID, and Name in Local Storage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("adminId", response.data.adminId);
-      localStorage.setItem("adminName", response.data.name); // Store name
+      sessionStorage.setItem("token", response.data.token);
+      sessionStorage.setItem("adminId", response.data.adminId);
+      sessionStorage.setItem("adminName", response.data.name); // Store name
 
       navigate("/admindash");
     } catch (err) {

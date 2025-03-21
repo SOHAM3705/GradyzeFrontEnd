@@ -11,11 +11,11 @@ const TeacherNotification = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const adminId = localStorage.getItem("adminId"); // Get logged-in admin ID
-        const teacherId = localStorage.getItem("teacherId"); // Get logged-in teacher ID
+        const adminId = sessionStorage.getItem("adminId"); // Get logged-in admin ID
+        const teacherId = sessionStorage.getItem("teacherId"); // Get logged-in teacher ID
 
         if (!adminId || !teacherId) {
-          console.error("Admin ID or Teacher ID not found in localStorage");
+          console.error("Admin ID or Teacher ID not found in sessionStorage");
           return;
         }
 
@@ -67,7 +67,7 @@ const TeacherNotification = () => {
         fileId = fileResponse.data.fileID; // Store the file's ID
       }
 
-      const teacherId = localStorage.getItem("teacherId"); // Get logged-in teacher ID
+      const teacherId = sessionStorage.getItem("teacherId"); // Get logged-in teacher ID
 
       if (!teacherId) {
         alert("Teacher ID not found. Please log in again.");

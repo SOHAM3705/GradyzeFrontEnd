@@ -9,16 +9,16 @@ function AdminDash() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedName = localStorage.getItem("adminName");
+    const storedName = sessionStorage.getItem("adminName");
     if (storedName) {
       setAdminName(storedName);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("adminName");
+    sessionStorage.removeItem("adminId");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("adminName");
     sessionStorage.clear();
     navigate("/adminlogin");
   };

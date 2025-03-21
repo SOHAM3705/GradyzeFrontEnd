@@ -102,7 +102,7 @@ const FacultyManagementSystem = () => {
 
   const fetchFaculty = async () => {
     try {
-      const adminId = localStorage.getItem("adminId");
+      const adminId = sessionStorage.getItem("adminId");
       const response = await axios.get(
         "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
         {
@@ -125,7 +125,7 @@ const FacultyManagementSystem = () => {
     const department = formData.get("department")?.trim();
     const isClassTeacher = formData.get("isClassTeacher") === "on";
     const isSubjectTeacher = formData.get("isSubjectTeacher") === "on";
-    const adminId = localStorage.getItem("adminId");
+    const adminId = sessionStorage.getItem("adminId");
 
     if (!name || !email || !department) {
       alert("Please fill in all required fields: Name, Email, and Department.");
@@ -190,7 +190,7 @@ const FacultyManagementSystem = () => {
         facultyData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
             "Content-Type": "application/json",
           },
         }
@@ -215,7 +215,7 @@ const FacultyManagementSystem = () => {
     const year = formData.get("year")?.trim();
     const semester = parseInt(formData.get("semester"), 10);
     const division = formData.get("division")?.trim();
-    const adminId = localStorage.getItem("adminId");
+    const adminId = sessionStorage.getItem("adminId");
 
     if (!subjectName || !year || isNaN(semester) || !division) {
       alert(
@@ -237,7 +237,7 @@ const FacultyManagementSystem = () => {
         subjectData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
             "Content-Type": "application/json",
           },
         }
@@ -273,8 +273,8 @@ const FacultyManagementSystem = () => {
 
   const removeSubject = async (subjectName, year, semester, division) => {
     try {
-      const token = localStorage.getItem("token");
-      const adminId = localStorage.getItem("adminId");
+      const token = sessionStorage.getItem("token");
+      const adminId = sessionStorage.getItem("adminId");
 
       if (!token) {
         alert("Authentication error. Please log in again.");
@@ -341,8 +341,8 @@ const FacultyManagementSystem = () => {
     if (!teacherToDelete) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const adminId = localStorage.getItem("adminId");
+      const token = sessionStorage.getItem("token");
+      const adminId = sessionStorage.getItem("adminId");
 
       if (!token || !adminId) {
         alert("Authentication error. Please log in again.");
@@ -398,8 +398,8 @@ const FacultyManagementSystem = () => {
 
   const removeClass = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const adminId = localStorage.getItem("adminId");
+      const token = sessionStorage.getItem("token");
+      const adminId = sessionStorage.getItem("adminId");
 
       if (!token) {
         alert("Authentication error. Please log in again.");

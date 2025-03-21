@@ -35,10 +35,10 @@ const SyllabusManagement = () => {
   useEffect(() => {
     const fetchSyllabi = async () => {
       try {
-        const adminId = localStorage.getItem("adminId"); // ✅ Retrieve admin ID
+        const adminId = sessionStorage.getItem("adminId"); // ✅ Retrieve admin ID
 
         if (!adminId) {
-          console.error("Admin ID not found in localStorage");
+          console.error("Admin ID not found in sessionStorage");
           return;
         }
 
@@ -77,7 +77,7 @@ const SyllabusManagement = () => {
     setIsSending(true);
 
     try {
-      const adminId = localStorage.getItem("adminId"); // ✅ Include adminId
+      const adminId = sessionStorage.getItem("adminId"); // ✅ Include adminId
 
       if (!adminId) {
         alert("Admin ID not found. Please log in again.");

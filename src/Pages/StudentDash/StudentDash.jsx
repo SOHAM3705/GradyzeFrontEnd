@@ -9,16 +9,16 @@ function StudentDash() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedName = localStorage.getItem("studentName");
+    const storedName = sessionStorage.getItem("studentName");
     if (storedName) {
       setStudentName(storedName);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("studentId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("studentName");
+    sessionStorage.removeItem("studentId");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("studentName");
     sessionStorage.clear();
     navigate("/studentlogin");
   };

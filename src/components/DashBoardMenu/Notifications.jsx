@@ -18,10 +18,10 @@ const Notification = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const adminId = localStorage.getItem("adminId"); // ✅ Get logged-in admin ID
+        const adminId = sessionStorage.getItem("adminId"); // ✅ Get logged-in admin ID
 
         if (!adminId) {
-          console.error("Admin ID not found in localStorage");
+          console.error("Admin ID not found in sessionStorage");
           return;
         }
 
@@ -79,7 +79,7 @@ const Notification = () => {
         fileId = fileResponse.data.fileID; // Store the file's ID
       }
 
-      const adminId = localStorage.getItem("adminId"); // ✅ Get logged-in admin ID
+      const adminId = sessionStorage.getItem("adminId"); // ✅ Get logged-in admin ID
 
       if (!adminId) {
         alert("Admin ID not found. Please log in again.");

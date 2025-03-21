@@ -9,16 +9,16 @@ function TeacherDash() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedName = localStorage.getItem("teacherName");
+    const storedName = sessionStorage.getItem("teacherName");
     if (storedName) {
       setTeacherName(storedName);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("teacherId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("teacherName");
+    sessionStorage.removeItem("teacherId");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("teacherName");
     sessionStorage.clear();
     navigate("/teacherlogin");
   };
