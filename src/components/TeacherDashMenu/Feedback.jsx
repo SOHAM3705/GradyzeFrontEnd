@@ -15,7 +15,7 @@ const TeacherFeedbackForm = () => {
 
   // Google Sheets Web App URL (Replace this with your actual URL)
   const GOOGLE_SHEET_WEBHOOK =
-    "https://script.google.com/macros/s/AKfycbzGc5S6grhFdJLr8ODC6tcSZVeQdTmZGfDkgMsVldYyP5QSAqJAXDWdKf4sxTnyF1d8mA/exec";
+    "https://script.google.com/macros/s/AKfycbyQB9byyI4UUst11BqRMW8r2G8BG0ymGwaqZhBF8YgZDxnpbGgv9MFU1MAPRAdcsiTefw/exec";
 
   const handleChange = (e) => {
     const { name, value } = e.target;

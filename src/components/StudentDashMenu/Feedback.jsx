@@ -15,7 +15,7 @@ const AdminFeedback = () => {
 
   // Google Sheets Web App URL (Replace this with your actual URL)
   const GOOGLE_SHEET_WEBHOOK =
-    "https://script.google.com/macros/s/AKfycbwcdhEGO2698tk9f4JuAgiUcTIYD66wxuzlOY16GQ0vrrwZJ2Nk7EVf5ZeJWd8sO6bRcg/exec";
+    "https://script.google.com/macros/s/AKfycbwd4I2MiKI7K2fUd9dc_pdWPSXv2s4b_KF1oP2bS2bGA4ScH7JTQryX_l26m6UlEwA9Zg/exec";
 
   const handleChange = (e) => {
     const { name, value } = e.target;

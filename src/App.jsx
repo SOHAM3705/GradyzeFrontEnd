@@ -21,6 +21,7 @@ import StudentManagement from "./components/DashBoardMenu/StudentManage";
 import FacultyManagement from "./components/DashBoardMenu/FacultyManage";
 import AdminStudentMarks from "./components/DashBoardMenu/StudentsMarks";
 import AdminOverview from "./components/DashBoardMenu/Overview";
+import AdminAttendanceDashboard from "./components/DashBoardMenu/AttendanceReport";
 
 import TeacherDash from "./Pages/TeacherDash/TeacherDash";
 import StudentDash from "./Pages/StudentDash/StudentDash";
@@ -32,9 +33,9 @@ import TeacherChangePassword from "./Pages/TeacherLogin/teacherchangepassword";
 import StudentManage from "./components/TeacherDashMenu/StudentManage";
 {
   /*
-import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
-import AttendanceReport from "./components/TeacherDashMenu/AttendanceReport";*/
+import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";*/
 }
+import TeacherAttendanceDashboard from "./components/TeacherDashMenu/AttendanceReport";
 import TeacherNotifications from "./components/TeacherDashMenu/Notification";
 import TeacherSyllabusView from "./components/TeacherDashMenu/Syllabus";
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
@@ -87,6 +88,10 @@ function App() {
         <Route path="FacultyManage" element={<FacultyManagement />} />
         <Route path="students-marks" element={<AdminStudentMarks />} />
         <Route path="" element={<AdminOverview />} />
+        <Route
+          path="attendance-report"
+          element={<AdminAttendanceDashboard />}
+        />
       </Route>
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />
@@ -100,8 +105,11 @@ function App() {
       >
         <Route path="TeacherStudentManage" element={<StudentManage />} />
         <Route path="" element={<TeacherOverview />} />
-        {/*<Route path="subject-marks" element={<SubjectMarks />} />
-        <Route path="attendance-report" element={<AttendanceReport />} />*/}
+        {/*<Route path="subject-marks" element={<SubjectMarks />} />*/}
+        <Route
+          path="attendance-report"
+          element={<TeacherAttendanceDashboard />}
+        />
         <Route path="notifications" element={<TeacherNotifications />} />
         <Route path="syllabus" element={<TeacherSyllabusView />} />
         <Route path="feedback" element={<TeacherFeedback />} />
