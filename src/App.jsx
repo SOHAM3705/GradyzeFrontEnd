@@ -88,10 +88,7 @@ function App() {
         <Route path="FacultyManage" element={<FacultyManagement />} />
         <Route path="students-marks" element={<AdminStudentMarks />} />
         <Route path="" element={<AdminOverview />} />
-        <Route
-          path="attendance-report"
-          element={<AdminAttendanceDashboard />}
-        />
+        <Route path="AttendanceReport" element={<AdminAttendanceDashboard />} />
       </Route>
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />
@@ -115,6 +112,8 @@ function App() {
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
       </Route>
+
+      <Route path="/studentdash" element={<StudentDash />} />
     </Routes>
   );
 }

@@ -18,15 +18,6 @@ const AdminAttendanceDashboard = () => {
         <div className="text-2xl font-bold">
           Department Attendance Dashboard
         </div>
-        <div className="flex items-center">
-          <div className="w-10 h-10 bg-blue-600 text-white flex items-center justify-center rounded-full font-bold mr-2">
-            AD
-          </div>
-          <div>
-            <div className="font-bold">Admin Demo</div>
-            <div className="text-gray-500 text-sm">Department Head</div>
-          </div>
-        </div>
       </div>
 
       <div className="flex flex-wrap gap-4 mb-8 p-5 bg-white rounded-lg shadow-sm">
