@@ -29,7 +29,7 @@ const TeacherFeedbackForm = () => {
 
     try {
       await axios.post(
-        "http://gradyzebackend.onrender.com/api/Gsheet/teacher/submit-feedback",
+        "https://gradyzebackend.onrender.com/api/Gsheet/teacher/submit-feedback",
         formData
       );
       setMessage({ text: "Feedback submitted successfully!", type: "success" });

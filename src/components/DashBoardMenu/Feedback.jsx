@@ -27,7 +27,7 @@ const AdminFeedbackForm = () => {
 
     try {
       await axios.post(
-        "http://gradyzebackend.onrender.com/api/Gsheet/admin/submit-feedback",
+        "https://gradyzebackend.onrender.com/api/Gsheet/admin/submit-feedback",
         formData
       );
       setMessage({ text: "Feedback submitted successfully!", type: "success" });
