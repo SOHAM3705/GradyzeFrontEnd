@@ -20,7 +20,7 @@ const TeacherNotification = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachernotification/teacher/${teacherId}/${adminId}`
+          `https://gradyzebackend.onrender.com/api/teachernotification/teacher/${adminId}`
         );
 
         console.log("Fetched Notifications:", response.data);

@@ -40,7 +40,7 @@ const TeacherSyllabusView = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachersyllabi/teacher/${teacherId}/${adminId}`,
+          `https://gradyzebackend.onrender.com/api/teachersyllabi/teacher/${adminId}`,
           { withCredentials: true } // ✅ Ensures token is sent with the request
         );
 
