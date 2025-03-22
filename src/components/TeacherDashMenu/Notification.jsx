@@ -7,6 +7,7 @@ const TeacherNotification = () => {
   const [file, setFile] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [createdNotifications, setCreatedNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState("created");
 
   useEffect(() => {
@@ -20,15 +21,19 @@ const TeacherNotification = () => {
           return;
         }
 
-        const response = await axios.get(
+        // Fetch all notifications for the admin
+        const allNotificationsResponse = await axios.get(
           `https://gradyzebackend.onrender.com/api/teachernotifications/getteachernotification/${adminId}`
         );
 
-        const sortedNotifications = response.data.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        setNotifications(allNotificationsResponse.data);
+
+        // Fetch notifications created by the teacher
+        const createdNotificationsResponse = await axios.get(
+          `https://gradyzebackend.onrender.com/api/teachernotifications/getteachercreates/${teacherId}`
         );
 
-        setNotifications(sortedNotifications);
+        setCreatedNotifications(createdNotificationsResponse.data);
       } catch (error) {
         console.error("Error fetching notifications:", error);
       }
@@ -88,7 +93,7 @@ const TeacherNotification = () => {
       );
 
       const newNotification = response.data;
-      setNotifications((prev) => [newNotification, ...prev]);
+      setCreatedNotifications((prev) => [newNotification, ...prev]);
 
       setMessage("");
       setFile(null);
@@ -150,7 +155,7 @@ const TeacherNotification = () => {
         }
       );
 
-      setNotifications((prev) =>
+      setCreatedNotifications((prev) =>
         prev.filter((notification) => notification._id !== notificationId)
       );
       alert("Notification deleted successfully!");
@@ -164,19 +169,6 @@ const TeacherNotification = () => {
     return (
       audienceOptions.find((option) => option.value === value)?.label || value
     );
-  };
-
-  const filterNotifications = () => {
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (activeTab === "created") {
-      return notifications.filter(
-        (notification) => notification.teacherId === teacherId
-      );
-    } else {
-      return notifications.filter(
-        (notification) => notification.teacherId !== teacherId
-      );
-    }
   };
 
   return (
@@ -275,8 +267,53 @@ const TeacherNotification = () => {
 
         <h2 className="text-2xl font-bold mb-6">Notification History</h2>
         <div className="space-y-6">
-          {filterNotifications().length > 0 ? (
-            filterNotifications().map((notification) => (
+          {activeTab === "created" ? (
+            createdNotifications.length > 0 ? (
+              createdNotifications.map((notification) => (
+                <div
+                  key={notification._id}
+                  className="border rounded-lg p-6 hover:bg-gray-50 transition-colors duration-300"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-sm text-gray-500">
+                      {new Date(notification.createdAt).toLocaleString()}
+                    </span>
+
+                    <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                      {getAudienceLabel(notification.audience)}
+                    </span>
+                  </div>
+                  <p className="text-gray-800 mb-4">{notification.message}</p>
+
+                  {notification.fileId && (
+                    <div className="mt-4">
+                      <p className="font-semibold text-gray-600">
+                        Attached File:
+                      </p>
+                      <button
+                        onClick={() => handleDownload(notification.fileId)}
+                        className="text-blue-500 hover:underline font-medium"
+                      >
+                        Download File
+                      </button>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => handleDelete(notification._id)}
+                    className="text-red-500 hover:underline font-medium mt-4"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center">
+                No created notifications to show.
+              </p>
+            )
+          ) : notifications.length > 0 ? (
+            notifications.map((notification) => (
               <div
                 key={notification._id}
                 className="border rounded-lg p-6 hover:bg-gray-50 transition-colors duration-300"
@@ -305,20 +342,11 @@ const TeacherNotification = () => {
                     </button>
                   </div>
                 )}
-
-                {activeTab === "created" && (
-                  <button
-                    onClick={() => handleDelete(notification._id)}
-                    className="text-red-500 hover:underline font-medium mt-4"
-                  >
-                    Delete
-                  </button>
-                )}
               </div>
             ))
           ) : (
             <p className="text-gray-500 text-center">
-              No notifications to show.
+              No received notifications to show.
             </p>
           )}
         </div>
