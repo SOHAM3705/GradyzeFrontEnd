@@ -10,7 +10,6 @@ const SyllabusManagement = () => {
   const [file, setFile] = useState(null);
   const [isSending, setIsSending] = useState(false);
 
-  // Options for Stream, Pattern, and Year
   const streamOptions = [
     { value: "computer", label: "Computer" },
     { value: "it", label: "IT" },
@@ -31,11 +30,10 @@ const SyllabusManagement = () => {
     { value: "BE", label: "BE" },
   ];
 
-  // Fetch syllabus data from the backend for the logged-in admin
   useEffect(() => {
     const fetchSyllabi = async () => {
       try {
-        const adminId = sessionStorage.getItem("adminId"); // ✅ Retrieve admin ID
+        const adminId = sessionStorage.getItem("adminId");
 
         if (!adminId) {
           console.error("Admin ID not found in sessionStorage");
@@ -43,7 +41,7 @@ const SyllabusManagement = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/syllabi/getsyllabi/${adminId}` // ✅ Fetch only admin's syllabi
+          `https://gradyzebackend.onrender.com/api/syllabi/getsyllabi/${adminId}`
         );
 
         console.log("Received syllabus data from API:", response.data);
@@ -77,14 +75,13 @@ const SyllabusManagement = () => {
     setIsSending(true);
 
     try {
-      const adminId = sessionStorage.getItem("adminId"); // ✅ Include adminId
+      const adminId = sessionStorage.getItem("adminId");
 
       if (!adminId) {
         alert("Admin ID not found. Please log in again.");
         return;
       }
 
-      // Upload the file
       const formData = new FormData();
       formData.append("file", file);
 
@@ -100,13 +97,12 @@ const SyllabusManagement = () => {
 
       const { fileID } = fileResponse.data;
 
-      // Create syllabus
       const syllabusData = {
         stream,
         pattern,
         year,
         fileId: fileID,
-        adminId, // ✅ Send adminId with the request
+        adminId,
       };
 
       const response = await axios.post(
@@ -114,8 +110,8 @@ const SyllabusManagement = () => {
         syllabusData
       );
 
-      setSyllabusData((prevData) => [response.data, ...prevData]); // Add the new syllabus at the top
-      setIsOpen(false); // Close the modal after submission
+      setSyllabusData((prevData) => [response.data, ...prevData]);
+      setIsOpen(false);
     } catch (error) {
       console.error("Error submitting syllabus:", error);
     } finally {
@@ -132,20 +128,45 @@ const SyllabusManagement = () => {
     try {
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/syllabi/files/${fileId}`,
-        { responseType: "blob" } // ✅ Ensures binary file download
+        { responseType: "blob" }
       );
 
-      // ✅ Create a downloadable blob
       const blob = new Blob([response.data], { type: "application/pdf" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "syllabus.pdf"; // ✅ Set default filename
+      link.download = "syllabus.pdf";
       document.body.appendChild(link);
-      link.click(); // ✅ Trigger file download
-      document.body.removeChild(link); // ✅ Clean up
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error("Error downloading file:", error);
       alert("Failed to download the syllabus. Please try again.");
+    }
+  };
+
+  const handleDelete = async (syllabusId) => {
+    try {
+      const adminId = sessionStorage.getItem("adminId");
+
+      if (!adminId) {
+        alert("Admin ID not found. Please log in again.");
+        return;
+      }
+
+      await axios.delete(
+        `https://gradyzebackend.onrender.com/api/syllabi/delete/${syllabusId}`,
+        {
+          data: { adminId },
+        }
+      );
+
+      setSyllabusData((prevData) =>
+        prevData.filter((syllabus) => syllabus._id !== syllabusId)
+      );
+      alert("Syllabus deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting syllabus:", error);
+      alert("Failed to delete syllabus");
     }
   };
 
@@ -255,7 +276,6 @@ const SyllabusManagement = () => {
               </div>
             </div>
             <div className="syllabus-info flex justify-between items-center mt-4 pt-4 border-t">
-              {/* If the syllabus contains a file, show the download button */}
               {entry.fileId && (
                 <div className="mt-3">
                   <p className="font-semibold text-gray-600">Attached File:</p>
@@ -267,6 +287,12 @@ const SyllabusManagement = () => {
                   </button>
                 </div>
               )}
+              <button
+                onClick={() => handleDelete(entry._id)}
+                className="text-red-500 hover:underline"
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}

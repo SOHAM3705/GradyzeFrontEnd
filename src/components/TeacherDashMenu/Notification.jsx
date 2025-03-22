@@ -11,7 +11,7 @@ const TeacherNotification = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const adminId = sessionStorage.getItem("adminId"); // Get logged-in admin ID
+        const adminId = sessionStorage.getItem("adminId");
 
         if (!adminId) {
           console.error("Admin ID not found in sessionStorage");
@@ -24,7 +24,6 @@ const TeacherNotification = () => {
 
         console.log("Fetched Notifications:", response.data);
 
-        // Ensure sorted by newest first in case backend sorting fails
         const sortedNotifications = response.data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
@@ -63,11 +62,11 @@ const TeacherNotification = () => {
         );
 
         console.log(fileResponse.data);
-        fileId = fileResponse.data.fileID; // Store the file's ID
+        fileId = fileResponse.data.fileID;
       }
 
-      const teacherId = sessionStorage.getItem("teacherId"); // Get logged-in teacher ID
-      const adminId = sessionStorage.getItem("adminId"); // Get admin ID
+      const teacherId = sessionStorage.getItem("teacherId");
+      const adminId = sessionStorage.getItem("adminId");
 
       if (!teacherId || !adminId) {
         alert("Teacher ID or Admin ID not found. Please log in again.");
@@ -79,9 +78,9 @@ const TeacherNotification = () => {
         {
           message: message.trim(),
           audience: "students",
-          fileId, // Include fileId if a file was uploaded
-          teacherId, // Include teacher ID
-          adminId, // ✅ Add adminId to the request
+          fileId,
+          teacherId,
+          adminId,
         }
       );
 
@@ -116,26 +115,56 @@ const TeacherNotification = () => {
     try {
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachernotifications/files/${fileId}`,
-        { responseType: "blob" } // ✅ Ensures binary file download
+        { responseType: "blob" }
       );
 
-      // ✅ Create a downloadable blob
       const blob = new Blob([response.data], { type: "application/pdf" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "syllabus.pdf"; // ✅ Set default filename
+      link.download = "syllabus.pdf";
       document.body.appendChild(link);
-      link.click(); // ✅ Trigger file download
-      document.body.removeChild(link); // ✅ Clean up
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error("Error downloading file:", error);
       alert("Failed to download the syllabus. Please try again.");
     }
   };
 
+  const handleDelete = async (notificationId) => {
+    try {
+      const teacherId = sessionStorage.getItem("teacherId");
+
+      if (!teacherId) {
+        alert("Teacher ID not found. Please log in again.");
+        return;
+      }
+
+      await axios.delete(
+        `https://gradyzebackend.onrender.com/api/teachernotifications/delete/${notificationId}`,
+        {
+          data: { teacherId },
+        }
+      );
+
+      setNotifications((prev) =>
+        prev.filter((notification) => notification._id !== notificationId)
+      );
+      alert("Notification deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      alert("Failed to delete notification");
+    }
+  };
+
+  const getAudienceLabel = (value) => {
+    return (
+      audienceOptions.find((option) => option.value === value)?.label || value
+    );
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-100 p-5">
-      {/* Button to create a new notification */}
       <button
         onClick={() => setIsOpen(true)}
         className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 mt-6"
@@ -143,7 +172,6 @@ const TeacherNotification = () => {
         Create Notification
       </button>
 
-      {/* Modal and notification form */}
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
@@ -207,7 +235,6 @@ const TeacherNotification = () => {
         </div>
       )}
 
-      {/* Notification History */}
       <div className="w-full max-w-4xl bg-white rounded-lg shadow p-6 mt-6">
         <h2 className="text-2xl font-bold mb-6">Notification History</h2>
         <div className="space-y-6">
@@ -228,19 +255,28 @@ const TeacherNotification = () => {
                 </div>
                 <p className="text-gray-800 mb-4">{notification.message}</p>
 
-                {/* If the notification contains a file, show the download button */}
                 {notification.fileId && (
                   <div className="mt-4">
                     <p className="font-semibold text-gray-600">
                       Attached File:
                     </p>
                     <button
-                      onClick={() => handleDownload(notification.fileId)} // Trigger the file download
+                      onClick={() => handleDownload(notification.fileId)}
                       className="text-blue-500 hover:underline font-medium"
                     >
                       Download File
                     </button>
                   </div>
+                )}
+
+                {/* Delete Button for Teacher Notifications */}
+                {notification.teacherId && (
+                  <button
+                    onClick={() => handleDelete(notification._id)}
+                    className="text-red-500 hover:underline font-medium mt-4"
+                  >
+                    Delete
+                  </button>
                 )}
               </div>
             ))
