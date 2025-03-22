@@ -9,6 +9,7 @@ const AdminLogin = () => {
     password: "",
   });
   const [error, setError] = useState(null); // Store error messages
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate(); // Hook for navigation
 
   const handleChange = (e) => {
@@ -78,8 +79,12 @@ const AdminLogin = () => {
               required
             />
           </div>
-          <button className={styles.submitAdminbut} type="submit">
-            Login
+          <button
+            className={styles.submitAdminbut}
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
