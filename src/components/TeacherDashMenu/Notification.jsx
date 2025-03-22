@@ -19,7 +19,7 @@ const TeacherNotification = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachernotification/teacher/${adminId}`
+          `https://gradyzebackend.onrender.com/api/teachernotifications/getteachernotification/${adminId}`
         );
 
         console.log("Fetched Notifications:", response.data);
@@ -53,7 +53,7 @@ const TeacherNotification = () => {
         formData.append("file", file);
 
         const fileResponse = await axios.post(
-          "https://gradyzebackend.onrender.com/api/teachernotification/upload",
+          "https://gradyzebackend.onrender.com/api/teachernotifications/upload",
           formData,
           {
             headers: {
@@ -74,7 +74,7 @@ const TeacherNotification = () => {
       }
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teachernotification/teacher",
+        "https://gradyzebackend.onrender.com/api/teachernotifications/teacher",
         {
           message: message.trim(),
           audience: "students",
@@ -113,7 +113,7 @@ const TeacherNotification = () => {
 
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachernotification/files/${fileId}`,
+        `https://gradyzebackend.onrender.com/api/teachernotifications/files/${fileId}`,
         { responseType: "blob" } // ✅ Ensures binary file download
       );
 
