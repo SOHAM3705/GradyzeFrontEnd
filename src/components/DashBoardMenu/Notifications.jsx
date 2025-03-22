@@ -86,14 +86,18 @@ const Notification = () => {
         return;
       }
 
+      // ✅ Ensure teacherId is always null for admin-side notifications
+      const payload = {
+        message: message.trim(),
+        audience,
+        fileId, // Include fileId if a file was uploaded
+        adminId,
+        teacherId: null, // Explicitly set teacherId to null for admin notifications
+      };
+
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/notifications/createnotification",
-        {
-          message: message.trim(),
-          audience,
-          fileId, // Include fileId if a file was uploaded
-          adminId, // ✅ Include admin ID
-        }
+        payload
       );
 
       const newNotification = response.data;

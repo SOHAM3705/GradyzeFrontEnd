@@ -67,9 +67,10 @@ const TeacherNotification = () => {
       }
 
       const teacherId = sessionStorage.getItem("teacherId"); // Get logged-in teacher ID
+      const adminId = sessionStorage.getItem("adminId"); // Get admin ID
 
-      if (!teacherId) {
-        alert("Teacher ID not found. Please log in again.");
+      if (!teacherId || !adminId) {
+        alert("Teacher ID or Admin ID not found. Please log in again.");
         return;
       }
 
@@ -80,6 +81,7 @@ const TeacherNotification = () => {
           audience: "students",
           fileId, // Include fileId if a file was uploaded
           teacherId, // Include teacher ID
+          adminId, // ✅ Add adminId to the request
         }
       );
 
