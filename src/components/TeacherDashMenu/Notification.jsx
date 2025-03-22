@@ -7,22 +7,22 @@ const TeacherNotification = () => {
   const [file, setFile] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [activeTab, setActiveTab] = useState("created");
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const adminId = sessionStorage.getItem("adminId");
+        const teacherId = sessionStorage.getItem("teacherId");
 
-        if (!adminId) {
-          console.error("Admin ID not found in sessionStorage");
+        if (!adminId || !teacherId) {
+          console.error("Admin ID or Teacher ID not found in sessionStorage");
           return;
         }
 
         const response = await axios.get(
           `https://gradyzebackend.onrender.com/api/teachernotifications/getteachernotification/${adminId}`
         );
-
-        console.log("Fetched Notifications:", response.data);
 
         const sortedNotifications = response.data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -65,7 +65,6 @@ const TeacherNotification = () => {
           }
         );
 
-        console.log(fileResponse.data);
         fileId = fileResponse.data.fileID;
       }
 
@@ -122,7 +121,7 @@ const TeacherNotification = () => {
         { responseType: "blob" }
       );
 
-      const blob = new Blob([response.data], { type: "application/pdf" });
+      const blob = new Blob([response.data], { type: response.data.type });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = "syllabus.pdf";
@@ -165,6 +164,19 @@ const TeacherNotification = () => {
     return (
       audienceOptions.find((option) => option.value === value)?.label || value
     );
+  };
+
+  const filterNotifications = () => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (activeTab === "created") {
+      return notifications.filter(
+        (notification) => notification.teacherId === teacherId
+      );
+    } else {
+      return notifications.filter(
+        (notification) => notification.teacherId !== teacherId
+      );
+    }
   };
 
   return (
@@ -240,10 +252,31 @@ const TeacherNotification = () => {
       )}
 
       <div className="w-full max-w-4xl bg-white rounded-lg shadow p-6 mt-6">
+        <div className="flex space-x-4 mb-4">
+          <button
+            onClick={() => setActiveTab("created")}
+            className={`px-4 py-2 rounded-lg ${
+              activeTab === "created" ? "bg-blue-500 text-white" : "bg-gray-200"
+            }`}
+          >
+            Created Notifications
+          </button>
+          <button
+            onClick={() => setActiveTab("received")}
+            className={`px-4 py-2 rounded-lg ${
+              activeTab === "received"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            Received Notifications
+          </button>
+        </div>
+
         <h2 className="text-2xl font-bold mb-6">Notification History</h2>
         <div className="space-y-6">
-          {notifications.length > 0 ? (
-            notifications.map((notification) => (
+          {filterNotifications().length > 0 ? (
+            filterNotifications().map((notification) => (
               <div
                 key={notification._id}
                 className="border rounded-lg p-6 hover:bg-gray-50 transition-colors duration-300"
@@ -273,8 +306,7 @@ const TeacherNotification = () => {
                   </div>
                 )}
 
-                {/* Delete Button for Teacher Notifications */}
-                {notification.teacherId && (
+                {activeTab === "created" && (
                   <button
                     onClick={() => handleDelete(notification._id)}
                     className="text-red-500 hover:underline font-medium mt-4"
