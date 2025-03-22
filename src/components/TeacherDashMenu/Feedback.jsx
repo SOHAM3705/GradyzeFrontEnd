@@ -7,10 +7,15 @@ const TeacherFeedbackForm = () => {
     email: "",
     feedback: "",
     opinions: "",
-    role: "teacher",
+    role: "admin",
   });
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+
+  // Google Sheets Web App URL (Replace this with your actual URL)
+  const GOOGLE_SHEET_WEBHOOK =
+    "https://script.google.com/macros/s/AKfycbzGc5S6grhFdJLr8ODC6tcSZVeQdTmZGfDkgMsVldYyP5QSAqJAXDWdKf4sxTnyF1d8mA/exec";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,14 +30,17 @@ const TeacherFeedbackForm = () => {
     setLoading(true);
 
     try {
-      await axios.post("/api/feedbackRoutes/teacher/submit-feedback", formData);
+      await axios.post(GOOGLE_SHEET_WEBHOOK, formData, {
+        headers: { "Content-Type": "application/json" },
+      });
+
       setMessage({ text: "Feedback submitted successfully!", type: "success" });
       setFormData({
         name: "",
         email: "",
         feedback: "",
         opinions: "",
-        role: "teacher",
+        role: "admin",
       });
     } catch (error) {
       setMessage({
@@ -46,18 +54,21 @@ const TeacherFeedbackForm = () => {
   };
 
   return (
-    <div
-      className="flex justify-center items-center min-h-screen p-5"
-      style={{ backgroundColor: "#059669" }}
-    >
+    <div className="flex justify-center items-center min-h-screen p-5 bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
-        <h1 className="text-white text-2xl mb-4">Teacher Feedback</h1>
+        <h1 className="text-2xl font-bold text-[#059669] mb-4">
+          Gradyze Feedback
+        </h1>
         <p className="text-gray-600 mb-6">
           We value your insights and opinions!
         </p>
+
         <form onSubmit={handleSubmit}>
           <div className="mb-4 text-left">
-            <label className="block text-white font-bold mb-2" htmlFor="name">
+            <label
+              className="block text-gray-700 font-bold mb-2"
+              htmlFor="name"
+            >
               Name
             </label>
             <input
@@ -68,11 +79,15 @@ const TeacherFeedbackForm = () => {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#059669]"
             />
           </div>
+
           <div className="mb-4 text-left">
-            <label className="block text-white font-bold mb-2" htmlFor="email">
+            <label
+              className="block text-gray-700 font-bold mb-2"
+              htmlFor="email"
+            >
               Email
             </label>
             <input
@@ -83,12 +98,13 @@ const TeacherFeedbackForm = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#059669]"
             />
           </div>
+
           <div className="mb-4 text-left">
             <label
-              className="block text-white font-bold mb-2"
+              className="block text-gray-700 font-bold mb-2"
               htmlFor="feedback"
             >
               Project Feedback
@@ -96,16 +112,17 @@ const TeacherFeedbackForm = () => {
             <textarea
               id="feedback"
               name="feedback"
-              placeholder="Share your thoughts about the project"
+              placeholder="Share your thoughts about the Gradyze project"
               value={formData.feedback}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#059669]"
             />
           </div>
+
           <div className="mb-4 text-left">
             <label
-              className="block text-white font-bold mb-2"
+              className="block text-gray-700 font-bold mb-2"
               htmlFor="opinions"
             >
               Opinions
@@ -117,16 +134,17 @@ const TeacherFeedbackForm = () => {
               value={formData.opinions}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#059669]"
             />
           </div>
+
           <button
             type="submit"
-            className="w-full bg-white text-purple-700 py-2 rounded-md hover:bg-gray-100 transition duration-300"
+            className="w-full bg-[#059669] text-white py-2 rounded-md hover:bg-[#047857] transition duration-300"
           >
-            Submit Feedback
+            {loading ? "Submitting..." : "Submit Feedback"}
           </button>
-          {loading && <div className="mt-4 text-gray-600">Submitting...</div>}
+
           {message.text && (
             <div
               className={`mt-4 p-2 rounded ${

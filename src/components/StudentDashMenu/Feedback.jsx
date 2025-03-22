@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const StudentFeedbackForm = () => {
+const AdminFeedback = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     feedback: "",
     opinions: "",
-    role: "student",
+    role: "admin",
   });
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+
+  // Google Sheets Web App URL (Replace this with your actual URL)
+  const GOOGLE_SHEET_WEBHOOK =
+    "https://script.google.com/macros/s/AKfycbwcdhEGO2698tk9f4JuAgiUcTIYD66wxuzlOY16GQ0vrrwZJ2Nk7EVf5ZeJWd8sO6bRcg/exec";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,14 +30,17 @@ const StudentFeedbackForm = () => {
     setLoading(true);
 
     try {
-      await axios.post("/api/feedbackRoutes/student/submit-feedback", formData);
+      await axios.post(GOOGLE_SHEET_WEBHOOK, formData, {
+        headers: { "Content-Type": "application/json" },
+      });
+
       setMessage({ text: "Feedback submitted successfully!", type: "success" });
       setFormData({
         name: "",
         email: "",
         feedback: "",
         opinions: "",
-        role: "student",
+        role: "admin",
       });
     } catch (error) {
       setMessage({
@@ -46,14 +54,15 @@ const StudentFeedbackForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-5 bg-blue-600">
+    <div className="flex justify-center items-center min-h-screen p-5 bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold text-purple-700 mb-4">
-          Student Feedback
+        <h1 className="text-2xl font-bold text-[#2563eb] mb-4">
+          Gradyze Feedback
         </h1>
         <p className="text-gray-600 mb-6">
           We value your insights and opinions!
         </p>
+
         <form onSubmit={handleSubmit}>
           <div className="mb-4 text-left">
             <label
@@ -70,9 +79,10 @@ const StudentFeedbackForm = () => {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
             />
           </div>
+
           <div className="mb-4 text-left">
             <label
               className="block text-gray-700 font-bold mb-2"
@@ -88,9 +98,10 @@ const StudentFeedbackForm = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
             />
           </div>
+
           <div className="mb-4 text-left">
             <label
               className="block text-gray-700 font-bold mb-2"
@@ -101,13 +112,14 @@ const StudentFeedbackForm = () => {
             <textarea
               id="feedback"
               name="feedback"
-              placeholder="Share your thoughts about the project"
+              placeholder="Share your thoughts about the Gradyze project"
               value={formData.feedback}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
             />
           </div>
+
           <div className="mb-4 text-left">
             <label
               className="block text-gray-700 font-bold mb-2"
@@ -122,15 +134,17 @@ const StudentFeedbackForm = () => {
               value={formData.opinions}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
             />
           </div>
+
           <button
             type="submit"
-            className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 transition duration-300"
+            className="w-full bg-[#2563eb] text-white py-2 rounded-md hover:bg-[#1e4db7] transition duration-300"
           >
             {loading ? "Submitting..." : "Submit Feedback"}
           </button>
+
           {message.text && (
             <div
               className={`mt-4 p-2 rounded ${
@@ -148,4 +162,4 @@ const StudentFeedbackForm = () => {
   );
 };
 
-export default StudentFeedbackForm;
+export default AdminFeedback;
