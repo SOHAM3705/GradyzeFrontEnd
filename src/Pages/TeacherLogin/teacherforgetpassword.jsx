@@ -16,7 +16,7 @@ const TeacherForgetPassword = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/password/teacherpassword/forgot-password",
+        "https://gradyzebackend.onrender.com/api/password/teacherpassword/verify-email",
         { email }
       );
       setMessage("📩 " + response.data.message);
