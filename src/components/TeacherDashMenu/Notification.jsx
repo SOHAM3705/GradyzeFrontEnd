@@ -243,6 +243,8 @@ const TeacherNotification = () => {
         </div>
       )}
 
+      <h2 className="text-2xl font-bold mb-6">Notification History</h2>
+
       <div className="w-full max-w-4xl bg-white rounded-lg shadow p-6 mt-6">
         <div className="flex space-x-4 mb-4">
           <button
@@ -265,7 +267,6 @@ const TeacherNotification = () => {
           </button>
         </div>
 
-        <h2 className="text-2xl font-bold mb-6">Notification History</h2>
         <div className="space-y-6">
           {activeTab === "created" ? (
             createdNotifications.length > 0 ? (
