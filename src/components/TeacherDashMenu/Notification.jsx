@@ -37,6 +37,10 @@ const TeacherNotification = () => {
     fetchNotifications();
   }, []);
 
+  const audienceOptions = [
+    { value: "students", label: "Students", icon: "🎓" },
+  ];
+
   const handleSubmit = async () => {
     if (!message.trim()) {
       alert("Please enter a message");
