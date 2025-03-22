@@ -13,10 +13,6 @@ const AdminFeedbackForm = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
 
-  // Google Sheets Web App URL (Replace this with your actual URL)
-  const GOOGLE_SHEET_WEBHOOK =
-    "https://script.google.com/macros/s/AKfycbwNlBIgPcDyOcyEhCmD435CWChci3eUTAYYUQy6lBACaXUjtifh3NhKHLxB4UOu1jI/exec";
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -30,10 +26,10 @@ const AdminFeedbackForm = () => {
     setLoading(true);
 
     try {
-      await axios.post(GOOGLE_SHEET_WEBHOOK, formData, {
-        headers: { "Content-Type": "application/json" },
-      });
-
+      await axios.post(
+        "http://gradyzebackend.onrender.com/api/Gsheet/admin/submit-feedback",
+        formData
+      );
       setMessage({ text: "Feedback submitted successfully!", type: "success" });
       setFormData({
         name: "",
