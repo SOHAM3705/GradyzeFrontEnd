@@ -19,14 +19,12 @@ const TeacherForgetPassword = () => {
         "https://gradyzebackend.onrender.com/api/password/teacherpassword/verify-email",
         { email }
       );
-      setMessage("📩 " + response.data.message);
+      setMessage(response.data.message);
     } catch (error) {
-      setMessage(
-        "❌ " + (error.response?.data?.message || "Something went wrong.")
-      );
-    } finally {
-      setLoading(false);
+      setMessage(error?.response?.data?.message ?? "Something went wrong.");
     }
+
+    setLoading(false);
   };
 
   const handleBack = () => {

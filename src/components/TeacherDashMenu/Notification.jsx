@@ -12,10 +12,9 @@ const TeacherNotification = () => {
     const fetchNotifications = async () => {
       try {
         const adminId = sessionStorage.getItem("adminId"); // Get logged-in admin ID
-        const teacherId = sessionStorage.getItem("teacherId"); // Get logged-in teacher ID
 
-        if (!adminId || !teacherId) {
-          console.error("Admin ID or Teacher ID not found in sessionStorage");
+        if (!adminId) {
+          console.error("Admin ID not found in sessionStorage");
           return;
         }
 
