@@ -5,15 +5,16 @@ const AdminFeedback = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    studentId: "", // Added required studentId field for student role
     feedback: "",
     opinions: "",
-    role: "admin",
+    role: "student",
   });
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
 
-  // Google Sheets Web App URL (Replace this with your actual URL)
+  // Google Sheets Web App URL
   const GOOGLE_SHEET_WEBHOOK =
     "https://script.google.com/macros/s/AKfycbwd4I2MiKI7K2fUd9dc_pdWPSXv2s4b_KF1oP2bS2bGA4ScH7JTQryX_l26m6UlEwA9Zg/exec";
 
@@ -29,22 +30,43 @@ const AdminFeedback = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Validate required fields before submission
+    if (!formData.name || !formData.studentId || !formData.feedback) {
+      setMessage({
+        text: "Please fill in all required fields (name, student ID, and feedback)",
+        type: "error",
+      });
+      setLoading(false);
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      return;
+    }
+
     try {
       await axios.post(GOOGLE_SHEET_WEBHOOK, formData, {
         headers: { "Content-Type": "application/json" },
       });
 
       setMessage({ text: "Feedback submitted successfully!", type: "success" });
+
+      // Reset form
       setFormData({
         name: "",
         email: "",
+        studentId: "",
         feedback: "",
         opinions: "",
-        role: "admin",
+        role: "student",
       });
     } catch (error) {
+      // More detailed error handling
+      let errorMessage = "Error submitting feedback. Please try again.";
+
+      if (error.response) {
+        errorMessage = error.response.data?.error || errorMessage;
+      }
+
       setMessage({
-        text: "Error submitting feedback. Please try again.",
+        text: errorMessage,
         type: "error",
       });
     } finally {
@@ -52,7 +74,6 @@ const AdminFeedback = () => {
       setTimeout(() => setMessage({ text: "", type: "" }), 3000);
     }
   };
-
   return (
     <div className="flex justify-center items-center min-h-screen p-5 bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">

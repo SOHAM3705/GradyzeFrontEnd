@@ -5,15 +5,14 @@ const TeacherFeedbackForm = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    department: "", // Added required department field for teacher role
     feedback: "",
     opinions: "",
-    role: "admin",
+    role: "teacher",
   });
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
-
-  // Google Sheets Web App URL (Replace this with your actual URL)
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,22 +26,51 @@ const TeacherFeedbackForm = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Validate required fields before submission
+    if (!formData.name || !formData.department || !formData.feedback) {
+      setMessage({
+        text: "Please fill in all required fields (name, department, and feedback)",
+        type: "error",
+      });
+      setLoading(false);
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      return;
+    }
+
     try {
-      await axios.post(
+      const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/Gsheet/teacher/submit-feedback",
         formData
       );
-      setMessage({ text: "Feedback submitted successfully!", type: "success" });
+
+      // Check if response has data with status message
+      if (response.data && response.data.message) {
+        setMessage({ text: response.data.message, type: "success" });
+      } else {
+        setMessage({
+          text: "Feedback submitted successfully!",
+          type: "success",
+        });
+      }
+
+      // Reset form
       setFormData({
         name: "",
         email: "",
+        department: "",
         feedback: "",
         opinions: "",
         role: "teacher",
       });
     } catch (error) {
+      // Display more specific error if available
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.details ||
+        "Error submitting feedback. Please try again.";
+
       setMessage({
-        text: "Error submitting feedback. Please try again.",
+        text: errorMessage,
         type: "error",
       });
     } finally {

@@ -21,6 +21,7 @@ const AdminLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/admin/adminlogin",
@@ -36,6 +37,9 @@ const AdminLogin = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
       console.error("Login Error:", err.response?.data);
+      setLoading(false);
+    } finally {
+      setLoading(false); // Stop loading after the attempt
     }
   };
 

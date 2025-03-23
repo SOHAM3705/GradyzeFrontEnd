@@ -5,6 +5,7 @@ const AdminFeedbackForm = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    position: "", // Added required position field for admin role
     feedback: "",
     opinions: "",
     role: "admin",
@@ -25,22 +26,51 @@ const AdminFeedbackForm = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Validate required fields before submission
+    if (!formData.name || !formData.position || !formData.feedback) {
+      setMessage({
+        text: "Please fill in all required fields (name, position, and feedback)",
+        type: "error",
+      });
+      setLoading(false);
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      return;
+    }
+
     try {
-      await axios.post(
+      const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/Gsheet/admin/submit-feedback",
         formData
       );
-      setMessage({ text: "Feedback submitted successfully!", type: "success" });
+
+      // Check if response has data with status message
+      if (response.data && response.data.message) {
+        setMessage({ text: response.data.message, type: "success" });
+      } else {
+        setMessage({
+          text: "Feedback submitted successfully!",
+          type: "success",
+        });
+      }
+
+      // Reset form
       setFormData({
         name: "",
         email: "",
+        position: "",
         feedback: "",
         opinions: "",
         role: "admin",
       });
     } catch (error) {
+      // Display more specific error if available
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.details ||
+        "Error submitting feedback. Please try again.";
+
       setMessage({
-        text: "Error submitting feedback. Please try again.",
+        text: errorMessage,
         type: "error",
       });
     } finally {
