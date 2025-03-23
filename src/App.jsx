@@ -30,10 +30,7 @@ import TeacherForgetPassword from "./Pages/TeacherLogin/teacherforgetpassword";
 import TeacherChangePassword from "./Pages/TeacherLogin/teacherchangepassword";
 
 import StudentManage from "./components/TeacherDashMenu/StudentManage";
-{
-  /*
-import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";*/
-}
+import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
 import TeacherAttendanceDashboard from "./components/TeacherDashMenu/AttendanceReport";
 import TeacherNotifications from "./components/TeacherDashMenu/Notification";
 import TeacherSyllabusView from "./components/TeacherDashMenu/Syllabus";
@@ -110,7 +107,7 @@ function App() {
       >
         <Route path="TeacherStudentManage" element={<StudentManage />} />
         <Route path="" element={<TeacherOverview />} />
-        {/*<Route path="subject-marks" element={<SubjectMarks />} />*/}
+        <Route path="subject-marks" element={<SubjectMarks />} />
         <Route
           path="attendance-report"
           element={<TeacherAttendanceDashboard />}
