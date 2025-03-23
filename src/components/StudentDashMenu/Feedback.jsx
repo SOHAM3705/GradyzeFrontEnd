@@ -30,17 +30,6 @@ const AdminFeedback = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Validate required fields before submission
-    if (!formData.name || !formData.studentId || !formData.feedback) {
-      setMessage({
-        text: "Please fill in all required fields (name, student ID, and feedback)",
-        type: "error",
-      });
-      setLoading(false);
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-      return;
-    }
-
     try {
       await axios.post(GOOGLE_SHEET_WEBHOOK, formData, {
         headers: { "Content-Type": "application/json" },

@@ -27,15 +27,6 @@ const AdminFeedbackForm = () => {
     setLoading(true);
 
     // Validate required fields before submission
-    if (!formData.name || !formData.position || !formData.feedback) {
-      setMessage({
-        text: "Please fill in all required fields (name, position, and feedback)",
-        type: "error",
-      });
-      setLoading(false);
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-      return;
-    }
 
     try {
       const response = await axios.post(

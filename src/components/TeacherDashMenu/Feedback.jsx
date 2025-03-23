@@ -26,17 +26,6 @@ const TeacherFeedbackForm = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Validate required fields before submission
-    if (!formData.name || !formData.department || !formData.feedback) {
-      setMessage({
-        text: "Please fill in all required fields (name, department, and feedback)",
-        type: "error",
-      });
-      setLoading(false);
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-      return;
-    }
-
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/Gsheet/teacher/submit-feedback",
