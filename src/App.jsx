@@ -24,7 +24,6 @@ import AdminOverview from "./components/DashBoardMenu/Overview";
 import AdminAttendanceDashboard from "./components/DashBoardMenu/AttendanceReport";
 
 import TeacherDash from "./Pages/TeacherDash/TeacherDash";
-import StudentDash from "./Pages/StudentDash/StudentDash";
 import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
 import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
 import TeacherForgetPassword from "./Pages/TeacherLogin/teacherforgetpassword";
@@ -41,6 +40,15 @@ import TeacherSyllabusView from "./components/TeacherDashMenu/Syllabus";
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
 import TeacherSettings from "./components/TeacherDashMenu/Settings";
 import TeacherOverview from "./components/TeacherDashMenu/teacherOverview";
+
+import StudentDash from "./Pages/StudentDash/StudentDash";
+import StudentAttendanceDashboard from "./components/StudentDashMenu/AttendnaceReport";
+import StudentNotifications from "./components/StudentDashMenu/Notification";
+import StudentSyllabus from "./components/StudentDashMenu/Syllabus";
+import StudentFeedback from "./components/StudentDashMenu/Feedback";
+import StudentSettings from "./components/StudentDashMenu/Settings";
+import StudentOverview from "./components/StudentDashMenu/Overview";
+import StudentResults from "./components/StudentDashMenu/Results";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
@@ -113,7 +121,18 @@ function App() {
         <Route path="settings" element={<TeacherSettings />} />
       </Route>
 
-      <Route path="/studentdash" element={<StudentDash />} />
+      <Route path="/studentdash" element={<StudentDash />}>
+        <Route path="" element={<StudentOverview />} />
+        <Route
+          path="attendance-reports"
+          element={<StudentAttendanceDashboard />}
+        />
+        <Route path="notifications" element={<StudentNotifications />} />
+        <Route path="syllabus" element={<StudentSyllabus />} />
+        <Route path="feedback" element={<StudentFeedback />} />
+        <Route path="settings" element={<StudentSettings />} />
+        <Route path="results" element={<StudentResults />} />
+      </Route>
     </Routes>
   );
 }
