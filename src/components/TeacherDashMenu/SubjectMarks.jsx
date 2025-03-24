@@ -202,6 +202,19 @@ const TeacherDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("class-teacher");
   const [modalContent, setModalContent] = useState(null);
+  const [summaryData, setSummaryData] = useState({
+    totalStudents: 0,
+    passRate: 0,
+    classAverage: 0,
+    highestPerformer: "N/A",
+    atRiskCount: "0%",
+  });
+  const [subjectSummaryData, setSubjectSummaryData] = useState({
+    totalStudents: 0,
+    passRate: 0,
+    averageScore: 0,
+    highestScore: 0,
+  });
 
   useEffect(() => {
     updateSummary();
