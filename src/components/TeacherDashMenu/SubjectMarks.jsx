@@ -208,7 +208,7 @@ const TeacherDashboard = () => {
     filterStudents();
   }, [
     students,
-    divisonFilter,
+    divisionFilter,
     examFilter,
     subjectFilter,
     statusFilter,
@@ -270,7 +270,7 @@ const TeacherDashboard = () => {
   const filterStudents = () => {
     let filtered = students.filter((student) => {
       const matchesDivision =
-        divisonFilter === "all" || student.division === divisonFilter;
+        divisionFilter === "all" || student.division === divisionFilter;
       const matchesStatus =
         statusFilter === "all" || student.status === statusFilter;
       const matchesSearch =
@@ -1071,7 +1071,7 @@ const TeacherDashboard = () => {
             <div className="flex items-center gap-2">
               <label className="font-medium text-gray-600">Division</label>
               <select
-                value={divisonFilter}
+                value={divisionFilter}
                 onChange={(e) => setDivisionFilter(e.target.value)}
                 className="p-2 border rounded"
               >

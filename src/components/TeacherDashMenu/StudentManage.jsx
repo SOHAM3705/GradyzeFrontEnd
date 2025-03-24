@@ -1,317 +1,462 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
-const StudentManage = () => {
-  const [students] = useState([
-    { roll: "1", name: "John Doe", email: "john@example.com" },
-    { roll: "2", name: "Jane Smith", email: "jane@example.com" },
-    { roll: "3", name: "Bob Wilson", email: "bob@example.com" },
-    { roll: "4", name: "Alice Brown", email: "alice@example.com" },
-    { roll: "5", name: "Charlie Davis", email: "charlie@example.com" },
+const StudentManagementSystem = () => {
+  const [students, setStudents] = useState([
+    { rollNo: 1, name: "John Doe", email: "john.doe@example.com" },
+    { rollNo: 2, name: "Jane Smith", email: "jane.smith@example.com" },
+    { rollNo: 3, name: "Michael Brown", email: "michael.brown@example.com" },
   ]);
+  const [view, setView] = useState("class-teacher");
+  const [excelData, setExcelData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ message: "", type: "" });
 
-  const [departmentData] = useState([
-    {
-      department: "Computer Engineering",
-      divisions: ["A", "B"],
-      year: "Third Year",
-      semester: "Sixth",
-      totalStudents: 60,
-      marksStatus: "pending",
-    },
-    {
-      department: "Information Technology",
-      divisions: ["A", "B", "C"],
-      year: "Second Year",
-      semester: "Fourth",
-      totalStudents: 60,
-      marksStatus: "complete",
-    },
-    {
-      department: "Electronics & Telecommunication",
-      divisions: ["A", "B"],
-      year: "First Year",
-      semester: "Second",
-      totalStudents: 60,
-      marksStatus: "pending",
-    },
-  ]);
-
-  const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [examType, setExamType] = useState("");
-  const [subject, setSubject] = useState("");
-  const [maxMarks, setMaxMarks] = useState(0);
-  const [showModal, setShowModal] = useState(false);
-  const [marksTable, setMarksTable] = useState(null);
-
-  const handleDepartmentClick = (department) => {
-    setSelectedDepartment(department);
-    setShowModal(true);
+  const toggleView = (viewId) => {
+    setView(viewId);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  const addStudent = () => {
+    const rollNo = document.getElementById("roll-no").value;
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
 
-  const updateMaxMarks = () => {
-    setMaxMarks(
-      examType === "unit_test" || examType === "reunit_test" ? 30 : 70
-    );
-  };
-
-  const showMarksTable = () => {
-    if (!examType || !subject || !selectedDepartment) {
-      alert("Please fill all the fields");
+    if (!rollNo || !name || !email) {
+      showToast("Please fill all fields", "error");
       return;
     }
 
-    if (maxMarks === 0) {
-      updateMaxMarks();
-    }
-
-    closeModal();
-
-    const tableHtml = (
-      <div>
-        <div className="table-header">
-          <h3 className="text-teal-700">
-            Enter Marks - {subject.toUpperCase()} (Max Marks: {maxMarks})
-          </h3>
-          <p>
-            Department: {selectedDepartment.department} | Year:{" "}
-            {selectedDepartment.year} | Semester: {selectedDepartment.semester}{" "}
-            | Exam: {examType.replace("_", " ").toUpperCase()}
-          </p>
-        </div>
-        <table className="marks-table min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-teal-700 text-white">
-              <th className="py-2 px-4">Roll No.</th>
-              <th className="py-2 px-4">Name</th>
-              <th className="py-2 px-4">Email</th>
-              <th className="py-2 px-4">Marks (Max: {maxMarks})</th>
-              <th className="py-2 px-4">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student) => (
-              <tr key={student.roll} className="border-b">
-                <td className="py-2 px-4">{student.roll}</td>
-                <td className="py-2 px-4">{student.name}</td>
-                <td className="py-2 px-4">{student.email}</td>
-                <td className="py-2 px-4">
-                  <input
-                    type="number"
-                    className="marks-input w-16 border border-gray-300 rounded px-2"
-                    min="0"
-                    max={maxMarks}
-                    onChange={(e) => updateStatus(e, student.roll)}
-                  />
-                </td>
-                <td className="py-2 px-4">
-                  <span id={`status-${student.roll}`}></span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-
-    setMarksTable(tableHtml);
-    updateStats();
-  };
-
-  const updateStatus = (event, roll) => {
-    const marks = parseInt(event.target.value) || 0;
-    if (marks > maxMarks) {
-      alert(`Marks cannot exceed ${maxMarks}`);
-      event.target.value = maxMarks;
+    if (students.some((student) => student.rollNo == rollNo)) {
+      showToast("Roll number already exists", "error");
       return;
     }
 
-    const statusCell = document.getElementById(`status-${roll}`);
-    const status = marks >= 35 ? "Pass" : "Fail";
-    statusCell.textContent = status;
-    statusCell.className = status === "Pass" ? "text-teal-700" : "text-red-500";
+    const newStudent = { rollNo: parseInt(rollNo), name, email };
+    setStudents([...students, newStudent]);
 
-    updateStats();
+    document.getElementById("roll-no").value = "";
+    document.getElementById("name").value = "";
+    document.getElementById("email").value = "";
+
+    showToast("Student added successfully", "success");
   };
 
-  const updateStats = () => {
-    const inputs = document.querySelectorAll(".marks-input");
-    let total = 0;
-    let passed = 0;
-    let highest = 0;
-    let validInputs = 0;
-
-    inputs.forEach((input) => {
-      const value = parseInt(input.value) || 0;
-      if (value > 0) {
-        total += value;
-        validInputs++;
-        if (value >= 35) passed++;
-        highest = Math.max(highest, value);
-      }
-    });
-
-    const average = validInputs ? (total / validInputs).toFixed(1) : 0;
-    const passRate = validInputs
-      ? ((passed / validInputs) * 100).toFixed(1)
-      : 0;
-
-    document.getElementById("totalStudents").textContent = students.length;
-    document.getElementById("passRate").textContent = `${passRate}%`;
-    document.getElementById("avgScore").textContent = average;
-    document.getElementById("highestScore").textContent = highest;
+  const removeStudent = (rollNo) => {
+    setStudents(students.filter((student) => student.rollNo !== rollNo));
+    showToast("Student removed", "success");
   };
 
-  useEffect(() => {
-    updateMaxMarks();
-  }, [examType]);
+  const importExcel = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      setExcelData(jsonData);
+      setLoading(false);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const importStudents = () => {
+    if (!excelData || excelData.length === 0) {
+      showToast("No data to import", "error");
+      return;
+    }
+
+    setLoading(true);
+    setTimeout(() => {
+      const newStudents = excelData.map((row) => {
+        const rollNoKey =
+          Object.keys(row).find((key) => key.toLowerCase().includes("roll")) ||
+          "Roll No";
+        const nameKey =
+          Object.keys(row).find((key) => key.toLowerCase().includes("name")) ||
+          "Name";
+        const emailKey =
+          Object.keys(row).find((key) => key.toLowerCase().includes("email")) ||
+          "Email";
+
+        return {
+          rollNo: parseInt(row[rollNoKey]),
+          name: row[nameKey],
+          email: row[emailKey],
+        };
+      });
+
+      setStudents(newStudents);
+      setExcelData(null);
+      setLoading(false);
+      showToast("Students imported successfully", "success");
+    }, 1000);
+  };
+
+  const generateClassPDF = () => {
+    setLoading(true);
+    setTimeout(() => {
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text("Class Report - Computer Science Second Year (A)", 14, 22);
+      doc.setFontSize(12);
+      doc.text(`Class Teacher: Prof. Jane Doe`, 14, 32);
+      doc.text(`Total Students: ${students.length}`, 14, 38);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 44);
+
+      const tableColumn = ["Roll No", "Name", "Email"];
+      const tableRows = students
+        .sort((a, b) => a.rollNo - b.rollNo)
+        .map((student) => [student.rollNo, student.name, student.email]);
+
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 55,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [5, 150, 105] },
+      });
+
+      doc.save("class-report.pdf");
+      setLoading(false);
+      showToast("Class PDF generated successfully", "success");
+    }, 1000);
+  };
+
+  const downloadStudentReport = () => {
+    setLoading(true);
+    setTimeout(() => {
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text("Student Report - Computer Science Second Year (A)", 14, 22);
+      doc.setFontSize(12);
+      doc.text(`Class Teacher: Prof. Jane Doe`, 14, 32);
+      doc.text(`Total Students: ${students.length}`, 14, 38);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 44);
+
+      const tableColumn = ["Roll No", "Name", "Email"];
+      const tableRows = students
+        .sort((a, b) => a.rollNo - b.rollNo)
+        .map((student) => [student.rollNo, student.name, student.email]);
+
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 55,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [5, 150, 105] },
+      });
+
+      doc.save("student-report.pdf");
+      setLoading(false);
+      showToast("Student report downloaded successfully", "success");
+    }, 1000);
+  };
+
+  const showToast = (message, type) => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast({ message: "", type: "" });
+    }, 3000);
+  };
 
   return (
-    <div className="container mx-auto p-5 bg-gray-100 min-h-screen">
-      <div className="header bg-teal-700 text-white p-4 rounded mb-5">
-        <h2 className="text-2xl">Subject Marks</h2>
+    <div className="container mx-auto p-5">
+      <h1 className="text-2xl font-semibold text-primary-dark flex items-center gap-3 mb-6">
+        <span className="w-2 h-8 bg-primary rounded"></span>
+        Student Management System
+      </h1>
+
+      <div className="flex bg-gray-200 rounded-lg p-1 mb-6 max-w-xl">
+        <button
+          className={`flex-1 p-3 rounded-md text-secondary ${
+            view === "class-teacher"
+              ? "bg-white shadow-md text-primary-dark"
+              : ""
+          }`}
+          onClick={() => toggleView("class-teacher")}
+        >
+          Class Teacher
+        </button>
+        <button
+          className={`flex-1 p-3 rounded-md text-secondary ${
+            view === "students" ? "bg-white shadow-md text-primary-dark" : ""
+          }`}
+          onClick={() => toggleView("students")}
+        >
+          Subject Teacher
+        </button>
       </div>
 
-      <div className="stats-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-        <div className="stat-card bg-white p-4 rounded shadow">
-          <h3 className="text-teal-700 mb-2">Total Students</h3>
-          <p id="totalStudents">0</p>
-        </div>
-        <div className="stat-card bg-white p-4 rounded shadow">
-          <h3 className="text-teal-700 mb-2">Pass Rate</h3>
-          <p id="passRate">0%</p>
-        </div>
-        <div className="stat-card bg-white p-4 rounded shadow">
-          <h3 className="text-teal-700 mb-2">Average Score</h3>
-          <p id="avgScore">0</p>
-        </div>
-        <div className="stat-card bg-white p-4 rounded shadow">
-          <h3 className="text-teal-700 mb-2">Highest Score</h3>
-          <p id="highestScore">0</p>
-        </div>
-      </div>
-
-      <div className="department-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
-        {departmentData.map((dept) => (
-          <div
-            key={dept.department}
-            className="department-card bg-white p-5 rounded shadow cursor-pointer transition transform hover:-translate-y-1"
-            onClick={() => handleDepartmentClick(dept)}
-          >
-            <h3 className="text-teal-700 text-lg mb-3">{dept.department}</h3>
-            <div className="card-detail text-gray-600 mb-2">
-              <span>Year:</span> <strong>{dept.year}</strong>
+      {view === "class-teacher" && (
+        <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
+          <div className="class-info flex flex-wrap gap-6 mb-6">
+            <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-primary-dark font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+                Department
+              </h3>
+              <p className="text-lg font-medium">
+                Computer Science Engineering
+              </p>
             </div>
-            <div className="card-detail text-gray-600 mb-2">
-              <span>Semester:</span> <strong>{dept.semester}</strong>
+            <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-primary-dark font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+                Year
+              </h3>
+              <p className="text-lg font-medium">Second Year</p>
             </div>
-            <div className="card-detail text-gray-600 mb-2">
-              <span>Divisions:</span>{" "}
-              <strong>{dept.divisions.join(", ")}</strong>
+            <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-primary-dark font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+                Division
+              </h3>
+              <p className="text-lg font-medium">A</p>
             </div>
-            <div className="card-detail text-gray-600 mb-2">
-              <span>Total Students:</span> <strong>{dept.totalStudents}</strong>
-            </div>
-            <div
-              className={`status-tag inline-block px-2 py-1 rounded text-sm ${
-                dept.marksStatus === "pending"
-                  ? "bg-yellow-200 text-yellow-800"
-                  : "bg-green-200 text-green-800"
-              }`}
-            >
-              {dept.marksStatus.charAt(0).toUpperCase() +
-                dept.marksStatus.slice(1)}
+            <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-primary-dark font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+                Class Teacher
+              </h3>
+              <p className="text-lg font-medium">Prof. Jane Doe</p>
             </div>
           </div>
-        ))}
-      </div>
 
-      {showModal && (
-        <div className="modal fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="modal-content bg-white p-6 rounded shadow relative w-full max-w-md">
-            <span
-              className="close absolute top-2 right-2 text-2xl cursor-pointer"
-              onClick={closeModal}
-            >
-              &times;
-            </span>
-            <h3 className="text-teal-700 text-xl mb-4">
-              Enter Marks - {selectedDepartment?.department} (
-              {selectedDepartment?.year}, {selectedDepartment?.semester})
-            </h3>
-            <div className="form-group mb-4">
-              <label className="block text-gray-700 mb-2">Exam Type:</label>
-              <select
-                className="w-full p-2 border border-gray-300 rounded"
-                value={examType}
-                onChange={(e) => setExamType(e.target.value)}
+          <div className="button-group flex flex-wrap gap-4 mb-6">
+            <label className="file-label flex items-center gap-2 bg-primary text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1">
+              Import from Excel
+              <input
+                type="file"
+                className="hidden"
+                accept=".xlsx, .xls"
+                onChange={importExcel}
+              />
+            </label>
+          </div>
+
+          {excelData && (
+            <div className="bg-light p-5 rounded-lg border border-dashed border-primary mb-6">
+              <h3 className="text-primary-dark font-semibold mb-4">
+                Imported Students
+              </h3>
+              <div>
+                <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      {Object.keys(excelData[0]).map((header) => (
+                        <th
+                          key={header}
+                          className="py-2 px-4 text-left font-semibold text-primary-dark"
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {excelData.slice(0, 5).map((row, index) => (
+                      <tr
+                        key={index}
+                        className="transition-transform transform hover:bg-primary-light"
+                      >
+                        {Object.values(row).map((value, i) => (
+                          <td key={i} className="py-2 px-4">
+                            {value}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {excelData.length > 5 && (
+                  <p className="mt-2">Showing 5 of {excelData.length} rows</p>
+                )}
+              </div>
+              <button
+                className="bg-primary text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
+                onClick={importStudents}
               >
-                <option value="">Select Exam Type</option>
-                <option value="unit_test">Unit Test</option>
-                <option value="reunit_test">Re-Unit Test</option>
-                <option value="prelim">Prelim</option>
-                <option value="reprelim">Re-Prelim</option>
-              </select>
+                Import Students
+              </button>
             </div>
-            <div className="form-group mb-4">
-              <label className="block text-gray-700 mb-2">Subject:</label>
-              <select
-                className="w-full p-2 border border-gray-300 rounded"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              >
-                <option value="">Select Subject</option>
-                <option value="mathematics">Engineering Mathematics</option>
-                <option value="physics">Engineering Physics</option>
-                <option value="chemistry">Engineering Chemistry</option>
-              </select>
-            </div>
+          )}
+
+          {students.length > 0 && (
             <button
-              className="submit-btn bg-teal-700 text-white p-2 rounded hover:bg-teal-800 transition"
-              onClick={showMarksTable}
+              className="bg-primary text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
+              onClick={generateClassPDF}
             >
-              Proceed
+              Generate Class PDF
             </button>
+          )}
+
+          <div className="mt-6">
+            <h3 className="text-primary-dark font-semibold mb-4">
+              Add New Student
+            </h3>
+            <div className="student-form flex flex-wrap gap-5 bg-light p-6 rounded-lg">
+              <div className="form-group flex-1 min-w-xs">
+                <label className="block mb-2 font-medium text-dark">
+                  Roll No
+                </label>
+                <input
+                  type="number"
+                  id="roll-no"
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  placeholder="Enter roll number"
+                />
+              </div>
+              <div className="form-group flex-1 min-w-xs">
+                <label className="block mb-2 font-medium text-dark">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  placeholder="Enter student name"
+                />
+              </div>
+              <div className="form-group flex-1 min-w-xs">
+                <label className="block mb-2 font-medium text-dark">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  placeholder="Enter student email"
+                />
+              </div>
+              <div className="form-group flex-1 min-w-xs flex items-end">
+                <button
+                  className="bg-primary text-white p-3 rounded-lg w-full font-medium transition-transform transform hover:-translate-y-1"
+                  onClick={addStudent}
+                >
+                  Add Student
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <h3 className="text-primary-dark font-semibold mb-4">
+              Student List
+            </h3>
+            <div className="table-container overflow-x-auto rounded-lg shadow-md">
+              <table className="min-w-full bg-white">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                      Roll No
+                    </th>
+                    <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                      Name
+                    </th>
+                    <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                      Email
+                    </th>
+                    <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student) => (
+                    <tr
+                      key={student.rollNo}
+                      className="transition-transform transform hover:bg-primary-light"
+                    >
+                      <td className="py-2 px-4">{student.rollNo}</td>
+                      <td className="py-2 px-4">{student.name}</td>
+                      <td className="py-2 px-4">{student.email}</td>
+                      <td className="py-2 px-4">
+                        <button
+                          className="bg-secondary text-white p-2 rounded-lg font-medium transition-transform transform hover:-translate-y-1"
+                          onClick={() => removeStudent(student.rollNo)}
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      <div id="marksTableContainer">{marksTable}</div>
+      {view === "students" && (
+        <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-primary-dark mb-4">
+            Computer Science Second Year (A)
+          </h2>
+          <p className="mb-4">
+            <strong>Class Teacher:</strong> Prof. Jane Doe
+          </p>
+          <div className="table-container overflow-x-auto rounded-lg shadow-md">
+            <table className="min-w-full bg-white">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                    Roll No
+                  </th>
+                  <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                    Name
+                  </th>
+                  <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                    Email
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((student) => (
+                  <tr
+                    key={student.rollNo}
+                    className="transition-transform transform hover:bg-primary-light"
+                  >
+                    <td className="py-2 px-4">{student.rollNo}</td>
+                    <td className="py-2 px-4">{student.name}</td>
+                    <td className="py-2 px-4">{student.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <button
+            className="bg-primary text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
+            onClick={downloadStudentReport}
+          >
+            Download Student Report
+          </button>
+        </div>
+      )}
 
-      <div className="action-buttons flex gap-4 mt-5">
-        <button
-          className="btn bg-teal-700 text-white p-2 rounded hover:bg-teal-800 transition"
-          onClick={() => setShowModal(true)}
+      {toast.message && (
+        <div
+          className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg text-white font-medium flex items-center gap-3 ${
+            toast.type === "success" ? "bg-primary" : "bg-danger"
+          } transition-transform transform ${
+            toast.message ? "translate-y-0" : "-translate-y-5"
+          } opacity-${toast.message ? "100" : "0"}`}
         >
-          Add Marks
-        </button>
-        <button
-          className="btn bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
-          onClick={() => alert("PDF generation would be implemented here")}
-        >
-          Generate PDF
-        </button>
-        <input
-          type="file"
-          id="fileUpload"
-          className="file-upload hidden"
-          accept=".csv,.xlsx"
-          onChange={(e) =>
-            alert("File upload processing would be implemented here")
-          }
-        />
-        <button
-          className="btn bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600 transition"
-          onClick={() => document.getElementById("fileUpload").click()}
-        >
-          Upload Marks File
-        </button>
-      </div>
+          {toast.message}
+        </div>
+      )}
+
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm z-50">
+          <div className="w-12 h-12 border-4 border-t-4 border-primary-light border-t-primary rounded-full animate-spin"></div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default StudentManage;
+export default StudentManagementSystem;
