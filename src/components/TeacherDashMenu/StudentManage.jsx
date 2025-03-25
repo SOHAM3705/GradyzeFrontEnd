@@ -256,18 +256,26 @@ const StudentManagementSystem = () => {
     email: "",
   });
 
-  // ✅ Function to Open Modal
-  const openEditStudentModal = (student) => {
-    setEditStudentData(student);
+  const [deleteStudentModalOpen, setDeleteStudentModalOpen] = useState(false);
+
+  // ✅ Open Edit Modal
+  const openEditModal = (student) => {
+    setSelectedStudent(student);
     setEditStudentModalOpen(true);
   };
 
-  // ✅ Function to Close Modal
-  const closeEditStudentModal = () => {
-    setEditStudentModalOpen(false);
-    setEditStudentData({ _id: "", rollNo: "", name: "", email: "" });
+  // ✅ Open Delete Modal
+  const openDeleteModal = (student) => {
+    setSelectedStudent(student);
+    setDeleteStudentModalOpen(true);
   };
 
+  // ✅ Close Modals
+  const closeModals = () => {
+    setEditStudentModalOpen(false);
+    setDeleteStudentModalOpen(false);
+    setSelectedStudent(null);
+  };
   // ✅ Function to Update Student Data
   const updateStudent = async () => {
     const teacherId = sessionStorage.getItem("teacherId");
@@ -372,7 +380,7 @@ const StudentManagementSystem = () => {
 
     try {
       const response = await axios.get(
-        `/api/studentmanagement/generate-report/${teacherId}`,
+        `https://gradyzebackend.onrender.com/api/studentmanagement/generate-report/${teacherId}`,
         {
           responseType: "blob", // ✅ Ensure PDF is downloaded
         }
@@ -590,6 +598,17 @@ const StudentManagementSystem = () => {
           <div className="mt-8">
             <h3 className="text-gray-800 font-semibold mb-4">Student List</h3>
 
+            {/* ✅ Search Input */}
+            <div className="flex justify-between items-center mb-4">
+              <input
+                type="text"
+                placeholder="Search students..."
+                className="p-2 border border-gray-300 rounded-lg"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
             {loading ? (
               <p className="text-gray-600">Loading students...</p>
             ) : students.length > 0 ? (
@@ -612,66 +631,140 @@ const StudentManagementSystem = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {students.map((student) => (
-                      <tr
-                        key={student.rollNo}
-                        className="hover:bg-gray-100 transition"
-                      >
-                        <td className="py-2 px-4">{student.rollNo}</td>
-                        <td className="py-2 px-4">{student.name}</td>
-                        <td className="py-2 px-4">{student.email}</td>
-                        <td className="py-2 px-4 flex gap-2">
-                          {/* Edit Button */}
-                          <button
-                            className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
-                            onClick={() => openEditModal(student)}
-                          >
-                            Edit
-                          </button>
+                    {students
+                      .filter(
+                        (student) =>
+                          student.name
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()) ||
+                          student.email
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase())
+                      )
+                      .map((student) => (
+                        <tr
+                          key={student.rollNo}
+                          className="hover:bg-gray-100 transition"
+                        >
+                          <td className="py-2 px-4">{student.rollNo}</td>
+                          <td className="py-2 px-4">{student.name}</td>
+                          <td className="py-2 px-4">{student.email}</td>
+                          <td className="py-2 px-4 flex gap-2">
+                            {/* Edit Button */}
+                            <button
+                              className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
+                              onClick={() => openEditModal(student)}
+                            >
+                              Edit
+                            </button>
 
-                          {/* Remove Button */}
-                          <button
-                            className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
-                            onClick={() => openModal(student)}
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                            {/* Remove Button */}
+                            <button
+                              className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
+                              onClick={() => openDeleteModal(student)}
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
             ) : (
               <p className="text-gray-600">No students found.</p>
             )}
-          </div>
-        </div>
-      )}
 
-      {modalOpen && selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-lg font-semibold">Confirm Delete</h3>
-            <p>
-              Are you sure you want to remove{" "}
-              <strong>{selectedStudent.name}</strong>?
-            </p>
+            {/* ✅ Edit Student Modal */}
+            {editStudentModalOpen && selectedStudent && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                  <h3 className="text-lg font-semibold">Edit Student</h3>
 
-            <div className="flex justify-end mt-4 gap-3">
-              <button
-                onClick={closeModal}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg"
-              >
-                Delete
-              </button>
-            </div>
+                  <div className="mt-4">
+                    <label className="block font-medium">Roll No</label>
+                    <input
+                      type="number"
+                      value={selectedStudent.rollNo}
+                      onChange={(e) =>
+                        setSelectedStudent({
+                          ...selectedStudent,
+                          rollNo: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block font-medium">Name</label>
+                    <input
+                      type="text"
+                      value={selectedStudent.name}
+                      onChange={(e) =>
+                        setSelectedStudent({
+                          ...selectedStudent,
+                          name: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block font-medium">Email</label>
+                    <input
+                      type="email"
+                      value={selectedStudent.email}
+                      onChange={(e) =>
+                        setSelectedStudent({
+                          ...selectedStudent,
+                          email: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 mt-4">
+                    <button
+                      onClick={closeModals}
+                      className="bg-gray-400 text-white px-4 py-2 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button className="bg-green-500 text-white px-4 py-2 rounded-lg">
+                      Update
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ✅ Delete Confirmation Modal */}
+            {deleteStudentModalOpen && selectedStudent && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                  <h3 className="text-lg font-semibold">Confirm Delete</h3>
+                  <p>
+                    Are you sure you want to remove{" "}
+                    <strong>{selectedStudent.name}</strong>?
+                  </p>
+
+                  <div className="flex justify-end mt-4 gap-3">
+                    <button
+                      onClick={closeModals}
+                      className="bg-gray-400 text-white px-4 py-2 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button className="bg-red-500 text-white px-4 py-2 rounded-lg">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -707,17 +800,8 @@ const StudentManagementSystem = () => {
             </div>
           )}
 
-          <div className="flex justify-between items-center mb-4">
-            <input
-              type="text"
-              placeholder="Search students..."
-              className="p-2 border border-gray-300 rounded-lg"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div className="table-container overflow-x-auto rounded-lg shadow-md">
+          {/* ✅ Student List Table */}
+          <div className="table-container overflow-x-auto rounded-lg shadow-md mt-6">
             <table className="min-w-full bg-white">
               <thead>
                 <tr className="bg-gray-100">
@@ -730,46 +814,16 @@ const StudentManagementSystem = () => {
                   <th className="py-2 px-4 text-left font-semibold text-gray-800">
                     Email
                   </th>
-                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                    Actions
-                  </th>
                 </tr>
               </thead>
               <tbody>
-                {students
-                  .filter(
-                    (student) =>
-                      student.name
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) ||
-                      student.email
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase())
-                  )
-                  .map((student) => (
-                    <tr
-                      key={student.rollNo}
-                      className="hover:bg-gray-100 transition"
-                    >
-                      <td className="py-2 px-4">{student.rollNo}</td>
-                      <td className="py-2 px-4">{student.name}</td>
-                      <td className="py-2 px-4">{student.email}</td>
-                      <td className="py-2 px-4 flex gap-2">
-                        <button
-                          className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
-                          onClick={() => openEditStudentModal(student)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
-                          onClick={() => removeStudent(student._id)}
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                {students.map((student) => (
+                  <tr key={student.rollNo}>
+                    <td className="py-2 px-4">{student.rollNo}</td>
+                    <td className="py-2 px-4">{student.name}</td>
+                    <td className="py-2 px-4">{student.email}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -793,74 +847,6 @@ const StudentManagementSystem = () => {
           } opacity-${toast.message ? "100" : "0"}`}
         >
           {toast.message}
-        </div>
-      )}
-
-      {editStudentModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-lg font-semibold">Edit Student</h3>
-
-            <div className="mt-4">
-              <label className="block font-medium">Roll No</label>
-              <input
-                type="number"
-                value={editStudentData.rollNo}
-                onChange={(e) =>
-                  setEditStudentData({
-                    ...editStudentData,
-                    rollNo: e.target.value,
-                  })
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            <div className="mt-4">
-              <label className="block font-medium">Name</label>
-              <input
-                type="text"
-                value={editStudentData.name}
-                onChange={(e) =>
-                  setEditStudentData({
-                    ...editStudentData,
-                    name: e.target.value,
-                  })
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            <div className="mt-4">
-              <label className="block font-medium">Email</label>
-              <input
-                type="email"
-                value={editStudentData.email}
-                onChange={(e) =>
-                  setEditStudentData({
-                    ...editStudentData,
-                    email: e.target.value,
-                  })
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={closeEditStudentModal}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={updateStudent}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg"
-              >
-                Update
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
