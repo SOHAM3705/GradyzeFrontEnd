@@ -2,8 +2,12 @@ import React, { useState } from "react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { useEffect } from "react";
+import axios from "axios";
 
 const StudentManagementSystem = () => {
+  const [isClassTeacher, setIsClassTeacher] = useState(false);
+  const [isSubjectTeacher, setIsSubjectTeacher] = useState(false);
   const [students, setStudents] = useState([
     { rollNo: 1, name: "John Doe", email: "john.doe@example.com" },
     { rollNo: 2, name: "Jane Smith", email: "jane.smith@example.com" },
@@ -42,6 +46,28 @@ const StudentManagementSystem = () => {
 
     showToast("Student added successfully", "success");
   };
+
+  useEffect(() => {
+    const fetchTeacherRole = async () => {
+      const teacherId = sessionStorage.getItem("teacherId");
+      if (!teacherId) {
+        console.error("No teacherId found in sessionStorage");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `/api/studentmanagement/teacher-role/${teacherId}`
+        );
+        setIsClassTeacher(response.data.isClassTeacher);
+        setIsSubjectTeacher(response.data.isSubjectTeacher);
+      } catch (error) {
+        console.error("Error fetching teacher role:", error);
+      }
+    };
+
+    fetchTeacherRole();
+  }, []);
 
   const removeStudent = (rollNo) => {
     setStudents(students.filter((student) => student.rollNo !== rollNo));
@@ -179,14 +205,17 @@ const StudentManagementSystem = () => {
             view === "class-teacher" ? "bg-white shadow-md text-gray-800" : ""
           }`}
           onClick={() => toggleView("class-teacher")}
+          disabled={isSubjectTeacher && !isClassTeacher} // Disable if only subject teacher
         >
           Class Teacher
         </button>
+
         <button
           className={`flex-1 p-3 rounded-md text-gray-700 ${
             view === "students" ? "bg-white shadow-md text-gray-800" : ""
           }`}
           onClick={() => toggleView("students")}
+          disabled={isClassTeacher && !isSubjectTeacher} // Disable if only class teacher
         >
           Subject Teacher
         </button>
@@ -195,7 +224,7 @@ const StudentManagementSystem = () => {
       {view === "class-teacher" && (
         <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
           <div className="class-info flex flex-wrap gap-6 mb-6">
-            <div className="info-item flex-1 min-w-xs  p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
               <h3 className="text-gray-800 font-semibold flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Department
