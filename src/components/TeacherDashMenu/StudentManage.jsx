@@ -137,9 +137,52 @@ const StudentManagementSystem = () => {
     }
   };
 
-  const removeStudent = (rollNo) => {
-    setStudents(students.filter((student) => student.rollNo !== rollNo));
-    showToast("Student removed", "success");
+  useEffect(() => {
+    const fetchStudents = async () => {
+      const teacherId = sessionStorage.getItem("teacherId");
+      if (!teacherId) {
+        console.error("No teacherId found in sessionStorage");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students/${teacherId}`
+        );
+        setStudents(response.data.students);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching students:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  const removeStudent = async (rollNo) => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to remove this student?"))
+      return;
+
+    try {
+      const response = await axios.delete(
+        `/api/studentmanagement/delete-student/${teacherId}/${rollNo}`
+      );
+      alert(response.data.message);
+
+      // ✅ Update UI to remove the deleted student
+      setStudents(students.filter((s) => s.rollNo !== rollNo));
+    } catch (error) {
+      console.error("Error removing student:", error);
+      alert(error.response?.data?.message || "Failed to remove student.");
+    }
   };
 
   const importExcel = (event) => {
@@ -451,46 +494,62 @@ const StudentManagementSystem = () => {
 
           <div className="mt-8">
             <h3 className="text-gray-800 font-semibold mb-4">Student List</h3>
-            <div className="table-container overflow-x-auto rounded-lg shadow-md">
-              <table className="min-w-full bg-white">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                      Roll No
-                    </th>
-                    <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                      Name
-                    </th>
-                    <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                      Email
-                    </th>
-                    <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((student) => (
-                    <tr
-                      key={student.rollNo}
-                      className="transition-transform transform hover:bg-[#059669] hover:text-white"
-                    >
-                      <td className="py-2 px-4">{student.rollNo}</td>
-                      <td className="py-2 px-4">{student.name}</td>
-                      <td className="py-2 px-4">{student.email}</td>
-                      <td className="py-2 px-4">
-                        <button
-                          className="bg-red-500 text-white p-2 rounded-lg font-medium transition-transform transform hover:-translate-y-1"
-                          onClick={() => removeStudent(student.rollNo)}
-                        >
-                          Remove
-                        </button>
-                      </td>
+
+            {loading ? (
+              <p className="text-gray-600">Loading students...</p>
+            ) : students.length > 0 ? (
+              <div className="table-container overflow-x-auto rounded-lg shadow-md">
+                <table className="min-w-full bg-white">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Roll No
+                      </th>
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Name
+                      </th>
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Email
+                      </th>
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {students.map((student) => (
+                      <tr
+                        key={student.rollNo}
+                        className="hover:bg-gray-100 transition"
+                      >
+                        <td className="py-2 px-4">{student.rollNo}</td>
+                        <td className="py-2 px-4">{student.name}</td>
+                        <td className="py-2 px-4">{student.email}</td>
+                        <td className="py-2 px-4 flex gap-2">
+                          {/* Edit Button */}
+                          <button
+                            className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
+                            onClick={() => editStudent(student)}
+                          >
+                            Edit
+                          </button>
+
+                          {/* Remove Button */}
+                          <button
+                            className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
+                            onClick={() => removeStudent(student.rollNo)}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-600">No students found.</p>
+            )}
           </div>
         </div>
       )}
