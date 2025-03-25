@@ -161,34 +161,6 @@ const StudentManagementSystem = () => {
     fetchStudents();
   }, []);
 
-  const updateStudent = async () => {
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      console.error("No teacherId found in sessionStorage");
-      return;
-    }
-
-    try {
-      const response = await axios.put(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/update-student/${teacherId}/${editStudentData._id}`,
-        {
-          rollNo: editStudentData.rollNo,
-          name: editStudentData.name,
-          email: editStudentData.email,
-        }
-      );
-
-      setStudents(
-        students.map((s) =>
-          s._id === editStudentData._id ? response.data.student : s
-        )
-      ); // ✅ Update UI
-      closeEditModal();
-    } catch (error) {
-      console.error("Error updating student:", error);
-    }
-  };
-
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
@@ -276,6 +248,7 @@ const StudentManagementSystem = () => {
     }, 1000);
   };
 
+  const [editStudentModalOpen, setEditStudentModalOpen] = useState(false);
   const [editStudentData, setEditStudentData] = useState({
     _id: "",
     rollNo: "",
@@ -283,14 +256,46 @@ const StudentManagementSystem = () => {
     email: "",
   });
 
-  const openEditModal = (student) => {
+  // ✅ Function to Open Modal
+  const openEditStudentModal = (student) => {
     setEditStudentData(student);
-    setModalOpen(true);
+    setEditStudentModalOpen(true);
   };
 
-  const closeEditModal = () => {
-    setModalOpen(false);
+  // ✅ Function to Close Modal
+  const closeEditStudentModal = () => {
+    setEditStudentModalOpen(false);
     setEditStudentData({ _id: "", rollNo: "", name: "", email: "" });
+  };
+
+  // ✅ Function to Update Student Data
+  const updateStudent = async () => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/update-student/${teacherId}/${editStudentData._id}`,
+        {
+          rollNo: editStudentData.rollNo,
+          name: editStudentData.name,
+          email: editStudentData.email,
+        }
+      );
+
+      // ✅ Update UI after edit
+      setStudents(
+        students.map((s) =>
+          s._id === editStudentData._id ? response.data.student : s
+        )
+      );
+      closeEditStudentModal();
+    } catch (error) {
+      console.error("Error updating student:", error);
+    }
   };
 
   const generateClassPDF = () => {
@@ -719,7 +724,7 @@ const StudentManagementSystem = () => {
         </div>
       )}
 
-      {modalOpen && (
+      {editStudentModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h3 className="text-lg font-semibold">Edit Student</h3>
@@ -771,13 +776,13 @@ const StudentManagementSystem = () => {
 
             <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={closeEditModal}
+                onClick={closeEditStudentModal}
                 className="bg-gray-400 text-white px-4 py-2 rounded-lg"
               >
                 Cancel
               </button>
               <button
-                onClick={() => updateStudent()}
+                onClick={updateStudent}
                 className="bg-green-500 text-white px-4 py-2 rounded-lg"
               >
                 Update
