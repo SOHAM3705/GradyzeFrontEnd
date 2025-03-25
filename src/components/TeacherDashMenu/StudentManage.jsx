@@ -116,12 +116,15 @@ const StudentManagementSystem = () => {
     }
 
     try {
-      const response = await axios.post("/api/studentmanagement/add-student", {
-        teacherId,
-        rollNo: parseInt(rollNo),
-        name,
-        email,
-      });
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/studentmanagement/add-student",
+        {
+          teacherId,
+          rollNo: parseInt(rollNo),
+          name,
+          email,
+        }
+      );
 
       alert("Student added successfully!");
       setStudents([...students, response.data.student]); // Update UI with new student
