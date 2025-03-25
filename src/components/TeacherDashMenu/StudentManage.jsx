@@ -160,6 +160,35 @@ const StudentManagementSystem = () => {
 
     fetchStudents();
   }, []);
+
+  const updateStudent = async () => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/update-student/${teacherId}/${editStudentData._id}`,
+        {
+          rollNo: editStudentData.rollNo,
+          name: editStudentData.name,
+          email: editStudentData.email,
+        }
+      );
+
+      setStudents(
+        students.map((s) =>
+          s._id === editStudentData._id ? response.data.student : s
+        )
+      ); // ✅ Update UI
+      closeEditModal();
+    } catch (error) {
+      console.error("Error updating student:", error);
+    }
+  };
+
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
@@ -245,6 +274,23 @@ const StudentManagementSystem = () => {
       setLoading(false);
       showToast("Students imported successfully", "success");
     }, 1000);
+  };
+
+  const [editStudentData, setEditStudentData] = useState({
+    _id: "",
+    rollNo: "",
+    name: "",
+    email: "",
+  });
+
+  const openEditModal = (student) => {
+    setEditStudentData(student);
+    setModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setModalOpen(false);
+    setEditStudentData({ _id: "", rollNo: "", name: "", email: "" });
   };
 
   const generateClassPDF = () => {
@@ -540,7 +586,7 @@ const StudentManagementSystem = () => {
                           {/* Edit Button */}
                           <button
                             className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
-                            onClick={() => editStudent(student)}
+                            onClick={() => openEditModal(student)}
                           >
                             Edit
                           </button>
@@ -670,6 +716,74 @@ const StudentManagementSystem = () => {
           } opacity-${toast.message ? "100" : "0"}`}
         >
           {toast.message}
+        </div>
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-semibold">Edit Student</h3>
+
+            <div className="mt-4">
+              <label className="block font-medium">Roll No</label>
+              <input
+                type="number"
+                value={editStudentData.rollNo}
+                onChange={(e) =>
+                  setEditStudentData({
+                    ...editStudentData,
+                    rollNo: e.target.value,
+                  })
+                }
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="block font-medium">Name</label>
+              <input
+                type="text"
+                value={editStudentData.name}
+                onChange={(e) =>
+                  setEditStudentData({
+                    ...editStudentData,
+                    name: e.target.value,
+                  })
+                }
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="block font-medium">Email</label>
+              <input
+                type="email"
+                value={editStudentData.email}
+                onChange={(e) =>
+                  setEditStudentData({
+                    ...editStudentData,
+                    email: e.target.value,
+                  })
+                }
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={closeEditModal}
+                className="bg-gray-400 text-white px-4 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => updateStudent()}
+                className="bg-green-500 text-white px-4 py-2 rounded-lg"
+              >
+                Update
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
