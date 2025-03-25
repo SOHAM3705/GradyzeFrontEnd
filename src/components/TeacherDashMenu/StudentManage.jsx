@@ -168,25 +168,23 @@ const StudentManagementSystem = () => {
 
   return (
     <div className="container mx-auto p-5">
-      <h1 className="text-2xl font-semibold text-primary-dark flex items-center gap-3 mb-6">
-        <span className="w-2 h-8 bg-primary rounded"></span>
+      <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-3 mb-6">
+        <span className="w-2 h-8 bg-[#059669] rounded"></span>
         Student Management System
       </h1>
 
       <div className="flex bg-gray-200 rounded-lg p-1 mb-6 max-w-xl">
         <button
-          className={`flex-1 p-3 rounded-md text-secondary ${
-            view === "class-teacher"
-              ? "bg-white shadow-md text-primary-dark"
-              : ""
+          className={`flex-1 p-3 rounded-md text-gray-700 ${
+            view === "class-teacher" ? "bg-white shadow-md text-gray-800" : ""
           }`}
           onClick={() => toggleView("class-teacher")}
         >
           Class Teacher
         </button>
         <button
-          className={`flex-1 p-3 rounded-md text-secondary ${
-            view === "students" ? "bg-white shadow-md text-primary-dark" : ""
+          className={`flex-1 p-3 rounded-md text-gray-700 ${
+            view === "students" ? "bg-white shadow-md text-gray-800" : ""
           }`}
           onClick={() => toggleView("students")}
         >
@@ -198,8 +196,8 @@ const StudentManagementSystem = () => {
         <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
           <div className="class-info flex flex-wrap gap-6 mb-6">
             <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-primary-dark font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Department
               </h3>
               <p className="text-lg font-medium">
@@ -207,22 +205,22 @@ const StudentManagementSystem = () => {
               </p>
             </div>
             <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-primary-dark font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Year
               </h3>
               <p className="text-lg font-medium">Second Year</p>
             </div>
             <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-primary-dark font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Division
               </h3>
               <p className="text-lg font-medium">A</p>
             </div>
             <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-primary-dark font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Class Teacher
               </h3>
               <p className="text-lg font-medium">Prof. Jane Doe</p>
@@ -230,7 +228,7 @@ const StudentManagementSystem = () => {
           </div>
 
           <div className="button-group flex flex-wrap gap-4 mb-6">
-            <label className="file-label flex items-center gap-2 bg-primary text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1">
+            <label className="file-label flex items-center gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1">
               Import from Excel
               <input
                 type="file"
@@ -241,7 +239,7 @@ const StudentManagementSystem = () => {
             </label>
             {students.length > 0 && (
               <button
-                className="bg-primary text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
+                className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
                 onClick={generateClassPDF}
               >
                 Generate Class PDF
@@ -250,8 +248,8 @@ const StudentManagementSystem = () => {
           </div>
 
           {excelData && (
-            <div className="bg-light p-5 rounded-lg border border-dashed border-primary mb-6">
-              <h3 className="text-primary-dark font-semibold mb-4">
+            <div className="bg-light p-5 rounded-lg border border-dashed border-[#059669] mb-6">
+              <h3 className="text-gray-800 font-semibold mb-4">
                 Imported Students
               </h3>
               <div>
@@ -261,7 +259,7 @@ const StudentManagementSystem = () => {
                       {Object.keys(excelData[0]).map((header) => (
                         <th
                           key={header}
-                          className="py-2 px-4 text-left font-semibold text-primary-dark"
+                          className="py-2 px-4 text-left font-semibold text-gray-800"
                         >
                           {header}
                         </th>
@@ -272,7 +270,7 @@ const StudentManagementSystem = () => {
                     {excelData.slice(0, 5).map((row, index) => (
                       <tr
                         key={index}
-                        className="transition-transform transform hover:bg-primary-light"
+                        className="transition-transform transform hover:bg-[#059669] hover:text-white"
                       >
                         {Object.values(row).map((value, i) => (
                           <td key={i} className="py-2 px-4">
@@ -288,7 +286,7 @@ const StudentManagementSystem = () => {
                 )}
               </div>
               <button
-                className="bg-primary text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
+                className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
                 onClick={importStudents}
               >
                 Import Students
@@ -297,7 +295,7 @@ const StudentManagementSystem = () => {
           )}
 
           <div className="mt-6">
-            <h3 className="text-primary-dark font-semibold mb-4">
+            <h3 className="text-gray-800 font-semibold mb-4">
               Add New Student
             </h3>
             <div className="student-form flex flex-wrap gap-5 bg-light p-6 rounded-lg">
@@ -334,7 +332,7 @@ const StudentManagementSystem = () => {
               </div>
               <div className="form-group flex-1 min-w-xs flex items-end">
                 <button
-                  className="bg-primary text-white p-3 rounded-lg w-full font-medium transition-transform transform hover:-translate-y-1"
+                  className="bg-[#059669] text-white p-3 rounded-lg w-full font-medium transition-transform transform hover:-translate-y-1"
                   onClick={addStudent}
                 >
                   Add Student
@@ -344,23 +342,21 @@ const StudentManagementSystem = () => {
           </div>
 
           <div className="mt-8">
-            <h3 className="text-primary-dark font-semibold mb-4">
-              Student List
-            </h3>
+            <h3 className="text-gray-800 font-semibold mb-4">Student List</h3>
             <div className="table-container overflow-x-auto rounded-lg shadow-md">
               <table className="min-w-full bg-white">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                    <th className="py-2 px-4 text-left font-semibold text-gray-800">
                       Roll No
                     </th>
-                    <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                    <th className="py-2 px-4 text-left font-semibold text-gray-800">
                       Name
                     </th>
-                    <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                    <th className="py-2 px-4 text-left font-semibold text-gray-800">
                       Email
                     </th>
-                    <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                    <th className="py-2 px-4 text-left font-semibold text-gray-800">
                       Actions
                     </th>
                   </tr>
@@ -369,14 +365,14 @@ const StudentManagementSystem = () => {
                   {students.map((student) => (
                     <tr
                       key={student.rollNo}
-                      className="transition-transform transform hover:bg-primary-light"
+                      className="transition-transform transform hover:bg-[#059669] hover:text-white"
                     >
                       <td className="py-2 px-4">{student.rollNo}</td>
                       <td className="py-2 px-4">{student.name}</td>
                       <td className="py-2 px-4">{student.email}</td>
                       <td className="py-2 px-4">
                         <button
-                          className="bg-secondary text-white p-2 rounded-lg font-medium transition-transform transform hover:-translate-y-1"
+                          className="bg-red-500 text-white p-2 rounded-lg font-medium transition-transform transform hover:-translate-y-1"
                           onClick={() => removeStudent(student.rollNo)}
                         >
                           Remove
@@ -393,7 +389,7 @@ const StudentManagementSystem = () => {
 
       {view === "students" && (
         <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-primary-dark mb-4">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Computer Science Second Year (A)
           </h2>
           <p className="mb-4">
@@ -403,13 +399,13 @@ const StudentManagementSystem = () => {
             <table className="min-w-full bg-white">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
                     Roll No
                   </th>
-                  <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
                     Name
                   </th>
-                  <th className="py-2 px-4 text-left font-semibold text-primary-dark">
+                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
                     Email
                   </th>
                 </tr>
@@ -418,7 +414,7 @@ const StudentManagementSystem = () => {
                 {students.map((student) => (
                   <tr
                     key={student.rollNo}
-                    className="transition-transform transform hover:bg-primary-light"
+                    className="transition-transform transform hover:bg-[#059669] hover:text-white"
                   >
                     <td className="py-2 px-4">{student.rollNo}</td>
                     <td className="py-2 px-4">{student.name}</td>
@@ -429,7 +425,7 @@ const StudentManagementSystem = () => {
             </table>
           </div>
           <button
-            className="bg-primary text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
+            className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
             onClick={downloadStudentReport}
           >
             Download Student Report
@@ -440,7 +436,7 @@ const StudentManagementSystem = () => {
       {toast.message && (
         <div
           className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg text-white font-medium flex items-center gap-3 ${
-            toast.type === "success" ? "bg-primary" : "bg-danger"
+            toast.type === "success" ? "bg-[#059669]" : "bg-red-500"
           } transition-transform transform ${
             toast.message ? "translate-y-0" : "-translate-y-5"
           } opacity-${toast.message ? "100" : "0"}`}
@@ -451,7 +447,7 @@ const StudentManagementSystem = () => {
 
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm z-50">
-          <div className="w-12 h-12 border-4 border-t-4 border-primary-light border-t-primary rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-t-4 border-[#059669] border-t-[#059669] rounded-full animate-spin"></div>
         </div>
       )}
     </div>
