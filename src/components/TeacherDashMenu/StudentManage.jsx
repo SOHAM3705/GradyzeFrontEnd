@@ -160,28 +160,39 @@ const StudentManagementSystem = () => {
 
     fetchStudents();
   }, []);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
-  const removeStudent = async (rollNo) => {
+  const openModal = (student) => {
+    setSelectedStudent(student);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedStudent(null);
+  };
+
+  const confirmDelete = () => {
+    if (selectedStudent) {
+      removeStudent(selectedStudent._id);
+      closeModal();
+    }
+  };
+  const removeStudent = async (studentId) => {
     const teacherId = sessionStorage.getItem("teacherId");
     if (!teacherId) {
       console.error("No teacherId found in sessionStorage");
       return;
     }
 
-    if (!window.confirm("Are you sure you want to remove this student?"))
-      return;
-
     try {
       const response = await axios.delete(
-        `/api/studentmanagement/delete-student/${teacherId}/${rollNo}`
+        `https://gradyzebackend.onrender.com/api/studentmanagement/delete-student/${teacherId}/${studentId}`
       );
-      alert(response.data.message);
-
-      // ✅ Update UI to remove the deleted student
-      setStudents(students.filter((s) => s.rollNo !== rollNo));
+      setStudents(students.filter((s) => s._id !== studentId)); // ✅ Update UI
     } catch (error) {
       console.error("Error removing student:", error);
-      alert(error.response?.data?.message || "Failed to remove student.");
     }
   };
 
@@ -537,7 +548,7 @@ const StudentManagementSystem = () => {
                           {/* Remove Button */}
                           <button
                             className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
-                            onClick={() => removeStudent(student.rollNo)}
+                            onClick={() => openModal(student)}
                           >
                             Remove
                           </button>
@@ -550,6 +561,33 @@ const StudentManagementSystem = () => {
             ) : (
               <p className="text-gray-600">No students found.</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {modalOpen && selectedStudent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-semibold">Confirm Delete</h3>
+            <p>
+              Are you sure you want to remove{" "}
+              <strong>{selectedStudent.name}</strong>?
+            </p>
+
+            <div className="flex justify-end mt-4 gap-3">
+              <button
+                onClick={closeModal}
+                className="bg-gray-400 text-white px-4 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
