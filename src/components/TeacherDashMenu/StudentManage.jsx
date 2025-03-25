@@ -87,7 +87,7 @@ const StudentManagementSystem = () => {
 
       try {
         const response = await axios.get(
-          `/api/studentmanagement/teacher-role/${teacherId}`
+          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-role/${teacherId}`
         );
         setIsClassTeacher(response.data.isClassTeacher);
         setIsSubjectTeacher(response.data.isSubjectTeacher);
