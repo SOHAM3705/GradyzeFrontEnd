@@ -6,8 +6,8 @@ import { useEffect } from "react";
 import axios from "axios";
 
 const StudentManagementSystem = () => {
-  const [isClassTeacher, setIsClassTeacher] = useState(false);
-  const [isSubjectTeacher, setIsSubjectTeacher] = useState(false);
+  const [teacherDetails, setTeacherDetails] = useState({});
+  const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([
     { rollNo: 1, name: "John Doe", email: "john.doe@example.com" },
     { rollNo: 2, name: "Jane Smith", email: "jane.smith@example.com" },
@@ -48,7 +48,7 @@ const StudentManagementSystem = () => {
   };
 
   useEffect(() => {
-    const fetchTeacherRole = async () => {
+    const fetchTeacherData = async () => {
       const teacherId = sessionStorage.getItem("teacherId");
       if (!teacherId) {
         console.error("No teacherId found in sessionStorage");
@@ -56,17 +56,23 @@ const StudentManagementSystem = () => {
       }
 
       try {
-        const response = await axios.get(
-          `/api/studentmanagement/teacher-role/${teacherId}`
+        // Fetch Class Teacher data
+        const classResponse = await axios.get(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/class-details/${teacherId}`
         );
-        setIsClassTeacher(response.data.isClassTeacher);
-        setIsSubjectTeacher(response.data.isSubjectTeacher);
+        setTeacherDetails(classResponse.data);
+
+        // Fetch Subject Teacher data
+        const subjectResponse = await axios.get(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
+        );
+        setSubjects(subjectResponse.data.subjects);
       } catch (error) {
-        console.error("Error fetching teacher role:", error);
+        console.error("Error fetching teacher data:", error);
       }
     };
 
-    fetchTeacherRole();
+    fetchTeacherData();
   }, []);
 
   const removeStudent = (rollNo) => {
@@ -230,7 +236,7 @@ const StudentManagementSystem = () => {
                 Department
               </h3>
               <p className="text-lg font-medium">
-                Computer Science Engineering
+                {teacherDetails.department || "N/A"}
               </p>
             </div>
             <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
@@ -238,21 +244,27 @@ const StudentManagementSystem = () => {
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Year
               </h3>
-              <p className="text-lg font-medium">Second Year</p>
+              <p className="text-lg font-medium">
+                {teacherDetails.year || "N/A"}
+              </p>
             </div>
             <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
               <h3 className="text-gray-800 font-semibold flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Division
               </h3>
-              <p className="text-lg font-medium">A</p>
+              <p className="text-lg font-medium">
+                {teacherDetails.division || "N/A"}
+              </p>
             </div>
             <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
               <h3 className="text-gray-800 font-semibold flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Class Teacher
               </h3>
-              <p className="text-lg font-medium">Prof. Jane Doe</p>
+              <p className="text-lg font-medium">
+                {teacherDetails.classTeacher || "N/A"}
+              </p>
             </div>
           </div>
 
@@ -276,7 +288,6 @@ const StudentManagementSystem = () => {
                 </button>
               )}
             </div>
-            )}
           </div>
 
           {excelData && (
@@ -425,9 +436,41 @@ const StudentManagementSystem = () => {
             Computer Science Second Year (A)
           </h2>
           <p className="mb-4">
-            <strong>Class Teacher:</strong> Prof. Jane Doe
+            <strong>Class Teacher:</strong> Prof.{" "}
+            {teacherDetails.classTeacher || "N/A"}
           </p>
-          <div className="table-container overflow-x-auto rounded-lg shadow-md">
+
+          {/* ✅ Subject Teacher Section - Shows Assigned Subjects */}
+          {subjects.length > 0 && (
+            <div>
+              <h3 className="text-gray-800 font-semibold mb-4">
+                Assigned Subjects
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {subjects.map((subject, index) => (
+                  <div
+                    key={index}
+                    className="bg-gray-200 p-5 rounded-lg shadow-sm"
+                  >
+                    <h3 className="text-gray-800 font-semibold flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
+                      {subject.name}
+                    </h3>
+                    <p className="text-lg font-medium">Year: {subject.year}</p>
+                    <p className="text-lg font-medium">
+                      Semester: {subject.semester}
+                    </p>
+                    <p className="text-lg font-medium">
+                      Division: {subject.division}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ✅ Student List Table */}
+          <div className="table-container overflow-x-auto rounded-lg shadow-md mt-6">
             <table className="min-w-full bg-white">
               <thead>
                 <tr className="bg-gray-100">
@@ -453,6 +496,8 @@ const StudentManagementSystem = () => {
               </tbody>
             </table>
           </div>
+
+          {/* ✅ Download Student Report Button */}
           <button
             className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
             onClick={downloadStudentReport}
