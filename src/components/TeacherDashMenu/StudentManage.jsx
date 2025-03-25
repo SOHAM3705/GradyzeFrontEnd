@@ -10,11 +10,6 @@ const StudentManagementSystem = () => {
   const [isSubjectTeacher, setIsSubjectTeacher] = useState(false);
   const [teacherDetails, setTeacherDetails] = useState({});
   const [subjects, setSubjects] = useState([]);
-  const [students, setStudents] = useState([
-    { rollNo: 1, name: "John Doe", email: "john.doe@example.com" },
-    { rollNo: 2, name: "Jane Smith", email: "jane.smith@example.com" },
-    { rollNo: 3, name: "Michael Brown", email: "michael.brown@example.com" },
-  ]);
   const [view, setView] = useState("class-teacher"); // Default view
   const [excelData, setExcelData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -102,6 +97,42 @@ const StudentManagementSystem = () => {
 
     fetchTeacherData();
   }, []);
+
+  const [rollNo, setRollNo] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [students, setStudents] = useState([]); // Store students
+
+  const handleAddStudent = async () => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
+
+    if (!rollNo || !name || !email) {
+      alert("Please fill all fields!");
+      return;
+    }
+
+    try {
+      const response = await axios.post("/api/studentmanagement/add-student", {
+        teacherId,
+        rollNo: parseInt(rollNo),
+        name,
+        email,
+      });
+
+      alert("Student added successfully!");
+      setStudents([...students, response.data.student]); // Update UI with new student
+      setRollNo("");
+      setName("");
+      setEmail(""); // Reset form
+    } catch (error) {
+      console.error("Error adding student:", error);
+      alert(error.response?.data?.message || "Failed to add student");
+    }
+  };
 
   const removeStudent = (rollNo) => {
     setStudents(students.filter((student) => student.rollNo !== rollNo));
@@ -376,7 +407,8 @@ const StudentManagementSystem = () => {
                 </label>
                 <input
                   type="number"
-                  id="roll-no"
+                  value={rollNo}
+                  onChange={(e) => setRollNo(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg"
                   placeholder="Enter roll number"
                 />
@@ -385,7 +417,8 @@ const StudentManagementSystem = () => {
                 <label className="block mb-2 font-medium text-dark">Name</label>
                 <input
                   type="text"
-                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg"
                   placeholder="Enter student name"
                 />
@@ -396,7 +429,8 @@ const StudentManagementSystem = () => {
                 </label>
                 <input
                   type="email"
-                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg"
                   placeholder="Enter student email"
                 />
@@ -404,7 +438,7 @@ const StudentManagementSystem = () => {
               <div className="form-group flex-1 min-w-xs flex items-end">
                 <button
                   className="bg-[#059669] text-white p-3 rounded-lg w-full font-medium transition-transform transform hover:-translate-y-1"
-                  onClick={addStudent}
+                  onClick={handleAddStudent}
                 >
                   Add Student
                 </button>
