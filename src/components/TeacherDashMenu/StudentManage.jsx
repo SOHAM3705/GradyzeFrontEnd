@@ -7,6 +7,8 @@ import axios from "axios";
 
 const StudentManagementSystem = () => {
   const [teacherDetails, setTeacherDetails] = useState({});
+  const [isClassTeacher, setIsClassTeacher] = useState(false);
+  const [isSubjectTeacher, setIsSubjectTeacher] = useState(false);
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([
     { rollNo: 1, name: "John Doe", email: "john.doe@example.com" },
@@ -73,6 +75,28 @@ const StudentManagementSystem = () => {
     };
 
     fetchTeacherData();
+  }, []);
+
+  useEffect(() => {
+    const fetchTeacherRole = async () => {
+      const teacherId = sessionStorage.getItem("teacherId");
+      if (!teacherId) {
+        console.error("No teacherId found in sessionStorage");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `/api/studentmanagement/teacher-role/${teacherId}`
+        );
+        setIsClassTeacher(response.data.isClassTeacher);
+        setIsSubjectTeacher(response.data.isSubjectTeacher);
+      } catch (error) {
+        console.error("Error fetching teacher role:", error);
+      }
+    };
+
+    fetchTeacherRole();
   }, []);
 
   const removeStudent = (rollNo) => {
