@@ -239,6 +239,14 @@ const StudentManagementSystem = () => {
                 onChange={importExcel}
               />
             </label>
+            {students.length > 0 && (
+              <button
+                className="bg-primary text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
+                onClick={generateClassPDF}
+              >
+                Generate Class PDF
+              </button>
+            )}
           </div>
 
           {excelData && (
@@ -286,15 +294,6 @@ const StudentManagementSystem = () => {
                 Import Students
               </button>
             </div>
-          )}
-
-          {students.length > 0 && (
-            <button
-              className="bg-primary text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
-              onClick={generateClassPDF}
-            >
-              Generate Class PDF
-            </button>
           )}
 
           <div className="mt-6">
