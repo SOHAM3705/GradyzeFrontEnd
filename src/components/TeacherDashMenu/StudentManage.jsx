@@ -1,48 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { useEffect } from "react";
-import axios from "axios";
 
 const StudentManagementSystem = () => {
   const [isClassTeacher, setIsClassTeacher] = useState(false);
   const [isSubjectTeacher, setIsSubjectTeacher] = useState(false);
   const [teacherDetails, setTeacherDetails] = useState({});
   const [subjects, setSubjects] = useState([]);
-  const [view, setView] = useState("class-teacher"); // Default view
-  const [excelData, setExcelData] = useState(null);
+  const [view, setView] = useState("class-teacher");
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: "", type: "" });
-
-  const toggleView = (viewId) => {
-    setView(viewId);
-  };
-
-  const addStudent = () => {
-    const rollNo = document.getElementById("roll-no").value;
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
-
-    if (!rollNo || !name || !email) {
-      showToast("Please fill all fields", "error");
-      return;
-    }
-
-    if (students.some((student) => student.rollNo == rollNo)) {
-      showToast("Roll number already exists", "error");
-      return;
-    }
-
-    const newStudent = { rollNo: parseInt(rollNo), name, email };
-    setStudents([...students, newStudent]);
-
-    document.getElementById("roll-no").value = "";
-    document.getElementById("name").value = "";
-    document.getElementById("email").value = "";
-
-    showToast("Student added successfully", "success");
-  };
+  const [rollNo, setRollNo] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [editStudentModalOpen, setEditStudentModalOpen] = useState(false);
+  const [deleteStudentModalOpen, setDeleteStudentModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchTeacherData = async () => {
@@ -53,43 +32,32 @@ const StudentManagementSystem = () => {
       }
 
       try {
-        // ✅ Fetch teacher role
         const roleResponse = await axios.get(
           `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-role/${teacherId}`
         );
-        console.log("Teacher Role Data:", roleResponse.data);
-
-        // ✅ Set boolean states directly
         setIsClassTeacher(roleResponse.data.isClassTeacher);
         setIsSubjectTeacher(roleResponse.data.isSubjectTeacher);
 
-        // ✅ Fetch Class Teacher Details
         if (roleResponse.data.isClassTeacher) {
           const classResponse = await axios.get(
             `https://gradyzebackend.onrender.com/api/studentmanagement/class-details/${teacherId}`
           );
-          console.log("Class Teacher Details:", classResponse.data);
           setTeacherDetails(classResponse.data);
         }
 
-        // ✅ Fetch Subject Teacher Details
         if (roleResponse.data.isSubjectTeacher) {
           const subjectResponse = await axios.get(
             `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
           );
-          console.log("Subject Teacher Details:", subjectResponse.data);
           setSubjects(subjectResponse.data.subjects);
         }
 
-        // ✅ Set Default View Based on Role
-        if (
+        setView(
           roleResponse.data.isSubjectTeacher &&
-          !roleResponse.data.isClassTeacher
-        ) {
-          setView("students"); // Open with Subject Teacher view
-        } else {
-          setView("class-teacher"); // Default to Class Teacher view
-        }
+            !roleResponse.data.isClassTeacher
+            ? "students"
+            : "class-teacher"
+        );
       } catch (error) {
         console.error("Error fetching teacher data:", error);
       }
@@ -97,45 +65,6 @@ const StudentManagementSystem = () => {
 
     fetchTeacherData();
   }, []);
-
-  const [rollNo, setRollNo] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [students, setStudents] = useState([]); // Store students
-
-  const handleAddStudent = async () => {
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      console.error("No teacherId found in sessionStorage");
-      return;
-    }
-
-    if (!rollNo || !name || !email) {
-      alert("Please fill all fields!");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/studentmanagement/add-student",
-        {
-          teacherId,
-          rollNo: parseInt(rollNo),
-          name,
-          email,
-        }
-      );
-
-      alert("Student added successfully!");
-      setStudents([...students, response.data.student]); // Update UI with new student
-      setRollNo("");
-      setName("");
-      setEmail(""); // Reset form
-    } catch (error) {
-      console.error("Error adding student:", error);
-      alert(error.response?.data?.message || "Failed to add student");
-    }
-  };
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -161,43 +90,41 @@ const StudentManagementSystem = () => {
     fetchStudents();
   }, []);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-
-  const openModal = (student) => {
-    setSelectedStudent(student);
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setSelectedStudent(null);
-  };
-
-  const confirmDelete = () => {
-    if (selectedStudent) {
-      removeStudent(selectedStudent._id);
-      closeModal();
-    }
-  };
-  const removeStudent = async (studentId) => {
+  const handleAddStudent = async () => {
     const teacherId = sessionStorage.getItem("teacherId");
     if (!teacherId) {
       console.error("No teacherId found in sessionStorage");
       return;
     }
 
+    if (!rollNo || !name || !email) {
+      alert("Please fill all fields!");
+      return;
+    }
+
     try {
-      const response = await axios.delete(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/delete-student/${teacherId}/${studentId}`
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/studentmanagement/add-student",
+        {
+          teacherId,
+          rollNo: parseInt(rollNo),
+          name,
+          email,
+        }
       );
-      setStudents(students.filter((s) => s._id !== studentId)); // ✅ Update UI
+
+      alert("Student added successfully!");
+      setStudents([...students, response.data.student]);
+      setRollNo("");
+      setName("");
+      setEmail("");
     } catch (error) {
-      console.error("Error removing student:", error);
+      console.error("Error adding student:", error);
+      alert(error.response?.data?.message || "Failed to add student");
     }
   };
 
-  const importExcel = async (event) => {
+  const handleFileUpload = async (event) => {
     const teacherId = sessionStorage.getItem("teacherId");
     if (!teacherId) {
       console.error("No teacherId found in sessionStorage");
@@ -205,12 +132,8 @@ const StudentManagementSystem = () => {
     }
 
     const file = event.target.files[0];
-    if (!file) {
-      console.error("No file selected.");
-      return;
-    }
+    if (!file) return;
 
-    // ✅ Ensure only Excel files are uploaded
     if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
       alert("Invalid file format. Please upload an Excel file (.xlsx, .xls)");
       return;
@@ -230,133 +153,7 @@ const StudentManagementSystem = () => {
       );
 
       alert("Students imported successfully!");
-      setStudents([...students, ...response.data.students]); // ✅ Update UI
-    } catch (error) {
-      console.error("Error importing students:", error);
-      alert(error.response?.data?.message || "Failed to import students.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const importStudents = () => {
-    if (!excelData || excelData.length === 0) {
-      showToast("No data to import", "error");
-      return;
-    }
-
-    setLoading(true);
-    setTimeout(() => {
-      const newStudents = excelData.map((row) => {
-        const rollNoKey =
-          Object.keys(row).find((key) => key.toLowerCase().includes("roll")) ||
-          "Roll No";
-        const nameKey =
-          Object.keys(row).find((key) => key.toLowerCase().includes("name")) ||
-          "Name";
-        const emailKey =
-          Object.keys(row).find((key) => key.toLowerCase().includes("email")) ||
-          "Email";
-
-        return {
-          rollNo: parseInt(row[rollNoKey]),
-          name: row[nameKey],
-          email: row[emailKey],
-        };
-      });
-
-      setStudents(newStudents);
-      setExcelData(null);
-      setLoading(false);
-      showToast("Students imported successfully", "success");
-    }, 1000);
-  };
-
-  const [editStudentModalOpen, setEditStudentModalOpen] = useState(false);
-  const [editStudentData, setEditStudentData] = useState({
-    _id: "",
-    rollNo: "",
-    name: "",
-    email: "",
-  });
-
-  const [deleteStudentModalOpen, setDeleteStudentModalOpen] = useState(false);
-
-  // ✅ Open Edit Modal
-  const openEditModal = (student) => {
-    setSelectedStudent(student);
-    setEditStudentModalOpen(true);
-  };
-
-  // ✅ Open Delete Modal
-  const openDeleteModal = (student) => {
-    setSelectedStudent(student);
-    setDeleteStudentModalOpen(true);
-  };
-
-  // ✅ Close Modals
-  const closeModals = () => {
-    setEditStudentModalOpen(false);
-    setDeleteStudentModalOpen(false);
-    setSelectedStudent(null);
-  };
-  // ✅ Function to Update Student Data
-  const updateStudent = async () => {
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      console.error("No teacherId found in sessionStorage");
-      return;
-    }
-
-    try {
-      const response = await axios.put(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/update-student/${teacherId}/${editStudentData._id}`,
-        {
-          rollNo: editStudentData.rollNo,
-          name: editStudentData.name,
-          email: editStudentData.email,
-        }
-      );
-
-      // ✅ Update UI after edit
-      setStudents(
-        students.map((s) =>
-          s._id === editStudentData._id ? response.data.student : s
-        )
-      );
-      closeEditStudentModal();
-    } catch (error) {
-      console.error("Error updating student:", error);
-    }
-  };
-
-  const [uploading, setUploading] = useState(false);
-
-  const handleFileUpload = async (event) => {
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      console.error("No teacherId found in sessionStorage");
-      return;
-    }
-
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      setUploading(true);
-      const response = await axios.post(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/import-students/${teacherId}`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      alert("Students imported successfully!");
-      setStudents([...students, ...response.data.students]); // ✅ Update UI
+      setStudents([...students, ...response.data.students]);
       setUploading(false);
     } catch (error) {
       console.error("Error importing students:", error);
@@ -364,7 +161,7 @@ const StudentManagementSystem = () => {
       setUploading(false);
     }
   };
-  const [searchQuery, setSearchQuery] = useState("");
+
   const downloadStudentReport = async () => {
     const teacherId = sessionStorage.getItem("teacherId");
     if (!teacherId) {
@@ -376,12 +173,12 @@ const StudentManagementSystem = () => {
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/studentmanagement/generate-report/${teacherId}`,
         {
-          responseType: "blob", // ✅ Ensure the response is a file
+          responseType: "blob",
           headers: {
             "Content-Type": "application/pdf",
             Accept: "application/pdf",
           },
-          withCredentials: true, // ✅ Ensure cookies & authentication headers are sent
+          withCredentials: true,
         }
       );
 
@@ -398,6 +195,74 @@ const StudentManagementSystem = () => {
     }
   };
 
+  const openEditModal = (student) => {
+    setSelectedStudent(student);
+    setEditStudentModalOpen(true);
+  };
+
+  const openDeleteModal = (student) => {
+    setSelectedStudent(student);
+    setDeleteStudentModalOpen(true);
+  };
+
+  const closeModals = () => {
+    setEditStudentModalOpen(false);
+    setDeleteStudentModalOpen(false);
+    setSelectedStudent(null);
+  };
+
+  const confirmDelete = async () => {
+    if (selectedStudent) {
+      await removeStudent(selectedStudent._id);
+      closeModals();
+    }
+  };
+
+  const removeStudent = async (studentId) => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/delete-student/${teacherId}/${studentId}`
+      );
+      setStudents(students.filter((s) => s._id !== studentId));
+    } catch (error) {
+      console.error("Error removing student:", error);
+    }
+  };
+
+  const updateStudent = async () => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/update-student/${teacherId}/${selectedStudent._id}`,
+        {
+          rollNo: selectedStudent.rollNo,
+          name: selectedStudent.name,
+          email: selectedStudent.email,
+        }
+      );
+
+      setStudents(
+        students.map((s) =>
+          s._id === selectedStudent._id ? response.data.student : s
+        )
+      );
+      closeModals();
+    } catch (error) {
+      console.error("Error updating student:", error);
+    }
+  };
+
   return (
     <div className="container mx-auto p-5">
       <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-3 mb-6">
@@ -410,8 +275,8 @@ const StudentManagementSystem = () => {
           className={`flex-1 p-3 rounded-md text-gray-700 ${
             view === "class-teacher" ? "bg-white shadow-md text-gray-800" : ""
           }`}
-          onClick={() => toggleView("class-teacher")}
-          disabled={isSubjectTeacher && !isClassTeacher} // Disable if ONLY subject teacher
+          onClick={() => setView("class-teacher")}
+          disabled={isSubjectTeacher && !isClassTeacher}
         >
           Class Teacher
         </button>
@@ -420,8 +285,8 @@ const StudentManagementSystem = () => {
           className={`flex-1 p-3 rounded-md text-gray-700 ${
             view === "students" ? "bg-white shadow-md text-gray-800" : ""
           }`}
-          onClick={() => toggleView("students")}
-          disabled={isClassTeacher && !isSubjectTeacher} // Disable if ONLY class teacher
+          onClick={() => setView("students")}
+          disabled={isClassTeacher && !isSubjectTeacher}
         >
           Subject Teacher
         </button>
@@ -469,74 +334,25 @@ const StudentManagementSystem = () => {
           </div>
 
           <div className="button-group flex flex-wrap gap-4 mb-6">
-            <div className="button-group flex gap-4 mb-6">
-              <label className="file-label flex items-center justify-center gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1 cursor-pointer">
-                {uploading ? "Uploading..." : "Import from Excel"}
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".xlsx, .xls"
-                  onChange={handleFileUpload}
-                  disabled={uploading}
-                />
-              </label>
-              {students.length > 0 && (
-                <button
-                  className="bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1"
-                  onClick={downloadStudentReport}
-                >
-                  Generate Class PDF
-                </button>
-              )}
-            </div>
-          </div>
-
-          {excelData && (
-            <div className="bg-gray-200 p-5 rounded-lg border border-dashed border-[#059669] mb-6">
-              <h3 className="text-gray-800 font-semibold mb-4">
-                Imported Students
-              </h3>
-              <div>
-                <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      {Object.keys(excelData[0]).map((header) => (
-                        <th
-                          key={header}
-                          className="py-2 px-4 text-left font-semibold text-gray-800"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {excelData.slice(0, 5).map((row, index) => (
-                      <tr
-                        key={index}
-                        className="transition-transform transform hover:bg-[#059669] hover:text-white"
-                      >
-                        {Object.values(row).map((value, i) => (
-                          <td key={i} className="py-2 px-4">
-                            {value}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {excelData.length > 5 && (
-                  <p className="mt-2">Showing 5 of {excelData.length} rows</p>
-                )}
-              </div>
+            <label className="file-label flex items-center justify-center gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1 cursor-pointer">
+              {uploading ? "Uploading..." : "Import from Excel"}
+              <input
+                type="file"
+                className="hidden"
+                accept=".xlsx, .xls"
+                onChange={handleFileUpload}
+                disabled={uploading}
+              />
+            </label>
+            {students.length > 0 && (
               <button
-                className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
-                onClick={importStudents}
+                className="bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1"
+                onClick={downloadStudentReport}
               >
-                Import Students
+                Generate Class PDF
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="mt-6">
             <h3 className="text-gray-800 font-semibold mb-4">
@@ -590,8 +406,6 @@ const StudentManagementSystem = () => {
 
           <div className="mt-8">
             <h3 className="text-gray-800 font-semibold mb-4">Student List</h3>
-
-            {/* ✅ Search Input */}
             <div className="flex justify-between items-center mb-4">
               <input
                 type="text"
@@ -643,15 +457,12 @@ const StudentManagementSystem = () => {
                           <td className="py-2 px-4">{student.name}</td>
                           <td className="py-2 px-4">{student.email}</td>
                           <td className="py-2 px-4 flex gap-2">
-                            {/* Edit Button */}
                             <button
                               className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
                               onClick={() => openEditModal(student)}
                             >
                               Edit
                             </button>
-
-                            {/* Remove Button */}
                             <button
                               className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
                               onClick={() => openDeleteModal(student)}
@@ -668,12 +479,10 @@ const StudentManagementSystem = () => {
               <p className="text-gray-600">No students found.</p>
             )}
 
-            {/* ✅ Edit Student Modal */}
             {editStudentModalOpen && selectedStudent && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                   <h3 className="text-lg font-semibold">Edit Student</h3>
-
                   <div className="mt-4">
                     <label className="block font-medium">Roll No</label>
                     <input
@@ -688,7 +497,6 @@ const StudentManagementSystem = () => {
                       className="w-full p-2 border border-gray-300 rounded-lg"
                     />
                   </div>
-
                   <div className="mt-4">
                     <label className="block font-medium">Name</label>
                     <input
@@ -703,7 +511,6 @@ const StudentManagementSystem = () => {
                       className="w-full p-2 border border-gray-300 rounded-lg"
                     />
                   </div>
-
                   <div className="mt-4">
                     <label className="block font-medium">Email</label>
                     <input
@@ -718,7 +525,6 @@ const StudentManagementSystem = () => {
                       className="w-full p-2 border border-gray-300 rounded-lg"
                     />
                   </div>
-
                   <div className="flex justify-end gap-3 mt-4">
                     <button
                       onClick={closeModals}
@@ -726,7 +532,10 @@ const StudentManagementSystem = () => {
                     >
                       Cancel
                     </button>
-                    <button className="bg-green-500 text-white px-4 py-2 rounded-lg">
+                    <button
+                      onClick={updateStudent}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                    >
                       Update
                     </button>
                   </div>
@@ -734,7 +543,6 @@ const StudentManagementSystem = () => {
               </div>
             )}
 
-            {/* ✅ Delete Confirmation Modal */}
             {deleteStudentModalOpen && selectedStudent && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -743,7 +551,6 @@ const StudentManagementSystem = () => {
                     Are you sure you want to remove{" "}
                     <strong>{selectedStudent.name}</strong>?
                   </p>
-
                   <div className="flex justify-end mt-4 gap-3">
                     <button
                       onClick={closeModals}
@@ -752,7 +559,7 @@ const StudentManagementSystem = () => {
                       Cancel
                     </button>
                     <button
-                      onclick={confirmDelete}
+                      onClick={confirmDelete}
                       className="bg-red-500 text-white px-4 py-2 rounded-lg"
                     >
                       Delete
@@ -767,7 +574,6 @@ const StudentManagementSystem = () => {
 
       {view === "students" && (
         <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
-          {/* ✅ Subject Teacher Section - Shows Assigned Subjects */}
           {subjects.length > 0 && (
             <div>
               <h3 className="text-gray-800 font-semibold mb-4">
@@ -796,7 +602,6 @@ const StudentManagementSystem = () => {
             </div>
           )}
 
-          {/* ✅ Student List Table */}
           <div className="table-container overflow-x-auto rounded-lg shadow-md mt-6">
             <table className="min-w-full bg-white">
               <thead>
@@ -824,7 +629,6 @@ const StudentManagementSystem = () => {
             </table>
           </div>
 
-          {/* ✅ Download Student Report Button */}
           <button
             className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
             onClick={downloadStudentReport}
