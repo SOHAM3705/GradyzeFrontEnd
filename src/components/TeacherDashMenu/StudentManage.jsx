@@ -15,7 +15,7 @@ const StudentManagementSystem = () => {
     { rollNo: 2, name: "Jane Smith", email: "jane.smith@example.com" },
     { rollNo: 3, name: "Michael Brown", email: "michael.brown@example.com" },
   ]);
-  const [view, setView] = useState("class-teacher");
+  const [view, setView] = useState("class-teacher"); // Default view
   const [excelData, setExcelData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: "", type: "" });
@@ -58,9 +58,9 @@ const StudentManagementSystem = () => {
       }
 
       try {
-        // ✅ Fetch teacher role (Class Teacher / Subject Teacher)
+        // ✅ Fetch teacher role
         const roleResponse = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-role/${teacherId}`
+          `/api/studentmanagement/teacher-role/${teacherId}`
         );
         console.log("Teacher Role Data:", roleResponse.data);
 
@@ -69,18 +69,32 @@ const StudentManagementSystem = () => {
         setIsSubjectTeacher(roleResponse.data.isSubjectTeacher);
 
         // ✅ Fetch Class Teacher Details
-        const classResponse = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/class-details/${teacherId}`
-        );
-        console.log("Class Teacher Details:", classResponse.data);
-        setTeacherDetails(classResponse.data);
+        if (roleResponse.data.isClassTeacher) {
+          const classResponse = await axios.get(
+            `/api/studentmanagement/class-details/${teacherId}`
+          );
+          console.log("Class Teacher Details:", classResponse.data);
+          setTeacherDetails(classResponse.data);
+        }
 
         // ✅ Fetch Subject Teacher Details
-        const subjectResponse = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
-        );
-        console.log("Subject Teacher Details:", subjectResponse.data);
-        setSubjects(subjectResponse.data.subjects);
+        if (roleResponse.data.isSubjectTeacher) {
+          const subjectResponse = await axios.get(
+            `/api/studentmanagement/subject-details/${teacherId}`
+          );
+          console.log("Subject Teacher Details:", subjectResponse.data);
+          setSubjects(subjectResponse.data.subjects);
+        }
+
+        // ✅ Set Default View Based on Role
+        if (
+          roleResponse.data.isSubjectTeacher &&
+          !roleResponse.data.isClassTeacher
+        ) {
+          setView("students"); // Open with Subject Teacher view
+        } else {
+          setView("class-teacher"); // Default to Class Teacher view
+        }
       } catch (error) {
         console.error("Error fetching teacher data:", error);
       }
@@ -446,11 +460,6 @@ const StudentManagementSystem = () => {
 
       {view === "students" && (
         <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
-          <p className="mb-4">
-            <strong>Class Teacher:</strong> Prof.{" "}
-            {teacherDetails.classTeacher || "N/A"}
-          </p>
-
           {/* ✅ Subject Teacher Section - Shows Assigned Subjects */}
           {subjects.length > 0 && (
             <div>
