@@ -6,9 +6,9 @@ import { useEffect } from "react";
 import axios from "axios";
 
 const StudentManagementSystem = () => {
-  const [teacherDetails, setTeacherDetails] = useState({});
   const [isClassTeacher, setIsClassTeacher] = useState(false);
   const [isSubjectTeacher, setIsSubjectTeacher] = useState(false);
+  const [teacherDetails, setTeacherDetails] = useState({});
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([
     { rollNo: 1, name: "John Doe", email: "john.doe@example.com" },
@@ -58,16 +58,28 @@ const StudentManagementSystem = () => {
       }
 
       try {
-        // Fetch Class Teacher data
+        // ✅ Fetch teacher role (Class Teacher / Subject Teacher)
+        const roleResponse = await axios.get(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-role/${teacherId}`
+        );
+        console.log("Teacher Role Data:", roleResponse.data);
+
+        // ✅ Set boolean states directly
+        setIsClassTeacher(roleResponse.data.isClassTeacher);
+        setIsSubjectTeacher(roleResponse.data.isSubjectTeacher);
+
+        // ✅ Fetch Class Teacher Details
         const classResponse = await axios.get(
           `https://gradyzebackend.onrender.com/api/studentmanagement/class-details/${teacherId}`
         );
+        console.log("Class Teacher Details:", classResponse.data);
         setTeacherDetails(classResponse.data);
 
-        // Fetch Subject Teacher data
+        // ✅ Fetch Subject Teacher Details
         const subjectResponse = await axios.get(
           `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
         );
+        console.log("Subject Teacher Details:", subjectResponse.data);
         setSubjects(subjectResponse.data.subjects);
       } catch (error) {
         console.error("Error fetching teacher data:", error);
@@ -75,28 +87,6 @@ const StudentManagementSystem = () => {
     };
 
     fetchTeacherData();
-  }, []);
-
-  useEffect(() => {
-    const fetchTeacherRole = async () => {
-      const teacherId = sessionStorage.getItem("teacherId");
-      if (!teacherId) {
-        console.error("No teacherId found in sessionStorage");
-        return;
-      }
-
-      try {
-        const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-role/${teacherId}`
-        );
-        setIsClassTeacher(response.data.isClassTeacher);
-        setIsSubjectTeacher(response.data.isSubjectTeacher);
-      } catch (error) {
-        console.error("Error fetching teacher role:", error);
-      }
-    };
-
-    fetchTeacherRole();
   }, []);
 
   const removeStudent = (rollNo) => {
@@ -235,7 +225,7 @@ const StudentManagementSystem = () => {
             view === "class-teacher" ? "bg-white shadow-md text-gray-800" : ""
           }`}
           onClick={() => toggleView("class-teacher")}
-          disabled={isSubjectTeacher && !isClassTeacher} // Disable if only subject teacher
+          disabled={isSubjectTeacher && !isClassTeacher} // Disable if ONLY subject teacher
         >
           Class Teacher
         </button>
@@ -245,7 +235,7 @@ const StudentManagementSystem = () => {
             view === "students" ? "bg-white shadow-md text-gray-800" : ""
           }`}
           onClick={() => toggleView("students")}
-          disabled={isClassTeacher && !isSubjectTeacher} // Disable if only class teacher
+          disabled={isClassTeacher && !isSubjectTeacher} // Disable if ONLY class teacher
         >
           Subject Teacher
         </button>
@@ -293,8 +283,8 @@ const StudentManagementSystem = () => {
           </div>
 
           <div className="button-group flex flex-wrap gap-4 mb-6">
-            <div className="button-group flex flex-wrap gap-4 mb-6">
-              <label className="file-label flex items-center justify-center gap-2 bg-[#059669] text-white p-3 w-full rounded-lg font-medium transition-transform transform hover:-translate-y-1">
+            <div className="button-group flex gap-4 mb-6">
+              <label className="file-label flex items-center justify-center gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1">
                 Import from Excel
                 <input
                   type="file"
@@ -305,7 +295,7 @@ const StudentManagementSystem = () => {
               </label>
               {students.length > 0 && (
                 <button
-                  className="bg-[#059669] text-white p-3 w-full rounded-lg font-medium transition-transform transform hover:-translate-y-1"
+                  className="bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1"
                   onClick={generateClassPDF}
                 >
                   Generate Class PDF
