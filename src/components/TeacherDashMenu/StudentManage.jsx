@@ -60,7 +60,7 @@ const StudentManagementSystem = () => {
       try {
         // ✅ Fetch teacher role
         const roleResponse = await axios.get(
-          `/api/studentmanagement/teacher-role/${teacherId}`
+          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-role/${teacherId}`
         );
         console.log("Teacher Role Data:", roleResponse.data);
 
@@ -71,7 +71,7 @@ const StudentManagementSystem = () => {
         // ✅ Fetch Class Teacher Details
         if (roleResponse.data.isClassTeacher) {
           const classResponse = await axios.get(
-            `/api/studentmanagement/class-details/${teacherId}`
+            `https://gradyzebackend.onrender.com/api/studentmanagement/class-details/${teacherId}`
           );
           console.log("Class Teacher Details:", classResponse.data);
           setTeacherDetails(classResponse.data);
@@ -80,7 +80,7 @@ const StudentManagementSystem = () => {
         // ✅ Fetch Subject Teacher Details
         if (roleResponse.data.isSubjectTeacher) {
           const subjectResponse = await axios.get(
-            `/api/studentmanagement/subject-details/${teacherId}`
+            `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
           );
           console.log("Subject Teacher Details:", subjectResponse.data);
           setSubjects(subjectResponse.data.subjects);
