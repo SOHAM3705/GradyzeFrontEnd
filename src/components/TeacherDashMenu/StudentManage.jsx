@@ -456,9 +456,6 @@ const StudentManagementSystem = () => {
 
       {view === "students" && (
         <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Computer Science Second Year (A)
-          </h2>
           <p className="mb-4">
             <strong>Class Teacher:</strong> Prof.{" "}
             {teacherDetails.classTeacher || "N/A"}
