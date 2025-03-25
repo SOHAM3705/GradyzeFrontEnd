@@ -195,7 +195,7 @@ const StudentManagementSystem = () => {
       {view === "class-teacher" && (
         <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
           <div className="class-info flex flex-wrap gap-6 mb-6">
-            <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+            <div className="info-item flex-1 min-w-xs  p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
               <h3 className="text-gray-800 font-semibold flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Department
@@ -204,21 +204,21 @@ const StudentManagementSystem = () => {
                 Computer Science Engineering
               </p>
             </div>
-            <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
               <h3 className="text-gray-800 font-semibold flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Year
               </h3>
               <p className="text-lg font-medium">Second Year</p>
             </div>
-            <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
               <h3 className="text-gray-800 font-semibold flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Division
               </h3>
               <p className="text-lg font-medium">A</p>
             </div>
-            <div className="info-item flex-1 min-w-xs bg-light p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
               <h3 className="text-gray-800 font-semibold flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Class Teacher
@@ -248,7 +248,7 @@ const StudentManagementSystem = () => {
           </div>
 
           {excelData && (
-            <div className="bg-light p-5 rounded-lg border border-dashed border-[#059669] mb-6">
+            <div className="bg-gray-200 p-5 rounded-lg border border-dashed border-[#059669] mb-6">
               <h3 className="text-gray-800 font-semibold mb-4">
                 Imported Students
               </h3>
@@ -298,7 +298,7 @@ const StudentManagementSystem = () => {
             <h3 className="text-gray-800 font-semibold mb-4">
               Add New Student
             </h3>
-            <div className="student-form flex flex-wrap gap-5 bg-light p-6 rounded-lg">
+            <div className="student-form flex flex-wrap gap-5 bg-gray-200 p-6 rounded-lg">
               <div className="form-group flex-1 min-w-xs">
                 <label className="block mb-2 font-medium text-dark">
                   Roll No
@@ -412,10 +412,7 @@ const StudentManagementSystem = () => {
               </thead>
               <tbody>
                 {students.map((student) => (
-                  <tr
-                    key={student.rollNo}
-                    className="transition-transform transform hover:bg-[#059669] hover:text-white"
-                  >
+                  <tr key={student.rollNo}>
                     <td className="py-2 px-4">{student.rollNo}</td>
                     <td className="py-2 px-4">{student.name}</td>
                     <td className="py-2 px-4">{student.email}</td>
