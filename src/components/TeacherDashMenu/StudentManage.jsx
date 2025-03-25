@@ -376,7 +376,12 @@ const StudentManagementSystem = () => {
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/studentmanagement/generate-report/${teacherId}`,
         {
-          responseType: "blob", // ✅ Ensure PDF is downloaded
+          responseType: "blob", // ✅ Ensure the response is a file
+          headers: {
+            "Content-Type": "application/pdf",
+            Accept: "application/pdf",
+          },
+          withCredentials: true, // ✅ Ensure cookies & authentication headers are sent
         }
       );
 
@@ -391,12 +396,6 @@ const StudentManagementSystem = () => {
       console.error("Error downloading student report:", error);
       alert("Failed to download student report.");
     }
-  };
-  const showToast = (message, type) => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast({ message: "", type: "" });
-    }, 3000);
   };
 
   return (
@@ -477,7 +476,7 @@ const StudentManagementSystem = () => {
                   type="file"
                   className="hidden"
                   accept=".xlsx, .xls"
-                  onChange={importExcel}
+                  onChange={handleFileUpload}
                   disabled={uploading}
                 />
               </label>
@@ -752,7 +751,10 @@ const StudentManagementSystem = () => {
                     >
                       Cancel
                     </button>
-                    <button className="bg-red-500 text-white px-4 py-2 rounded-lg">
+                    <button
+                      onclick={confirmDelete}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                    >
                       Delete
                     </button>
                   </div>
