@@ -330,36 +330,6 @@ const StudentManagementSystem = () => {
     }
   };
 
-  const generateClassPDF = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const doc = new jsPDF();
-      doc.setFontSize(16);
-      doc.text("Class Report - Computer Science Second Year (A)", 14, 22);
-      doc.setFontSize(12);
-      doc.text(`Class Teacher: Prof. Jane Doe`, 14, 32);
-      doc.text(`Total Students: ${students.length}`, 14, 38);
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 44);
-
-      const tableColumn = ["Roll No", "Name", "Email"];
-      const tableRows = students
-        .sort((a, b) => a.rollNo - b.rollNo)
-        .map((student) => [student.rollNo, student.name, student.email]);
-
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 55,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [5, 150, 105] },
-      });
-
-      doc.save("class-report.pdf");
-      setLoading(false);
-      showToast("Class PDF generated successfully", "success");
-    }, 1000);
-  };
-
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (event) => {
@@ -404,7 +374,7 @@ const StudentManagementSystem = () => {
 
     try {
       const response = await axios.get(
-        `/api/studentmanagement/generate-report/${teacherId}`,
+        `https://gradyzebackend.onrender.com/api/studentmanagement/generate-report/${teacherId}`,
         {
           responseType: "blob", // ✅ Ensure PDF is downloaded
         }
@@ -514,7 +484,7 @@ const StudentManagementSystem = () => {
               {students.length > 0 && (
                 <button
                   className="bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1"
-                  onClick={generateClassPDF}
+                  onClick={downloadStudentReport}
                 >
                   Generate Class PDF
                 </button>
