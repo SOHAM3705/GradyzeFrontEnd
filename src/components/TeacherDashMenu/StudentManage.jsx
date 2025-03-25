@@ -328,36 +328,68 @@ const StudentManagementSystem = () => {
     }, 1000);
   };
 
-  const downloadStudentReport = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const doc = new jsPDF();
-      doc.setFontSize(16);
-      doc.text("Student Report - Computer Science Second Year (A)", 14, 22);
-      doc.setFontSize(12);
-      doc.text(`Class Teacher: Prof. Jane Doe`, 14, 32);
-      doc.text(`Total Students: ${students.length}`, 14, 38);
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 44);
+  const [uploading, setUploading] = useState(false);
 
-      const tableColumn = ["Roll No", "Name", "Email"];
-      const tableRows = students
-        .sort((a, b) => a.rollNo - b.rollNo)
-        .map((student) => [student.rollNo, student.name, student.email]);
+  const handleFileUpload = async (event) => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
 
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 55,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [5, 150, 105] },
-      });
+    const file = event.target.files[0];
+    if (!file) return;
 
-      doc.save("student-report.pdf");
-      setLoading(false);
-      showToast("Student report downloaded successfully", "success");
-    }, 1000);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setUploading(true);
+      const response = await axios.post(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/import-students/${teacherId}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      alert("Students imported successfully!");
+      setStudents([...students, ...response.data.students]); // ✅ Update UI
+      setUploading(false);
+    } catch (error) {
+      console.error("Error importing students:", error);
+      alert("Failed to import students");
+      setUploading(false);
+    }
   };
+  const [searchQuery, setSearchQuery] = useState("");
+  const downloadStudentReport = async () => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
 
+    try {
+      const response = await axios.get(
+        `/api/studentmanagement/generate-report/${teacherId}`,
+        {
+          responseType: "blob", // ✅ Ensure PDF is downloaded
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Student_Report.pdf");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading student report:", error);
+      alert("Failed to download student report.");
+    }
+  };
   const showToast = (message, type) => {
     setToast({ message, type });
     setTimeout(() => {
@@ -437,13 +469,14 @@ const StudentManagementSystem = () => {
 
           <div className="button-group flex flex-wrap gap-4 mb-6">
             <div className="button-group flex gap-4 mb-6">
-              <label className="file-label flex items-center justify-center gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1">
-                Import from Excel
+              <label className="file-label flex items-center justify-center gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1 cursor-pointer">
+                {uploading ? "Uploading..." : "Import from Excel"}
                 <input
                   type="file"
                   className="hidden"
                   accept=".xlsx, .xls"
                   onChange={importExcel}
+                  disabled={uploading}
                 />
               </label>
               {students.length > 0 && (
@@ -674,8 +707,17 @@ const StudentManagementSystem = () => {
             </div>
           )}
 
-          {/* ✅ Student List Table */}
-          <div className="table-container overflow-x-auto rounded-lg shadow-md mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <input
+              type="text"
+              placeholder="Search students..."
+              className="p-2 border border-gray-300 rounded-lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="table-container overflow-x-auto rounded-lg shadow-md">
             <table className="min-w-full bg-white">
               <thead>
                 <tr className="bg-gray-100">
@@ -688,16 +730,46 @@ const StudentManagementSystem = () => {
                   <th className="py-2 px-4 text-left font-semibold text-gray-800">
                     Email
                   </th>
+                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {students.map((student) => (
-                  <tr key={student.rollNo}>
-                    <td className="py-2 px-4">{student.rollNo}</td>
-                    <td className="py-2 px-4">{student.name}</td>
-                    <td className="py-2 px-4">{student.email}</td>
-                  </tr>
-                ))}
+                {students
+                  .filter(
+                    (student) =>
+                      student.name
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      student.email
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())
+                  )
+                  .map((student) => (
+                    <tr
+                      key={student.rollNo}
+                      className="hover:bg-gray-100 transition"
+                    >
+                      <td className="py-2 px-4">{student.rollNo}</td>
+                      <td className="py-2 px-4">{student.name}</td>
+                      <td className="py-2 px-4">{student.email}</td>
+                      <td className="py-2 px-4 flex gap-2">
+                        <button
+                          className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
+                          onClick={() => openEditStudentModal(student)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
+                          onClick={() => removeStudent(student._id)}
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
