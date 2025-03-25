@@ -197,22 +197,46 @@ const StudentManagementSystem = () => {
     }
   };
 
-  const importExcel = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  const importExcel = async (event) => {
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      console.error("No teacherId found in sessionStorage");
+      return;
+    }
 
-    setLoading(true);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      setExcelData(jsonData);
-      setLoading(false);
-    };
-    reader.readAsArrayBuffer(file);
+    const file = event.target.files[0];
+    if (!file) {
+      console.error("No file selected.");
+      return;
+    }
+
+    // ✅ Ensure only Excel files are uploaded
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      alert("Invalid file format. Please upload an Excel file (.xlsx, .xls)");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setUploading(true);
+      const response = await axios.post(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/import-students/${teacherId}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      alert("Students imported successfully!");
+      setStudents([...students, ...response.data.students]); // ✅ Update UI
+    } catch (error) {
+      console.error("Error importing students:", error);
+      alert(error.response?.data?.message || "Failed to import students.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const importStudents = () => {
@@ -380,7 +404,7 @@ const StudentManagementSystem = () => {
 
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/generate-report/${teacherId}`,
+        `/api/studentmanagement/generate-report/${teacherId}`,
         {
           responseType: "blob", // ✅ Ensure PDF is downloaded
         }
