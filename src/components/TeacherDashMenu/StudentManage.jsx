@@ -257,7 +257,7 @@ const StudentManagementSystem = () => {
           </div>
 
           <div className="button-group flex flex-wrap gap-4 mb-6">
-            <label className="file-label flex items-center gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1">
+            <label className="file-label gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1">
               Import from Excel
               <input
                 type="file"
