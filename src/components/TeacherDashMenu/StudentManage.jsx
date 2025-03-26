@@ -77,12 +77,9 @@ const StudentManagementSystem = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students/${teacherId}`
         );
-
-        // Store students grouped by subject
-        setStudents(response.data.studentData || {});
-        setSubjects(response.data.subjects || []);
+        setStudents(response.data.students);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching students:", error);
@@ -98,79 +95,42 @@ const StudentManagementSystem = () => {
     const adminId = sessionStorage.getItem("adminId");
 
     if (!teacherId || !adminId) {
-      alert("Session expired. Please log in again.");
+      console.error("Missing teacherId or adminId in sessionStorage");
+      return;
+    }
+
+    if (!rollNo || !name || !email || !year || !division) {
+      // ✅ Now checking year & division
+      alert("Please fill all fields!");
       return;
     }
 
     try {
-      // Fetch teacher details to get correct semester
-      const teacherResponse = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teacher/details/${teacherId}`
-      );
-
-      const teacher = teacherResponse.data;
-      let assignedYear, assignedDivision, assignedSemester;
-
-      if (teacher.isClassTeacher) {
-        assignedYear = teacher.assignedClass.year;
-        assignedDivision = teacher.assignedClass.division;
-        assignedSemester = teacher.assignedClass.section; // Use `section` as `semester`
-      } else if (teacher.isSubjectTeacher) {
-        assignedYear = teacher.assignedSubjects[0]?.year;
-        assignedDivision = teacher.assignedSubjects[0]?.division;
-        assignedSemester = teacher.assignedSubjects[0]?.semester; // Use correct `semester`
-      }
-
-      if (!assignedYear || !assignedDivision || !assignedSemester) {
-        alert("Class details are missing. Please contact the administrator.");
-        return;
-      }
-
-      // Validate input
-      if (!rollNo || !name || !email) {
-        alert("Please fill in all student details!");
-        return;
-      }
-
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/studentmanagement/add-student",
         {
+          teacherId,
+          adminId,
           rollNo: parseInt(rollNo),
           name,
           email,
-          year: assignedYear,
-          division: assignedDivision,
-          semester: assignedSemester, // Semester is now fetched dynamically
-        },
-        {
-          headers: {
-            teacherid: teacherId,
-            adminid: adminId,
-          },
+          year, // ✅ Now sending year
+          division, // ✅ Now sending division
         }
       );
 
-      // Reset form after successful addition
+      alert("Student added successfully!");
+      setStudents([...students, response.data.student]);
       setRollNo("");
       setName("");
       setEmail("");
-
-      // Refresh student list after adding
-      setStudents((prevStudents) => ({
-        ...prevStudents,
-        [assignedSemester]: [
-          ...(prevStudents[assignedSemester] || []),
-          response.data.student,
-        ],
-      }));
-
-      alert("Student added successfully!");
+      setYear(""); // ✅ Reset year input field
+      setDivision(""); // ✅ Reset division input field
     } catch (error) {
-      console.error("Error adding student:", error.response?.data);
+      console.error("Error adding student:", error);
       alert(error.response?.data?.message || "Failed to add student");
     }
   };
-
   const handleFileUpload = async (event) => {
     const teacherId = sessionStorage.getItem("teacherId");
     const adminId = sessionStorage.getItem("adminId");
@@ -190,33 +150,21 @@ const StudentManagementSystem = () => {
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("adminId", adminId);
+    formData.append("teacherId", teacherId);
 
     try {
       setUploading(true);
-
-      // Backend fetches semester automatically based on teacher ID
       const response = await axios.post(
         `https://gradyzebackend.onrender.com/api/studentmanagement/import-students`,
         formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            teacherid: teacherId,
-            adminid: adminId,
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
 
       alert("Students imported successfully!");
-
-      // Refresh student list after importing
-      setStudents((prevStudents) => ({
-        ...prevStudents,
-        ...response.data.students.reduce((acc, student) => {
-          acc[student.semester] = [...(acc[student.semester] || []), student];
-          return acc;
-        }, {}),
-      }));
+      setStudents([...students, ...response.data.students]);
     } catch (error) {
       console.error("Error importing students:", error);
       alert(error.response?.data?.message || "Failed to import students");
@@ -280,31 +228,6 @@ const StudentManagementSystem = () => {
       closeModals();
     }
   };
-
-  const [subjectStudents, setSubjectStudents] = useState({});
-
-  useEffect(() => {
-    const fetchSubjectStudents = async () => {
-      const teacherId = sessionStorage.getItem("teacherId");
-      if (!teacherId) {
-        console.error("No teacherId found in sessionStorage");
-        return;
-      }
-
-      try {
-        const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
-        );
-
-        setSubjects(response.data.subjects); // Store subjects
-        setSubjectStudents(response.data.studentData); // Store students grouped by subject with semester info
-      } catch (error) {
-        console.error("Error fetching subject students:", error);
-      }
-    };
-
-    fetchSubjectStudents();
-  }, []);
 
   const removeStudent = async (studentId) => {
     const teacherId = sessionStorage.getItem("teacherId");
@@ -408,15 +331,6 @@ const StudentManagementSystem = () => {
               </h3>
               <p className="text-lg font-medium">
                 {teacherDetails.division || "N/A"}
-              </p>
-            </div>
-            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
-                Semester
-              </h3>
-              <p className="text-lg font-medium">
-                {teacherDetails.semester || "N/A"}
               </p>
             </div>
             <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
@@ -530,9 +444,6 @@ const StudentManagementSystem = () => {
                         Email
                       </th>
                       <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                        Semester
-                      </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
                         Actions
                       </th>
                     </tr>
@@ -556,7 +467,6 @@ const StudentManagementSystem = () => {
                           <td className="py-2 px-4">{student.rollNo}</td>
                           <td className="py-2 px-4">{student.name}</td>
                           <td className="py-2 px-4">{student.email}</td>
-                          <td className="py-2 px-4">{student.semester}</td>
                           <td className="py-2 px-4 flex gap-2">
                             <button
                               className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
@@ -692,10 +602,8 @@ const StudentManagementSystem = () => {
                     </h3>
                     <p className="text-lg font-medium">Year: {subject.year}</p>
                     <p className="text-lg font-medium">
-                      Semester:{" "}
-                      {subjectStudents[subject.name]?.semester || "N/A"}
-                    </p>{" "}
-                    {/* Fetch semester from API response */}
+                      Semester: {subject.semester}
+                    </p>
                     <p className="text-lg font-medium">
                       Division: {subject.division}
                     </p>
@@ -705,42 +613,32 @@ const StudentManagementSystem = () => {
             </div>
           )}
 
-          {/* Loop through each subject & display students */}
-          {subjects.map((subject, index) => (
-            <div key={index} className="mt-8">
-              <h3 className="text-gray-800 font-semibold mb-4">
-                Students for {subject.name} ({subject.year} - {subject.division}{" "}
-                - Semester {subjectStudents[subject.name]?.semester || "N/A"})
-              </h3>
-
-              <div className="table-container overflow-x-auto rounded-lg shadow-md">
-                <table className="min-w-full bg-white">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                        Roll No
-                      </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                        Name
-                      </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                        Email
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subjectStudents[subject.name]?.students?.map((student) => (
-                      <tr key={student.rollNo}>
-                        <td className="py-2 px-4">{student.rollNo}</td>
-                        <td className="py-2 px-4">{student.name}</td>
-                        <td className="py-2 px-4">{student.email}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ))}
+          <div className="table-container overflow-x-auto rounded-lg shadow-md mt-6">
+            <table className="min-w-full bg-white">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                    Roll No
+                  </th>
+                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                    Name
+                  </th>
+                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                    Email
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((student) => (
+                  <tr key={student.rollNo}>
+                    <td className="py-2 px-4">{student.rollNo}</td>
+                    <td className="py-2 px-4">{student.name}</td>
+                    <td className="py-2 px-4">{student.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <button
             className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
