@@ -98,6 +98,7 @@ const StudentManagementSystem = () => {
       alert("Session expired. Please log in again.");
       return;
     }
+
     const { year, division } = teacherDetails || {};
 
     if (!year || !division) {
@@ -105,7 +106,7 @@ const StudentManagementSystem = () => {
       return;
     }
 
-    // Ensure all fields are populated
+    // Validate input
     if (!rollNo || !name || !email) {
       alert("Please fill in all student details!");
       return;
@@ -118,18 +119,26 @@ const StudentManagementSystem = () => {
           rollNo: parseInt(rollNo),
           name,
           email,
-          year,
-          division,
+          year, // ✅ Added year
+          division, // ✅ Added division
         },
         {
           headers: {
-            teacherid: teacherId, // Lowercase headers
-            adminid: adminId, // Lowercase headers
+            teacherid: teacherId,
+            adminid: adminId,
           },
         }
       );
 
-      // Rest of the code...
+      // Reset form after successful addition
+      setRollNo("");
+      setName("");
+      setEmail("");
+
+      // Optionally, refresh the students list
+      setStudents([...students, response.data.student]);
+
+      alert("Student added successfully!");
     } catch (error) {
       console.error("Error adding student:", error.response?.data);
       alert(error.response?.data?.message || "Failed to add student");
@@ -164,8 +173,8 @@ const StudentManagementSystem = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            teacherId,
-            adminId,
+            teacherid: teacherId, // Ensure lowercase headers
+            adminid: adminId, // Ensure lowercase headers
           },
         }
       );
