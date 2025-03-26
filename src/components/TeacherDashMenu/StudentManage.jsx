@@ -16,6 +16,8 @@ const StudentManagementSystem = () => {
   const [rollNo, setRollNo] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [year, setYear] = useState(""); // Add year state
+  const [division, setDivision] = useState(""); // Add division state
   const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -100,7 +102,6 @@ const StudentManagementSystem = () => {
     }
 
     if (!rollNo || !name || !email || !year || !division) {
-      // ✅ Now checking year & division
       alert("Please fill all fields!");
       return;
     }
@@ -109,13 +110,13 @@ const StudentManagementSystem = () => {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/studentmanagement/add-student",
         {
-          teacherId,
-          adminId,
           rollNo: parseInt(rollNo),
           name,
           email,
-          year, // ✅ Now sending year
-          division, // ✅ Now sending division
+          year,
+          division,
+          teacherId,
+          adminId,
         }
       );
 
@@ -124,13 +125,14 @@ const StudentManagementSystem = () => {
       setRollNo("");
       setName("");
       setEmail("");
-      setYear(""); // ✅ Reset year input field
-      setDivision(""); // ✅ Reset division input field
+      setYear("");
+      setDivision("");
     } catch (error) {
       console.error("Error adding student:", error);
       alert(error.response?.data?.message || "Failed to add student");
     }
   };
+
   const handleFileUpload = async (event) => {
     const teacherId = sessionStorage.getItem("teacherId");
     const adminId = sessionStorage.getItem("adminId");
@@ -150,8 +152,6 @@ const StudentManagementSystem = () => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("adminId", adminId);
-    formData.append("teacherId", teacherId);
 
     try {
       setUploading(true);
@@ -159,7 +159,11 @@ const StudentManagementSystem = () => {
         `https://gradyzebackend.onrender.com/api/studentmanagement/import-students`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            teacherId,
+            adminId,
+          },
         }
       );
 
@@ -402,6 +406,28 @@ const StudentManagementSystem = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg"
                   placeholder="Enter student email"
+                />
+              </div>
+              <div className="form-group flex-1 min-w-xs">
+                <label className="block mb-2 font-medium text-dark">Year</label>
+                <input
+                  type="text"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  placeholder="Enter year"
+                />
+              </div>
+              <div className="form-group flex-1 min-w-xs">
+                <label className="block mb-2 font-medium text-dark">
+                  Division
+                </label>
+                <input
+                  type="text"
+                  value={division}
+                  onChange={(e) => setDivision(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  placeholder="Enter division"
                 />
               </div>
               <div className="form-group flex-1 min-w-xs flex items-end">
