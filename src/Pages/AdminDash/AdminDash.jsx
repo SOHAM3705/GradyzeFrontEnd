@@ -1,25 +1,56 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand } from "lucide-react";
+import axios from "axios";
 
 function AdminDash() {
-  const [adminName, setAdminName] = useState("");
+  const [adminName, setAdminName] = useState(""); // ✅ Empty initially
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   const navigate = useNavigate();
 
+  // ✅ Fetch latest admin name
   useEffect(() => {
-    const storedName = sessionStorage.getItem("adminName");
-    if (storedName) {
-      setAdminName(storedName);
-    }
+    const fetchAdminName = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("🚨 No token found, redirecting to login.");
+          navigate("/adminlogin");
+          return;
+        }
+
+        const response = await axios.get(
+          "https://gradyzebackend.onrender.com/api/adminsetting/admin-name",
+          {
+            headers: { Authorization: `Bearer ${token}` }, // ✅ Send token
+          }
+        );
+
+        setAdminName(response.data.adminName || "Admin");
+      } catch (error) {
+        console.error(
+          "❌ Error fetching admin name:",
+          error.response?.data || error
+        );
+      }
+    };
+
+    fetchAdminName();
   }, []);
 
+  // ✅ Handle logout and clear session
   const handleLogout = () => {
-    sessionStorage.removeItem("adminId");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("adminName");
+    console.log("🔴 Logging out...");
+    localStorage.removeItem("adminId");
+    localStorage.removeItem("token");
+    localStorage.removeItem("adminName");
     sessionStorage.clear();
+
+    // ✅ Force a refresh to clear any cached user data
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+
     navigate("/adminlogin");
   };
 
@@ -30,14 +61,22 @@ function AdminDash() {
       label: "Faculty Management",
       path: "/admindash/FacultyManage",
     },
-
+    {
+      icon: "📊",
+      label: "Faculty Analytics",
+      path: "/admindash/FacultyAnalysis",
+    },
     {
       icon: "👥",
       label: "Student Management",
-      path: "/admindash/AdminStudentManage",
+      path: "/admindash/StudentManage",
     },
     { icon: "📝", label: "Students' Marks", path: "/admindash/students-marks" },
-
+    {
+      icon: "📊",
+      label: "Students' Analytics",
+      path: "/admindash/StudentAnalysis",
+    },
     {
       icon: "📅",
       label: "Attendance Reports",
@@ -85,7 +124,7 @@ function AdminDash() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
           <div className="text-lg font-semibold text-gray-800">
-            Welcome, {adminName || "Admin"}
+            Welcome, {adminName || "Loading...."}
           </div>
         </header>
 

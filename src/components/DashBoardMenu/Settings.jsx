@@ -1,59 +1,273 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const ProfileSettings = () => {
-  const [profileImage, setProfileImage] = useState("/profile.png");
+  const navigate = useNavigate();
+
+  // State management
+  const [profileData, setProfileData] = useState({
+    profileImage: "/profile.png",
+    name: "",
+    email: "",
+    oldEmail: "",
+    gender: "",
+  });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   const [notification, setNotification] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
+  // Fetch user profile on component mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/adminlogin");
+          return;
+        }
+
+        const response = await axios.get(
+          "https://gradyzebackend.onrender.com/api/adminsetting/profile",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.data) {
+          setProfileData({
+            profileImage: response.data.profilePhotoUrl || "/profile.png",
+            name: response.data.name || "",
+            email: response.data.email || "",
+            oldEmail: response.data.email || "",
+            gender: response.data.gender || "",
+          });
+        }
+      } catch (error) {
+        setError("Failed to load profile data");
+        console.error("Profile fetch error:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [navigate]);
+
+  // Image selection handler
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
-      reader.onload = () => setProfileImage(reader.result);
+      reader.onload = () => {
+        setProfileData((prev) => ({
+          ...prev,
+          profileImage: reader.result,
+        }));
+      };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleProfileSubmit = (e) => {
-    e.preventDefault();
-    // Handle profile settings submission
-    setNotification("Profile settings saved successfully!");
-    setTimeout(() => setNotification(""), 3000);
-  };
-
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    const newPassword = e.target["new-password"].value;
-    const confirmPassword = e.target["confirm-password"].value;
-    const currentPassword = e.target["current-password"].value;
-
-    if (newPassword && newPassword !== confirmPassword) {
-      alert("New passwords do not match!");
-      return;
+  // Function to update Profile Photo
+  const handleUpdatePhoto = async () => {
+    if (!selectedFile) {
+      return true; // No photo to update
     }
 
     try {
-      const response = await axios.post("/api/change-password", {
-        currentPassword,
-        newPassword,
-      });
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("email", profileData.email);
 
-      if (response.data.success) {
-        setNotification("Password changed successfully!");
-        setTimeout(() => setNotification(""), 3000);
-        setShowChangePassword(false); // Close change password section after success
-      } else {
-        setError(response.data.message || "Failed to change password.");
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
+      // Step 1: Upload Profile Photo
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/adminsetting/profile/upload",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      console.log("✅ Profile Photo Uploaded:", response.data);
+      const newProfilePhotoUrl = response.data.profilePhotoUrl;
+
+      // Step 2: Update Profile Photo in User Collection
+      await axios.post(
+        "https://gradyzebackend.onrender.com/api/adminsetting/update-profile-photo",
+        {
+          email: profileData.email,
+          profilePhotoUrl: newProfilePhotoUrl,
+        }
+      );
+
+      console.log("✅ Profile Photo Updated in User Collection");
+
+      // Step 3: Update State with New Image
+      setProfileData((prev) => ({
+        ...prev,
+        profileImage: newProfilePhotoUrl,
+      }));
+
+      return true;
+    } catch (error) {
+      setError("Failed to upload photo. Please try again.");
+      console.error("❌ Photo upload error:", error);
+      return false;
     }
+  };
+
+  // Function to update Name & Email
+  const handleUpdateNameEmail = async () => {
+    if (!profileData.name || !profileData.email) {
+      setError("Name and Email are required");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Unauthorized: Please log in again.");
+        navigate("/adminlogin");
+        return;
+      }
+
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/adminsetting/update-name-email",
+        {
+          oldEmail: profileData.oldEmail,
+          newEmail: profileData.email,
+          name: profileData.name,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }, // ✅ Send token
+        }
+      );
+
+      console.log("✅ Name & Email Updated:", response.data);
+
+      // ✅ Clear old token and redirect to login
+      localStorage.removeItem("token");
+      localStorage.removeItem("adminId");
+
+      setNotification("Profile updated! Please log in again.");
+      setTimeout(() => {
+        navigate("/adminlogin");
+      }, 1500); // ✅ Redirect after 1.5 seconds
+    } catch (error) {
+      setError("Failed to update Name & Email. Please try again.");
+      console.error("❌ Update error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Comprehensive profile form submission handler
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!profileData.name || !profileData.email) {
+      setError("Name and Email are required");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Step 1: Update Name & Email
+      const nameEmailUpdated = await handleUpdateNameEmail();
+
+      // Step 2: Update Profile Photo (if a file is selected)
+      const photoUpdated = await handleUpdatePhoto();
+
+      // If both updates are successful
+      if (nameEmailUpdated && photoUpdated) {
+        setNotification("Profile updated successfully!");
+
+        // Optional: Refresh page or update local state
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    } catch (error) {
+      setError("Failed to update profile. Please try again.");
+      console.error("❌ Profile update error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Password change handler
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    const { currentPassword, newPassword, confirmPassword } = passwordData;
+
+    if (!currentPassword || !newPassword) {
+      setError("Both current and new passwords are required");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("New password must be at least 6 characters long");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem("token"); // ✅ Get token
+      if (!token) {
+        setError("Unauthorized: No token found, please log in again");
+        navigate("/adminlogin"); // Redirect to login if no token
+        return;
+      }
+
+      await axios.post(
+        "https://gradyzebackend.onrender.com/api/adminsetting/change-password",
+        {
+          currentPassword,
+          newPassword,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }, // ✅ Include token
+        }
+      );
+
+      setNotification("Password changed successfully! Please log in again.");
+      setTimeout(() => {
+        localStorage.removeItem("token");
+        navigate("/adminlogin"); // ✅ Force re-login after password change
+      }, 1500);
+    } catch (error) {
+      setError(error.response?.data?.error || "Failed to change password");
+      console.error("❌ Password change error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Common input change handler
+  const handleInputChange = (e, setState) => {
+    const { name, value } = e.target;
+    setState((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
     <div className="max-w-3xl mx-auto p-6">
+      {/* Notification and Error Modals */}
       {notification && (
         <div className="fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg animate-slide-in">
           {notification}
@@ -64,10 +278,12 @@ const ProfileSettings = () => {
           {error}
         </div>
       )}
+
+      {/* Profile Header */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6 flex gap-6">
         <div className="w-32 h-32 rounded-lg overflow-hidden shadow-md">
           <img
-            src={profileImage}
+            src={profileData.profileImage}
             alt="Profile"
             className="w-full h-full object-cover"
           />
@@ -80,6 +296,7 @@ const ProfileSettings = () => {
         </div>
       </div>
 
+      {/* Profile/Password Form */}
       <div className="bg-white p-6 rounded-lg shadow-lg">
         {!showChangePassword ? (
           <form onSubmit={handleProfileSubmit} className="space-y-6">
@@ -87,6 +304,8 @@ const ProfileSettings = () => {
               <h2 className="text-xl font-semibold border-b pb-2 mb-4">
                 Personal Information
               </h2>
+
+              {/* Name Input */}
               <div className="mb-4">
                 <label className="block text-gray-700 font-medium">
                   Full Name
@@ -94,10 +313,14 @@ const ProfileSettings = () => {
                 <input
                   type="text"
                   name="name"
+                  value={profileData.name}
+                  onChange={(e) => handleInputChange(e, setProfileData)}
                   placeholder="Enter your name"
                   className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
                 />
               </div>
+
+              {/* Email and Gender Inputs */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
@@ -106,18 +329,20 @@ const ProfileSettings = () => {
                   <input
                     type="email"
                     name="email"
+                    value={profileData.email}
+                    onChange={(e) => handleInputChange(e, setProfileData)}
                     placeholder="Enter your email"
                     className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
                     Gender
                   </label>
                   <select
                     name="gender"
+                    value={profileData.gender}
+                    onChange={(e) => handleInputChange(e, setProfileData)}
                     className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
                   >
                     <option value="">Select Gender</option>
@@ -126,25 +351,38 @@ const ProfileSettings = () => {
                     <option value="prefer-not-to-say">Prefer not to say</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Profile Picture Upload */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
                     Profile Picture
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="w-full p-2 border rounded-md"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="w-full p-2 border rounded-md"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Action Buttons */}
             <div className="flex gap-4 mt-6">
               <button
                 type="submit"
-                className="bg-purple-700 text-white px-6 py-2 rounded-md hover:bg-purple-800 transition"
+                disabled={isLoading}
+                className={`${
+                  isLoading
+                    ? "bg-purple-500"
+                    : "bg-purple-700 hover:bg-purple-800"
+                } text-white px-6 py-2 rounded-md transition`}
               >
-                Save Changes
+                {isLoading ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"
@@ -161,24 +399,28 @@ const ProfileSettings = () => {
               <h2 className="text-xl font-semibold border-b pb-2 mb-4">
                 Change Password
               </h2>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-medium">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  name="current-password"
-                  className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
-                />
-              </div>
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 font-medium">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => handleInputChange(e, setPasswordData)}
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
+                  />
+                </div>
                 <div>
                   <label className="block text-gray-700 font-medium">
                     New Password
                   </label>
                   <input
                     type="password"
-                    name="new-password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={(e) => handleInputChange(e, setPasswordData)}
                     className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
                   />
                 </div>
@@ -188,18 +430,27 @@ const ProfileSettings = () => {
                   </label>
                   <input
                     type="password"
-                    name="confirm-password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => handleInputChange(e, setPasswordData)}
                     className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
                   />
                 </div>
               </div>
             </div>
+
+            {/* Password Action Buttons */}
             <div className="flex gap-4 mt-6">
               <button
                 type="submit"
-                className="bg-purple-700 text-white px-6 py-2 rounded-md hover:bg-purple-800 transition"
+                disabled={isLoading}
+                className={`${
+                  isLoading
+                    ? "bg-purple-500"
+                    : "bg-purple-700 hover:bg-purple-800"
+                } text-white px-6 py-2 rounded-md transition`}
               >
-                Save Changes
+                {isLoading ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"

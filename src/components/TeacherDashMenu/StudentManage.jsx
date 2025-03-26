@@ -261,8 +261,8 @@ const StudentManagementSystem = () => {
           `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
         );
 
-        setSubjects(response.data.subjects);
-        setSubjectStudents(response.data.studentData);
+        setSubjects(response.data.subjects); // ✅ Store subjects
+        setSubjectStudents(response.data.studentData); // ✅ Store students grouped by subject with semester info
       } catch (error) {
         console.error("Error fetching subject students:", error);
       }
@@ -657,8 +657,10 @@ const StudentManagementSystem = () => {
                     </h3>
                     <p className="text-lg font-medium">Year: {subject.year}</p>
                     <p className="text-lg font-medium">
-                      Semester: {subject.semester}
-                    </p>
+                      Semester:{" "}
+                      {subjectStudents[subject.name]?.semester || "N/A"}
+                    </p>{" "}
+                    {/* ✅ Fetch semester from API response */}
                     <p className="text-lg font-medium">
                       Division: {subject.division}
                     </p>
@@ -672,8 +674,8 @@ const StudentManagementSystem = () => {
           {subjects.map((subject, index) => (
             <div key={index} className="mt-8">
               <h3 className="text-gray-800 font-semibold mb-4">
-                Students for {subject.name} ({subject.year} - {subject.division}
-                )
+                Students for {subject.name} ({subject.year} - {subject.division}{" "}
+                - Semester {subjectStudents[subject.name]?.semester || "N/A"})
               </h3>
 
               <div className="table-container overflow-x-auto rounded-lg shadow-md">
@@ -689,18 +691,14 @@ const StudentManagementSystem = () => {
                       <th className="py-2 px-4 text-left font-semibold text-gray-800">
                         Email
                       </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                        Semester
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {subjectStudents[subject.name]?.map((student) => (
+                    {subjectStudents[subject.name]?.students?.map((student) => (
                       <tr key={student.rollNo}>
                         <td className="py-2 px-4">{student.rollNo}</td>
                         <td className="py-2 px-4">{student.name}</td>
                         <td className="py-2 px-4">{student.email}</td>
-                        <td className="py-2 px-4">{student.semester}</td>
                       </tr>
                     ))}
                   </tbody>
