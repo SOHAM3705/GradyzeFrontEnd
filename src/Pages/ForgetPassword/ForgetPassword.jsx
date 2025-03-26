@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "@fortawesome/fontawesome-free/css/all.min.css";
+import "@fortawesome/fontawesome-free/css/all.min.css"; // Ensure FontAwesome is loaded
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState("");
@@ -15,12 +15,15 @@ const ForgetPassword = () => {
     setMessage("");
 
     try {
+      console.log("🔍 Sending password reset request for:", email);
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/password/verify-email",
         { email }
       );
-      setMessage(response.data.message);
+
+      setMessage("✅ " + response.data.message);
     } catch (error) {
+      console.error("❌ Error sending reset email:", error);
       setMessage(error?.response?.data?.message ?? "Something went wrong.");
     }
 
@@ -28,7 +31,11 @@ const ForgetPassword = () => {
   };
 
   const handleBack = () => {
-    navigate("/adminlogin");
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate("/login"); // Change to your login page
+    }
   };
 
   return (
@@ -43,14 +50,9 @@ const ForgetPassword = () => {
         </button>
 
         <h2 className="text-2xl font-bold text-purple-700 mb-4">
-          Forgot Password
+          Verify Email
         </h2>
 
-        <p className="text-gray-600 mb-4">
-          Enter your registered email to receive a password reset link.
-        </p>
-
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center border border-gray-300 p-2 rounded-lg bg-gray-50">
             <i className="fas fa-envelope text-gray-500 mx-2"></i>
@@ -69,7 +71,7 @@ const ForgetPassword = () => {
             disabled={loading}
             className="w-full bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-800 transition"
           >
-            {loading ? "Sending..." : "Send Reset Link"}
+            {loading ? "Sending..." : "Verify Email"}
           </button>
         </form>
 

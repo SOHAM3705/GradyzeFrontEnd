@@ -99,9 +99,9 @@ const StudentManagementSystem = () => {
       return;
     }
 
-    const { year, division } = teacherDetails || {};
+    const { year, division, semester } = teacherDetails || {};
 
-    if (!year || !division) {
+    if (!year || !division || !semester) {
       alert("Class details are missing. Please contact the administrator.");
       return;
     }
@@ -119,8 +119,9 @@ const StudentManagementSystem = () => {
           rollNo: parseInt(rollNo),
           name,
           email,
-          year, // ✅ Added year
-          division, // ✅ Added division
+          year,
+          division,
+          semester, // Include semester
         },
         {
           headers: {
@@ -173,8 +174,8 @@ const StudentManagementSystem = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            teacherid: teacherId, // Ensure lowercase headers
-            adminid: adminId, // Ensure lowercase headers
+            teacherid: teacherId,
+            adminid: adminId,
           },
         }
       );
@@ -260,8 +261,8 @@ const StudentManagementSystem = () => {
           `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
         );
 
-        setSubjects(response.data.subjects); // ✅ Set subject details
-        setSubjectStudents(response.data.studentData); // ✅ Store students grouped by subject
+        setSubjects(response.data.subjects);
+        setSubjectStudents(response.data.studentData);
       } catch (error) {
         console.error("Error fetching subject students:", error);
       }
@@ -377,6 +378,15 @@ const StudentManagementSystem = () => {
             <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
               <h3 className="text-gray-800 font-semibold flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
+                Semester
+              </h3>
+              <p className="text-lg font-medium">
+                {teacherDetails.semester || "N/A"}
+              </p>
+            </div>
+            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
                 Class Teacher
               </h3>
               <p className="text-lg font-medium">
@@ -485,6 +495,9 @@ const StudentManagementSystem = () => {
                         Email
                       </th>
                       <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Semester
+                      </th>
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
                         Actions
                       </th>
                     </tr>
@@ -508,6 +521,7 @@ const StudentManagementSystem = () => {
                           <td className="py-2 px-4">{student.rollNo}</td>
                           <td className="py-2 px-4">{student.name}</td>
                           <td className="py-2 px-4">{student.email}</td>
+                          <td className="py-2 px-4">{student.semester}</td>
                           <td className="py-2 px-4 flex gap-2">
                             <button
                               className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
@@ -675,6 +689,9 @@ const StudentManagementSystem = () => {
                       <th className="py-2 px-4 text-left font-semibold text-gray-800">
                         Email
                       </th>
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Semester
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -683,6 +700,7 @@ const StudentManagementSystem = () => {
                         <td className="py-2 px-4">{student.rollNo}</td>
                         <td className="py-2 px-4">{student.name}</td>
                         <td className="py-2 px-4">{student.email}</td>
+                        <td className="py-2 px-4">{student.semester}</td>
                       </tr>
                     ))}
                   </tbody>

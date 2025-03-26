@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "@fortawesome/fontawesome-free/css/all.min.css";
+import "@fortawesome/fontawesome-free/css/all.min.css"; // FontAwesome Icons
 
 const ChangePassword = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -14,10 +14,13 @@ const ChangePassword = () => {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const urlToken = searchParams.get("token");
+
     if (!urlToken) {
       setMessage("❌ Token is missing.");
+    } else {
+      console.log("🔑 Token Retrieved:", urlToken);
+      setToken(urlToken);
     }
-    setToken(urlToken);
   }, []);
 
   const handleSubmit = async (e) => {
@@ -38,16 +41,23 @@ const ChangePassword = () => {
     }
 
     try {
+      console.log("🔄 Sending password reset request...");
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/password/change-password",
-        { token, newPassword, confirmPassword }
+        { token, newPassword, confirmPassword },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setMessage("✅ " + response.data.message);
       setTimeout(() => {
-        navigate("/adminlogin");
+        navigate("/login"); // Redirect after successful password reset
       }, 2000);
     } catch (error) {
+      console.error("❌ Password reset error:", error);
       setMessage(
         "❌ " +
           (error.response?.data?.message ||
@@ -63,19 +73,18 @@ const ChangePassword = () => {
       <div className="bg-white p-8 rounded-lg shadow-lg w-96 text-center relative">
         {/* Back Button */}
         <button
-          className="absolute left-4 top-4 text-purple-600 hover:text-purple-800"
-          onClick={() => navigate("/adminlogin")}
+          className="absolute left-4 top-4 text-green-600 hover:text-green-800"
+          onClick={() => navigate("/login")}
         >
           <i className="fas fa-arrow-left text-xl"></i>
         </button>
 
-        <h2 className="text-2xl font-bold text-purple-700 mb-4">
+        <h2 className="text-2xl font-bold text-green-700 mb-4">
           Reset Password
         </h2>
 
         <p className="text-gray-600 mb-4">Enter your new password below.</p>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center border border-gray-300 p-2 rounded-lg bg-gray-50">
             <i className="fas fa-lock text-gray-500 mx-2"></i>
@@ -104,7 +113,7 @@ const ChangePassword = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-800 transition"
+            className="w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-800 transition"
           >
             {loading ? "Updating..." : "Change Password"}
           </button>
