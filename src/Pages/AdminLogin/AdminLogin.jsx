@@ -29,11 +29,11 @@ const AdminLogin = () => {
       console.log("🔹 Login Response Data:", response.data);
 
       if (response.data.token) {
-        sessionstorage.setItem("token", response.data.token);
-        sessionstorage.setItem("adminId", response.data.adminId);
-        sessionstorage.setItem("adminName", response.data.name);
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("adminId", response.data.adminId);
+        sessionStorage.setItem("adminName", response.data.name);
 
-        console.log("✅ Token Stored in sessionstorage:", response.data.token);
+        console.log("✅ Token Stored in sessionStorage:", response.data.token);
 
         // ✅ Force refresh user profile after login
         setTimeout(() => {
