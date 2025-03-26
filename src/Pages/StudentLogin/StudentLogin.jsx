@@ -1,94 +1,80 @@
 import React, { useState } from "react";
-import styles from "./StudentLogin.module.css";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import styles from "./StudentLogin.module.css";
 
 const StudentLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
-  const [forgotPasswordMessage, setForgotPasswordMessage] = useState("");
-  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Handle Student Login
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-    setLoading(true);
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
 
-    if (!email.trim() || !password.trim()) {
-      setError("Please enter both email and password.");
-      setLoading(false);
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
 
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/student/login",
-        { email, password }
+        formData
       );
 
-      sessionStorage.setItem("token", response.data.token);
-      sessionStorage.setItem("studentId", response.data.student._id);
-      sessionStorage.setItem("studentName", response.data.student.name);
+      console.log("🔹 Student Login Response:", response.data);
 
-      // Redirect to Student Dashboard
-      navigate("/studentdash");
-    } catch (error) {
-      console.error("Login Error:", error);
-      setError("Login failed. Please check your credentials.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (response.data.token) {
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("studentId", response.data.studentId);
+        sessionStorage.setItem("studentName", response.data.name);
+        sessionStorage.setItem("adminId", response.data.adminId || "");
+        sessionStorage.setItem("teacherId", response.data.teacherId || "");
 
-  // Handle Forgot Password
-  const handleForgotPassword = async () => {
-    setForgotPasswordMessage("");
+        console.log("✅ Data stored in sessionStorage");
 
-    if (!forgotPasswordEmail.trim()) {
-      setForgotPasswordMessage("Please enter your email.");
-      return;
-    }
+        // ✅ Refresh & Navigate
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
 
-    try {
-      const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/password/verify-email",
-        { email: forgotPasswordEmail }
-      );
-      setForgotPasswordMessage(response.data.message);
-    } catch (error) {
-      setForgotPasswordMessage("Error sending reset link. Try again.");
+        navigate("/studentdash");
+      } else {
+        throw new Error("Token missing in response");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid email or password");
+      console.error("❌ Login Error:", err.response?.data);
     }
   };
 
   return (
     <div className={styles.studentBg}>
       <div className={styles.loginContainer}>
-        {/* Header with Back Button and Title */}
+        <Link to="/">
+          <button className={styles.backButton_Slogin}>
+            <i className="fas fa-arrow-left"></i>
+          </button>
+        </Link>
+
         <div className={styles.loginHeader}>
-          <Link to="/">
-            <button className={styles.backButton_Slogin}>
-              <i className="fas fa-arrow-left"></i>
-            </button>
-          </Link>
           <h2>Student Login</h2>
         </div>
 
-        <form id="studentLoginForm" onSubmit={handleSubmit}>
-          {error && <p className={styles.error}>{error}</p>}
+        <form onSubmit={handleSubmit}>
+          {error && <p className={styles.errorMessage}>{error}</p>}
 
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
             <input
               type="email"
-              id="studentEmail"
+              id="email"
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleChange}
               required
             />
           </div>
@@ -97,20 +83,16 @@ const StudentLogin = () => {
             <i className="fas fa-lock"></i>
             <input
               type="password"
-              id="studentPassword"
+              id="password"
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleChange}
               required
             />
           </div>
 
-          <button
-            className={styles.submitStudentloginbut}
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
+          <button className={styles.submitStudentloginbut} type="submit">
+            Login
           </button>
         </form>
 
@@ -120,53 +102,13 @@ const StudentLogin = () => {
             Sign Up
           </Link>
         </p>
+
         <p>
-          <button
-            onClick={() => setShowForgotPasswordModal(true)}
-            className={styles.StudentLogin_a}
-          >
+          <Link to="/forgot-password" className={styles.StudentLogin_a}>
             Forgot Password?
-          </button>
+          </Link>
         </p>
       </div>
-
-      {/* Forgot Password Modal */}
-      {showForgotPasswordModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-            <h3 className="text-xl font-semibold mb-4">Reset Password</h3>
-            <p className="text-gray-600 mb-3">
-              Enter your email to receive a reset link.
-            </p>
-
-            <input
-              type="email"
-              className="w-full p-2 border border-gray-300 rounded-lg mb-3"
-              placeholder="Enter your email"
-              value={forgotPasswordEmail}
-              onChange={(e) => setForgotPasswordEmail(e.target.value)}
-            />
-
-            <button
-              onClick={handleForgotPassword}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-800"
-            >
-              Send Reset Link
-            </button>
-
-            {forgotPasswordMessage && (
-              <p className="text-green-600 mt-2">{forgotPasswordMessage}</p>
-            )}
-
-            <button
-              onClick={() => setShowForgotPasswordModal(false)}
-              className="mt-4 text-red-600 hover:text-red-800"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
