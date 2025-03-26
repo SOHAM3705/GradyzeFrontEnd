@@ -1,196 +1,11 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const TeacherDashboard = () => {
-  const [students, setStudents] = useState([
-    {
-      id: 1,
-      rollNo: "101",
-      name: "John Doe",
-      division: "A",
-      status: "pass",
-      marks: {
-        1: { "unit-test": 26, "re-unit-test": 0, prelim: 58, reprelim: 0 },
-        2: { "unit-test": 24, "re-unit-test": 0, prelim: 56, reprelim: 0 },
-        3: { "unit-test": 22, "re-unit-test": 0, prelim: 52, reprelim: 0 },
-        4: { "unit-test": 25, "re-unit-test": 0, prelim: 55, reprelim: 0 },
-        5: { "unit-test": 28, "re-unit-test": 0, prelim: 62, reprelim: 0 },
-      },
-    },
-    {
-      id: 2,
-      rollNo: "102",
-      name: "Jane Smith",
-      division: "A",
-      status: "pass",
-      marks: {
-        1: { "unit-test": 28, "re-unit-test": 0, prelim: 65, reprelim: 0 },
-        2: { "unit-test": 27, "re-unit-test": 0, prelim: 68, reprelim: 0 },
-        3: { "unit-test": 29, "re-unit-test": 0, prelim: 67, reprelim: 0 },
-        4: { "unit-test": 28, "re-unit-test": 0, prelim: 66, reprelim: 0 },
-        5: { "unit-test": 29, "re-unit-test": 0, prelim: 67, reprelim: 0 },
-      },
-    },
-    {
-      id: 3,
-      rollNo: "103",
-      name: "Michael Johnson",
-      division: "A",
-      status: "fail",
-      marks: {
-        1: { "unit-test": 10, "re-unit-test": 15, prelim: 26, reprelim: 30 },
-        2: { "unit-test": 11, "re-unit-test": 14, prelim: 25, reprelim: 32 },
-        3: { "unit-test": 13, "re-unit-test": 0, prelim: 28, reprelim: 0 },
-        4: { "unit-test": 12, "re-unit-test": 15, prelim: 27, reprelim: 35 },
-        5: { "unit-test": 10, "re-unit-test": 13, prelim: 26, reprelim: 31 },
-      },
-    },
-    {
-      id: 4,
-      rollNo: "104",
-      name: "Emily Davis",
-      division: "A",
-      status: "pass",
-      marks: {
-        1: { "unit-test": 25, "re-unit-test": 0, prelim: 55, reprelim: 0 },
-        2: { "unit-test": 24, "re-unit-test": 0, prelim: 54, reprelim: 0 },
-        3: { "unit-test": 26, "re-unit-test": 0, prelim: 58, reprelim: 0 },
-        4: { "unit-test": 25, "re-unit-test": 0, prelim: 56, reprelim: 0 },
-        5: { "unit-test": 27, "re-unit-test": 0, prelim: 59, reprelim: 0 },
-      },
-    },
-    {
-      id: 5,
-      rollNo: "105",
-      name: "Robert Wilson",
-      division: "A",
-      status: "pending",
-      marks: {
-        1: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-        2: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-        3: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-        4: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-        5: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-      },
-    },
-    {
-      id: 6,
-      rollNo: "106",
-      name: "Sarah Brown",
-      division: "B",
-      status: "pass",
-      marks: {
-        1: { "unit-test": 26, "re-unit-test": 0, prelim: 57, reprelim: 0 },
-        2: { "unit-test": 25, "re-unit-test": 0, prelim: 56, reprelim: 0 },
-        3: { "unit-test": 27, "re-unit-test": 0, prelim: 59, reprelim: 0 },
-        4: { "unit-test": 26, "re-unit-test": 0, prelim: 58, reprelim: 0 },
-        5: { "unit-test": 28, "re-unit-test": 0, prelim: 61, reprelim: 0 },
-      },
-    },
-    {
-      id: 7,
-      rollNo: "107",
-      name: "David Miller",
-      division: "B",
-      status: "fail",
-      marks: {
-        1: { "unit-test": 11, "re-unit-test": 13, prelim: 25, reprelim: 30 },
-        2: { "unit-test": 10, "re-unit-test": 14, prelim: 27, reprelim: 32 },
-        3: { "unit-test": 12, "re-unit-test": 15, prelim: 26, reprelim: 31 },
-        4: { "unit-test": 11, "re-unit-test": 14, prelim: 25, reprelim: 30 },
-        5: { "unit-test": 10, "re-unit-test": 13, prelim: 24, reprelim: 29 },
-      },
-    },
-    {
-      id: 8,
-      rollNo: "108",
-      name: "Jessica Taylor",
-      division: "B",
-      status: "pass",
-      marks: {
-        1: { "unit-test": 24, "re-unit-test": 0, prelim: 54, reprelim: 0 },
-        2: { "unit-test": 23, "re-unit-test": 0, prelim: 53, reprelim: 0 },
-        3: { "unit-test": 25, "re-unit-test": 0, prelim: 56, reprelim: 0 },
-        4: { "unit-test": 24, "re-unit-test": 0, prelim: 55, reprelim: 0 },
-        5: { "unit-test": 26, "re-unit-test": 0, prelim: 58, reprelim: 0 },
-      },
-    },
-    {
-      id: 9,
-      rollNo: "109",
-      name: "James Anderson",
-      division: "B",
-      status: "pending",
-      marks: {
-        1: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-        2: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-        3: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-        4: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-        5: { "unit-test": 0, "re-unit-test": 0, prelim: 0, reprelim: 0 },
-      },
-    },
-    {
-      id: 10,
-      rollNo: "110",
-      name: "Jennifer Thomas",
-      division: "B",
-      status: "pass",
-      marks: {
-        1: { "unit-test": 27, "re-unit-test": 0, prelim: 60, reprelim: 0 },
-        2: { "unit-test": 26, "re-unit-test": 0, prelim: 59, reprelim: 0 },
-        3: { "unit-test": 28, "re-unit-test": 0, prelim: 62, reprelim: 0 },
-        4: { "unit-test": 27, "re-unit-test": 0, prelim: 61, reprelim: 0 },
-        5: { "unit-test": 29, "re-unit-test": 0, prelim: 64, reprelim: 0 },
-      },
-    },
-  ]);
-
-  const [subjects, setSubjects] = useState([
-    {
-      id: 1,
-      name: "Computer Engineering",
-      fullMarks: { "unit-test": 30, prelim: 70 },
-    },
-    {
-      id: 2,
-      name: "Data Structures",
-      fullMarks: { "unit-test": 30, prelim: 70 },
-    },
-    {
-      id: 3,
-      name: "Database Management",
-      fullMarks: { "unit-test": 30, prelim: 70 },
-    },
-    {
-      id: 4,
-      name: "Software Engineering",
-      fullMarks: { "unit-test": 30, prelim: 70 },
-    },
-    {
-      id: 5,
-      name: "Computer Networks",
-      fullMarks: { "unit-test": 30, prelim: 70 },
-    },
-  ]);
-
-  const [subjectsList, setSubjectsList] = useState([
-    {
-      id: 1,
-      name: "Computer Engineering",
-      year: "Third Year",
-      semester: "Sixth",
-      divisions: ["A", "B"],
-      totalStudents: 60,
-      status: "Pending",
-      marksEntered: {
-        "unit-test": false,
-        "re-unit-test": false,
-        prelim: false,
-        reprelim: false,
-      },
-    },
-  ]);
-
-  const [filteredStudents, setFilteredStudents] = useState([...students]);
+  const [students, setStudents] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [subjectsList, setSubjectsList] = useState([]);
+  const [filteredStudents, setFilteredStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 5;
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
@@ -217,6 +32,12 @@ const TeacherDashboard = () => {
   });
 
   useEffect(() => {
+    fetchStudents();
+    fetchSubjects();
+    fetchSubjectsList();
+  }, []);
+
+  useEffect(() => {
     updateSummary();
     filterStudents();
   }, [
@@ -227,6 +48,33 @@ const TeacherDashboard = () => {
     statusFilter,
     searchQuery,
   ]);
+
+  const fetchStudents = async () => {
+    try {
+      const response = await axios.get("/api/students");
+      setStudents(response.data);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
+  };
+
+  const fetchSubjects = async () => {
+    try {
+      const response = await axios.get("/api/subjects");
+      setSubjects(response.data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  };
+
+  const fetchSubjectsList = async () => {
+    try {
+      const response = await axios.get("/api/subjects-list");
+      setSubjectsList(response.data);
+    } catch (error) {
+      console.error("Error fetching subjects list:", error);
+    }
+  };
 
   const updateSummary = () => {
     const totalStudents = students.length;
@@ -387,7 +235,7 @@ const TeacherDashboard = () => {
     openStudentsModal(selectedSubjectId, selectedExamType);
   };
 
-  const handleSaveMarks = () => {
+  const handleSaveMarks = async () => {
     const subjectData = studentsData[selectedSubjectId];
     if (!subjectData) return;
 
@@ -399,7 +247,7 @@ const TeacherDashboard = () => {
 
     const rows = document.querySelectorAll(".student-row");
 
-    rows.forEach((row, index) => {
+    const marksToSave = rows.map((row, index) => {
       const q1q2Input = row.querySelector(".q1q2-input");
       const q3q4Input = row.querySelector(".q3q4-input");
       const q5q6Input = row.querySelector(".q5q6-input");
@@ -417,31 +265,23 @@ const TeacherDashboard = () => {
         status = total >= passingMark ? "Pass" : "Fail";
       }
 
-      if (!examData[index]) {
-        examData[index] = {};
-      }
-
-      examData[index].q1q2 = q1q2;
-      examData[index].q3q4 = q3q4;
-
-      if (!isUnitTest) {
-        examData[index].q5q6 = q5q6;
-        examData[index].q7q8 = q7q8;
-      }
-
-      examData[index].total = total;
-      examData[index].status = status;
+      return {
+        studentId: students[index].id,
+        subjectId: selectedSubjectId,
+        examType: selectedExamType,
+        marksObtained: total,
+        status,
+      };
     });
 
-    const allMarksEntered = examData.every((data, index) =>
-      index < students.length ? data.total > 0 : true
-    );
-    const subject = subjectsList.find((s) => s.id == selectedSubjectId);
-
-    subject.marksEntered[selectedExamType] = allMarksEntered;
-
-    closeModal();
-    alert("Marks saved successfully!");
+    try {
+      await axios.post("/api/add-marks", marksToSave);
+      alert("Marks saved successfully!");
+      closeModal();
+      fetchStudents(); // Refresh student data
+    } catch (error) {
+      console.error("Error saving marks:", error);
+    }
   };
 
   const renderStudents = () => {
