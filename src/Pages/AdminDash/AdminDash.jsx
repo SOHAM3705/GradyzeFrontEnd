@@ -61,22 +61,14 @@ function AdminDash() {
       label: "Faculty Management",
       path: "/admindash/FacultyManage",
     },
-    {
-      icon: "📊",
-      label: "Faculty Analytics",
-      path: "/admindash/FacultyAnalysis",
-    },
+
     {
       icon: "👥",
       label: "Student Management",
       path: "/admindash/StudentManage",
     },
     { icon: "📝", label: "Students' Marks", path: "/admindash/students-marks" },
-    {
-      icon: "📊",
-      label: "Students' Analytics",
-      path: "/admindash/StudentAnalysis",
-    },
+
     {
       icon: "📅",
       label: "Attendance Reports",

@@ -80,7 +80,7 @@ const StudentManagementSystem = () => {
           `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
         );
 
-        // ✅ Store students grouped by subject
+        // Store students grouped by subject
         setStudents(response.data.studentData || {});
         setSubjects(response.data.subjects || []);
         setLoading(false);
@@ -103,7 +103,7 @@ const StudentManagementSystem = () => {
     }
 
     try {
-      // ✅ Fetch teacher details to get correct semester
+      // Fetch teacher details to get correct semester
       const teacherResponse = await axios.get(
         `https://gradyzebackend.onrender.com/api/teacher/details/${teacherId}`
       );
@@ -114,11 +114,11 @@ const StudentManagementSystem = () => {
       if (teacher.isClassTeacher) {
         assignedYear = teacher.assignedClass.year;
         assignedDivision = teacher.assignedClass.division;
-        assignedSemester = teacher.assignedClass.section; // ✅ Use `section` as `semester`
+        assignedSemester = teacher.assignedClass.section; // Use `section` as `semester`
       } else if (teacher.isSubjectTeacher) {
         assignedYear = teacher.assignedSubjects[0]?.year;
         assignedDivision = teacher.assignedSubjects[0]?.division;
-        assignedSemester = teacher.assignedSubjects[0]?.semester; // ✅ Use correct `semester`
+        assignedSemester = teacher.assignedSubjects[0]?.semester; // Use correct `semester`
       }
 
       if (!assignedYear || !assignedDivision || !assignedSemester) {
@@ -126,7 +126,7 @@ const StudentManagementSystem = () => {
         return;
       }
 
-      // ✅ Validate input
+      // Validate input
       if (!rollNo || !name || !email) {
         alert("Please fill in all student details!");
         return;
@@ -140,7 +140,7 @@ const StudentManagementSystem = () => {
           email,
           year: assignedYear,
           division: assignedDivision,
-          semester: assignedSemester, // ✅ Semester is now fetched dynamically
+          semester: assignedSemester, // Semester is now fetched dynamically
         },
         {
           headers: {
@@ -150,12 +150,12 @@ const StudentManagementSystem = () => {
         }
       );
 
-      // ✅ Reset form after successful addition
+      // Reset form after successful addition
       setRollNo("");
       setName("");
       setEmail("");
 
-      // ✅ Refresh student list after adding
+      // Refresh student list after adding
       setStudents((prevStudents) => ({
         ...prevStudents,
         [assignedSemester]: [
@@ -194,7 +194,7 @@ const StudentManagementSystem = () => {
     try {
       setUploading(true);
 
-      // ✅ Backend fetches semester automatically based on teacher ID
+      // Backend fetches semester automatically based on teacher ID
       const response = await axios.post(
         `https://gradyzebackend.onrender.com/api/studentmanagement/import-students`,
         formData,
@@ -209,7 +209,7 @@ const StudentManagementSystem = () => {
 
       alert("Students imported successfully!");
 
-      // ✅ Refresh student list after importing
+      // Refresh student list after importing
       setStudents((prevStudents) => ({
         ...prevStudents,
         ...response.data.students.reduce((acc, student) => {
@@ -296,8 +296,8 @@ const StudentManagementSystem = () => {
           `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
         );
 
-        setSubjects(response.data.subjects); // ✅ Store subjects
-        setSubjectStudents(response.data.studentData); // ✅ Store students grouped by subject with semester info
+        setSubjects(response.data.subjects); // Store subjects
+        setSubjectStudents(response.data.studentData); // Store students grouped by subject with semester info
       } catch (error) {
         console.error("Error fetching subject students:", error);
       }
@@ -695,7 +695,7 @@ const StudentManagementSystem = () => {
                       Semester:{" "}
                       {subjectStudents[subject.name]?.semester || "N/A"}
                     </p>{" "}
-                    {/* ✅ Fetch semester from API response */}
+                    {/* Fetch semester from API response */}
                     <p className="text-lg font-medium">
                       Division: {subject.division}
                     </p>
@@ -705,7 +705,7 @@ const StudentManagementSystem = () => {
             </div>
           )}
 
-          {/* ✅ Loop through each subject & display students */}
+          {/* Loop through each subject & display students */}
           {subjects.map((subject, index) => (
             <div key={index} className="mt-8">
               <h3 className="text-gray-800 font-semibold mb-4">
