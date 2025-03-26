@@ -247,7 +247,7 @@ const StudentManagementSystem = () => {
 
   const [subjectStudents, setSubjectStudents] = useState({});
 
-  useEffect(() => {
+  uuseEffect(() => {
     const fetchSubjectStudents = async () => {
       const teacherId = sessionStorage.getItem("teacherId");
       if (!teacherId) {
@@ -260,8 +260,10 @@ const StudentManagementSystem = () => {
           `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
         );
 
-        setSubjects(response.data.subjects); // ✅ Set subject details
-        setSubjectStudents(response.data.studentData); // ✅ Store students grouped by subject
+        console.log("Fetched Subject Students:", response.data); // Debugging line
+
+        setSubjects(response.data.subjects); // Set subject details
+        setSubjectStudents(response.data.studentData); // Store students grouped by subject
       } catch (error) {
         console.error("Error fetching subject students:", error);
       }
@@ -690,13 +692,6 @@ const StudentManagementSystem = () => {
               </div>
             </div>
           ))}
-
-          <button
-            className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
-            onClick={downloadStudentReport}
-          >
-            Download Student Report
-          </button>
         </div>
       )}
 
