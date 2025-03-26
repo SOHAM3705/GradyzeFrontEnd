@@ -104,7 +104,12 @@ const StudentManagementSystem = () => {
       return;
     }
 
-    const { year, division } = teacherDetails.assignedClass;
+    const { year, division } = teacherDetails.assignedClass || {};
+
+    if (!year || !division) {
+      alert("Class details are missing. Please contact the administrator.");
+      return;
+    }
 
     try {
       const response = await axios.post(
@@ -230,6 +235,31 @@ const StudentManagementSystem = () => {
       closeModals();
     }
   };
+
+  const [subjectStudents, setSubjectStudents] = useState({});
+
+  useEffect(() => {
+    const fetchSubjectStudents = async () => {
+      const teacherId = sessionStorage.getItem("teacherId");
+      if (!teacherId) {
+        console.error("No teacherId found in sessionStorage");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
+        );
+
+        setSubjects(response.data.subjects); // ✅ Set subject details
+        setSubjectStudents(response.data.studentData); // ✅ Store students grouped by subject
+      } catch (error) {
+        console.error("Error fetching subject students:", error);
+      }
+    };
+
+    fetchSubjectStudents();
+  }, []);
 
   const removeStudent = async (studentId) => {
     const teacherId = sessionStorage.getItem("teacherId");
@@ -615,32 +645,42 @@ const StudentManagementSystem = () => {
             </div>
           )}
 
-          <div className="table-container overflow-x-auto rounded-lg shadow-md mt-6">
-            <table className="min-w-full bg-white">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                    Roll No
-                  </th>
-                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                    Name
-                  </th>
-                  <th className="py-2 px-4 text-left font-semibold text-gray-800">
-                    Email
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr key={student.rollNo}>
-                    <td className="py-2 px-4">{student.rollNo}</td>
-                    <td className="py-2 px-4">{student.name}</td>
-                    <td className="py-2 px-4">{student.email}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* ✅ Loop through each subject & display students */}
+          {subjects.map((subject, index) => (
+            <div key={index} className="mt-8">
+              <h3 className="text-gray-800 font-semibold mb-4">
+                Students for {subject.name} ({subject.year} - {subject.division}
+                )
+              </h3>
+
+              <div className="table-container overflow-x-auto rounded-lg shadow-md">
+                <table className="min-w-full bg-white">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Roll No
+                      </th>
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Name
+                      </th>
+                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                        Email
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subjectStudents[subject.name]?.map((student) => (
+                      <tr key={student.rollNo}>
+                        <td className="py-2 px-4">{student.rollNo}</td>
+                        <td className="py-2 px-4">{student.name}</td>
+                        <td className="py-2 px-4">{student.email}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
 
           <button
             className="bg-[#059669] text-white p-3 rounded-lg mt-4 font-medium transition-transform transform hover:-translate-y-1"
