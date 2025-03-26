@@ -247,7 +247,7 @@ const StudentManagementSystem = () => {
 
   const [subjectStudents, setSubjectStudents] = useState({});
 
-  uuseEffect(() => {
+  useEffect(() => {
     const fetchSubjectStudents = async () => {
       const teacherId = sessionStorage.getItem("teacherId");
       if (!teacherId) {
