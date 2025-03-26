@@ -23,16 +23,15 @@ const StudentLogin = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/student/login",
+        "https://gradyzebackend.onrender.com/api/student/login", // Corrected API endpoint
         { email, password }
       );
 
       sessionStorage.setItem("token", response.data.token);
       sessionStorage.setItem("studentId", response.data.student._id);
-      sessionStorage.setItem("studentName", response.data.student.name);
-      sessionStorage.setItem("adminId", response.data.student.adminId); // Store Admin ID
-      sessionStorage.setItem("teacherId", response.data.student.teacherId); // Store Teacher ID
+      sessionStorage.setItem("studentName", response.data.student.name); // Corrected key
 
+      // Redirect to Student Dashboard
       navigate("/studentdash");
     } catch (error) {
       console.error("Login Error:", error);
@@ -45,6 +44,7 @@ const StudentLogin = () => {
   return (
     <div className={styles.studentBg}>
       <div className={styles.loginContainer}>
+        {/* Header with Back Button and Title */}
         <div className={styles.loginHeader}>
           <Link to="/">
             <button className={styles.backButton_Slogin}>

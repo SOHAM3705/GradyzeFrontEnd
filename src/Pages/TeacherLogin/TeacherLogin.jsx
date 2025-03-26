@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import styles from "./StudentLogin.module.css";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import styles from "./TeacherLogin.module.css";
 
-const StudentLogin = () => {
+const TeacherLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading state
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -23,82 +23,73 @@ const StudentLogin = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/student/login", // Corrected API endpoint
+        "https://gradyzebackend.onrender.com/api/teacher/login",
         { email, password }
       );
 
       sessionStorage.setItem("token", response.data.token);
-      sessionStorage.setItem("studentId", response.data.student._id);
-      sessionStorage.setItem("studentName", response.data.student.name); // Corrected key
+      sessionStorage.setItem("adminId", response.data.teacher.adminId);
+      sessionStorage.setItem("teacherId", response.data.teacher._id); // Store teacherId
+      sessionStorage.setItem("teacherName", response.data.teacher.name); // Store teacherName
 
-      // Redirect to Student Dashboard
-      navigate("/studentdash");
+      // Redirect to Teacher Dashboard
+      navigate("/teacherdash");
     } catch (error) {
       console.error("Login Error:", error);
       setError("Login failed. Please check your credentials.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading after the attempt
     }
   };
 
   return (
-    <div className={styles.studentBg}>
+    <div className={styles.teacherBg}>
       <div className={styles.loginContainer}>
-        {/* Header with Back Button and Title */}
-        <div className={styles.loginHeader}>
-          <Link to="/">
-            <button className={styles.backButton_Slogin}>
-              <i className="fas fa-arrow-left"></i>
-            </button>
-          </Link>
-          <h2>Student Login</h2>
-        </div>
-
-        <form id="studentLoginForm" onSubmit={handleSubmit}>
-          {error && <p className={styles.error}>{error}</p>}
-
+        <Link to="/">
+          <button className={styles.backButton_Tlogin}>
+            <i className="fas fa-arrow-left"></i>
+          </button>
+        </Link>
+        <h2>Teacher Login</h2>
+        {error && <p className={styles.errorMessage}>{error}</p>}
+        <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
             <input
               type="email"
-              id="studentEmail"
               placeholder="Email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
             />
           </div>
-
           <div className={styles.inputGroup}>
             <i className="fas fa-lock"></i>
             <input
               type="password"
-              id="studentPassword"
               placeholder="Password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
             />
           </div>
-
           <button
-            className={styles.submitStudentloginbut}
             type="submit"
+            className={styles.Tlogin_but}
             disabled={loading}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Logging in..." : "Login"} {/* Conditional Text */}
           </button>
         </form>
-
-        <p>Don't have an account? Contact Your College/School Admin.</p>
+        <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
-          <a href="#" className={styles.StudentLogin_a}>
+          <Link to="/teacher-forget-password" className={styles.TeacherLogin_a}>
             Forgot Password?
-          </a>
+          </Link>
         </p>
       </div>
     </div>
   );
 };
 
-export default StudentLogin;
+export default TeacherLogin;
