@@ -16,8 +16,6 @@ const StudentManagementSystem = () => {
   const [rollNo, setRollNo] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [year, setYear] = useState(""); // Add year state
-  const [division, setDivision] = useState(""); // Add division state
   const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -101,10 +99,12 @@ const StudentManagementSystem = () => {
       return;
     }
 
-    if (!rollNo || !name || !email || !year || !division) {
+    if (!rollNo || !name || !email) {
       alert("Please fill all fields!");
       return;
     }
+
+    const { year, division } = teacherDetails.assignedClass;
 
     try {
       const response = await axios.post(
@@ -125,8 +125,6 @@ const StudentManagementSystem = () => {
       setRollNo("");
       setName("");
       setEmail("");
-      setYear("");
-      setDivision("");
     } catch (error) {
       console.error("Error adding student:", error);
       alert(error.response?.data?.message || "Failed to add student");
@@ -406,28 +404,6 @@ const StudentManagementSystem = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg"
                   placeholder="Enter student email"
-                />
-              </div>
-              <div className="form-group flex-1 min-w-xs">
-                <label className="block mb-2 font-medium text-dark">Year</label>
-                <input
-                  type="text"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  placeholder="Enter year"
-                />
-              </div>
-              <div className="form-group flex-1 min-w-xs">
-                <label className="block mb-2 font-medium text-dark">
-                  Division
-                </label>
-                <input
-                  type="text"
-                  value={division}
-                  onChange={(e) => setDivision(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  placeholder="Enter division"
                 />
               </div>
               <div className="form-group flex-1 min-w-xs flex items-end">
