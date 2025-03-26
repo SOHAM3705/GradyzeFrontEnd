@@ -99,7 +99,8 @@ const StudentManagementSystem = () => {
       return;
     }
 
-    if (!rollNo || !name || !email) {
+    if (!rollNo || !name || !email || !year || !division) {
+      // ✅ Now checking year & division
       alert("Please fill all fields!");
       return;
     }
@@ -109,10 +110,12 @@ const StudentManagementSystem = () => {
         "https://gradyzebackend.onrender.com/api/studentmanagement/add-student",
         {
           teacherId,
-          adminId, // ✅ Now sending adminId to the backend
+          adminId,
           rollNo: parseInt(rollNo),
           name,
           email,
+          year, // ✅ Now sending year
+          division, // ✅ Now sending division
         }
       );
 
@@ -121,12 +124,13 @@ const StudentManagementSystem = () => {
       setRollNo("");
       setName("");
       setEmail("");
+      setYear(""); // ✅ Reset year input field
+      setDivision(""); // ✅ Reset division input field
     } catch (error) {
       console.error("Error adding student:", error);
       alert(error.response?.data?.message || "Failed to add student");
     }
   };
-
   const handleFileUpload = async (event) => {
     const teacherId = sessionStorage.getItem("teacherId");
     const adminId = sessionStorage.getItem("adminId");
@@ -146,12 +150,13 @@ const StudentManagementSystem = () => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("adminId", adminId); // ✅ Now sending adminId along with the file
+    formData.append("adminId", adminId);
+    formData.append("teacherId", teacherId);
 
     try {
       setUploading(true);
       const response = await axios.post(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/import-students/${teacherId}`,
+        `https://gradyzebackend.onrender.com/api/studentmanagement/import-students`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

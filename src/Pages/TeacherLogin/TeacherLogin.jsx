@@ -7,7 +7,7 @@ const TeacherLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -16,7 +16,7 @@ const TeacherLogin = () => {
     setLoading(true);
 
     if (!email.trim() || !password.trim()) {
-      setError("Please enter both email and password.");
+      setError("⚠ Please enter both email and password.");
       setLoading(false);
       return;
     }
@@ -27,18 +27,19 @@ const TeacherLogin = () => {
         { email, password }
       );
 
+      // ✅ Store teacher info securely
       sessionStorage.setItem("token", response.data.token);
       sessionStorage.setItem("adminId", response.data.teacher.adminId);
-      sessionStorage.setItem("teacherId", response.data.teacher._id); // Store teacherId
-      sessionStorage.setItem("teacherName", response.data.teacher.name); // Store teacherName
+      sessionStorage.setItem("teacherId", response.data.teacher._id);
+      sessionStorage.setItem("teacherName", response.data.teacher.name);
 
-      // Redirect to Teacher Dashboard
+      // ✅ Redirect to Teacher Dashboard
       navigate("/teacherdash");
     } catch (error) {
       console.error("Login Error:", error);
-      setError("Login failed. Please check your credentials.");
+      setError("❌ Login failed. Please check your credentials.");
     } finally {
-      setLoading(false); // Stop loading after the attempt
+      setLoading(false);
     }
   };
 
@@ -51,7 +52,9 @@ const TeacherLogin = () => {
           </button>
         </Link>
         <h2>Teacher Login</h2>
+
         {error && <p className={styles.errorMessage}>{error}</p>}
+
         <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
@@ -63,6 +66,7 @@ const TeacherLogin = () => {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
+
           <div className={styles.inputGroup}>
             <i className="fas fa-lock"></i>
             <input
@@ -73,15 +77,19 @@ const TeacherLogin = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+
           <button
             type="submit"
             className={styles.Tlogin_but}
             disabled={loading}
           >
-            {loading ? "Logging in..." : "Login"} {/* Conditional Text */}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
         <p>Don't have an account? Contact Your College/School Admin</p>
+
+        {/* ✅ Link to Forgot Password */}
         <p>
           <Link to="/teacher-forget-password" className={styles.TeacherLogin_a}>
             Forgot Password?
