@@ -77,9 +77,12 @@ const StudentManagementSystem = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/students/${teacherId}`
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
         );
-        setStudents(response.data.students);
+
+        // ✅ Store students grouped by subject
+        setStudents(response.data.studentData || {});
+        setSubjects(response.data.subjects || []);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching students:", error);
@@ -99,29 +102,45 @@ const StudentManagementSystem = () => {
       return;
     }
 
-    const { year, division, semester } = teacherDetails || {};
-
-    if (!year || !division || !semester) {
-      alert("Class details are missing. Please contact the administrator.");
-      return;
-    }
-
-    // Validate input
-    if (!rollNo || !name || !email) {
-      alert("Please fill in all student details!");
-      return;
-    }
-
     try {
+      // ✅ Fetch teacher details to get correct semester
+      const teacherResponse = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teacher/details/${teacherId}`
+      );
+
+      const teacher = teacherResponse.data;
+      let assignedYear, assignedDivision, assignedSemester;
+
+      if (teacher.isClassTeacher) {
+        assignedYear = teacher.assignedClass.year;
+        assignedDivision = teacher.assignedClass.division;
+        assignedSemester = teacher.assignedClass.section; // ✅ Use `section` as `semester`
+      } else if (teacher.isSubjectTeacher) {
+        assignedYear = teacher.assignedSubjects[0]?.year;
+        assignedDivision = teacher.assignedSubjects[0]?.division;
+        assignedSemester = teacher.assignedSubjects[0]?.semester; // ✅ Use correct `semester`
+      }
+
+      if (!assignedYear || !assignedDivision || !assignedSemester) {
+        alert("Class details are missing. Please contact the administrator.");
+        return;
+      }
+
+      // ✅ Validate input
+      if (!rollNo || !name || !email) {
+        alert("Please fill in all student details!");
+        return;
+      }
+
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/studentmanagement/add-student",
         {
           rollNo: parseInt(rollNo),
           name,
           email,
-          year,
-          division,
-          semester, // Include semester
+          year: assignedYear,
+          division: assignedDivision,
+          semester: assignedSemester, // ✅ Semester is now fetched dynamically
         },
         {
           headers: {
@@ -131,13 +150,19 @@ const StudentManagementSystem = () => {
         }
       );
 
-      // Reset form after successful addition
+      // ✅ Reset form after successful addition
       setRollNo("");
       setName("");
       setEmail("");
 
-      // Optionally, refresh the students list
-      setStudents([...students, response.data.student]);
+      // ✅ Refresh student list after adding
+      setStudents((prevStudents) => ({
+        ...prevStudents,
+        [assignedSemester]: [
+          ...(prevStudents[assignedSemester] || []),
+          response.data.student,
+        ],
+      }));
 
       alert("Student added successfully!");
     } catch (error) {
@@ -168,6 +193,8 @@ const StudentManagementSystem = () => {
 
     try {
       setUploading(true);
+
+      // ✅ Backend fetches semester automatically based on teacher ID
       const response = await axios.post(
         `https://gradyzebackend.onrender.com/api/studentmanagement/import-students`,
         formData,
@@ -181,7 +208,15 @@ const StudentManagementSystem = () => {
       );
 
       alert("Students imported successfully!");
-      setStudents([...students, ...response.data.students]);
+
+      // ✅ Refresh student list after importing
+      setStudents((prevStudents) => ({
+        ...prevStudents,
+        ...response.data.students.reduce((acc, student) => {
+          acc[student.semester] = [...(acc[student.semester] || []), student];
+          return acc;
+        }, {}),
+      }));
     } catch (error) {
       console.error("Error importing students:", error);
       alert(error.response?.data?.message || "Failed to import students");
