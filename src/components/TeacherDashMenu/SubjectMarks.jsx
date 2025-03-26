@@ -52,7 +52,11 @@ const TeacherDashboard = () => {
   const fetchStudents = async () => {
     try {
       const response = await axios.get("/api/students");
-      setStudents(response.data);
+      if (Array.isArray(response.data)) {
+        setStudents(response.data);
+      } else {
+        console.error("Expected an array for students data");
+      }
     } catch (error) {
       console.error("Error fetching students:", error);
     }
@@ -61,7 +65,11 @@ const TeacherDashboard = () => {
   const fetchSubjects = async () => {
     try {
       const response = await axios.get("/api/subjects");
-      setSubjects(response.data);
+      if (Array.isArray(response.data)) {
+        setSubjects(response.data);
+      } else {
+        console.error("Expected an array for subjects data");
+      }
     } catch (error) {
       console.error("Error fetching subjects:", error);
     }
@@ -70,7 +78,11 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get("/api/subjects-list");
-      setSubjectsList(response.data);
+      if (Array.isArray(response.data)) {
+        setSubjectsList(response.data);
+      } else {
+        console.error("Expected an array for subjects list data");
+      }
     } catch (error) {
       console.error("Error fetching subjects list:", error);
     }
@@ -139,7 +151,7 @@ const TeacherDashboard = () => {
         student.rollNo.includes(searchQuery);
 
       if (examFilter !== "all" && subjectFilter !== "all") {
-        const subjectMarks = student.marks[subjectFilter][examFilter];
+        const subjectMarks = student.marks[subjectFilter]?.[examFilter];
         return (
           matchesDivision &&
           matchesStatus &&
@@ -296,7 +308,7 @@ const TeacherDashboard = () => {
         <td className="p-2">{student.division}</td>
         {subjects.map((subject) => (
           <td key={subject.id} className="p-2">
-            {student.marks[subject.id]["unit-test"] || 0}
+            {student.marks[subject.id]?.["unit-test"] || 0}
           </td>
         ))}
         <td className="p-2">{calculateOverallScore(student, "unit-test")}%</td>
@@ -568,7 +580,9 @@ const TeacherDashboard = () => {
                                 .toUpperCase() +
                                 examType.replace(/-/g, " ").slice(1)}
                             </td>
-                            <td>{student.marks[subject.id][examType] || 0}</td>
+                            <td>
+                              {student.marks[subject.id]?.[examType] || 0}
+                            </td>
                             <td>{subject.fullMarks[examType]}</td>
                           </tr>
                         ))}
