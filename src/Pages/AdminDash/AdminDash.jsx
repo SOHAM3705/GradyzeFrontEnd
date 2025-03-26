@@ -41,9 +41,9 @@ function AdminDash() {
   // ✅ Handle logout and clear session
   const handleLogout = () => {
     console.log("🔴 Logging out...");
-    localStorage.removeItem("adminId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("adminName");
+    sessionstorage.removeItem("adminId");
+    sessionstorage.removeItem("token");
+    sessionstorage.removeItem("adminName");
     sessionStorage.clear();
 
     // ✅ Force a refresh to clear any cached user data
