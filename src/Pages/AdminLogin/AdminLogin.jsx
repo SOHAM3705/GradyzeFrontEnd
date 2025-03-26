@@ -9,7 +9,6 @@ const AdminLogin = () => {
     password: "",
   });
   const [error, setError] = useState(null); // Store error messages
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate(); // Hook for navigation
 
   const handleChange = (e) => {
@@ -21,25 +20,33 @@ const AdminLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/admin/adminlogin",
+        "http://gradyzebackend.onrender.com/api/admin/adminlogin",
         formData
       );
 
-      // Store Token, ID, and Name in Local Storage
-      sessionStorage.setItem("token", response.data.token);
-      sessionStorage.setItem("adminId", response.data.adminId);
-      sessionStorage.setItem("adminName", response.data.name); // Store name
+      console.log("🔹 Login Response Data:", response.data);
 
-      navigate("/admindash");
+      if (response.data.token) {
+        sessionstorage.setItem("token", response.data.token);
+        sessionstorage.setItem("adminId", response.data.adminId);
+        sessionstorage.setItem("adminName", response.data.name);
+
+        console.log("✅ Token Stored in sessionstorage:", response.data.token);
+
+        // ✅ Force refresh user profile after login
+        setTimeout(() => {
+          window.location.reload();
+        }, 500); // Reload to apply token updates
+
+        navigate("/admindash");
+      } else {
+        throw new Error("Token not received from server");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
-      console.error("Login Error:", err.response?.data);
-      setLoading(false);
-    } finally {
-      setLoading(false); // Stop loading after the attempt
+      console.error("❌ Login Error:", err.response?.data);
     }
   };
 
@@ -83,12 +90,8 @@ const AdminLogin = () => {
               required
             />
           </div>
-          <button
-            className={styles.submitAdminbut}
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
+          <button className={styles.submitAdminbut} type="submit">
+            Login
           </button>
         </form>
 
@@ -100,9 +103,9 @@ const AdminLogin = () => {
         </p>
 
         <p>
-          <Link to="/forgetpassword" className={styles.AdminSignup_a}>
+          <a href="#" className={styles.AdminSignup_a}>
             Forgot Password?
-          </Link>
+          </a>
         </p>
       </div>
     </div>

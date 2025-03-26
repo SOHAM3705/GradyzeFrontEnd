@@ -12,7 +12,7 @@ function AdminDash() {
   useEffect(() => {
     const fetchAdminName = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = sessionStorage.getItem("token");
         if (!token) {
           console.error("🚨 No token found, redirecting to login.");
           navigate("/adminlogin");

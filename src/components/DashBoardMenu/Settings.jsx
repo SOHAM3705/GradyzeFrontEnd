@@ -30,7 +30,7 @@ const ProfileSettings = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = sessionstorage.getItem("token");
         if (!token) {
           navigate("/adminlogin");
           return;
@@ -134,7 +134,7 @@ const ProfileSettings = () => {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionstorage.getItem("token");
       if (!token) {
         setError("Unauthorized: Please log in again.");
         navigate("/adminlogin");
@@ -156,8 +156,8 @@ const ProfileSettings = () => {
       console.log("✅ Name & Email Updated:", response.data);
 
       // ✅ Clear old token and redirect to login
-      localStorage.removeItem("token");
-      localStorage.removeItem("adminId");
+      sessionstorage.removeItem("token");
+      sessionstorage.removeItem("adminId");
 
       setNotification("Profile updated! Please log in again.");
       setTimeout(() => {
@@ -225,7 +225,7 @@ const ProfileSettings = () => {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("token"); // ✅ Get token
+      const token = sessionstorage.getItem("token"); // ✅ Get token
       if (!token) {
         setError("Unauthorized: No token found, please log in again");
         navigate("/adminlogin"); // Redirect to login if no token
@@ -245,7 +245,7 @@ const ProfileSettings = () => {
 
       setNotification("Password changed successfully! Please log in again.");
       setTimeout(() => {
-        localStorage.removeItem("token");
+        sessionstorage.removeItem("token");
         navigate("/adminlogin"); // ✅ Force re-login after password change
       }, 1500);
     } catch (error) {
