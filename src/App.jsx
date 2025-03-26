@@ -118,7 +118,14 @@ function App() {
         <Route path="settings" element={<TeacherSettings />} />
       </Route>
 
-      <Route path="/studentdash" element={<StudentDash />}>
+      <Route
+        path="/studentdash"
+        element={
+          <PrivateRoute role="student">
+            <StudentDash />
+          </PrivateRoute>
+        }
+      >
         <Route path="" element={<StudentOverview />} />
         <Route
           path="attendance-reports"

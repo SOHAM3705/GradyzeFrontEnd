@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const TeacherDashboard = () => {
+const TeacherDashboard = ({ isSubjectTeacher }) => {
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [subjectsList, setSubjectsList] = useState([]);
@@ -15,7 +15,9 @@ const TeacherDashboard = () => {
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("class-teacher");
+  const [activeTab, setActiveTab] = useState(
+    isSubjectTeacher ? "subject-teacher" : "class-teacher"
+  );
   const [modalContent, setModalContent] = useState(null);
   const [summaryData, setSummaryData] = useState({
     totalStudents: 0,
@@ -32,14 +34,19 @@ const TeacherDashboard = () => {
   });
 
   useEffect(() => {
-    fetchStudents();
-    fetchSubjects();
-    fetchSubjectsList();
-  }, []);
+    if (activeTab === "class-teacher") {
+      fetchStudents();
+    } else if (activeTab === "subject-teacher") {
+      fetchSubjects();
+      fetchSubjectsList();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
-    updateSummary();
-    filterStudents();
+    if (activeTab === "class-teacher") {
+      updateSummary();
+      filterStudents();
+    }
   }, [
     students,
     divisionFilter,
@@ -51,7 +58,9 @@ const TeacherDashboard = () => {
 
   const fetchStudents = async () => {
     try {
-      const response = await axios.get("/api/students");
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/teachermarks/students"
+      );
       if (Array.isArray(response.data)) {
         setStudents(response.data);
       } else {
@@ -64,7 +73,9 @@ const TeacherDashboard = () => {
 
   const fetchSubjects = async () => {
     try {
-      const response = await axios.get("/api/subjects");
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/teachermarks/subjects"
+      );
       if (Array.isArray(response.data)) {
         setSubjects(response.data);
       } else {
@@ -77,7 +88,9 @@ const TeacherDashboard = () => {
 
   const fetchSubjectsList = async () => {
     try {
-      const response = await axios.get("/api/subjects-list");
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/teachermarks/subjects-list"
+      );
       if (Array.isArray(response.data)) {
         setSubjectsList(response.data);
       } else {
@@ -287,7 +300,10 @@ const TeacherDashboard = () => {
     });
 
     try {
-      await axios.post("/api/add-marks", marksToSave);
+      await axios.post(
+        "https://gradyzebackend.onrender.com/api/teachermarks/add-marks",
+        marksToSave
+      );
       alert("Marks saved successfully!");
       closeModal();
       fetchStudents(); // Refresh student data
@@ -916,7 +932,8 @@ const TeacherDashboard = () => {
             activeTab === "class-teacher"
               ? "bg-blue-500 text-white"
               : "bg-gray-300 text-gray-700"
-          }`}
+          } ${isSubjectTeacher ? "opacity-50 cursor-not-allowed" : ""}`}
+          disabled={isSubjectTeacher}
         >
           Class Teacher
         </button>
@@ -926,7 +943,8 @@ const TeacherDashboard = () => {
             activeTab === "subject-teacher"
               ? "bg-blue-500 text-white"
               : "bg-gray-300 text-gray-700"
-          }`}
+          } ${!isSubjectTeacher ? "opacity-50 cursor-not-allowed" : ""}`}
+          disabled={!isSubjectTeacher}
         >
           Subject Teacher
         </button>

@@ -92,8 +92,10 @@ const StudentManagementSystem = () => {
 
   const handleAddStudent = async () => {
     const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      console.error("No teacherId found in sessionStorage");
+    const adminId = sessionStorage.getItem("adminId");
+
+    if (!teacherId || !adminId) {
+      console.error("Missing teacherId or adminId in sessionStorage");
       return;
     }
 
@@ -107,6 +109,7 @@ const StudentManagementSystem = () => {
         "https://gradyzebackend.onrender.com/api/studentmanagement/add-student",
         {
           teacherId,
+          adminId, // ✅ Now sending adminId to the backend
           rollNo: parseInt(rollNo),
           name,
           email,
@@ -126,8 +129,10 @@ const StudentManagementSystem = () => {
 
   const handleFileUpload = async (event) => {
     const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      console.error("No teacherId found in sessionStorage");
+    const adminId = sessionStorage.getItem("adminId");
+
+    if (!teacherId || !adminId) {
+      console.error("Missing teacherId or adminId in sessionStorage");
       return;
     }
 
@@ -141,6 +146,7 @@ const StudentManagementSystem = () => {
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("adminId", adminId); // ✅ Now sending adminId along with the file
 
     try {
       setUploading(true);
@@ -154,10 +160,10 @@ const StudentManagementSystem = () => {
 
       alert("Students imported successfully!");
       setStudents([...students, ...response.data.students]);
-      setUploading(false);
     } catch (error) {
       console.error("Error importing students:", error);
-      alert("Failed to import students");
+      alert(error.response?.data?.message || "Failed to import students");
+    } finally {
       setUploading(false);
     }
   };
