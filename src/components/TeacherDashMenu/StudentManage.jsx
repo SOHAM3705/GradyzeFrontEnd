@@ -104,7 +104,7 @@ const StudentManagementSystem = () => {
       return;
     }
 
-    const { year, division } = teacherDetails.assignedClass || {};
+    const { year, division } = teacherDetails || {};
 
     if (!year || !division) {
       alert("Class details are missing. Please contact the administrator.");
