@@ -656,12 +656,10 @@ const StudentManagementSystem = () => {
             </div>
           )}
 
-          {/* ✅ Loop through each subject & display students */}
-          {subjects.map((subject, index) => (
-            <div key={index} className="mt-8">
+          {Object.keys(subjectStudents).map((key) => (
+            <div key={key} className="mt-8">
               <h3 className="text-gray-800 font-semibold mb-4">
-                Students for {subject.name} ({subject.year} - {subject.division}
-                )
+                Students for {key}
               </h3>
 
               <div className="table-container overflow-x-auto rounded-lg shadow-md">
@@ -680,7 +678,7 @@ const StudentManagementSystem = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {subjectStudents[subject.name]?.map((student) => (
+                    {subjectStudents[key].map((student) => (
                       <tr key={student.rollNo}>
                         <td className="py-2 px-4">{student.rollNo}</td>
                         <td className="py-2 px-4">{student.name}</td>
