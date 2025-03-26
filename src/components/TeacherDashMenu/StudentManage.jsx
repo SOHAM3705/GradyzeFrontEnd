@@ -95,19 +95,19 @@ const StudentManagementSystem = () => {
     const adminId = sessionStorage.getItem("adminId");
 
     if (!teacherId || !adminId) {
-      console.error("Missing teacherId or adminId in sessionStorage");
+      alert("Session expired. Please log in again.");
       return;
     }
-
-    if (!rollNo || !name || !email) {
-      alert("Please fill all fields!");
-      return;
-    }
-
     const { year, division } = teacherDetails || {};
 
     if (!year || !division) {
       alert("Class details are missing. Please contact the administrator.");
+      return;
+    }
+
+    // Ensure all fields are populated
+    if (!rollNo || !name || !email) {
+      alert("Please fill in all student details!");
       return;
     }
 
@@ -120,18 +120,18 @@ const StudentManagementSystem = () => {
           email,
           year,
           division,
-          teacherId,
-          adminId,
+        },
+        {
+          headers: {
+            teacherid: teacherId, // Lowercase headers
+            adminid: adminId, // Lowercase headers
+          },
         }
       );
 
-      alert("Student added successfully!");
-      setStudents([...students, response.data.student]);
-      setRollNo("");
-      setName("");
-      setEmail("");
+      // Rest of the code...
     } catch (error) {
-      console.error("Error adding student:", error);
+      console.error("Error adding student:", error.response?.data);
       alert(error.response?.data?.message || "Failed to add student");
     }
   };
