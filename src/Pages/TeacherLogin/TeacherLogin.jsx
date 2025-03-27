@@ -42,7 +42,7 @@ const TeacherLogin = () => {
         sessionStorage.setItem("token", response.data.token);
         sessionStorage.setItem("teacherId", response.data.teacher._id);
         sessionStorage.setItem("teacherName", response.data.teacher.name);
-        sessionStorage.setItem("AdminId", response.data.AdminId);
+        sessionStorage.setItem("AdminId", response.data.teacher.adminId);
 
         console.log("✅ Token Stored in sessionStorage:", response.data.token);
 

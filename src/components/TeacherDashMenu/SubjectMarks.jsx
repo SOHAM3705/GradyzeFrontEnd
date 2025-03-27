@@ -1075,9 +1075,7 @@ const TeacherDashboard = () => {
                 <tbody>{renderStudents()}</tbody>
               </table>
             </div>
-            <div className="flex justify-center gap-2 mt-4">
-              {renderPagination()}
-            </div>
+            <div className="flex justify-center gap-2 mt-4"></div>
           </div>
 
           {renderModalContent()}
