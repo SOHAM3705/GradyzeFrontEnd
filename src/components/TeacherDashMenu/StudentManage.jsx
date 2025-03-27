@@ -71,7 +71,7 @@ const StudentManagementSystem = () => {
       try {
         const token = sessionStorage.getItem("token");
         const response = await axios.get(
-          "https://gradyzebackend.onrender.com/api/studentmanagement/students",
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students/${teacherId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 

@@ -87,7 +87,6 @@ const TeacherDashboard = () => {
   const fetchStudents = async () => {
     try {
       const token = sessionStorage.getItem("token");
-
       if (!token) {
         console.error("No token found, redirecting to login.");
         window.location.href = "/teacherlogin";
@@ -99,17 +98,11 @@ const TeacherDashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (!Array.isArray(response.data)) {
+      if (Array.isArray(response.data.students)) {
+        setStudents(response.data.students);
+      } else {
         console.error("Unexpected API response:", response.data);
-        return;
       }
-
-      setStudents(
-        response.data.map((student) => ({
-          ...student,
-          name: student.name || "Unknown Student",
-        }))
-      );
     } catch (error) {
       console.error("Error fetching students:", error.response?.data || error);
     }
@@ -133,7 +126,7 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subjects-list`
+        `https://gradyzebackend.onrender.com/api/teachermarks/subjects-list/${teacherId}`
       );
       if (Array.isArray(response.data)) {
         setSubjectsList(response.data);
@@ -203,7 +196,6 @@ const TeacherDashboard = () => {
         const matchesSearch =
           student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           student.rollNo?.toString().includes(searchQuery);
-
         return matchesSearch;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -239,13 +231,13 @@ const TeacherDashboard = () => {
     const paginatedStudents = filteredStudents.slice(start, end);
 
     return paginatedStudents.map((student) => (
-      <tr key={student.id} className="border-b hover:bg-gray-100">
+      <tr key={student._id} className="border-b hover:bg-gray-100">
         <td className="p-2">{student.rollNo}</td>
         <td className="p-2">{student.name}</td>
         <td className="p-2">{division}</td>
         {subjects.map((subject) => (
-          <td key={subject.id} className="p-2">
-            {student.marks[subject.id]?.["unit-test"] || 0}
+          <td key={subject._id} className="p-2">
+            {student.marks?.[subject._id]?.["unit-test"] || 0}
           </td>
         ))}
         <td className="p-2">{calculateOverallScore(student, "unit-test")}%</td>
@@ -254,29 +246,13 @@ const TeacherDashboard = () => {
         </td>
         <td className="p-2">
           <button
-            onClick={() => openStudentModal(student.id)}
+            onClick={() => openStudentModal(student._id)}
             className="bg-blue-500 text-white px-4 py-2 rounded"
           >
             View
           </button>
         </td>
       </tr>
-    ));
-  };
-
-  const renderPagination = () => {
-    const totalPages = Math.ceil(filteredStudents.length / rowsPerPage);
-
-    return Array.from({ length: totalPages }, (_, i) => (
-      <button
-        key={i}
-        onClick={() => setCurrentPage(i + 1)}
-        className={`mx-1 px-3 py-2 rounded ${
-          currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
-        }`}
-      >
-        {i + 1}
-      </button>
     ));
   };
 
