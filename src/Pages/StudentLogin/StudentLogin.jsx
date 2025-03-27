@@ -31,7 +31,7 @@ const StudentLogin = () => {
         sessionStorage.setItem("token", response.data.token);
         sessionStorage.setItem("studentId", response.data.studentId);
         sessionStorage.setItem("studentName", response.data.name);
-        sessionStorage.setItem("AdminId", response.data.AdminId);
+        sessionStorage.setItem("AdminId", response.data.adminId);
         sessionStorage.setItem("TeacherId", response.data.teacherId);
 
         console.log("✅ Student Data stored in sessionStorage");

@@ -136,7 +136,7 @@ const ProfileSettings = () => {
       const token = sessionStorage.getItem("token");
       if (!token) {
         setError("Unauthorized: Please log in again.");
-        navigate("/adminlogin");
+        navigate("/teacherlogin");
         return false;
       }
 
@@ -155,7 +155,7 @@ const ProfileSettings = () => {
       console.log("✅ Name & Email Updated:", response.data);
 
       sessionStorage.removeItem("token");
-      sessionStorage.removeItem("adminId");
+      sessionStorage.removeItem("teacherId");
 
       return true;
     } catch (error) {
@@ -222,7 +222,7 @@ const ProfileSettings = () => {
       const token = sessionStorage.getItem("token");
       if (!token) {
         setError("Unauthorized: No token found, please log in again");
-        navigate("/adminlogin");
+        navigate("/teacherlogin");
         return;
       }
 
@@ -240,7 +240,7 @@ const ProfileSettings = () => {
       setNotification("Password changed successfully! Please log in again.");
       setTimeout(() => {
         sessionStorage.removeItem("token");
-        navigate("/adminlogin");
+        navigate("/teacherlogin");
       }, 1500);
     } catch (error) {
       setError(error.response?.data?.error || "Failed to change password");

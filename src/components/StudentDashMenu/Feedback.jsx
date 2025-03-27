@@ -67,6 +67,7 @@ const AdminFeedback = () => {
       setTimeout(() => setMessage({ text: "", type: "" }), 3000);
     }
   };
+
   return (
     <div className="flex justify-center items-center min-h-screen p-5 bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
