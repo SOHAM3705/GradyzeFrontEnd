@@ -3,38 +3,45 @@ import axios from "axios";
 
 const NotificationCenter = () => {
   const [notifications, setNotifications] = useState([]);
-  const [activeFilter, setActiveFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [modalNotification, setModalNotification] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch student-specific notifications from backend
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get("/api/notifications/students")
-      .then((response) => {
-        console.log("Fetched Student Notifications:", response.data);
-
-        // Sort notifications by newest first
-        const sortedNotifications = response.data.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    const fetchNotifications = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          "https://gradyzebackend.onrender.com/api/studentnotification/notifications"
         );
 
-        setNotifications(sortedNotifications);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching student notifications:", error);
-        setLoading(false);
-      });
-  }, []);
+        console.log("📩 Fetched Notifications:", response.data);
 
-  const filterTabs = ["all", "exam", "assignment", "general"];
+        // ✅ Check if response is an array before sorting
+        if (Array.isArray(response.data)) {
+          const sortedNotifications = response.data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setNotifications(sortedNotifications);
+        } else {
+          console.error("🚨 API returned invalid data format:", response.data);
+          setNotifications([]); // ✅ Ensure state is always an array
+        }
+      } catch (error) {
+        console.error("❌ Error fetching notifications:", error);
+        setNotifications([]); // Ensure empty state in case of failure
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   // Construct file URL
   const getFileUrl = (fileId) => {
-    return `/api/notifications/files/${fileId}`;
+    return `https://gradyzebackend.onrender.com/api/studentnotification/files/${fileId}`;
   };
 
   // Open file in new tab instead of downloading
@@ -49,9 +56,6 @@ const NotificationCenter = () => {
   };
 
   const filteredNotifications = notifications.filter((notification) => {
-    if (activeFilter !== "all" && notification.type !== activeFilter) {
-      return false;
-    }
     if (
       searchTerm &&
       !(
@@ -106,7 +110,7 @@ const NotificationCenter = () => {
     <div className="min-h-screen bg-gray-100 text-gray-800">
       <div className="bg-blue-600 text-white p-5 shadow-md sticky top-0 z-10">
         <div className="container mx-auto flex justify-between items-center">
-          <h2 className="font-semibold text-xl">Notification Center</h2>
+          <h2 className="font-semibold text-xl">Notification</h2>
           <div className="relative w-full max-w-sm">
             <input
               type="text"
@@ -125,22 +129,6 @@ const NotificationCenter = () => {
             <h3>Loading notifications...</h3>
           </div>
         )}
-
-        <div className="flex justify-center gap-2 overflow-x-auto py-4">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveFilter(tab)}
-              className={`px-4 py-2 rounded-full shadow-sm cursor-pointer transition ${
-                activeFilter === tab
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-600"
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
 
         {!loading && filteredNotifications.length === 0 ? (
           <div className="text-center p-10 text-gray-500">
