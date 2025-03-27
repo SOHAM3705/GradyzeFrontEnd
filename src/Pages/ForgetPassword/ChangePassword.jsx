@@ -60,12 +60,7 @@ const ChangePassword = () => {
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/password/change-password",
-        { token, newPassword, confirmPassword },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // ✅ Add this
-          },
-        }
+        { token, newPassword, confirmPassword }
       );
 
       console.log("✅ Response:", response.data);
@@ -83,7 +78,7 @@ const ChangePassword = () => {
         {/* Back Button */}
         <button
           className="absolute left-4 top-4 text-green-600 hover:text-green-800"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate("/adminlogin")}
         >
           <i className="fas fa-arrow-left text-xl"></i>
         </button>

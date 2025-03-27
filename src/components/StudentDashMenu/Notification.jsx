@@ -107,14 +107,14 @@ const NotificationCenter = () => {
           </div>
         )}
 
-        {!loading && filteredNotifications.length === 0 ? (
+        {!loading && notifications.length === 0 ? (
           <div className="text-center p-10 text-gray-500">
             <h3>No notifications found</h3>
             <p>Check back later for updates</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-5">
-            {filteredNotifications.map((notification, index) => (
+            {notifications.map((notification, index) => (
               <div
                 key={notification._id || notification.id}
                 onClick={() => openModal(notification)}
