@@ -68,22 +68,20 @@ const StudentManagementSystem = () => {
 
   useEffect(() => {
     const fetchStudents = async () => {
-      const teacherId = sessionStorage.getItem("teacherId");
-      if (!teacherId) {
-        console.error("No teacherId found in sessionStorage");
-        return;
-      }
-
       try {
-        setLoading(true);
+        const token = sessionStorage.getItem("token");
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/students/${teacherId}`
+          "https://gradyzebackend.onrender.com/api/teachermarks/students",
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        setStudents(response.data.students);
-        setLoading(false);
+
+        if (Array.isArray(response.data)) {
+          setStudents(response.data);
+        } else {
+          console.error("Expected an array for students data");
+        }
       } catch (error) {
-        console.error("Error fetching students:", error);
-        setLoading(false);
+        console.error("❌ Error fetching students:", error);
       }
     };
 
