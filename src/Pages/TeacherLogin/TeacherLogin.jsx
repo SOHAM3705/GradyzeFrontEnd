@@ -4,18 +4,27 @@ import axios from "axios";
 import styles from "./TeacherLogin.module.css";
 
 const TeacherLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
+    setError(null);
     setLoading(true);
 
-    if (!email.trim() || !password.trim()) {
+    if (!formData.email.trim() || !formData.password.trim()) {
       setError("⚠ Please enter both email and password.");
       setLoading(false);
       return;
@@ -24,20 +33,30 @@ const TeacherLogin = () => {
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/teacher/login",
-        { email, password }
+        formData
       );
 
-      // ✅ Store teacher info securely
-      sessionStorage.setItem("token", response.data.token);
-      sessionStorage.setItem("adminId", response.data.teacher.adminId);
-      sessionStorage.setItem("teacherId", response.data.teacher._id);
-      sessionStorage.setItem("teacherName", response.data.teacher.name);
+      console.log("🔹 Login Response Data:", response.data);
 
-      // ✅ Redirect to Teacher Dashboard
-      navigate("/teacherdash");
+      if (response.data.token) {
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("teacherId", response.data.teacher._id);
+        sessionStorage.setItem("teacherName", response.data.teacher.name);
+
+        console.log("✅ Token Stored in sessionStorage:", response.data.token);
+
+        // ✅ Force refresh user profile after login
+        setTimeout(() => {
+          window.location.reload();
+        }, 500); // Reload to apply token updates
+
+        navigate("/teacherdash");
+      } else {
+        throw new Error("Token not received from server");
+      }
     } catch (error) {
-      console.error("Login Error:", error);
-      setError("❌ Login failed. Please check your credentials.");
+      setError(error.response?.data?.message || "Invalid email or password");
+      console.error("❌ Login Error:", error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -51,6 +70,7 @@ const TeacherLogin = () => {
             <i className="fas fa-arrow-left"></i>
           </button>
         </Link>
+
         <h2>Teacher Login</h2>
 
         {error && <p className={styles.errorMessage}>{error}</p>}
@@ -60,10 +80,11 @@ const TeacherLogin = () => {
             <i className="fas fa-envelope"></i>
             <input
               type="email"
+              id="email"
               placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
@@ -71,10 +92,11 @@ const TeacherLogin = () => {
             <i className="fas fa-lock"></i>
             <input
               type="password"
+              id="password"
               placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
@@ -89,7 +111,6 @@ const TeacherLogin = () => {
 
         <p>Don't have an account? Contact Your College/School Admin</p>
 
-        {/* ✅ Link to Forgot Password */}
         <p>
           <Link to="/teacher-forget-password" className={styles.TeacherLogin_a}>
             Forgot Password?

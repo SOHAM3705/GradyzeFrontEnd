@@ -1,25 +1,56 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand } from "lucide-react";
+import axios from "axios";
 
 function TeacherDash() {
   const [teacherName, setTeacherName] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   const navigate = useNavigate();
 
+  // ✅ Fetch latest teacher name from API (like admin)
   useEffect(() => {
-    const storedName = sessionStorage.getItem("teacherName");
-    if (storedName) {
-      setTeacherName(storedName);
-    }
-  }, []);
+    const fetchTeacherName = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        if (!token) {
+          console.error("🚨 No token found, redirecting to login.");
+          navigate("/teacherlogin");
+          return;
+        }
 
+        const response = await axios.get(
+          "https://gradyzebackend.onrender.com/api/teachersetting/teacher-name",
+          {
+            headers: { Authorization: `Bearer ${token}` }, // ✅ Send token
+          }
+        );
+
+        setTeacherName(response.data.teacherName || "Teacher");
+      } catch (error) {
+        console.error(
+          "❌ Error fetching teacher name:",
+          error.response?.data || error
+        );
+      }
+    };
+
+    fetchTeacherName();
+  }, [navigate]);
+
+  // ✅ Handle logout and clear session (same as admin)
   const handleLogout = () => {
+    console.log("🔴 Logging out...");
     sessionStorage.removeItem("teacherId");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("teacherName");
     sessionStorage.clear();
+
+    // ✅ Force a refresh to clear any cached user data
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+
     navigate("/teacherlogin");
   };
 
@@ -73,7 +104,7 @@ function TeacherDash() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
           <div className="text-2xl font-semibold text-gray-800">
-            Welcome, {teacherName || "Teacher"}
+            Welcome, {teacherName || "Loading...."}
           </div>
         </header>
 

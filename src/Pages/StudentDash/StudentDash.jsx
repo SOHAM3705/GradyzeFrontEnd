@@ -1,19 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand } from "lucide-react";
+import axios from "axios";
 
 function StudentDash() {
-  const [studentName, setStudentName] = useState("");
+  const [studentName, setStudentName] = useState("Student");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedName = sessionStorage.getItem("studentName");
-    if (storedName) {
-      setStudentName(storedName);
-    }
-  }, []);
+    const fetchStudentName = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        if (!token) {
+          console.error("🚨 No token found, redirecting to login.");
+          navigate("/studentlogin");
+          return;
+        }
+
+        const response = await axios.get(
+          "https://gradyzebackend.onrender.com/api/studentlogin/student-name",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        setStudentName(response.data.studentName || "Student");
+      } catch (error) {
+        console.error(
+          "❌ Error fetching student name:",
+          error.response?.data || error
+        );
+      }
+    };
+
+    fetchStudentName();
+  }, [navigate]);
 
   const handleLogout = () => {
     sessionStorage.removeItem("studentId");
@@ -68,16 +90,14 @@ function StudentDash() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
           <div className="text-2xl font-semibold text-gray-800">
-            Welcome, {studentName || "Student"}
+            Welcome, {studentName}
           </div>
         </header>
-
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
       </div>
 
-      {/* Logout Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-96 shadow-lg mx-4 text-center">

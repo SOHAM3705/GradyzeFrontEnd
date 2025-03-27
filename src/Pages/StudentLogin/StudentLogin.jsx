@@ -21,7 +21,7 @@ const StudentLogin = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/student/login",
+        "https://gradyzebackend.onrender.com/api/student/studentlogin",
         formData
       );
 
@@ -31,10 +31,8 @@ const StudentLogin = () => {
         sessionStorage.setItem("token", response.data.token);
         sessionStorage.setItem("studentId", response.data.studentId);
         sessionStorage.setItem("studentName", response.data.name);
-        sessionStorage.setItem("adminId", response.data.adminId || "");
-        sessionStorage.setItem("teacherId", response.data.teacherId || "");
 
-        console.log("✅ Data stored in sessionStorage");
+        console.log("✅ Student Data stored in sessionStorage");
 
         // ✅ Refresh & Navigate
         setTimeout(() => {
@@ -54,16 +52,19 @@ const StudentLogin = () => {
   return (
     <div className={styles.studentBg}>
       <div className={styles.loginContainer}>
+        {/* Back Button */}
         <Link to="/">
           <button className={styles.backButton_Slogin}>
             <i className="fas fa-arrow-left"></i>
           </button>
         </Link>
 
+        {/* Login Header */}
         <div className={styles.loginHeader}>
           <h2>Student Login</h2>
         </div>
 
+        {/* Login Form */}
         <form onSubmit={handleSubmit}>
           {error && <p className={styles.errorMessage}>{error}</p>}
 
