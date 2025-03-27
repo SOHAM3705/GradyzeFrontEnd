@@ -59,12 +59,7 @@ const ChangePassword = () => {
       console.log("🔄 Sending password reset request...");
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/password/change-password",
-        { token, newPassword },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { token, newPassword, confirmPassword } // ✅ Added confirmPassword
       );
 
       setMessage("✅ " + response.data.message);
@@ -75,9 +70,9 @@ const ChangePassword = () => {
       console.error("❌ Password reset error:", error);
       if (error.response) {
         if (error.response.status === 400) {
-          setMessage("⚠ Invalid token or password format.");
-        } else if (error.response.status === 401) {
-          setMessage("⚠ Token expired. Please request a new reset link.");
+          setMessage(error.response.data.message || "⚠ Invalid request.");
+        } else if (error.response.status === 404) {
+          setMessage("⚠ User not found.");
         } else {
           setMessage("❌ Failed to update password. Try again.");
         }

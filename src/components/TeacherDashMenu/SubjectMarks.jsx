@@ -82,17 +82,34 @@ const TeacherDashboard = () => {
 
   const fetchStudents = async () => {
     try {
+      const token = sessionStorage.getItem("token"); // ✅ Get the JWT token
+
+      if (!token) {
+        console.error("🚨 No token found, redirecting to login.");
+        window.location.href = "/teacherlogin"; // ✅ Redirect to login if token is missing
+        return;
+      }
+
       const response = await axios.get(
         "https://gradyzebackend.onrender.com/api/teachermarks/students",
-        { params: { teacherId } }
+        {
+          headers: { Authorization: `Bearer ${token}` }, // ✅ Correctly send token in headers
+        }
       );
+
       if (Array.isArray(response.data)) {
         setStudents(response.data);
       } else {
-        console.error("Expected an array for students data");
+        console.error(
+          "🚨 Expected an array for students data, but received:",
+          response.data
+        );
       }
     } catch (error) {
-      console.error("Error fetching students:", error);
+      console.error(
+        "❌ Error fetching students:",
+        error.response?.data || error
+      );
     }
   };
 
