@@ -54,31 +54,19 @@ const ChangePassword = () => {
       setLoading(false);
       return;
     }
-
     try {
       console.log("🔄 Sending password reset request...");
+      console.log("📤 Payload:", { token, newPassword, confirmPassword });
+
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/password/change-password",
-        { token, newPassword, confirmPassword } // ✅ Added confirmPassword
+        { token, newPassword, confirmPassword } // Ensure token is in the body
       );
 
+      console.log("✅ Response:", response.data);
       setMessage("✅ " + response.data.message);
-      setTimeout(() => {
-        navigate("/login"); // Redirect after success
-      }, 2000);
     } catch (error) {
       console.error("❌ Password reset error:", error);
-      if (error.response) {
-        if (error.response.status === 400) {
-          setMessage(error.response.data.message || "⚠ Invalid request.");
-        } else if (error.response.status === 404) {
-          setMessage("⚠ User not found.");
-        } else {
-          setMessage("❌ Failed to update password. Try again.");
-        }
-      } else {
-        setMessage("❌ Network error. Check your internet connection.");
-      }
     } finally {
       setLoading(false);
     }
