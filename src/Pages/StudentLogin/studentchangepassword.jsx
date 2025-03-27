@@ -47,7 +47,7 @@ const studentChangePassword = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/password/teacherpassword/change-password",
+        "https://gradyzebackend.onrender.com/api/password/studentpassword/change-password",
         { token, newPassword, confirmPassword }
       );
 
