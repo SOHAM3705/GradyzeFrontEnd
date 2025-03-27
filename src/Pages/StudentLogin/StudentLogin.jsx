@@ -100,14 +100,7 @@ const StudentLogin = () => {
         </form>
 
         <p>
-          Don't have an account?{" "}
-          <Link to="/studentsignup" className={styles.StudentLogin_a}>
-            Sign Up
-          </Link>
-        </p>
-
-        <p>
-          <Link to="/forgot-password" className={styles.StudentLogin_a}>
+          <Link to="/student-forget-password" className={styles.StudentLogin_a}>
             Forgot Password?
           </Link>
         </p>

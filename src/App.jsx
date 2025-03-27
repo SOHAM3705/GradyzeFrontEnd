@@ -28,6 +28,8 @@ import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
 import ForgetPassword from "./Pages/ForgetPassword/ForgetPassword";
 import TeacherForgetPassword from "./Pages/TeacherLogin/teacherforgetpassword";
 import TeacherChangePassword from "./Pages/TeacherLogin/teacherchangepassword";
+import studentForgetPassword from "./Pages/StudentLogin/studentforgetpassword.jsx";
+import studentChangePassword from "./Pages/StudentLogin/studentchangepassword.jsx";
 
 import StudentManage from "./components/TeacherDashMenu/StudentManage";
 import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
@@ -72,6 +74,14 @@ function App() {
       <Route
         path="/teacher-change-password"
         element={<TeacherChangePassword />}
+      />
+      <Route
+        path="/student-forget-password"
+        element={<studentForgetPassword />}
+      />
+      <Route
+        path="/student-change-password"
+        element={<studentChangePassword />}
       />
 
       {/* 🔹 Admin Routes */}

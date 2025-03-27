@@ -103,9 +103,9 @@ const AdminLogin = () => {
         </p>
 
         <p>
-          <a href="#" className={styles.AdminSignup_a}>
+          <Link to="/forgetpassword" className={styles.AdminSignup_a}>
             Forgot Password?
-          </a>
+          </Link>
         </p>
       </div>
     </div>
