@@ -57,7 +57,7 @@ const TeacherDashboard = () => {
   const fetchTeacherData = async () => {
     try {
       const response = await axios.get(
-        `/api/teachermarks/teacher-role/${teacherId}`
+        `https://gradyzebackend.onrender.com/api/teachermarks/teacher-role/${teacherId}`
       );
       setIsClassTeacher(response.data.isClassTeacher);
       setIsSubjectTeacher(response.data.isSubjectTeacher);
@@ -75,7 +75,7 @@ const TeacherDashboard = () => {
   const fetchAssignedDivision = async () => {
     try {
       const response = await axios.get(
-        `/api/teachermarks/${teacherId}/divisions`
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/divisions`
       );
       setDivision(response.data.division);
       setYear(response.data.year);
@@ -95,7 +95,7 @@ const TeacherDashboard = () => {
       }
 
       const response = await axios.get(
-        `/api/teachermarks/${teacherId}/students`,
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/students`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -118,7 +118,7 @@ const TeacherDashboard = () => {
   const fetchSubjects = async () => {
     try {
       const response = await axios.get(
-        `/api/teachermarks/${teacherId}/subjects`
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subjects`
       );
       if (Array.isArray(response.data)) {
         setSubjects(response.data);
@@ -133,7 +133,7 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get(
-        `/api/teachermarks/${teacherId}/subjects-list`
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subjects-list`
       );
       if (Array.isArray(response.data)) {
         setSubjectsList(response.data);
@@ -903,9 +903,13 @@ const TeacherDashboard = () => {
     });
 
     try {
-      await axios.post(`/api/teachermarks/${teacherId}/marks`, marksToSave, {
-        params: { teacherId },
-      });
+      await axios.post(
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks`,
+        marksToSave,
+        {
+          params: { teacherId },
+        }
+      );
       alert("Marks saved successfully!");
       closeModal();
       fetchStudents();
@@ -921,7 +925,7 @@ const TeacherDashboard = () => {
 
     try {
       await axios.put(
-        `/api/teachermarks/${teacherId}/marks/${marksId}`,
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks/${marksId}`,
         updatedMarks,
         { params: { teacherId } }
       );
@@ -934,9 +938,12 @@ const TeacherDashboard = () => {
 
   const handleDeleteMarks = async (marksId) => {
     try {
-      await axios.delete(`/api/teachermarks/${teacherId}/marks/${marksId}`, {
-        params: { teacherId },
-      });
+      await axios.delete(
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks/${marksId}`,
+        {
+          params: { teacherId },
+        }
+      );
       alert("Marks deleted successfully!");
       fetchStudents();
     } catch (error) {
