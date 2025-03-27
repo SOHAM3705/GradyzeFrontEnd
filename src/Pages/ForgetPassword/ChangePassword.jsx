@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "@fortawesome/fontawesome-free/css/all.min.css"; // FontAwesome Icons
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const ChangePassword = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -9,6 +9,7 @@ const ChangePassword = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +24,12 @@ const ChangePassword = () => {
     }
   }, []);
 
+  const isValidPassword = (password) => {
+    return /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+      password
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -30,6 +37,14 @@ const ChangePassword = () => {
 
     if (!token) {
       setMessage("❌ Invalid or missing token.");
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidPassword(newPassword)) {
+      setMessage(
+        "⚠ Password must be at least 8 characters long, with 1 uppercase letter, 1 number, and 1 special character."
+      );
       setLoading(false);
       return;
     }
@@ -44,7 +59,7 @@ const ChangePassword = () => {
       console.log("🔄 Sending password reset request...");
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/password/change-password",
-        { token, newPassword, confirmPassword },
+        { token, newPassword },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -54,15 +69,21 @@ const ChangePassword = () => {
 
       setMessage("✅ " + response.data.message);
       setTimeout(() => {
-        navigate("/login"); // Redirect after successful password reset
+        navigate("/login"); // Redirect after success
       }, 2000);
     } catch (error) {
       console.error("❌ Password reset error:", error);
-      setMessage(
-        "❌ " +
-          (error.response?.data?.message ||
-            "An error occurred while updating your password. Please try again.")
-      );
+      if (error.response) {
+        if (error.response.status === 400) {
+          setMessage("⚠ Invalid token or password format.");
+        } else if (error.response.status === 401) {
+          setMessage("⚠ Token expired. Please request a new reset link.");
+        } else {
+          setMessage("❌ Failed to update password. Try again.");
+        }
+      } else {
+        setMessage("❌ Network error. Check your internet connection.");
+      }
     } finally {
       setLoading(false);
     }
@@ -86,16 +107,26 @@ const ChangePassword = () => {
         <p className="text-gray-600 mb-4">Enter your new password below.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex items-center border border-gray-300 p-2 rounded-lg bg-gray-50">
+          <div className="flex items-center border border-gray-300 p-2 rounded-lg bg-gray-50 relative">
             <i className="fas fa-lock text-gray-500 mx-2"></i>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
               className="w-full outline-none bg-transparent"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              <i
+                className={`fas ${
+                  showPassword ? "fa-eye-slash" : "fa-eye"
+                } mx-2 text-gray-500`}
+              ></i>
+            </button>
           </div>
 
           <div className="flex items-center border border-gray-300 p-2 rounded-lg bg-gray-50">
@@ -112,8 +143,12 @@ const ChangePassword = () => {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-800 transition"
+            disabled={loading || !newPassword.trim() || !confirmPassword.trim()}
+            className={`w-full py-2 rounded-lg font-bold transition ${
+              newPassword.trim() && confirmPassword.trim() && !loading
+                ? "bg-green-600 text-white hover:bg-green-800"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
           >
             {loading ? "Updating..." : "Change Password"}
           </button>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "@fortawesome/fontawesome-free/css/all.min.css"; // Ensure FontAwesome is loaded
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState("");
@@ -14,28 +14,37 @@ const ForgetPassword = () => {
     setLoading(true);
     setMessage("");
 
+    if (!email.trim()) {
+      setMessage("⚠️ Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log("🔍 Sending password reset request for:", email);
+      const trimmedEmail = email.trim();
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/password/verify-email",
-        { email }
+        { email: trimmedEmail }
       );
 
       setMessage("✅ " + response.data.message);
     } catch (error) {
       console.error("❌ Error sending reset email:", error);
-      setMessage(error?.response?.data?.message ?? "Something went wrong.");
+      if (error.response) {
+        if (error.response.status === 404) {
+          setMessage("⚠️ No account found with this email.");
+        } else if (error.response.status === 400) {
+          setMessage("⚠️ Please provide a valid email.");
+        } else {
+          setMessage("❌ Something went wrong. Please try again.");
+        }
+      } else {
+        setMessage("❌ Network error. Please check your internet connection.");
+      }
     }
 
     setLoading(false);
-  };
-
-  const handleBack = () => {
-    if (window.history.length > 2) {
-      navigate(-1);
-    } else {
-      navigate("/login"); // Change to your login page
-    }
   };
 
   return (
@@ -44,7 +53,7 @@ const ForgetPassword = () => {
         {/* Back Button */}
         <button
           className="absolute left-4 top-4 text-purple-600 hover:text-purple-800"
-          onClick={handleBack}
+          onClick={() => navigate(-1)}
         >
           <i className="fas fa-arrow-left text-xl"></i>
         </button>
@@ -68,8 +77,12 @@ const ForgetPassword = () => {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-800 transition"
+            disabled={loading || !email.trim()}
+            className={`w-full py-2 rounded-lg font-bold transition ${
+              email.trim() && !loading
+                ? "bg-purple-600 text-white hover:bg-purple-800"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
           >
             {loading ? "Sending..." : "Verify Email"}
           </button>
