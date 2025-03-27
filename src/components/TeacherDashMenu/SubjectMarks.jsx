@@ -13,10 +13,8 @@ const TeacherDashboard = () => {
   const rowsPerPage = 5;
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedExamType, setSelectedExamType] = useState(null);
-  const [divisionFilter, setDivisionFilter] = useState("all");
-  const [examFilter, setExamFilter] = useState("all");
-  const [subjectFilter, setSubjectFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [division, setDivision] = useState("");
+  const [year, setYear] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
   const [summaryData, setSummaryData] = useState({
@@ -42,6 +40,7 @@ const TeacherDashboard = () => {
   useEffect(() => {
     if (activeTab === "class-teacher") {
       fetchStudents();
+      fetchAssignedDivision();
     } else if (activeTab === "subject-teacher") {
       fetchSubjects();
       fetchSubjectsList();
@@ -53,19 +52,12 @@ const TeacherDashboard = () => {
       updateSummary();
       filterStudents();
     }
-  }, [
-    students,
-    divisionFilter,
-    examFilter,
-    subjectFilter,
-    statusFilter,
-    searchQuery,
-  ]);
+  }, [students, division, selectedExamType, searchQuery]);
 
   const fetchTeacherData = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/teacher-role/${teacherId}`
+        `/api/teachermarks/teacher-role/${teacherId}`
       );
       setIsClassTeacher(response.data.isClassTeacher);
       setIsSubjectTeacher(response.data.isSubjectTeacher);
@@ -80,6 +72,18 @@ const TeacherDashboard = () => {
     }
   };
 
+  const fetchAssignedDivision = async () => {
+    try {
+      const response = await axios.get(
+        `/api/teachermarks/${teacherId}/divisions`
+      );
+      setDivision(response.data.division);
+      setYear(response.data.year);
+    } catch (error) {
+      console.error("Error fetching assigned division:", error);
+    }
+  };
+
   const fetchStudents = async () => {
     try {
       const token = sessionStorage.getItem("token");
@@ -91,7 +95,7 @@ const TeacherDashboard = () => {
       }
 
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/students`,
+        `/api/teachermarks/${teacherId}/students`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -114,7 +118,7 @@ const TeacherDashboard = () => {
   const fetchSubjects = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subjects`
+        `/api/teachermarks/${teacherId}/subjects`
       );
       if (Array.isArray(response.data)) {
         setSubjects(response.data);
@@ -129,7 +133,7 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subjects-list`
+        `/api/teachermarks/${teacherId}/subjects-list`
       );
       if (Array.isArray(response.data)) {
         setSubjectsList(response.data);
@@ -196,15 +200,11 @@ const TeacherDashboard = () => {
   const filterStudents = () => {
     let filtered = students
       .filter((student) => {
-        const matchesDivision =
-          divisionFilter === "all" || student.division === divisionFilter;
-        const matchesStatus =
-          statusFilter === "all" || student.status === statusFilter;
         const matchesSearch =
           student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           student.rollNo?.toString().includes(searchQuery);
 
-        return matchesDivision && matchesStatus && matchesSearch;
+        return matchesSearch;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -242,7 +242,7 @@ const TeacherDashboard = () => {
       <tr key={student.id} className="border-b hover:bg-gray-100">
         <td className="p-2">{student.rollNo}</td>
         <td className="p-2">{student.name}</td>
-        <td className="p-2">{student.division}</td>
+        <td className="p-2">{division}</td>
         {subjects.map((subject) => (
           <td key={subject.id} className="p-2">
             {student.marks[subject.id]?.["unit-test"] || 0}
@@ -467,7 +467,7 @@ const TeacherDashboard = () => {
                   <label className="block font-medium text-gray-600">
                     Division
                   </label>
-                  <span className="block mt-1">{student.division}</span>
+                  <span className="block mt-1">{division}</span>
                 </div>
                 <div>
                   <label className="block font-medium text-gray-600">
@@ -903,13 +903,9 @@ const TeacherDashboard = () => {
     });
 
     try {
-      await axios.post(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks`,
-        marksToSave,
-        {
-          params: { teacherId },
-        }
-      );
+      await axios.post(`/api/teachermarks/${teacherId}/marks`, marksToSave, {
+        params: { teacherId },
+      });
       alert("Marks saved successfully!");
       closeModal();
       fetchStudents();
@@ -925,7 +921,7 @@ const TeacherDashboard = () => {
 
     try {
       await axios.put(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks/${marksId}`,
+        `/api/teachermarks/${teacherId}/marks/${marksId}`,
         updatedMarks,
         { params: { teacherId } }
       );
@@ -938,12 +934,9 @@ const TeacherDashboard = () => {
 
   const handleDeleteMarks = async (marksId) => {
     try {
-      await axios.delete(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks/${marksId}`,
-        {
-          params: { teacherId },
-        }
-      );
+      await axios.delete(`/api/teachermarks/${teacherId}/marks/${marksId}`, {
+        params: { teacherId },
+      });
       alert("Marks deleted successfully!");
       fetchStudents();
     } catch (error) {
@@ -1005,56 +998,20 @@ const TeacherDashboard = () => {
           <div className="flex flex-wrap gap-4 mb-4">
             <div className="flex items-center gap-2">
               <label className="font-medium text-gray-600">Division</label>
-              <select
-                value={divisionFilter}
-                onChange={(e) => setDivisionFilter(e.target.value)}
-                className="p-2 border rounded"
-              >
-                <option value="all">All Divisions</option>
-                <option value="A">Division A</option>
-                <option value="B">Division B</option>
-              </select>
+              <span className="p-2 border rounded">{division}</span>
             </div>
             <div className="flex items-center gap-2">
               <label className="font-medium text-gray-600">Exam Type</label>
               <select
-                value={examFilter}
-                onChange={(e) => setExamFilter(e.target.value)}
+                value={selectedExamType}
+                onChange={(e) => setSelectedExamType(e.target.value)}
                 className="p-2 border rounded"
               >
-                <option value="all">All Exams</option>
+                <option value="">All Exams</option>
                 <option value="unit-test">Unit Test</option>
                 <option value="re-unit-test">Re-Unit Test</option>
                 <option value="prelim">Prelim</option>
                 <option value="reprelim">Re-Prelim</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="font-medium text-gray-600">Subject</label>
-              <select
-                value={subjectFilter}
-                onChange={(e) => setSubjectFilter(e.target.value)}
-                className="p-2 border rounded"
-              >
-                <option value="all">All Subjects</option>
-                <option value="1">Computer Engineering</option>
-                <option value="2">Data Structures</option>
-                <option value="3">Database Management</option>
-                <option value="4">Software Engineering</option>
-                <option value="5">Computer Networks</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="font-medium text-gray-600">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="p-2 border rounded"
-              >
-                <option value="all">All Status</option>
-                <option value="pass">Pass</option>
-                <option value="fail">Fail</option>
-                <option value="pending">Pending</option>
               </select>
             </div>
           </div>
