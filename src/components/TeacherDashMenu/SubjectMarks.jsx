@@ -1002,8 +1002,7 @@ const TeacherDashboard = () => {
             activeTab === "class-teacher"
               ? "bg-blue-500 text-white"
               : "bg-gray-300 text-gray-700"
-          } ${isSubjectTeacher ? "opacity-50 cursor-not-allowed" : ""}`}
-          disabled={isSubjectTeacher}
+          }`}
         >
           Class Teacher
         </button>
@@ -1013,8 +1012,7 @@ const TeacherDashboard = () => {
             activeTab === "subject-teacher"
               ? "bg-blue-500 text-white"
               : "bg-gray-300 text-gray-700"
-          } ${!isSubjectTeacher ? "opacity-50 cursor-not-allowed" : ""}`}
-          disabled={!isSubjectTeacher}
+          }`}
         >
           Subject Teacher
         </button>
