@@ -60,7 +60,12 @@ const ChangePassword = () => {
 
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/password/change-password",
-        { token, newPassword, confirmPassword } // Ensure token is in the body
+        { token, newPassword, confirmPassword },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ Add this
+          },
+        }
       );
 
       console.log("✅ Response:", response.data);
