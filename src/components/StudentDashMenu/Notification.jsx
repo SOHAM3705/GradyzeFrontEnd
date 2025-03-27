@@ -3,7 +3,6 @@ import axios from "axios";
 
 const NotificationCenter = () => {
   const [notifications, setNotifications] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [modalNotification, setModalNotification] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -55,19 +54,6 @@ const NotificationCenter = () => {
     }
   };
 
-  const filteredNotifications = notifications.filter((notification) => {
-    if (
-      searchTerm &&
-      !(
-        notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        notification.message.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    ) {
-      return false;
-    }
-    return true;
-  });
-
   const openModal = (notification) => {
     setModalNotification(notification);
   };
@@ -111,15 +97,6 @@ const NotificationCenter = () => {
       <div className="bg-blue-600 text-white p-5 shadow-md sticky top-0 z-10">
         <div className="container mx-auto flex justify-between items-center">
           <h2 className="font-semibold text-xl">Notification</h2>
-          <div className="relative w-full max-w-sm">
-            <input
-              type="text"
-              placeholder="Search notifications..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 rounded-full bg-gray-100 text-gray-800 placeholder-gray-500 focus:outline-none"
-            />
-          </div>
         </div>
       </div>
 
@@ -164,11 +141,6 @@ const NotificationCenter = () => {
                   {notification.time ||
                     new Date(notification.createdAt).toLocaleString()}
                 </span>
-                {notification.fileId && (
-                  <span className="absolute top-2 right-2 text-blue-500">
-                    📎
-                  </span>
-                )}
                 {notification.unread && (
                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
                 )}
