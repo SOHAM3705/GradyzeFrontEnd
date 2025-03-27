@@ -19,7 +19,7 @@ function StudentDash() {
         }
 
         const response = await axios.get(
-          "https://gradyzebackend.onrender.com/api/studentlogin/student-name",
+          "https://gradyzebackend.onrender.com/api/studentsetting/student-name",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
