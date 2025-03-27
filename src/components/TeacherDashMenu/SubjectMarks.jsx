@@ -1003,6 +1003,7 @@ const TeacherDashboard = () => {
               ? "bg-blue-500 text-white"
               : "bg-gray-300 text-gray-700"
           }`}
+          disabled={isSubjectTeacher && !isClassTeacher}
         >
           Class Teacher
         </button>
@@ -1013,6 +1014,7 @@ const TeacherDashboard = () => {
               ? "bg-blue-500 text-white"
               : "bg-gray-300 text-gray-700"
           }`}
+          disabled={isClassTeacher && !isSubjectTeacher}
         >
           Subject Teacher
         </button>
