@@ -65,7 +65,7 @@ const TeacherDashboard = () => {
   const fetchTeacherData = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/teacher-role/${teacherId}`
+        `/api/teachermarks/teacher-role/${teacherId}`
       );
       setIsClassTeacher(response.data.isClassTeacher);
       setIsSubjectTeacher(response.data.isSubjectTeacher);
@@ -85,41 +85,36 @@ const TeacherDashboard = () => {
       const token = sessionStorage.getItem("token");
 
       if (!token) {
-        console.error("🚨 No token found, redirecting to login.");
+        console.error("No token found, redirecting to login.");
         window.location.href = "/teacherlogin";
         return;
       }
 
       const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/teachermarks/students",
+        `/api/teachermarks/${teacherId}/students`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (!Array.isArray(response.data)) {
-        console.error("🚨 Unexpected API response:", response.data);
+        console.error("Unexpected API response:", response.data);
         return;
       }
 
-      // ✅ Ensure all students have a 'name' property
-      const sanitizedStudents = response.data.map((student) => ({
-        ...student,
-        name: student.name || "Unknown Student",
-      }));
-
-      setStudents(sanitizedStudents);
-    } catch (error) {
-      console.error(
-        "❌ Error fetching students:",
-        error.response?.data || error
+      setStudents(
+        response.data.map((student) => ({
+          ...student,
+          name: student.name || "Unknown Student",
+        }))
       );
+    } catch (error) {
+      console.error("Error fetching students:", error.response?.data || error);
     }
   };
 
   const fetchSubjects = async () => {
     try {
       const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/teachermarks/subjects",
-        { params: { teacherId } }
+        `/api/teachermarks/${teacherId}/subjects`
       );
       if (Array.isArray(response.data)) {
         setSubjects(response.data);
@@ -134,8 +129,7 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/teachermarks/subjects-list",
-        { params: { teacherId } }
+        `/api/teachermarks/${teacherId}/subjects-list`
       );
       if (Array.isArray(response.data)) {
         setSubjectsList(response.data);
@@ -200,44 +194,19 @@ const TeacherDashboard = () => {
   };
 
   const filterStudents = () => {
-    let filtered = students.filter((student) => {
-      const matchesDivision =
-        divisionFilter === "all" || student.division === divisionFilter;
-      const matchesStatus =
-        statusFilter === "all" || student.status === statusFilter;
-      const matchesSearch =
-        student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.rollNo.includes(searchQuery);
+    let filtered = students
+      .filter((student) => {
+        const matchesDivision =
+          divisionFilter === "all" || student.division === divisionFilter;
+        const matchesStatus =
+          statusFilter === "all" || student.status === statusFilter;
+        const matchesSearch =
+          student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          student.rollNo?.toString().includes(searchQuery);
 
-      if (examFilter !== "all" && subjectFilter !== "all") {
-        const subjectMarks = student.marks[subjectFilter]?.[examFilter];
-        return (
-          matchesDivision &&
-          matchesStatus &&
-          matchesSearch &&
-          subjectMarks &&
-          subjectMarks > 0
-        );
-      } else if (examFilter !== "all") {
-        return (
-          matchesDivision &&
-          matchesStatus &&
-          matchesSearch &&
-          Object.values(student.marks).some(
-            (marks) => marks[examFilter] && marks[examFilter] > 0
-          )
-        );
-      } else if (subjectFilter !== "all") {
-        return (
-          matchesDivision &&
-          matchesStatus &&
-          matchesSearch &&
-          student.marks[subjectFilter]
-        );
-      }
-
-      return matchesDivision && matchesStatus && matchesSearch;
-    });
+        return matchesDivision && matchesStatus && matchesSearch;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     setFilteredStudents(filtered);
     setCurrentPage(1);
@@ -289,18 +258,6 @@ const TeacherDashboard = () => {
             className="bg-blue-500 text-white px-4 py-2 rounded"
           >
             View
-          </button>
-          <button
-            onClick={() => handleUpdateMarks(student.marksId)}
-            className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
-          >
-            Update
-          </button>
-          <button
-            onClick={() => handleDeleteMarks(student.marksId)}
-            className="bg-red-500 text-white px-4 py-2 rounded ml-2"
-          >
-            Delete
           </button>
         </td>
       </tr>
@@ -946,14 +903,12 @@ const TeacherDashboard = () => {
     });
 
     try {
-      await axios.post(
-        "https://gradyzebackend.onrender.com/api/teachermarks/add-marks",
-        marksToSave,
-        { params: { teacherId } }
-      );
+      await axios.post(`/api/teachermarks/${teacherId}/marks`, marksToSave, {
+        params: { teacherId },
+      });
       alert("Marks saved successfully!");
       closeModal();
-      fetchStudents(); // Refresh student data
+      fetchStudents();
     } catch (error) {
       console.error("Error saving marks:", error);
     }
@@ -966,12 +921,12 @@ const TeacherDashboard = () => {
 
     try {
       await axios.put(
-        `https://gradyzebackend.onrender.com/api/teachermarks/update-marks/${marksId}`,
+        `/api/teachermarks/${teacherId}/marks/${marksId}`,
         updatedMarks,
         { params: { teacherId } }
       );
       alert("Marks updated successfully!");
-      fetchStudents(); // Refresh student data
+      fetchStudents();
     } catch (error) {
       console.error("Error updating marks:", error);
     }
@@ -979,12 +934,11 @@ const TeacherDashboard = () => {
 
   const handleDeleteMarks = async (marksId) => {
     try {
-      await axios.delete(
-        `https://gradyzebackend.onrender.com/api/teachermarks/delete-marks/${marksId}`,
-        { params: { teacherId } }
-      );
+      await axios.delete(`/api/teachermarks/${teacherId}/marks/${marksId}`, {
+        params: { teacherId },
+      });
       alert("Marks deleted successfully!");
-      fetchStudents(); // Refresh student data
+      fetchStudents();
     } catch (error) {
       console.error("Error deleting marks:", error);
     }
