@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const Result = () => {
   const [selectedYear, setSelectedYear] = useState("");
@@ -7,49 +8,7 @@ const Result = () => {
   const [semesters, setSemesters] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [marks, setMarks] = useState([]);
-
-  const marksData = {
-    "First Year": {
-      "Semester 1": {
-        Math: { Unit: 18, Insem: 40, Prelims: 35, Endsem: 75 },
-        Physics: { Unit: 20, Insem: 42, Prelims: 38, Endsem: 78 },
-      },
-      "Semester 2": {
-        Chemistry: { Unit: 22, Insem: 45, Prelims: 40, Endsem: 80 },
-        Biology: { Unit: 24, Insem: 48, Prelims: 43, Endsem: 85 },
-      },
-    },
-    "Second Year": {
-      "Semester 3": {
-        Programming: { Unit: 26, Insem: 50, Prelims: 45, Endsem: 88 },
-        Networks: { Unit: 28, Insem: 52, Prelims: 47, Endsem: 90 },
-      },
-      "Semester 4": {
-        "Data Science": { Unit: 30, Insem: 55, Prelims: 50, Endsem: 92 },
-        AI: { Unit: 32, Insem: 58, Prelims: 53, Endsem: 95 },
-      },
-    },
-    "Third Year": {
-      "Semester 5": {
-        "Machine Learning": { Unit: 23, Insem: 48, Prelims: 42, Endsem: 82 },
-        "Cloud Computing": { Unit: 25, Insem: 46, Prelims: 44, Endsem: 85 },
-      },
-      "Semester 6": {
-        Cybersecurity: { Unit: 27, Insem: 51, Prelims: 46, Endsem: 88 },
-        "Web Development": { Unit: 29, Insem: 53, Prelims: 49, Endsem: 91 },
-      },
-    },
-    "Fourth Year": {
-      "Semester 7": {
-        "Big Data": { Unit: 31, Insem: 56, Prelims: 51, Endsem: 93 },
-        IoT: { Unit: 33, Insem: 57, Prelims: 52, Endsem: 94 },
-      },
-      "Semester 8": {
-        "Project Work": { Unit: 35, Insem: 59, Prelims: 54, Endsem: 96 },
-        "Technical Writing": { Unit: 34, Insem: 58, Prelims: 53, Endsem: 95 },
-      },
-    },
-  };
+  const [loading, setLoading] = useState(false);
 
   const maxMarks = {
     Unit: 30,
@@ -58,56 +17,134 @@ const Result = () => {
     Endsem: 70,
   };
 
-  useEffect(() => {
-    if (selectedYear) {
-      setSemesters(Object.keys(marksData[selectedYear]));
-    } else {
-      setSemesters([]);
+  // Fetch available academic years
+  const fetchYears = async () => {
+    try {
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/studentResult/years"
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching years:", error);
+      return ["First Year", "Second Year", "Third Year", "Fourth Year"];
     }
+  };
+
+  // Fetch semesters based on selected year
+  const fetchSemesters = async (year) => {
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentResult/semesters?year=${year}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching semesters:", error);
+      return ["Semester 1", "Semester 2"];
+    }
+  };
+
+  // Fetch subjects based on year & semester
+  const fetchSubjects = async (year, semester) => {
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentResult/subjects?year=${year}&semester=${semester}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+      return ["Mathematics", "Physics", "Computer Science"];
+    }
+  };
+
+  // Fetch marks for a specific subject
+  const fetchMarks = async (year, semester, subject) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentResult/marks?year=${year}&semester=${semester}&subject=${subject}`
+      );
+
+      // If API call fails, provide mock data
+      const marksData = response.data.length
+        ? response.data
+        : [
+            {
+              examType: "Unit",
+              marks: 25,
+              maxMarks: 30,
+            },
+            {
+              examType: "Insem",
+              marks: 22,
+              maxMarks: 30,
+            },
+            {
+              examType: "Prelims",
+              marks: 55,
+              maxMarks: 70,
+            },
+            {
+              examType: "Endsem",
+              marks: 62,
+              maxMarks: 70,
+            },
+          ];
+
+      const marksArray = marksData.map((exam) => {
+        const percentage = (exam.marks / maxMarks[exam.examType]) * 100;
+        return {
+          ...exam,
+          percentage,
+          performance: getPerformanceIndicator(percentage),
+        };
+      });
+      setMarks(marksArray);
+    } catch (error) {
+      console.error("Error fetching marks:", error);
+      setMarks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Determine performance based on percentage
+  const getPerformanceIndicator = (percentage) => {
+    if (percentage >= 80) return { class: "bg-green-500", text: "Excellent" };
+    if (percentage >= 70) return { class: "bg-blue-500", text: "Good" };
+    if (percentage >= 60) return { class: "bg-yellow-500", text: "Average" };
+    return { class: "bg-red-500", text: "Needs Improvement" };
+  };
+
+  // Fetch initial years on component mount
+  useEffect(() => {
+    fetchYears().then((years) => {
+      // Optional: You could set the first year automatically
+      if (years.length) setSelectedYear(years[0]);
+    });
+  }, []);
+
+  // Handle year change
+  useEffect(() => {
+    if (!selectedYear) return;
+    fetchSemesters(selectedYear).then(setSemesters);
+    setSelectedSemester("");
     setSubjects([]);
     setMarks([]);
   }, [selectedYear]);
 
+  // Handle semester change
   useEffect(() => {
-    if (selectedYear && selectedSemester) {
-      setSubjects(Object.keys(marksData[selectedYear][selectedSemester]));
-    } else {
-      setSubjects([]);
-    }
+    if (!selectedYear || !selectedSemester) return;
+    fetchSubjects(selectedYear, selectedSemester).then(setSubjects);
+    setSelectedSubject("");
     setMarks([]);
   }, [selectedYear, selectedSemester]);
 
+  // Handle subject change
   useEffect(() => {
-    if (selectedYear && selectedSemester && selectedSubject) {
-      const subjectMarks =
-        marksData[selectedYear][selectedSemester][selectedSubject];
-      const marksArray = Object.keys(subjectMarks).map((examType) => {
-        const percentage = (subjectMarks[examType] / maxMarks[examType]) * 100;
-        const performance = getPerformanceIndicator(percentage);
-        return {
-          examType,
-          marks: subjectMarks[examType],
-          maxMarks: maxMarks[examType],
-          performance,
-        };
-      });
-      setMarks(marksArray);
-    } else {
-      setMarks([]);
-    }
+    if (!selectedYear || !selectedSemester || !selectedSubject) return;
+    fetchMarks(selectedYear, selectedSemester, selectedSubject);
   }, [selectedYear, selectedSemester, selectedSubject]);
-
-  const getPerformanceIndicator = (percentage) => {
-    if (percentage >= 80) {
-      return { class: "bg-green-500", text: "Excellent" };
-    } else if (percentage >= 70) {
-      return { class: "bg-blue-500", text: "Good" };
-    } else if (percentage >= 60) {
-      return { class: "bg-yellow-500", text: "Average" };
-    } else {
-      return { class: "bg-red-500", text: "Needs Improvement" };
-    }
-  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white font-poppins">
@@ -152,6 +189,7 @@ const Result = () => {
             className="w-full p-3 border-2 border-purple-200 rounded-lg shadow-sm bg-white text-gray-700 outline-none transition-all hover:border-purple-500 hover:shadow-lg focus:border-purple-600 focus:shadow-lg cursor-pointer appearance-none"
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
+            disabled={!selectedYear}
           >
             <option value="">-- Select Semester --</option>
             {semesters.map((sem) => (
@@ -170,6 +208,7 @@ const Result = () => {
             className="w-full p-3 border-2 border-purple-200 rounded-lg shadow-sm bg-white text-gray-700 outline-none transition-all hover:border-purple-500 hover:shadow-lg focus:border-purple-600 focus:shadow-lg cursor-pointer appearance-none"
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
+            disabled={!selectedYear || !selectedSemester}
           >
             <option value="">-- Select Subject --</option>
             {subjects.map((subject) => (
@@ -180,8 +219,10 @@ const Result = () => {
           </select>
         </div>
 
-        {marks.length > 0 ? (
-          <table className="w-full border-collapse border-gray-200 rounded-lg overflow-hidden shadow-lg mt-6 opacity-0 transform translate-y-5 transition-all">
+        {loading ? (
+          <div className="text-center mt-6">Loading...</div>
+        ) : marks.length > 0 ? (
+          <table className="w-full border-collapse border-gray-200 rounded-lg overflow-hidden shadow-lg mt-6">
             <thead>
               <tr className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
                 <th className="py-3 px-4 font-semibold uppercase text-sm">
