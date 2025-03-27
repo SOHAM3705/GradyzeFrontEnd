@@ -70,6 +70,7 @@ const ChangePassword = () => {
 
       console.log("✅ Response:", response.data);
       setMessage("✅ " + response.data.message);
+      navigate("/adminlogin");
     } catch (error) {
       console.error("❌ Password reset error:", error);
     } finally {

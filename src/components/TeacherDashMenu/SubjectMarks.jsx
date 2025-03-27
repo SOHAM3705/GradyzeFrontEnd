@@ -281,7 +281,7 @@ const TeacherDashboard = () => {
         ))}
         <td className="p-2">{calculateOverallScore(student, "unit-test")}%</td>
         <td className={`p-2 ${student.status}`}>
-          {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+          {student.status?.charAt(0).toUpperCase() + student.status?.slice(1)}
         </td>
         <td className="p-2">
           <button
@@ -517,8 +517,8 @@ const TeacherDashboard = () => {
                     Status
                   </label>
                   <span className={`block mt-1 ${student.status}`}>
-                    {student.status.charAt(0).toUpperCase() +
-                      student.status.slice(1)}
+                    {student.status?.charAt(0).toUpperCase() +
+                      student.status?.slice(1)}
                   </span>
                 </div>
                 <div>
