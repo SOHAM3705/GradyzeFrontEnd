@@ -5,7 +5,7 @@ const AdminFeedback = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    studentId: "", // Added required studentId field for student role
+    department: "", // Added required department field for teacher role
     feedback: "",
     opinions: "",
     role: "student",
@@ -13,10 +13,6 @@ const AdminFeedback = () => {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
-
-  // Google Sheets Web App URL
-  const GOOGLE_SHEET_WEBHOOK =
-    "https://script.google.com/macros/s/AKfycbwd4I2MiKI7K2fUd9dc_pdWPSXv2s4b_KF1oP2bS2bGA4ScH7JTQryX_l26m6UlEwA9Zg/exec";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,28 +27,36 @@ const AdminFeedback = () => {
     setLoading(true);
 
     try {
-      await axios.post(GOOGLE_SHEET_WEBHOOK, formData, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/Gsheet/student/submit-feedback",
+        formData
+      );
 
-      setMessage({ text: "Feedback submitted successfully!", type: "success" });
+      // Check if response has data with status message
+      if (response.data && response.data.message) {
+        setMessage({ text: response.data.message, type: "success" });
+      } else {
+        setMessage({
+          text: "Feedback submitted successfully!",
+          type: "success",
+        });
+      }
 
       // Reset form
       setFormData({
         name: "",
         email: "",
-        studentId: "",
+        department: "",
         feedback: "",
         opinions: "",
         role: "student",
       });
     } catch (error) {
-      // More detailed error handling
-      let errorMessage = "Error submitting feedback. Please try again.";
-
-      if (error.response) {
-        errorMessage = error.response.data?.error || errorMessage;
-      }
+      // Display more specific error if available
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.details ||
+        "Error submitting feedback. Please try again.";
 
       setMessage({
         text: errorMessage,
