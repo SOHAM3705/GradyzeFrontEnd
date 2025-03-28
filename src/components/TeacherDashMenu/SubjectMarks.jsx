@@ -296,7 +296,7 @@ const TeacherDashboard = () => {
 
   const renderSubjects = () => {
     if (!subjectsList || subjectsList.length === 0) {
-      return <p>No subjects available.</p>; // Handle empty subjects case
+      return <p>No subjects available.</p>;
     }
 
     return subjectsList.map((subject) => {
@@ -304,9 +304,16 @@ const TeacherDashboard = () => {
         (value) => value
       );
 
+      // Use fallback to handle different subject object structures
+      const subjectId = subject._id || subject.id;
+      const subjectName = subject.name;
+      const subjectYear = subject.year;
+      const subjectSemester = subject.semester;
+      const subjectDivisions = subject.divisions || [subject.division];
+
       let buttonsHtml = (
         <button
-          onClick={() => openExamModal(subject.id)}
+          onClick={() => openExamModal(subjectId)}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Add Marks
@@ -318,7 +325,7 @@ const TeacherDashboard = () => {
           <>
             {buttonsHtml}
             <button
-              onClick={() => generatePDF(subject.id)}
+              onClick={() => generatePDF(subjectId)}
               className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
             >
               Generate PDF
@@ -328,12 +335,12 @@ const TeacherDashboard = () => {
       }
 
       return (
-        <div key={subject.id} className="bg-white p-4 rounded shadow mb-4">
-          <h3 className="text-lg font-semibold mb-2">{subject.name}</h3>
-          <p>Year: {subject.year}</p>
-          <p>Semester: {subject.semester}</p>
-          <p>Divisions: {subject.divisions.join(", ")}</p>
-          <p>Total Students: {subject.totalStudents}</p>
+        <div key={subjectId} className="bg-white p-4 rounded shadow mb-4">
+          <h3 className="text-lg font-semibold mb-2">{subjectName}</h3>
+          <p>Year: {subjectYear}</p>
+          <p>Semester: {subjectSemester}</p>
+          <p>Divisions: {subjectDivisions.join(", ")}</p>
+          <p>Total Students: {subject.totalStudents || 0}</p>
           <div
             className={`status-badge ${getOverallStatus(
               subject
@@ -346,14 +353,14 @@ const TeacherDashboard = () => {
       );
     });
   };
-
   const getOverallStatus = (subject) => {
-    const hasAnyMarksEntered = Object.values(subject.marksEntered).some(
+    // Add default value for marksEntered
+    const marksEntered = subject.marksEntered || {};
+
+    const hasAnyMarksEntered = Object.values(marksEntered).some(
       (value) => value
     );
-    const allMarksEntered = Object.values(subject.marksEntered).every(
-      (value) => value
-    );
+    const allMarksEntered = Object.values(marksEntered).every((value) => value);
 
     if (allMarksEntered) return "Complete";
     if (hasAnyMarksEntered) return "In Progress";
