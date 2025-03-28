@@ -126,7 +126,7 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/subject-list/${teacherId}`
+        `https://gradyzebackend.onrender.com/api/teachermarks/subject-list/${teacherId}`
       );
 
       console.log("Fetched Subject List:", response.data); // Debugging
@@ -231,13 +231,8 @@ const TeacherDashboard = () => {
     const percentage = Math.round((totalMarks / totalFullMarks) * 100);
     return percentage;
   };
-
   const renderStudents = () => {
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const paginatedStudents = filteredStudents.slice(start, end);
-
-    return paginatedStudents.map((student) => (
+    return filteredStudents.map((student) => (
       <tr key={student._id} className="border-b hover:bg-gray-100">
         <td className="p-2">{student.rollNo}</td>
         <td className="p-2">{student.name}</td>
@@ -534,6 +529,74 @@ const TeacherDashboard = () => {
             </div>
           </div>
         );
+
+      case "student-details":
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+              <button
+                onClick={closeModal}
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+              >
+                &times;
+              </button>
+              <div className="mb-4 border-b pb-2">
+                <h3 className="font-semibold text-gray-800">
+                  {student.name} - Performance Details
+                </h3>
+              </div>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block font-medium text-gray-600">
+                    Roll No.
+                  </label>
+                  <span className="block mt-1">{student.rollNo}</span>
+                </div>
+                <div>
+                  <label className="block font-medium text-gray-600">
+                    Division
+                  </label>
+                  <span className="block mt-1">{student.division}</span>
+                </div>
+                <div>
+                  <label className="block font-medium text-gray-600">
+                    Year
+                  </label>
+                  <span className="block mt-1">{student.year}</span>
+                </div>
+              </div>
+
+              <h3 className="font-semibold text-gray-800 mb-2">
+                Exam Performance
+              </h3>
+              {student.exams.map((exam, examIndex) => (
+                <div key={examIndex} className="mb-4 bg-gray-100 p-3 rounded">
+                  <h4 className="font-semibold mb-2">{exam.examType}</h4>
+                  <table className="w-full">
+                    <thead>
+                      <tr>
+                        <th className="text-left">Subject</th>
+                        <th className="text-left">Marks</th>
+                        <th className="text-left">Percentage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {exam.subjects.map((subject, subjectIndex) => (
+                        <tr key={subjectIndex}>
+                          <td>{subject.subjectName}</td>
+                          <td>
+                            {subject.marksObtained} / {subject.totalMarks}
+                          </td>
+                          <td>{subject.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
       case "exam-selection":
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
@@ -804,14 +867,26 @@ const TeacherDashboard = () => {
     statusCell.className = "status-cell " + status.toLowerCase();
   };
 
-  const openStudentModal = (studentId) => {
-    const student = students.find((s) => s.id === studentId);
-    if (!student) return;
+  const openStudentModal = async (studentId) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/student/${studentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    setModalContent({
-      student,
-      type: "student-details",
-    });
+      setModalContent({
+        student: response.data,
+        type: "student-details",
+      });
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+      alert("Could not fetch student details");
+    }
   };
 
   const openExamModal = (subjectId) => {
