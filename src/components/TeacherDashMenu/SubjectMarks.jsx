@@ -126,12 +126,19 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/subjects-list/${teacherId}`
+        `https://gradyzebackend.onrender.com/api/subject-list/${teacherId}`
       );
-      if (Array.isArray(response.data)) {
-        setSubjectsList(response.data);
+
+      console.log("Fetched Subject List:", response.data); // Debugging
+
+      if (response.data && Array.isArray(response.data.subjects)) {
+        setSubjectsList(response.data.subjects);
       } else {
-        console.error("Expected an array for subjects list data");
+        console.error(
+          "Expected an array for subjects list data, got:",
+          response.data
+        );
+        setSubjectsList([]);
       }
     } catch (error) {
       console.error("Error fetching subjects list:", error);
