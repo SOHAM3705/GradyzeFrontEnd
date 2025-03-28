@@ -47,17 +47,20 @@ const TeacherDashboard = () => {
             params: {
               subjectId: subject._id,
               teacherId: teacherId,
-              division: subject.division, // Add division parameter
+              division: subject.division,
             },
           }
         );
 
-        console.log(`Response for subject ${subject._id}:`, response.data);
+        // Normalize the response data
+        const studentData = response.data.studentData || {};
+        const divisionKey = `${subject.year}-${subject.division}`;
 
         return {
           [subject._id]: {
-            students: response.data.students || [],
+            students: studentData[divisionKey] || [],
             examData: response.data.examData || {},
+            totalStudents: studentData[divisionKey]?.length || 0,
           },
         };
       });
@@ -71,6 +74,14 @@ const TeacherDashboard = () => {
       console.log("Combined Students Data:", combinedStudentsData);
 
       setStudentsData(combinedStudentsData);
+
+      // Update subjects list with total students
+      const updatedSubjectsList = subjectsList.map((subject) => ({
+        ...subject,
+        totalStudents: combinedStudentsData[subject._id]?.totalStudents || 0,
+      }));
+
+      setSubjectsList(updatedSubjectsList);
     } catch (error) {
       console.error(
         "Error fetching subject students data:",
@@ -160,20 +171,26 @@ const TeacherDashboard = () => {
         `https://gradyzebackend.onrender.com/api/teachermarks/subject-list/${teacherId}`
       );
 
-      console.log("Fetched Subject List:", response.data); // Debugging
+      console.log("Fetched Subject List:", response.data);
 
-      // Check if response.data and response.data.subjects are defined
-      if (response.data && Array.isArray(response.data.subjects)) {
-        setSubjectsList(response.data.subjects);
-      } else {
-        console.error(
-          "Expected an array for subjects list data, got:",
-          response.data
-        );
-        setSubjectsList([]); // Reset to empty array if not valid
-      }
+      // Normalize the subjects data extraction
+      const subjects = response.data.subjects || response.data;
+
+      // Ensure each subject has a consistent _id field
+      const normalizedSubjects = subjects.map((subject) => ({
+        ...subject,
+        _id: subject._id || subject.id || subject._id,
+        name: subject.name,
+        year: subject.year,
+        semester: subject.semester,
+        division: subject.division || subject.divisions?.[0],
+        totalStudents: 0, // Default value if not provided
+      }));
+
+      setSubjectsList(normalizedSubjects);
     } catch (error) {
       console.error("Error fetching subjects list:", error);
+      setSubjectsList([]); // Reset to empty array if error occurs
     }
   };
   const updateSummary = () => {
