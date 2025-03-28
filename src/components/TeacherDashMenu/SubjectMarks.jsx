@@ -161,11 +161,12 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/subjects-list/${teacherId}`
+        `https://gradyzebackend.onrender.com/api/teachermarks/subject-list/${teacherId}`
       );
 
       console.log("Fetched Subject List:", response.data); // Debugging
 
+      // Check if response.data and response.data.subjects are defined
       if (response.data && Array.isArray(response.data.subjects)) {
         setSubjectsList(response.data.subjects);
       } else {
@@ -173,13 +174,12 @@ const TeacherDashboard = () => {
           "Expected an array for subjects list data, got:",
           response.data
         );
-        setSubjectsList([]);
+        setSubjectsList([]); // Reset to empty array if not valid
       }
     } catch (error) {
       console.error("Error fetching subjects list:", error);
     }
   };
-
   const updateSummary = () => {
     const totalStudents = students.length;
     const passedStudents = students.filter(
@@ -295,14 +295,18 @@ const TeacherDashboard = () => {
   };
 
   const renderSubjects = () => {
+    if (!subjectsList || subjectsList.length === 0) {
+      return <p>No subjects available.</p>; // Handle empty subjects case
+    }
+
     return subjectsList.map((subject) => {
-      const hasAnyMarksEntered = Object.values(subject.marksEntered).some(
+      const hasAnyMarksEntered = Object.values(subject.marksEntered || {}).some(
         (value) => value
       );
 
       let buttonsHtml = (
         <button
-          onClick={() => openExamModal(subject._id)}
+          onClick={() => openExamModal(subject.id)}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Add Marks
@@ -314,7 +318,7 @@ const TeacherDashboard = () => {
           <>
             {buttonsHtml}
             <button
-              onClick={() => generatePDF(subject._id)}
+              onClick={() => generatePDF(subject.id)}
               className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
             >
               Generate PDF
@@ -324,7 +328,7 @@ const TeacherDashboard = () => {
       }
 
       return (
-        <div key={subject._id} className="bg-white p-4 rounded shadow mb-4">
+        <div key={subject.id} className="bg-white p-4 rounded shadow mb-4">
           <h3 className="text-lg font-semibold mb-2">{subject.name}</h3>
           <p>Year: {subject.year}</p>
           <p>Semester: {subject.semester}</p>
