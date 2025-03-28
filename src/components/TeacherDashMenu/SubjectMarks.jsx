@@ -30,6 +30,7 @@ const TeacherDashboard = () => {
     averageScore: 0,
     highestScore: 0,
   });
+  const [studentsData, setStudentsData] = useState({});
 
   const teacherId = sessionStorage.getItem("teacherId");
 
@@ -69,6 +70,40 @@ const TeacherDashboard = () => {
       );
     } catch (error) {
       console.error("Error fetching teacher data:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "subject-teacher") {
+      fetchSubjectStudentsData();
+    }
+  }, [activeTab, subjectsList]);
+
+  const fetchSubjectStudentsData = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const subjectDataPromises = subjectsList.map(async (subject) => {
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject.id}/students`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        return {
+          [subject.id]: {
+            students: response.data.students,
+            examData: response.data.examData || {},
+          },
+        };
+      });
+
+      const subjectDataResults = await Promise.all(subjectDataPromises);
+      const combinedStudentsData = subjectDataResults.reduce(
+        (acc, curr) => ({ ...acc, ...curr }),
+        {}
+      );
+
+      setStudentsData(combinedStudentsData);
+    } catch (error) {
+      console.error("Error fetching subject students data:", error);
     }
   };
 
@@ -837,6 +872,11 @@ const TeacherDashboard = () => {
   };
 
   const updateStudentRow = (index) => {
+    if (!modalContent || !modalContent.subjectId) return;
+
+    const subjectData = studentsData[modalContent.subjectId];
+    if (!subjectData) return;
+
     const row = document.querySelector(`.student-row:nth-child(${index + 1})`);
     const isUnitTest =
       selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
@@ -922,6 +962,8 @@ const TeacherDashboard = () => {
   };
 
   const handleSaveMarks = async () => {
+    if (!selectedSubjectId) return;
+
     const subjectData = studentsData[selectedSubjectId];
     if (!subjectData) return;
 
