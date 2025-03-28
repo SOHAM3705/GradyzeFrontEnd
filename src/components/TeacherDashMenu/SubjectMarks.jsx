@@ -41,12 +41,13 @@ const TeacherDashboard = () => {
         console.log("Fetching data for subject:", subject);
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject._id}/students`,
           {
             headers: { Authorization: `Bearer ${token}` },
             params: {
               subjectId: subject._id,
-              division: subject.division, // Ensure division is included if necessary
+              teacherId: teacherId,
+              division: subject.division, // Add division parameter
             },
           }
         );
@@ -77,27 +78,6 @@ const TeacherDashboard = () => {
       );
     }
   };
-
-  useEffect(() => {
-    fetchTeacherData();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === "class-teacher") {
-      fetchStudents();
-      fetchAssignedDivision();
-    } else if (activeTab === "subject-teacher") {
-      fetchSubjects();
-      fetchSubjectsList();
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab === "class-teacher") {
-      updateSummary();
-      filterStudents();
-    }
-  }, [students, division, selectedExamType, searchQuery]);
 
   const fetchTeacherData = async () => {
     try {
@@ -661,8 +641,13 @@ const TeacherDashboard = () => {
 
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-lg relative">
-              {/* ... existing modal header ... */}
+            <div className="bg-white p-6 rounded shadow-lg w-full max-w-lg relative overflow-y-auto max-h-[80vh]">
+              <button
+                onClick={closeModal}
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+              >
+                &times;
+              </button>
               <table className="w-full mb-4">
                 <thead>
                   <tr>
@@ -687,7 +672,6 @@ const TeacherDashboard = () => {
                 </thead>
                 <tbody>
                   {subjectData.students.map((student, index) => {
-                    // Provide a safe default object for exam data
                     const studentExamData = examData[index] || {
                       q1q2: 0,
                       q3q4: 0,
@@ -712,7 +696,6 @@ const TeacherDashboard = () => {
                             onChange={() => updateStudentRow(index)}
                           />
                         </td>
-
                         <td className="p-2">
                           <input
                             type="number"
