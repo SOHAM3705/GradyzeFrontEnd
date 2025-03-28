@@ -84,11 +84,11 @@ const TeacherDashboard = () => {
       const token = sessionStorage.getItem("token");
       const subjectDataPromises = subjectsList.map(async (subject) => {
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject.id}/students`,
+          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject._id}/students`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         return {
-          [subject.id]: {
+          [subject._id]: {
             students: response.data.students,
             examData: response.data.examData || {},
           },
@@ -161,7 +161,7 @@ const TeacherDashboard = () => {
   const fetchSubjectsList = async () => {
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/subject-list/${teacherId}`
+        `https://gradyzebackend.onrender.com/api/teachermarks/subjects-list/${teacherId}`
       );
 
       console.log("Fetched Subject List:", response.data); // Debugging
@@ -254,7 +254,7 @@ const TeacherDashboard = () => {
     for (const subjectId in student.marks) {
       const subjectMarks = student.marks[subjectId][examType];
       if (subjectMarks && subjectMarks > 0) {
-        const subject = subjects.find((s) => s.id == subjectId);
+        const subject = subjects.find((s) => s._id == subjectId);
         totalMarks += subjectMarks;
         totalFullMarks += subject.fullMarks[examType];
         subjectsWithMarks++;
@@ -266,6 +266,7 @@ const TeacherDashboard = () => {
     const percentage = Math.round((totalMarks / totalFullMarks) * 100);
     return percentage;
   };
+
   const renderStudents = () => {
     return filteredStudents.map((student) => (
       <tr key={student._id} className="border-b hover:bg-gray-100">
@@ -301,7 +302,7 @@ const TeacherDashboard = () => {
 
       let buttonsHtml = (
         <button
-          onClick={() => openExamModal(subject.id)}
+          onClick={() => openExamModal(subject._id)}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Add Marks
@@ -313,7 +314,7 @@ const TeacherDashboard = () => {
           <>
             {buttonsHtml}
             <button
-              onClick={() => generatePDF(subject.id)}
+              onClick={() => generatePDF(subject._id)}
               className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
             >
               Generate PDF
@@ -323,7 +324,7 @@ const TeacherDashboard = () => {
       }
 
       return (
-        <div key={subject.id} className="bg-white p-4 rounded shadow mb-4">
+        <div key={subject._id} className="bg-white p-4 rounded shadow mb-4">
           <h3 className="text-lg font-semibold mb-2">{subject.name}</h3>
           <p>Year: {subject.year}</p>
           <p>Semester: {subject.semester}</p>
@@ -365,7 +366,7 @@ const TeacherDashboard = () => {
     subjectsList.forEach((subject) => {
       totalStudents += subject.totalStudents;
 
-      const subjectData = studentsData[subject.id];
+      const subjectData = studentsData[subject._id];
       if (subjectData) {
         for (const examType in subjectData.examData) {
           if (subject.marksEntered[examType]) {
@@ -422,7 +423,7 @@ const TeacherDashboard = () => {
   };
 
   const handleSavePDF = () => {
-    const subject = subjectsList.find((s) => s.id == selectedSubjectId);
+    const subject = subjectsList.find((s) => s._id == selectedSubjectId);
     const examType = selectedExamType;
 
     if (!examType) {
@@ -508,7 +509,10 @@ const TeacherDashboard = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {subjects.map((subject) => (
-                  <div key={subject.id} className="bg-white p-4 rounded shadow">
+                  <div
+                    key={subject._id}
+                    className="bg-white p-4 rounded shadow"
+                  >
                     <h3 className="text-lg font-semibold mb-2">
                       {subject.name}
                     </h3>
@@ -531,7 +535,7 @@ const TeacherDashboard = () => {
                                 examType.replace(/-/g, " ").slice(1)}
                             </td>
                             <td>
-                              {student.marks[subject.id]?.[examType] || 0}
+                              {student.marks[subject._id]?.[examType] || 0}
                             </td>
                             <td>{subject.fullMarks[examType]}</td>
                           </tr>
@@ -565,73 +569,6 @@ const TeacherDashboard = () => {
           </div>
         );
 
-      case "student-details":
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
-              <button
-                onClick={closeModal}
-                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
-              >
-                &times;
-              </button>
-              <div className="mb-4 border-b pb-2">
-                <h3 className="font-semibold text-gray-800">
-                  {student.name} - Performance Details
-                </h3>
-              </div>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block font-medium text-gray-600">
-                    Roll No.
-                  </label>
-                  <span className="block mt-1">{student.rollNo}</span>
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-600">
-                    Division
-                  </label>
-                  <span className="block mt-1">{student.division}</span>
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-600">
-                    Year
-                  </label>
-                  <span className="block mt-1">{student.year}</span>
-                </div>
-              </div>
-
-              <h3 className="font-semibold text-gray-800 mb-2">
-                Exam Performance
-              </h3>
-              {student.exams.map((exam, examIndex) => (
-                <div key={examIndex} className="mb-4 bg-gray-100 p-3 rounded">
-                  <h4 className="font-semibold mb-2">{exam.examType}</h4>
-                  <table className="w-full">
-                    <thead>
-                      <tr>
-                        <th className="text-left">Subject</th>
-                        <th className="text-left">Marks</th>
-                        <th className="text-left">Percentage</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {exam.subjects.map((subject, subjectIndex) => (
-                        <tr key={subjectIndex}>
-                          <td>{subject.subjectName}</td>
-                          <td>
-                            {subject.marksObtained} / {subject.totalMarks}
-                          </td>
-                          <td>{subject.percentage}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
       case "exam-selection":
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
@@ -697,7 +634,7 @@ const TeacherDashboard = () => {
               </button>
               <div className="mb-4 border-b pb-2">
                 <h3 className="font-semibold text-gray-800">
-                  {subjectsList.find((s) => s.id == subjectId).name} -{" "}
+                  {subjectsList.find((s) => s._id == subjectId).name} -{" "}
                   {examTypeToText(examType)}
                 </h3>
               </div>
@@ -994,7 +931,7 @@ const TeacherDashboard = () => {
       }
 
       return {
-        studentId: students[index].id,
+        studentId: students[index]._id,
         subjectId: selectedSubjectId,
         examType: selectedExamType,
         marksObtained: total,
@@ -1187,7 +1124,7 @@ const TeacherDashboard = () => {
                     <th className="p-2 text-left">Student Name</th>
                     <th className="p-2 text-left">Division</th>
                     {subjects.map((subject) => (
-                      <th key={subject.id} className="p-2 text-left">
+                      <th key={subject._id} className="p-2 text-left">
                         {subject.name}
                       </th>
                     ))}
