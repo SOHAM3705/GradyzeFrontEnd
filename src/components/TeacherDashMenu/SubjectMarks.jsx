@@ -34,61 +34,26 @@ const TeacherDashboard = () => {
 
   const teacherId = sessionStorage.getItem("teacherId");
 
-  const fetchSubjectStudentsData = async () => {
-    try {
-      const token = sessionStorage.getItem("token");
-      const subjectDataPromises = subjectsList.map(async (subject) => {
-        console.log("Fetching data for subject:", subject);
+  useEffect(() => {
+    fetchTeacherData();
+  }, []);
 
-        const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject._id}/students`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params: {
-              subjectId: subject._id,
-              teacherId: teacherId,
-              division: subject.division,
-            },
-          }
-        );
-
-        // Normalize the response data
-        const studentData = response.data.studentData || {};
-        const divisionKey = `${subject.year}-${subject.division}`;
-
-        return {
-          [subject._id]: {
-            students: studentData[divisionKey] || [],
-            examData: response.data.examData || {},
-            totalStudents: studentData[divisionKey]?.length || 0,
-          },
-        };
-      });
-
-      const subjectDataResults = await Promise.all(subjectDataPromises);
-      const combinedStudentsData = subjectDataResults.reduce(
-        (acc, curr) => ({ ...acc, ...curr }),
-        {}
-      );
-
-      console.log("Combined Students Data:", combinedStudentsData);
-
-      setStudentsData(combinedStudentsData);
-
-      // Update subjects list with total students
-      const updatedSubjectsList = subjectsList.map((subject) => ({
-        ...subject,
-        totalStudents: combinedStudentsData[subject._id]?.totalStudents || 0,
-      }));
-
-      setSubjectsList(updatedSubjectsList);
-    } catch (error) {
-      console.error(
-        "Error fetching subject students data:",
-        error.response?.data || error
-      );
+  useEffect(() => {
+    if (activeTab === "class-teacher") {
+      fetchStudents();
+      fetchAssignedDivision();
+    } else if (activeTab === "subject-teacher") {
+      fetchSubjects();
+      fetchSubjectsList();
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "class-teacher") {
+      updateSummary();
+      filterStudents();
+    }
+  }, [students, division, selectedExamType, searchQuery]);
 
   const fetchTeacherData = async () => {
     try {
@@ -109,10 +74,38 @@ const TeacherDashboard = () => {
   };
 
   useEffect(() => {
-    if (activeTab === "subject-teacher" && subjectsList.length > 0) {
+    if (activeTab === "subject-teacher") {
       fetchSubjectStudentsData();
     }
   }, [activeTab, subjectsList]);
+
+  const fetchSubjectStudentsData = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const subjectDataPromises = subjectsList.map(async (subject) => {
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject._id}/students`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        return {
+          [subject._id]: {
+            students: response.data.students,
+            examData: response.data.examData || {},
+          },
+        };
+      });
+
+      const subjectDataResults = await Promise.all(subjectDataPromises);
+      const combinedStudentsData = subjectDataResults.reduce(
+        (acc, curr) => ({ ...acc, ...curr }),
+        {}
+      );
+
+      setStudentsData(combinedStudentsData);
+    } catch (error) {
+      console.error("Error fetching subject students data:", error);
+    }
+  };
 
   const fetchAssignedDivision = async () => {
     try {
@@ -171,26 +164,20 @@ const TeacherDashboard = () => {
         `https://gradyzebackend.onrender.com/api/teachermarks/subject-list/${teacherId}`
       );
 
-      console.log("Fetched Subject List:", response.data);
+      console.log("Fetched Subject List:", response.data); // Debugging
 
-      // Normalize the subjects data extraction
-      const subjects = response.data.subjects || response.data;
-
-      // Ensure each subject has a consistent _id field
-      const normalizedSubjects = subjects.map((subject) => ({
-        ...subject,
-        _id: subject._id || subject.id || subject._id,
-        name: subject.name,
-        year: subject.year,
-        semester: subject.semester,
-        division: subject.division || subject.divisions?.[0],
-        totalStudents: 0, // Default value if not provided
-      }));
-
-      setSubjectsList(normalizedSubjects);
+      // Check if response.data and response.data.subjects are defined
+      if (response.data && Array.isArray(response.data.subjects)) {
+        setSubjectsList(response.data.subjects);
+      } else {
+        console.error(
+          "Expected an array for subjects list data, got:",
+          response.data
+        );
+        setSubjectsList([]); // Reset to empty array if not valid
+      }
     } catch (error) {
       console.error("Error fetching subjects list:", error);
-      setSubjectsList([]); // Reset to empty array if error occurs
     }
   };
   const updateSummary = () => {
@@ -308,25 +295,14 @@ const TeacherDashboard = () => {
   };
 
   const renderSubjects = () => {
-    if (!subjectsList || subjectsList.length === 0) {
-      return <p>No subjects available.</p>;
-    }
-
     return subjectsList.map((subject) => {
-      const hasAnyMarksEntered = Object.values(subject.marksEntered || {}).some(
+      const hasAnyMarksEntered = Object.values(subject.marksEntered).some(
         (value) => value
       );
 
-      // Use fallback to handle different subject object structures
-      const subjectId = subject._id || subject.id;
-      const subjectName = subject.name;
-      const subjectYear = subject.year;
-      const subjectSemester = subject.semester;
-      const subjectDivisions = subject.divisions || [subject.division];
-
       let buttonsHtml = (
         <button
-          onClick={() => openExamModal(subjectId)}
+          onClick={() => openExamModal(subject._id)}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Add Marks
@@ -338,7 +314,7 @@ const TeacherDashboard = () => {
           <>
             {buttonsHtml}
             <button
-              onClick={() => generatePDF(subjectId)}
+              onClick={() => generatePDF(subject._id)}
               className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
             >
               Generate PDF
@@ -348,12 +324,12 @@ const TeacherDashboard = () => {
       }
 
       return (
-        <div key={subjectId} className="bg-white p-4 rounded shadow mb-4">
-          <h3 className="text-lg font-semibold mb-2">{subjectName}</h3>
-          <p>Year: {subjectYear}</p>
-          <p>Semester: {subjectSemester}</p>
-          <p>Divisions: {subjectDivisions.join(", ")}</p>
-          <p>Total Students: {subject.totalStudents || 0}</p>
+        <div key={subject._id} className="bg-white p-4 rounded shadow mb-4">
+          <h3 className="text-lg font-semibold mb-2">{subject.name}</h3>
+          <p>Year: {subject.year}</p>
+          <p>Semester: {subject.semester}</p>
+          <p>Divisions: {subject.divisions.join(", ")}</p>
+          <p>Total Students: {subject.totalStudents}</p>
           <div
             className={`status-badge ${getOverallStatus(
               subject
@@ -366,27 +342,20 @@ const TeacherDashboard = () => {
       );
     });
   };
-  const getOverallStatus = (subject) => {
-    // Add default value for marksEntered
-    const marksEntered = subject.marksEntered || {};
 
-    const hasAnyMarksEntered = Object.values(marksEntered).some(
+  const getOverallStatus = (subject) => {
+    const hasAnyMarksEntered = Object.values(subject.marksEntered).some(
       (value) => value
     );
-    const allMarksEntered = Object.values(marksEntered).every((value) => value);
+    const allMarksEntered = Object.values(subject.marksEntered).every(
+      (value) => value
+    );
 
     if (allMarksEntered) return "Complete";
     if (hasAnyMarksEntered) return "In Progress";
     return "Pending";
   };
 
-  useEffect(() => {
-    if (activeTab === "subject-teacher") {
-      updateSubjectSummary();
-    }
-  }, [activeTab, studentsData]);
-
-  // Modify updateSubjectSummary to handle undefined data safely
   const updateSubjectSummary = () => {
     let totalStudents = 0;
     let totalPassed = 0;
@@ -395,33 +364,35 @@ const TeacherDashboard = () => {
     let highestMark = 0;
 
     subjectsList.forEach((subject) => {
+      totalStudents += subject.totalStudents;
+
       const subjectData = studentsData[subject._id];
-      if (!subjectData) return; // Skip if no data for this subject
+      if (subjectData) {
+        for (const examType in subjectData.examData) {
+          if (subject.marksEntered[examType]) {
+            const examData = subjectData.examData[examType];
+            const studentCount = subjectData.students.length;
 
-      totalStudents += subject.totalStudents || 0;
+            for (let i = 0; i < studentCount; i++) {
+              const studentExamData = examData[i];
+              if (studentExamData && studentExamData.total > 0) {
+                totalWithMarks++;
+                totalMarks += studentExamData.total;
 
-      for (const examType in subject.marksEntered || {}) {
-        if (subject.marksEntered[examType]) {
-          const examData = subjectData.examData[examType] || [];
+                const isUnitTest =
+                  examType === "unit-test" || examType === "re-unit-test";
+                const passingMark = isUnitTest ? 12 : 28;
 
-          examData.forEach((studentExamData) => {
-            if (studentExamData && studentExamData.total > 0) {
-              totalWithMarks++;
-              totalMarks += studentExamData.total;
+                if (studentExamData.total >= passingMark) {
+                  totalPassed++;
+                }
 
-              const isUnitTest =
-                examType === "unit-test" || examType === "re-unit-test";
-              const passingMark = isUnitTest ? 12 : 28;
-
-              if (studentExamData.total >= passingMark) {
-                totalPassed++;
-              }
-
-              if (studentExamData.total > highestMark) {
-                highestMark = studentExamData.total;
+                if (studentExamData.total > highestMark) {
+                  highestMark = studentExamData.total;
+                }
               }
             }
-          });
+          }
         }
       }
     });
@@ -435,7 +406,7 @@ const TeacherDashboard = () => {
       totalStudents,
       passRate,
       averageScore,
-      highestScore: highestMark,
+      highestScore,
     });
   };
 
@@ -648,23 +619,25 @@ const TeacherDashboard = () => {
         );
       case "students-list":
         const { subjectId, examType } = modalContent;
-        const subjectData = studentsData[subjectId] || {
-          students: [],
-          examData: {},
-        };
-        const examData = subjectData.examData[examType] || [];
+        const subjectData = studentsData[subjectId];
         const isUnitTest =
           examType === "unit-test" || examType === "re-unit-test";
 
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-lg relative overflow-y-auto max-h-[80vh]">
+            <div className="bg-white p-6 rounded shadow-lg w-full max-w-lg relative">
               <button
                 onClick={closeModal}
                 className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
               >
                 &times;
               </button>
+              <div className="mb-4 border-b pb-2">
+                <h3 className="font-semibold text-gray-800">
+                  {subjectsList.find((s) => s._id == subjectId).name} -{" "}
+                  {examTypeToText(examType)}
+                </h3>
+              </div>
               <table className="w-full mb-4">
                 <thead>
                   <tr>
@@ -689,7 +662,9 @@ const TeacherDashboard = () => {
                 </thead>
                 <tbody>
                   {subjectData.students.map((student, index) => {
-                    const studentExamData = examData[index] || {
+                    const studentExamData = subjectData.examData[examType][
+                      index
+                    ] || {
                       q1q2: 0,
                       q3q4: 0,
                       q5q6: 0,
@@ -707,7 +682,7 @@ const TeacherDashboard = () => {
                             type="number"
                             min="0"
                             max={isUnitTest ? "15" : "17"}
-                            defaultValue={studentExamData.q1q2}
+                            value={studentExamData.q1q2}
                             className="q1q2-input w-16 p-1 border rounded"
                             data-index={index}
                             onChange={() => updateStudentRow(index)}
