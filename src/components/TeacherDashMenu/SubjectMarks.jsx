@@ -38,21 +38,19 @@ const TeacherDashboard = () => {
     try {
       const token = sessionStorage.getItem("token");
       const subjectDataPromises = subjectsList.map(async (subject) => {
-        // Log the subject being processed
         console.log("Fetching data for subject:", subject);
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject._id}/students`,
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
             params: {
-              subjectId: subject._id, // Add explicit subjectId parameter
-              teacherId: teacherId,
+              subjectId: subject._id,
+              division: subject.division, // Ensure division is included if necessary
             },
           }
         );
 
-        // Log the response data
         console.log(`Response for subject ${subject._id}:`, response.data);
 
         return {
@@ -69,7 +67,6 @@ const TeacherDashboard = () => {
         {}
       );
 
-      // Log the final combined data
       console.log("Combined Students Data:", combinedStudentsData);
 
       setStudentsData(combinedStudentsData);
