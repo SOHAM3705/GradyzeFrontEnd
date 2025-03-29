@@ -39,6 +39,8 @@ import TeacherSyllabusView from "./components/TeacherDashMenu/Syllabus";
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
 import TeacherSettings from "./components/TeacherDashMenu/Settings";
 import TeacherOverview from "./components/TeacherDashMenu/teacherOverview";
+import TeacherPrerequisiteTest from "./components/TeacherDashMenu/Prerequisitetest";
+import AssignmentManage from "./components/TeacherDashMenu/AssignmentManage";
 
 import StudentDash from "./Pages/StudentDash/StudentDash";
 import StudentAttendanceDashboard from "./components/StudentDashMenu/AttendnaceReport";
@@ -48,6 +50,8 @@ import StudentFeedback from "./components/StudentDashMenu/Feedback";
 import StudentSettings from "./components/StudentDashMenu/Settings";
 import StudentOverview from "./components/StudentDashMenu/Overview";
 import StudentResults from "./components/StudentDashMenu/Results";
+import StudentAssignment from "./components/StudentDashMenu/Assignment";
+import studentPrerequisiteTest from "./components/StudentDashMenu/Prerequisitetest";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
@@ -125,6 +129,8 @@ function App() {
         <Route path="syllabus" element={<TeacherSyllabusView />} />
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
+        <Route path="prerequisite-test" element={<TeacherPrerequisiteTest />} />
+        <Route path="assignment-manage" element={<AssignmentManage />} />
       </Route>
 
       <Route
@@ -145,6 +151,8 @@ function App() {
         <Route path="feedback" element={<StudentFeedback />} />
         <Route path="settings" element={<StudentSettings />} />
         <Route path="results" element={<StudentResults />} />
+        <Route path="assignment" element={<StudentAssignment />} />
+        <Route path="prerequisite-test" element={<studentPrerequisiteTest />} />
       </Route>
     </Routes>
   );

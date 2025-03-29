@@ -49,6 +49,12 @@ function StudentDash() {
     { icon: "🏠", label: "Overview", path: "/studentdash" },
     { icon: "📝", label: "Results", path: "/studentdash/results" },
     {
+      icon: "📝",
+      label: "Prerequisite Test",
+      path: "/studentdash/prerequisite-test",
+    },
+    { icon: "📄", label: "Assignment", path: "/studentdash/assignment" },
+    {
       icon: "📅",
       label: "Attendance Reports",
       path: "/studentdash/attendance-reports",
