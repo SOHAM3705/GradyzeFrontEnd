@@ -17,6 +17,9 @@ const TeacherDashboard = () => {
   const [year, setYear] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [editMode, setEditMode] = useState(false);
   const [summaryData, setSummaryData] = useState({
     totalStudents: 0,
     passRate: 0,
@@ -31,34 +34,92 @@ const TeacherDashboard = () => {
     highestScore: 0,
   });
   const [studentsData, setStudentsData] = useState({});
+  const [examTypeMarks, setExamTypeMarks] = useState({
+    "unit-test": { q1q2Max: 15, q3q4Max: 15, passingMark: 12, totalMarks: 30 },
+    "re-unit-test": {
+      q1q2Max: 15,
+      q3q4Max: 15,
+      passingMark: 12,
+      totalMarks: 30,
+    },
+    prelim: {
+      q1q2Max: 17,
+      q3q4Max: 18,
+      q5q6Max: 17,
+      q7q8Max: 18,
+      passingMark: 28,
+      totalMarks: 70,
+    },
+    reprelim: {
+      q1q2Max: 17,
+      q3q4Max: 18,
+      q5q6Max: 17,
+      q7q8Max: 18,
+      passingMark: 28,
+      totalMarks: 70,
+    },
+  });
 
   const teacherId = sessionStorage.getItem("teacherId");
+  const apiBaseUrl = "https://gradyzebackend.onrender.com/api";
 
-  const fetchSubjectStudentsData = async () => {
+  // API request with error handling and loading state
+  const makeRequest = async (method, endpoint, data = null, params = {}) => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       const token = sessionStorage.getItem("token");
+      if (!token && endpoint !== "/teachermarks/teacher-role/") {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      const config = {
+        method,
+        url: `${apiBaseUrl}${endpoint}`,
+        headers: { Authorization: `Bearer ${token}` },
+        params,
+      };
+
+      if (data && (method === "post" || method === "put")) {
+        config.data = data;
+      }
+
+      const response = await axios(config);
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "An error occurred";
+      setError(errorMessage);
+      console.error(
+        `Error during ${method.toUpperCase()} request to ${endpoint}:`,
+        error
+      );
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Improved fetch subject students data
+  const fetchSubjectStudentsData = async () => {
+    if (!subjectsList.length) return;
+
+    try {
       const subjectDataPromises = subjectsList.map(async (subject) => {
-        // Log the subject being processed
-        console.log("Fetching data for subject:", subject);
+        console.log("Fetching data for subject:", subject.name, subject._id);
 
-        const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject._id}/students`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params: {
-              subjectId: subject._id, // Add explicit subjectId parameter
-              teacherId: teacherId,
-            },
-          }
+        const data = await makeRequest(
+          "get",
+          `/teachermarks/${teacherId}/subject/${subject._id}/students`,
+          null,
+          { subjectId: subject._id, teacherId }
         );
-
-        // Log the response data
-        console.log(`Response for subject ${subject._id}:`, response.data);
 
         return {
           [subject._id]: {
-            students: response.data.students || [],
-            examData: response.data.examData || {},
+            students: data.students || [],
+            examData: data.examData || {},
           },
         };
       });
@@ -69,15 +130,10 @@ const TeacherDashboard = () => {
         {}
       );
 
-      // Log the final combined data
       console.log("Combined Students Data:", combinedStudentsData);
-
       setStudentsData(combinedStudentsData);
     } catch (error) {
-      console.error(
-        "Error fetching subject students data:",
-        error.response?.data || error
-      );
+      console.error("Failed to fetch subject students:", error);
     }
   };
 
@@ -104,14 +160,16 @@ const TeacherDashboard = () => {
 
   const fetchTeacherData = async () => {
     try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/teacher-role/${teacherId}`
+      const data = await makeRequest(
+        "get",
+        `/teachermarks/teacher-role/${teacherId}`
       );
-      setIsClassTeacher(response.data.isClassTeacher);
-      setIsSubjectTeacher(response.data.isSubjectTeacher);
+
+      setIsClassTeacher(data.isClassTeacher);
+      setIsSubjectTeacher(data.isSubjectTeacher);
 
       setActiveTab(
-        response.data.isSubjectTeacher && !response.data.isClassTeacher
+        data.isSubjectTeacher && !data.isClassTeacher
           ? "subject-teacher"
           : "class-teacher"
       );
@@ -128,47 +186,46 @@ const TeacherDashboard = () => {
 
   const fetchAssignedDivision = async () => {
     try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/divisions`
+      const data = await makeRequest(
+        "get",
+        `/teachermarks/${teacherId}/divisions`
       );
-      setDivision(response.data.division);
-      setYear(response.data.year);
+
+      setDivision(data.division);
+      setYear(data.year);
     } catch (error) {
       console.error("Error fetching assigned division:", error);
     }
   };
 
+  // Improved students fetching with proper error handling
   const fetchStudents = async () => {
     try {
-      const token = sessionStorage.getItem("token");
-      if (!token) {
-        console.error("No token found, redirecting to login.");
-        window.location.href = "/teacherlogin";
-        return;
-      }
-
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/students`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const data = await makeRequest(
+        "get",
+        `/teachermarks/${teacherId}/students`
       );
 
-      if (Array.isArray(response.data.students)) {
-        setStudents(response.data.students);
+      if (Array.isArray(data.students)) {
+        setStudents(data.students);
+        console.log("Successfully fetched students:", data.students.length);
       } else {
-        console.error("Unexpected API response:", response.data);
+        throw new Error("API returned unexpected data format");
       }
     } catch (error) {
-      console.error("Error fetching students:", error.response?.data || error);
+      console.error("Error fetching students:", error);
     }
   };
 
   const fetchSubjects = async () => {
     try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subjects`
+      const data = await makeRequest(
+        "get",
+        `/teachermarks/${teacherId}/subjects`
       );
-      if (Array.isArray(response.data)) {
-        setSubjects(response.data);
+
+      if (Array.isArray(data)) {
+        setSubjects(data);
       } else {
         console.error("Expected an array for subjects data");
       }
@@ -179,38 +236,41 @@ const TeacherDashboard = () => {
 
   const fetchSubjectsList = async () => {
     try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/subject-list/${teacherId}`
+      const data = await makeRequest(
+        "get",
+        `/teachermarks/subject-list/${teacherId}`
       );
 
-      console.log("Fetched Subject List:", response.data); // Debugging
+      console.log("Fetched Subject List:", data);
 
-      // Check if response.data and response.data.subjects are defined
-      if (response.data && Array.isArray(response.data.subjects)) {
-        setSubjectsList(response.data.subjects);
+      if (data && Array.isArray(data.subjects)) {
+        setSubjectsList(data.subjects);
       } else {
-        console.error(
-          "Expected an array for subjects list data, got:",
-          response.data
-        );
-        setSubjectsList([]); // Reset to empty array if not valid
+        console.error("Expected an array for subjects list data, got:", data);
+        setSubjectsList([]);
       }
     } catch (error) {
       console.error("Error fetching subjects list:", error);
     }
   };
+
   const updateSummary = () => {
     const totalStudents = students.length;
+    if (totalStudents === 0) return;
+
     const passedStudents = students.filter(
       (student) => student.status === "pass"
     ).length;
-    const passRate = Math.round((passedStudents / totalStudents) * 100);
+    const passRate = Math.round((passedStudents / totalStudents) * 100) || 0;
 
     let totalPercentage = 0;
     let studentsWithScores = 0;
 
     students.forEach((student) => {
-      const score = calculateOverallScore(student, "unit-test");
+      const score = calculateOverallScore(
+        student,
+        selectedExamType || "unit-test"
+      );
       if (score !== "N/A") {
         totalPercentage += parseInt(score);
         studentsWithScores++;
@@ -226,7 +286,10 @@ const TeacherDashboard = () => {
     let highestPerformer = null;
 
     students.forEach((student) => {
-      const score = calculateOverallScore(student, "unit-test");
+      const score = calculateOverallScore(
+        student,
+        selectedExamType || "unit-test"
+      );
       if (score !== "N/A" && parseInt(score) > highestScore) {
         highestScore = parseInt(score);
         highestPerformer = student;
@@ -234,11 +297,15 @@ const TeacherDashboard = () => {
     });
 
     const atRiskCount = students.filter((student) => {
-      const score = calculateOverallScore(student, "unit-test");
+      const score = calculateOverallScore(
+        student,
+        selectedExamType || "unit-test"
+      );
       return score !== "N/A" && parseInt(score) < 40;
     }).length;
 
-    const atRiskPercentage = Math.round((atRiskCount / totalStudents) * 100);
+    const atRiskPercentage =
+      Math.round((atRiskCount / totalStudents) * 100) || 0;
 
     setSummaryData({
       totalStudents,
@@ -252,6 +319,8 @@ const TeacherDashboard = () => {
   };
 
   const filterStudents = () => {
+    if (!students.length) return;
+
     let filtered = students
       .filter((student) => {
         const matchesSearch =
@@ -266,6 +335,8 @@ const TeacherDashboard = () => {
   };
 
   const calculateOverallScore = (student, examType = "unit-test") => {
+    if (!student || !student.marks) return "N/A";
+
     let totalMarks = 0;
     let totalFullMarks = 0;
     let subjectsWithMarks = 0;
@@ -273,44 +344,103 @@ const TeacherDashboard = () => {
     for (const subjectId in student.marks) {
       const subjectMarks = student.marks[subjectId][examType];
       if (subjectMarks && subjectMarks > 0) {
-        const subject = subjects.find((s) => s._id == subjectId);
-        totalMarks += subjectMarks;
-        totalFullMarks += subject.fullMarks[examType];
-        subjectsWithMarks++;
+        const subject = subjects.find((s) => s._id === subjectId);
+        if (subject && subject.fullMarks && subject.fullMarks[examType]) {
+          totalMarks += subjectMarks;
+          totalFullMarks += subject.fullMarks[examType];
+          subjectsWithMarks++;
+        }
       }
     }
 
     if (subjectsWithMarks === 0) return "N/A";
 
     const percentage = Math.round((totalMarks / totalFullMarks) * 100);
-    return percentage;
+    return percentage.toString();
   };
 
+  // Improved rendering of students with pagination
   const renderStudents = () => {
-    return filteredStudents.map((student) => (
+    if (filteredStudents.length === 0) {
+      return (
+        <tr>
+          <td colSpan="100%" className="p-4 text-center">
+            No students found. {error ? `Error: ${error}` : ""}
+          </td>
+        </tr>
+      );
+    }
+
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const paginatedStudents = filteredStudents.slice(
+      startIndex,
+      startIndex + rowsPerPage
+    );
+
+    return paginatedStudents.map((student) => (
       <tr key={student._id} className="border-b hover:bg-gray-100">
         <td className="p-2">{student.rollNo}</td>
         <td className="p-2">{student.name}</td>
         <td className="p-2">{division}</td>
         {subjects.map((subject) => (
           <td key={subject._id} className="p-2">
-            {student.marks?.[subject._id]?.["unit-test"] || 0}
+            {student.marks?.[subject._id]?.[selectedExamType || "unit-test"] ||
+              0}
           </td>
         ))}
-        <td className="p-2">{calculateOverallScore(student, "unit-test")}%</td>
-        <td className={`p-2 ${student.status}`}>
-          {student.status?.charAt(0).toUpperCase() + student.status?.slice(1)}
+        <td className="p-2">
+          {calculateOverallScore(student, selectedExamType || "unit-test")}%
+        </td>
+        <td
+          className={`p-2 ${
+            student.status === "pass" ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {student.status?.charAt(0).toUpperCase() + student.status?.slice(1) ||
+            "N/A"}
         </td>
         <td className="p-2">
-          <button
-            onClick={() => openStudentModal(student._id)}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            View
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => openStudentModal(student._id)}
+              className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
+            >
+              View
+            </button>
+            <button
+              onClick={() => openEditMarksModal(student._id)}
+              className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+            >
+              Edit
+            </button>
+          </div>
         </td>
       </tr>
     ));
+  };
+
+  // New function to open edit marks modal
+  const openEditMarksModal = async (studentId) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const response = await axios.get(
+        `${apiBaseUrl}/teachermarks/${teacherId}/student/${studentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setModalContent({
+        student: response.data,
+        type: "edit-marks",
+      });
+      setEditMode(true);
+    } catch (error) {
+      console.error("Error fetching student details for editing:", error);
+      alert("Could not fetch student details for editing");
+    }
   };
 
   const renderSubjects = () => {
@@ -349,6 +479,12 @@ const TeacherDashboard = () => {
             >
               Generate PDF
             </button>
+            <button
+              onClick={() => viewEditSubjectMarks(subjectId)}
+              className="bg-green-500 text-white px-4 py-2 rounded ml-2"
+            >
+              Edit Marks
+            </button>
           </>
         );
       }
@@ -363,15 +499,31 @@ const TeacherDashboard = () => {
           <div
             className={`status-badge ${getOverallStatus(
               subject
-            ).toLowerCase()} text-sm font-semibold px-3 py-1 rounded mt-2`}
+            ).toLowerCase()} text-sm font-semibold px-3 py-1 rounded mt-2 ${
+              getOverallStatus(subject) === "Complete"
+                ? "bg-green-100 text-green-800"
+                : getOverallStatus(subject) === "In Progress"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
           >
             {getOverallStatus(subject)}
           </div>
-          <div className="flex mt-4">{buttonsHtml}</div>
+          <div className="flex mt-4 space-x-2">{buttonsHtml}</div>
         </div>
       );
     });
   };
+
+  // New function to view/edit subject marks
+  const viewEditSubjectMarks = (subjectId) => {
+    setSelectedSubjectId(subjectId);
+    setModalContent({
+      type: "edit-subject-exam-selection",
+      subjectId,
+    });
+  };
+
   const getOverallStatus = (subject) => {
     // Add default value for marksEntered
     const marksEntered = subject.marksEntered || {};
@@ -392,13 +544,15 @@ const TeacherDashboard = () => {
     }
   }, [activeTab, studentsData]);
 
-  // Modify updateSubjectSummary to handle undefined data safely
+  // Modified updateSubjectSummary to handle undefined data safely
   const updateSubjectSummary = () => {
     let totalStudents = 0;
     let totalPassed = 0;
     let totalMarks = 0;
     let totalWithMarks = 0;
     let highestMark = 0;
+
+    if (!subjectsList.length) return;
 
     subjectsList.forEach((subject) => {
       const subjectData = studentsData[subject._id];
@@ -458,7 +612,7 @@ const TeacherDashboard = () => {
   };
 
   const handleSavePDF = () => {
-    const subject = subjectsList.find((s) => s._id == selectedSubjectId);
+    const subject = subjectsList.find((s) => s._id === selectedSubjectId);
     const examType = selectedExamType;
 
     if (!examType) {
@@ -485,6 +639,7 @@ const TeacherDashboard = () => {
     return types[type] || type;
   };
 
+  // Improved modal content rendering with edit functionality
   const renderModalContent = () => {
     if (!modalContent) return null;
 
@@ -493,7 +648,7 @@ const TeacherDashboard = () => {
         const { student } = modalContent;
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative max-h-[90vh] overflow-y-auto">
               <button
                 onClick={closeModal}
                 className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -540,7 +695,9 @@ const TeacherDashboard = () => {
                 Academic Performance
               </h3>
               <div className="chart-container h-64 mb-4 bg-gray-100">
-                <p>Chart would be rendered here.</p>
+                <p className="text-center pt-20">
+                  Performance charts would be rendered here.
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {subjects.map((subject) => (
@@ -555,26 +712,28 @@ const TeacherDashboard = () => {
                       <thead>
                         <tr>
                           <th className="text-left">Exam Type</th>
-                          <th className="text-left">Marks Obtained</th>
+                          <th className="text-left">Marks</th>
                           <th className="text-left">Full Marks</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {Object.keys(subject.fullMarks).map((examType) => (
-                          <tr key={examType}>
-                            <td>
-                              {examType
-                                .replace(/-/g, " ")
-                                .charAt(0)
-                                .toUpperCase() +
-                                examType.replace(/-/g, " ").slice(1)}
-                            </td>
-                            <td>
-                              {student.marks[subject._id]?.[examType] || 0}
-                            </td>
-                            <td>{subject.fullMarks[examType]}</td>
-                          </tr>
-                        ))}
+                        {Object.keys(subject.fullMarks || {}).map(
+                          (examType) => (
+                            <tr key={examType}>
+                              <td>
+                                {examType
+                                  .replace(/-/g, " ")
+                                  .charAt(0)
+                                  .toUpperCase() +
+                                  examType.replace(/-/g, " ").slice(1)}
+                              </td>
+                              <td>
+                                {student.marks?.[subject._id]?.[examType] || 0}
+                              </td>
+                              <td>{subject.fullMarks[examType]}</td>
+                            </tr>
+                          )
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -582,12 +741,18 @@ const TeacherDashboard = () => {
               </div>
               <div className="flex justify-end gap-2 mt-4">
                 <button
+                  onClick={() => openEditMarksModal(student._id)}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                >
+                  Edit Marks
+                </button>
+                <button
                   onClick={() =>
                     alert("Send report functionality would be implemented here")
                   }
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
                 >
-                  Send Report to Parents
+                  Send Report
                 </button>
                 <button
                   onClick={() =>
@@ -604,10 +769,11 @@ const TeacherDashboard = () => {
           </div>
         );
 
-      case "exam-selection":
+      case "edit-marks":
+        const studentForEdit = modalContent.student;
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+            <div className="bg-white p-6 rounded shadow-lg w-full max-w-3xl relative max-h-[90vh] overflow-y-auto">
               <button
                 onClick={closeModal}
                 className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -616,26 +782,82 @@ const TeacherDashboard = () => {
               </button>
               <div className="mb-4 border-b pb-2">
                 <h3 className="font-semibold text-gray-800">
-                  Select Exam Type
+                  Edit Marks for {studentForEdit.name}
                 </h3>
               </div>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block font-medium text-gray-600">
+                    Roll No.
+                  </label>
+                  <span className="block mt-1">{studentForEdit.rollNo}</span>
+                </div>
+                <div>
+                  <label className="block font-medium text-gray-600">
+                    Division
+                  </label>
+                  <span className="block mt-1">{division}</span>
+                </div>
+              </div>
+
               <div className="mb-4">
-                <label className="block font-medium text-gray-600">
-                  Exam Type
+                <label className="block font-medium text-gray-600 mb-2">
+                  Select Exam Type
                 </label>
                 <select
-                  value={selectedExamType}
+                  value={selectedExamType || "unit-test"}
                   onChange={(e) => setSelectedExamType(e.target.value)}
-                  className="w-full p-2 border rounded mt-1"
+                  className="w-full p-2 border rounded"
                 >
-                  <option value="">Select an exam type</option>
                   <option value="unit-test">Unit Test</option>
                   <option value="re-unit-test">Re-Unit Test</option>
                   <option value="prelim">Prelim</option>
                   <option value="reprelim">Re-Prelim</option>
                 </select>
               </div>
-              <div className="flex justify-end gap-2">
+
+              <div className="overflow-x-auto">
+                <table className="w-full mb-4">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="p-2 text-left">Subject</th>
+                      <th className="p-2 text-right">Current Marks</th>
+                      <th className="p-2 text-right">New Marks</th>
+                      <th className="p-2 text-center">Full Marks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subjects.map((subject) => {
+                      const currentMarks =
+                        studentForEdit.marks?.[subject._id]?.[
+                          selectedExamType || "unit-test"
+                        ] || 0;
+                      const fullMarks =
+                        subject.fullMarks?.[selectedExamType || "unit-test"] ||
+                        0;
+                      return (
+                        <tr key={subject._id} className="border-b">
+                          <td className="p-2">{subject.name}</td>
+                          <td className="p-2 text-right">{currentMarks}</td>
+                          <td className="p-2 text-right">
+                            <input
+                              type="number"
+                              min="0"
+                              max={fullMarks}
+                              defaultValue={currentMarks}
+                              className="w-20 p-1 border rounded text-right"
+                              id={`marks-${subject._id}`}
+                            />
+                          </td>
+                          <td className="p-2 text-center">{fullMarks}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={closeModal}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
@@ -643,130 +865,122 @@ const TeacherDashboard = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleContinueExam}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={() => handleSaveEditedMarks(studentForEdit._id)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                  disabled={isSubmitting}
                 >
-                  Continue
+                  {isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
           </div>
         );
-      case "students-list":
-        const { subjectId, examType } = modalContent;
-        const subjectData = studentsData[subjectId] || {
-          students: [],
-          examData: {},
-        };
-        const examData = subjectData.examData[examType] || [];
-        const isUnitTest =
-          examType === "unit-test" || examType === "re-unit-test";
 
+      case "add-marks":
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-lg relative">
-              {/* ... existing modal header ... */}
-              <table className="w-full mb-4">
-                <thead>
-                  <tr>
-                    <th className="text-left">Roll No.</th>
-                    <th className="text-left">Name</th>
-                    {isUnitTest ? (
-                      <>
-                        <th className="text-left">Q1/Q2 (15)</th>
-                        <th className="text-left">Q3/Q4 (15)</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="text-left">Q1/Q2 (17)</th>
-                        <th className="text-left">Q3/Q4 (18)</th>
-                        <th className="text-left">Q5/Q6 (17)</th>
-                        <th className="text-left">Q7/Q8 (18)</th>
-                      </>
-                    )}
-                    <th className="text-left">Total</th>
-                    <th className="text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subjectData.students.map((student, index) => {
-                    // Provide a safe default object for exam data
-                    const studentExamData = examData[index] || {
-                      q1q2: 0,
-                      q3q4: 0,
-                      q5q6: 0,
-                      q7q8: 0,
-                      total: 0,
-                      status: "",
-                    };
+            <div className="bg-white p-6 rounded shadow-lg w-full max-w-3xl relative max-h-[90vh] overflow-y-auto">
+              <button
+                onClick={closeModal}
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+              >
+                &times;
+              </button>
+              <div className="mb-4 border-b pb-2">
+                <h3 className="font-semibold text-gray-800">
+                  Add Marks for{" "}
+                  {selectedExamType.replace("-", " ").toUpperCase()}
+                </h3>
+              </div>
 
-                    return (
-                      <tr key={student.rollNo} className="student-row border-b">
-                        <td className="p-2">{student.rollNo}</td>
-                        <td className="p-2">{student.name}</td>
-                        <td className="p-2">
-                          <input
-                            type="number"
-                            min="0"
-                            max={isUnitTest ? "15" : "17"}
-                            defaultValue={studentExamData.q1q2}
-                            className="q1q2-input w-16 p-1 border rounded"
-                            data-index={index}
-                            onChange={() => updateStudentRow(index)}
-                          />
-                        </td>
+              <div className="mb-4">
+                <label className="block font-medium text-gray-600 mb-2">
+                  Select Exam Type
+                </label>
+                <select
+                  value={selectedExamType}
+                  onChange={(e) => setSelectedExamType(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="unit-test">Unit Test</option>
+                  <option value="re-unit-test">Re-Unit Test</option>
+                  <option value="prelim">Prelim</option>
+                  <option value="reprelim">Re-Prelim</option>
+                </select>
+              </div>
 
-                        <td className="p-2">
-                          <input
-                            type="number"
-                            min="0"
-                            max={isUnitTest ? "15" : "18"}
-                            value={studentExamData.q3q4}
-                            className="q3q4-input w-16 p-1 border rounded"
-                            data-index={index}
-                            onChange={() => updateStudentRow(index)}
-                          />
-                        </td>
-                        {!isUnitTest && (
-                          <>
-                            <td className="p-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max="17"
-                                value={studentExamData.q5q6}
-                                className="q5q6-input w-16 p-1 border rounded"
-                                data-index={index}
-                                onChange={() => updateStudentRow(index)}
-                              />
-                            </td>
-                            <td className="p-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max="18"
-                                value={studentExamData.q7q8}
-                                className="q7q8-input w-16 p-1 border rounded"
-                                data-index={index}
-                                onChange={() => updateStudentRow(index)}
-                              />
-                            </td>
-                          </>
-                        )}
-                        <td className="p-2 total-cell">
-                          {studentExamData.total}
-                        </td>
-                        <td
-                          className={`p-2 status-cell ${studentExamData.status.toLowerCase()}`}
-                        >
-                          {studentExamData.status}
-                        </td>
+              <div className="mb-4">
+                <label className="block font-medium text-gray-600 mb-2">
+                  Select Subject
+                </label>
+                <select
+                  value={selectedSubject || ""}
+                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">-- Select Subject --</option>
+                  {subjects.map((subject) => (
+                    <option key={subject._id} value={subject._id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedSubject && (
+                <div className="mb-4">
+                  <label className="block font-medium text-gray-600 mb-2">
+                    Full Marks
+                  </label>
+                  <input
+                    type="number"
+                    value={fullMarks}
+                    onChange={(e) =>
+                      setFullMarks(parseInt(e.target.value, 10) || 0)
+                    }
+                    className="w-full p-2 border rounded"
+                    min="0"
+                  />
+                </div>
+              )}
+
+              {selectedSubject && (
+                <div className="overflow-x-auto mt-4">
+                  <table className="w-full mb-4">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="p-2 text-left">Roll No.</th>
+                        <th className="p-2 text-left">Name</th>
+                        <th className="p-2 text-right">Marks</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <div className="flex justify-end gap-2">
+                    </thead>
+                    <tbody>
+                      {students.map((student) => (
+                        <tr key={student._id} className="border-b">
+                          <td className="p-2">{student.rollNo}</td>
+                          <td className="p-2">{student.name}</td>
+                          <td className="p-2 text-right">
+                            <input
+                              type="number"
+                              min="0"
+                              max={fullMarks}
+                              defaultValue={
+                                student.marks?.[selectedSubject]?.[
+                                  selectedExamType
+                                ] || 0
+                              }
+                              className="w-20 p-1 border rounded text-right"
+                              id={`marks-${student._id}`}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={closeModal}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
@@ -776,437 +990,376 @@ const TeacherDashboard = () => {
                 <button
                   onClick={handleSaveMarks}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  disabled={!selectedSubject || isSubmitting}
                 >
-                  Save Marks
+                  {isSubmitting ? "Saving..." : "Save Marks"}
                 </button>
               </div>
             </div>
           </div>
         );
-      case "pdf-exam-selection":
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
-              <button
-                onClick={closeModal}
-                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
-              >
-                &times;
-              </button>
-              <div className="mb-4 border-b pb-2">
-                <h3 className="font-semibold text-gray-800">
-                  Select Exam Type for PDF
-                </h3>
-              </div>
-              <div className="mb-4">
-                <label className="block font-medium text-gray-600">
-                  Exam Type
-                </label>
-                <select
-                  value={selectedExamType}
-                  onChange={(e) => setSelectedExamType(e.target.value)}
-                  className="w-full p-2 border rounded mt-1"
-                >
-                  <option value="">Select an exam type</option>
-                  <option value="unit-test">Unit Test</option>
-                  <option value="re-unit-test">Re-Unit Test</option>
-                  <option value="prelim">Prelim</option>
-                  <option value="reprelim">Re-Prelim</option>
-                </select>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={closeModal}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSavePDF}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Generate PDF
-                </button>
-              </div>
-            </div>
-          </div>
-        );
+
       default:
         return null;
     }
   };
 
-  const updateStudentRow = (index) => {
-    if (!modalContent || !modalContent.subjectId) return;
-
-    const subjectData = studentsData[modalContent.subjectId];
-    if (!subjectData) return;
-
-    const row = document.querySelector(`.student-row:nth-child(${index + 1})`);
-    const isUnitTest =
-      selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
-    const q1q2Input = row.querySelector(".q1q2-input");
-    const q3q4Input = row.querySelector(".q3q4-input");
-    const q5q6Input = row.querySelector(".q5q6-input");
-    const q7q8Input = row.querySelector(".q7q8-input");
-
-    const q1q2 = parseInt(q1q2Input?.value) || 0;
-    const q3q4 = parseInt(q3q4Input?.value) || 0;
-    const q5q6 = parseInt(q5q6Input?.value) || 0;
-    const q7q8 = parseInt(q7q8Input?.value) || 0;
-
-    const total = q1q2 + q3q4 + (isUnitTest ? 0 : q5q6 + q7q8);
-
-    const totalCell = row.querySelector(".total-cell");
-    totalCell.textContent = total;
-
-    const statusCell = row.querySelector(".status-cell");
-    const passingMark = isUnitTest ? 12 : 28;
-    let status = "";
-
-    if (total > 0) {
-      status = total >= passingMark ? "Pass" : "Fail";
-    }
-
-    statusCell.textContent = status;
-    statusCell.className = "status-cell " + status.toLowerCase();
-  };
-
-  const openStudentModal = async (studentId) => {
+  // Function to handle saving edited marks
+  const handleSaveEditedMarks = async (studentId) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/student/${studentId}`,
+      setIsSubmitting(true);
+
+      const updatedMarks = {};
+      subjects.forEach((subject) => {
+        const inputElement = document.getElementById(`marks-${subject._id}`);
+        if (inputElement) {
+          const markValue = parseInt(inputElement.value, 10) || 0;
+          updatedMarks[subject._id] = {
+            ...updatedMarks[subject._id],
+            [selectedExamType]: markValue,
+          };
+        }
+      });
+
+      const response = await axios.put(
+        `${apiBaseUrl}/students/${studentId}/marks`,
+        {
+          marks: updatedMarks,
+          examType: selectedExamType,
+        },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
 
-      setModalContent({
-        student: response.data,
-        type: "student-details",
-      });
-    } catch (error) {
-      console.error("Error fetching student details:", error);
-      alert("Could not fetch student details");
-    }
-  };
+      if (response.status === 200) {
+        // Update the students state with the new marks
+        setStudents((prevStudents) =>
+          prevStudents.map((student) =>
+            student._id === studentId
+              ? {
+                  ...student,
+                  marks: {
+                    ...student.marks,
+                    ...Object.keys(updatedMarks).reduce((acc, subjectId) => {
+                      acc[subjectId] = {
+                        ...(student.marks?.[subjectId] || {}),
+                        [selectedExamType]:
+                          updatedMarks[subjectId][selectedExamType],
+                      };
+                      return acc;
+                    }, {}),
+                  },
+                }
+              : student
+          )
+        );
 
-  const openExamModal = (subjectId) => {
-    setSelectedSubjectId(subjectId);
-    setModalContent({
-      type: "exam-selection",
-      subjectId,
-    });
-  };
-
-  const openStudentsModal = (subjectId, examType) => {
-    setSelectedSubjectId(subjectId);
-    setSelectedExamType(examType);
-    setModalContent({
-      type: "students-list",
-      subjectId,
-      examType,
-    });
-  };
-
-  const closeModal = () => {
-    setModalContent(null);
-  };
-
-  const handleContinueExam = () => {
-    if (!selectedExamType) {
-      alert("Please select an exam type.");
-      return;
-    }
-
-    closeModal();
-    openStudentsModal(selectedSubjectId, selectedExamType);
-  };
-
-  const handleSaveMarks = async () => {
-    if (!selectedSubjectId) return;
-
-    const subjectData = studentsData[selectedSubjectId];
-    if (!subjectData) return;
-
-    const examData = subjectData.examData[selectedExamType];
-    const students = subjectData.students;
-    const isUnitTest =
-      selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
-    const passingMark = isUnitTest ? 12 : 28;
-
-    const rows = document.querySelectorAll(".student-row");
-
-    const marksToSave = rows.map((row, index) => {
-      const q1q2Input = row.querySelector(".q1q2-input");
-      const q3q4Input = row.querySelector(".q3q4-input");
-      const q5q6Input = row.querySelector(".q5q6-input");
-      const q7q8Input = row.querySelector(".q7q8-input");
-
-      const q1q2 = parseInt(q1q2Input?.value) || 0;
-      const q3q4 = parseInt(q3q4Input?.value) || 0;
-      const q5q6 = parseInt(q5q6Input?.value) || 0;
-      const q7q8 = parseInt(q7q8Input?.value) || 0;
-
-      const total = q1q2 + q3q4 + (isUnitTest ? 0 : q5q6 + q7q8);
-
-      let status = "";
-      if (total > 0) {
-        status = total >= passingMark ? "Pass" : "Fail";
+        toast.success("Marks updated successfully");
+        closeModal();
       }
-
-      return {
-        studentId: students[index]._id,
-        subjectId: selectedSubjectId,
-        examType: selectedExamType,
-        marksObtained: total,
-        status,
-      };
-    });
-
-    try {
-      await axios.post(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks`,
-        marksToSave,
-        {
-          params: { teacherId },
-        }
-      );
-      alert("Marks saved successfully!");
-      closeModal();
-      fetchStudents();
-    } catch (error) {
-      console.error("Error saving marks:", error);
-    }
-  };
-
-  const handleUpdateMarks = async (marksId) => {
-    const updatedMarks = {
-      // Include the updated marks data here
-    };
-
-    try {
-      await axios.put(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks/${marksId}`,
-        updatedMarks,
-        { params: { teacherId } }
-      );
-      alert("Marks updated successfully!");
-      fetchStudents();
     } catch (error) {
       console.error("Error updating marks:", error);
+      toast.error(error.response?.data?.message || "Failed to update marks");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDeleteMarks = async (marksId) => {
+  // Function to handle saving marks for all students
+  const handleSaveMarks = async () => {
+    if (!selectedSubject) return;
+
     try {
-      await axios.delete(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks/${marksId}`,
+      setIsSubmitting(true);
+
+      const updatedStudents = students.map((student) => {
+        const inputElement = document.getElementById(`marks-${student._id}`);
+        const markValue = inputElement
+          ? parseInt(inputElement.value, 10) || 0
+          : 0;
+
+        return {
+          studentId: student._id,
+          mark: markValue,
+        };
+      });
+
+      const response = await axios.post(
+        `${apiBaseUrl}/marks/batch`,
         {
-          params: { teacherId },
+          subjectId: selectedSubject,
+          examType: selectedExamType,
+          fullMarks: fullMarks,
+          students: updatedStudents,
+          division: division,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
-      alert("Marks deleted successfully!");
-      fetchStudents();
+
+      if (response.status === 200) {
+        // Update the students state with the new marks
+        setStudents((prevStudents) =>
+          prevStudents.map((student) => {
+            const studentUpdate = updatedStudents.find(
+              (update) => update.studentId === student._id
+            );
+
+            if (studentUpdate) {
+              return {
+                ...student,
+                marks: {
+                  ...student.marks,
+                  [selectedSubject]: {
+                    ...(student.marks?.[selectedSubject] || {}),
+                    [selectedExamType]: studentUpdate.mark,
+                  },
+                },
+              };
+            }
+            return student;
+          })
+        );
+
+        // Update the subject with the new full marks
+        setSubjects((prevSubjects) =>
+          prevSubjects.map((subject) =>
+            subject._id === selectedSubject
+              ? {
+                  ...subject,
+                  fullMarks: {
+                    ...(subject.fullMarks || {}),
+                    [selectedExamType]: fullMarks,
+                  },
+                }
+              : subject
+          )
+        );
+
+        toast.success("Marks saved successfully");
+        closeModal();
+      }
     } catch (error) {
-      console.error("Error deleting marks:", error);
+      console.error("Error saving marks:", error);
+      toast.error(error.response?.data?.message || "Failed to save marks");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 p-4">
-      <div className="bg-green-600 text-white p-5 rounded shadow-md mb-4 flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Teacher Dashboard</h1>
-        <div className="flex gap-3">
-          <button
-            onClick={() =>
-              alert("PDF export functionality would be implemented here")
-            }
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Export PDF
-          </button>
-          <button
-            onClick={() =>
-              alert("Email reports functionality would be implemented here")
-            }
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Email Reports
-          </button>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Teacher Dashboard</h1>
+
+      {/* Filters and Controls */}
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block font-medium text-gray-600 mb-2">
+              Select Batch
+            </label>
+            <select
+              value={selectedBatch}
+              onChange={(e) => {
+                setSelectedBatch(e.target.value);
+                setDivision("");
+                setStudents([]);
+              }}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">-- Select Batch --</option>
+              {batches.map((batch) => (
+                <option key={batch._id} value={batch._id}>
+                  {batch.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-medium text-gray-600 mb-2">
+              Select Division
+            </label>
+            <select
+              value={division}
+              onChange={(e) => setDivision(e.target.value)}
+              disabled={!selectedBatch}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">-- Select Division --</option>
+              {divisions.map((div) => (
+                <option key={div} value={div}>
+                  {div}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-medium text-gray-600 mb-2">
+              Exam Type
+            </label>
+            <select
+              value={selectedExamType}
+              onChange={(e) => setSelectedExamType(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="unit-test">Unit Test</option>
+              <option value="re-unit-test">Re-Unit Test</option>
+              <option value="prelim">Prelim</option>
+              <option value="reprelim">Re-Prelim</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 justify-between items-center">
+          <div className="w-full md:w-auto mb-2 md:mb-0">
+            <input
+              type="text"
+              placeholder="Search by name or roll no..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full md:w-64 p-2 border rounded"
+            />
+          </div>
+
+          <div className="w-full md:w-auto flex gap-2">
+            <button
+              onClick={() => fetchStudents()}
+              disabled={!division || isLoading}
+              className="bg-blue-100 text-blue-700 px-4 py-2 rounded hover:bg-blue-200 flex items-center"
+            >
+              <span className="mr-1">⟳</span> Refresh
+            </button>
+
+            <button
+              onClick={() => {
+                setModalContent({ type: "add-marks" });
+                setModalOpen(true);
+                setSelectedSubject("");
+                setFullMarks(0);
+              }}
+              disabled={!students.length}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Add Marks
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-3 mb-4">
-        <button
-          onClick={() => setActiveTab("class-teacher")}
-          className={`px-4 py-2 rounded ${
-            activeTab === "class-teacher"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-300 text-gray-700"
-          }`}
-          disabled={isSubjectTeacher && !isClassTeacher}
-        >
-          Class Teacher
-        </button>
-        <button
-          onClick={() => setActiveTab("subject-teacher")}
-          className={`px-4 py-2 rounded ${
-            activeTab === "subject-teacher"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-300 text-gray-700"
-          }`}
-          disabled={isClassTeacher && !isSubjectTeacher}
-        >
-          Subject Teacher
-        </button>
-      </div>
+      {/* Student List */}
+      {isLoading ? (
+        <div className="bg-white p-8 rounded shadow text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Loading students...</p>
+        </div>
+      ) : students.length > 0 ? (
+        <div className="bg-white rounded shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th
+                    className="p-3 text-left cursor-pointer"
+                    onClick={() => handleSort("rollNo")}
+                  >
+                    Roll No.
+                    {sortConfig.key === "rollNo" && (
+                      <span className="ml-1">
+                        {sortConfig.direction === "ascending" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </th>
+                  <th
+                    className="p-3 text-left cursor-pointer"
+                    onClick={() => handleSort("name")}
+                  >
+                    Name
+                    {sortConfig.key === "name" && (
+                      <span className="ml-1">
+                        {sortConfig.direction === "ascending" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </th>
+                  {subjects.map((subject) => (
+                    <th key={subject._id} className="p-3 text-center">
+                      {subject.name}
+                      <div className="text-xs text-gray-500">
+                        FM: {subject.fullMarks?.[selectedExamType] || "-"}
+                      </div>
+                    </th>
+                  ))}
+                  <th className="p-3 text-center">Total</th>
+                  <th className="p-3 text-center">Percentage</th>
+                  <th className="p-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredStudents.map((student) => {
+                  const totalMarks = calculateTotalMarks(student);
+                  const totalFullMarks = calculateTotalFullMarks();
+                  const percentage =
+                    totalFullMarks > 0
+                      ? ((totalMarks / totalFullMarks) * 100).toFixed(2)
+                      : "-";
 
-      {activeTab === "class-teacher" && (
-        <div>
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <label className="font-medium text-gray-600">Division</label>
-              <span className="p-2 border rounded">{division}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="font-medium text-gray-600">Exam Type</label>
-              <select
-                value={selectedExamType}
-                onChange={(e) => setSelectedExamType(e.target.value)}
-                className="p-2 border rounded"
-              >
-                <option value="">All Exams</option>
-                <option value="unit-test">Unit Test</option>
-                <option value="re-unit-test">Re-Unit Test</option>
-                <option value="prelim">Prelim</option>
-                <option value="reprelim">Re-Prelim</option>
-              </select>
-            </div>
+                  return (
+                    <tr key={student._id} className="border-t hover:bg-gray-50">
+                      <td className="p-3">{student.rollNo}</td>
+                      <td className="p-3">{student.name}</td>
+                      {subjects.map((subject) => (
+                        <td
+                          key={`${student._id}-${subject._id}`}
+                          className="p-3 text-center"
+                        >
+                          {student.marks?.[subject._id]?.[selectedExamType] ??
+                            "-"}
+                        </td>
+                      ))}
+                      <td className="p-3 text-center font-medium">
+                        {totalMarks}
+                      </td>
+                      <td className="p-3 text-center">{percentage}%</td>
+                      <td className="p-3 text-center">
+                        <button
+                          onClick={() => {
+                            setModalContent({ type: "edit-marks", student });
+                            setModalOpen(true);
+                          }}
+                          className="text-blue-500 hover:text-blue-700"
+                          title="Edit Marks"
+                        >
+                          ✏️
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Total Students</h3>
-              <p className="text-2xl font-bold">{summaryData.totalStudents}</p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Overall Pass Rate</h3>
-              <p className="text-2xl font-bold">{summaryData.passRate}%</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                <div
-                  className="bg-blue-500 h-2.5 rounded-full"
-                  style={{ width: `${summaryData.passRate}%` }}
-                ></div>
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Class Average</h3>
-              <p className="text-2xl font-bold">{summaryData.classAverage}%</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                <div
-                  className="bg-blue-500 h-2.5 rounded-full"
-                  style={{ width: `${summaryData.classAverage}%` }}
-                ></div>
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Highest Performer</h3>
-              <p className="text-xl font-bold">
-                {summaryData.highestPerformer}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">At-Risk Students</h3>
-              <p className="text-xl font-bold">{summaryData.atRiskCount}</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded shadow mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Student Performance</h2>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Search students..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="p-2 border rounded"
-                />
-                <button
-                  onClick={filterStudents}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Search
-                </button>
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="p-2 text-left">Roll No.</th>
-                    <th className="p-2 text-left">Student Name</th>
-                    <th className="p-2 text-left">Division</th>
-                    {subjects.map((subject) => (
-                      <th key={subject._id} className="p-2 text-left">
-                        {subject.name}
-                      </th>
-                    ))}
-                    <th className="p-2 text-left">Overall Score</th>
-                    <th className="p-2 text-left">Status</th>
-                    <th className="p-2 text-left">Action</th>
-                  </tr>
-                </thead>
-                <tbody>{renderStudents()}</tbody>
-              </table>
-            </div>
-            <div className="flex justify-center gap-2 mt-4"></div>
-          </div>
-
-          {renderModalContent()}
+        </div>
+      ) : division ? (
+        <div className="bg-white p-8 rounded shadow text-center">
+          <p className="text-gray-500">No students found in this division.</p>
+        </div>
+      ) : (
+        <div className="bg-white p-8 rounded shadow text-center">
+          <p className="text-gray-500">
+            Select a batch and division to view students.
+          </p>
         </div>
       )}
 
-      {activeTab === "subject-teacher" && (
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Total Students</h3>
-              <p className="text-2xl font-bold">
-                {subjectSummaryData.totalStudents}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Pass Rate</h3>
-              <p className="text-2xl font-bold">
-                {subjectSummaryData.passRate}%
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Average Score</h3>
-              <p className="text-2xl font-bold">
-                {subjectSummaryData.averageScore}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Highest Score</h3>
-              <p className="text-2xl font-bold">
-                {subjectSummaryData.highestScore}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            {renderSubjects()}
-          </div>
-
-          {renderModalContent()}
-        </div>
-      )}
+      {/* Modal */}
+      {modalContent && renderModalContent()}
     </div>
   );
 };
