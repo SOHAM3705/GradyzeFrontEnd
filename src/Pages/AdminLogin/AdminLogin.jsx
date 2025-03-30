@@ -23,6 +23,12 @@ const AdminLogin = () => {
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/admin/adminlogin",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ Send JWT token in header
+            "Content-Type": "application/json",
+          },
+        },
         formData
       );
 
@@ -54,7 +60,12 @@ const AdminLogin = () => {
     try {
       const response = await axios.get(
         "https://gradyzebackend.onrender.com/api/auth/google",
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ Send JWT token in header
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       console.log("🔹 Google Login Response:", response.data);

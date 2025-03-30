@@ -203,6 +203,8 @@ const TeacherDashboard = () => {
     }
   }, [activeTab, subjectsList]);
 
+  const [divisions, setDivisions] = useState([]);
+
   const fetchAssignedDivision = async () => {
     try {
       const data = await makeRequest(
@@ -216,6 +218,9 @@ const TeacherDashboard = () => {
       console.error("Error fetching assigned division:", error);
     }
   };
+  useEffect(() => {
+    fetchAssignedDivision();
+  }, []);
 
   // Improved students fetching with proper error handling
   const fetchStudents = async () => {
