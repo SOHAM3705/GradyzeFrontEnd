@@ -1,17 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { GoogleLogin } from "@react-oauth/google"; // ✅ Import Google Login
-import jwt_decode from "jwt-decode"; // ✅ Decode Google Token
 import styles from "./TeacherLogin.module.css";
 
 const TeacherLogin = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,81 +15,91 @@ const TeacherLogin = () => {
     });
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError(null);
-    setLoading(true);
-
-    if (!formData.email.trim() || !formData.password.trim()) {
-      setError("⚠ Please enter both email and password.");
-      setLoading(false);
-      return;
-    }
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/login",
+        "https://gradyzebackend.onrender.com/api/teacher/teacherlogin",
         formData
       );
 
+      console.log("🔹 Teacher Login Response:", response.data);
+
       if (response.data.token) {
         sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("teacherId", response.data.teacher._id);
-        sessionStorage.setItem("teacherName", response.data.teacher.name);
-        sessionStorage.setItem("adminId", response.data.teacher.adminId);
+        sessionStorage.setItem("teacherId", response.data.teacherId);
+        sessionStorage.setItem("teacherName", response.data.name);
+        sessionStorage.setItem("AdminId", response.data.adminId);
+
+        console.log("✅ Teacher Data stored in sessionStorage");
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
 
         navigate("/teacherdash");
       } else {
-        throw new Error("Token not received from server");
+        throw new Error("Token missing in response");
       }
-    } catch (error) {
-      setError(error.response?.data?.message || "Invalid email or password");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid email or password");
+      console.error("❌ Login Error:", err.response?.data);
     }
   };
 
-  // ✅ Handle Google Sign-In
-  const handleGoogleLogin = async (response) => {
+  // ✅ Handle Google Login
+  const handleGoogleLogin = async () => {
     try {
-      const decoded = jwt_decode(response.credential);
-      console.log("🔹 Google User:", decoded);
-
-      const googleResponse = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/google-login",
-        { token: response.credential }
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/auth/google",
+        { withCredentials: true }
       );
 
-      if (googleResponse.data.token) {
-        sessionStorage.setItem("token", googleResponse.data.token);
-        sessionStorage.setItem("teacherId", googleResponse.data.teacher._id);
-        sessionStorage.setItem("teacherName", googleResponse.data.teacher.name);
-        sessionStorage.setItem("adminId", googleResponse.data.teacher.adminId);
+      console.log("🔹 Google Login Response:", response.data);
+
+      if (response.data.token) {
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("teacherId", response.data.teacherId);
+        sessionStorage.setItem("teacherName", response.data.name);
+        sessionStorage.setItem("AdminId", response.data.adminId);
+
+        console.log("✅ Google Token Stored:", response.data.token);
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
 
         navigate("/teacherdash");
       } else {
-        throw new Error("Token not received from server");
+        throw new Error("Google login failed");
       }
-    } catch (error) {
-      console.error("❌ Google Login Error:", error);
-      setError("Google sign-in failed. Please try again.");
+    } catch (err) {
+      setError("Google login failed. Try again.");
+      console.error("❌ Google Login Error:", err);
     }
   };
 
   return (
     <div className={styles.teacherBg}>
       <div className={styles.loginContainer}>
+        {/* Back Button */}
         <Link to="/">
           <button className={styles.backButton_Tlogin}>
             <i className="fas fa-arrow-left"></i>
           </button>
         </Link>
 
-        <h2>Teacher Login</h2>
+        {/* Login Header */}
+        <div className={styles.loginHeader}>
+          <h2>Teacher Login</h2>
+        </div>
 
-        {error && <p className={styles.errorMessage}>{error}</p>}
-
+        {/* Login Form */}
         <form onSubmit={handleSubmit}>
+          {error && <p className={styles.errorMessage}>{error}</p>}
+
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
             <input
@@ -120,24 +124,17 @@ const TeacherLogin = () => {
             />
           </div>
 
-          <button
-            type="submit"
-            className={styles.Tlogin_but}
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
+          <button className={styles.submitTeacherloginbut} type="submit">
+            Login
           </button>
         </form>
 
-        <div className={styles.googleLoginContainer}>
-          <GoogleLogin
-            onSuccess={handleGoogleLogin}
-            onError={() => setError("Google sign-in failed")}
-          />
-        </div>
+        {/* ✅ Google Login Button */}
+        <button className={styles.googleLogin} onClick={handleGoogleLogin}>
+          <i className="fab fa-google"></i> Sign in with Google
+        </button>
 
         <p>Don't have an account? Contact Your College/School Admin</p>
-
         <p>
           <Link to="/teacher-forget-password" className={styles.TeacherLogin_a}>
             Forgot Password?

@@ -62,6 +62,22 @@ const TeacherDashboard = () => {
 
   // Initialize selectedBatch
   const [selectedBatch, setSelectedBatch] = useState("");
+  const [batches, setBatches] = useState([]);
+  const fetchBatches = async () => {
+    try {
+      const data = await makeRequest(
+        "get",
+        `/teachermarks/${teacherId}/batches`
+      );
+      setBatches(data.batches || []);
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBatches();
+  }, []);
 
   const teacherId = sessionStorage.getItem("teacherId");
   const apiBaseUrl = "https://gradyzebackend.onrender.com/api";
