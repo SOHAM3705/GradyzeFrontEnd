@@ -21,7 +21,7 @@ const TeacherLogin = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/teacherlogin",
+        "https://gradyzebackend.onrender.com/api/teacher/login",
         formData
       );
 
@@ -129,7 +129,7 @@ const TeacherLogin = () => {
             />
           </div>
 
-          <button className={styles.submitTeacherloginbut} type="submit">
+          <button className={styles.Tlogin_but} type="submit">
             Login
           </button>
         </form>

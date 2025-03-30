@@ -341,18 +341,31 @@ const TeacherDashboard = () => {
       atRiskCount: `${atRiskCount} (${atRiskPercentage}%)`,
     });
   };
-
+  const [sortConfig, setSortConfig] = useState({
+    key: "name",
+    direction: "asc",
+  });
   const filterStudents = () => {
     if (!students.length) return;
 
-    let filtered = students
-      .filter((student) => {
-        const matchesSearch =
-          student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          student.rollNo?.toString().includes(searchQuery);
-        return matchesSearch;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+    let filtered = students.filter((student) => {
+      const matchesSearch =
+        student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.rollNo?.toString().includes(searchQuery);
+      return matchesSearch;
+    });
+
+    // Sort based on `sortConfig`
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
 
     setFilteredStudents(filtered);
     setCurrentPage(1);
