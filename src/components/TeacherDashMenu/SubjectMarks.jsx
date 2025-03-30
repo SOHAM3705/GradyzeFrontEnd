@@ -60,6 +60,9 @@ const TeacherDashboard = () => {
     },
   });
 
+  // Initialize selectedBatch
+  const [selectedBatch, setSelectedBatch] = useState("");
+
   const teacherId = sessionStorage.getItem("teacherId");
   const apiBaseUrl = "https://gradyzebackend.onrender.com/api";
 
