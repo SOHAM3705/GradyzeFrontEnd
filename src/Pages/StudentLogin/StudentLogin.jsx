@@ -36,7 +36,6 @@ const StudentLogin = () => {
 
         console.log("✅ Student Data stored in sessionStorage");
 
-        // ✅ Refresh & Navigate
         setTimeout(() => {
           window.location.reload();
         }, 500);
@@ -48,6 +47,39 @@ const StudentLogin = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
       console.error("❌ Login Error:", err.response?.data);
+    }
+  };
+
+  // ✅ Handle Google Login
+  const handleGoogleLogin = async () => {
+    try {
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/auth/google",
+        { withCredentials: true }
+      );
+
+      console.log("🔹 Google Login Response:", response.data);
+
+      if (response.data.token) {
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("studentId", response.data.studentId);
+        sessionStorage.setItem("studentName", response.data.name);
+        sessionStorage.setItem("AdminId", response.data.adminId);
+        sessionStorage.setItem("TeacherId", response.data.teacherId);
+
+        console.log("✅ Google Token Stored:", response.data.token);
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+
+        navigate("/studentdash");
+      } else {
+        throw new Error("Google login failed");
+      }
+    } catch (err) {
+      setError("Google login failed. Try again.");
+      console.error("❌ Google Login Error:", err);
     }
   };
 
@@ -98,6 +130,12 @@ const StudentLogin = () => {
             Login
           </button>
         </form>
+
+        {/* ✅ Google Login Button */}
+        <button className={styles.googleLogin} onClick={handleGoogleLogin}>
+          <i className="fab fa-google"></i> Sign in with Google
+        </button>
+
         <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
           <Link to="/student-forget-password" className={styles.StudentLogin_a}>

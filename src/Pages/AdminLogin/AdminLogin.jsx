@@ -8,8 +8,8 @@ const AdminLogin = () => {
     email: "",
     password: "",
   });
-  const [error, setError] = useState(null); // Store error messages
-  const navigate = useNavigate(); // Hook for navigation
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -35,10 +35,9 @@ const AdminLogin = () => {
 
         console.log("✅ Token Stored in sessionStorage:", response.data.token);
 
-        // ✅ Force refresh user profile after login
         setTimeout(() => {
           window.location.reload();
-        }, 500); // Reload to apply token updates
+        }, 500);
 
         navigate("/admindash");
       } else {
@@ -50,10 +49,40 @@ const AdminLogin = () => {
     }
   };
 
+  // ✅ Handle Google Login
+  const handleGoogleLogin = async () => {
+    try {
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/auth/google",
+        { withCredentials: true }
+      );
+
+      console.log("🔹 Google Login Response:", response.data);
+
+      if (response.data.token) {
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("adminId", response.data.adminId);
+        sessionStorage.setItem("adminName", response.data.name);
+
+        console.log("✅ Google Token Stored:", response.data.token);
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+
+        navigate("/admindash");
+      } else {
+        throw new Error("Google login failed");
+      }
+    } catch (err) {
+      setError("Google login failed. Try again.");
+      console.error("❌ Google Login Error:", err);
+    }
+  };
+
   return (
     <div className={styles.adminBg}>
       <div className={styles.loginContainer}>
-        {/* Header with Back Button and Title */}
         <Link to="/">
           <button className={styles.backButton_Alogin}>
             <i className="fas fa-arrow-left"></i>
@@ -64,10 +93,8 @@ const AdminLogin = () => {
           <h2>Admin Login</h2>
         </div>
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit}>
-          {error && <p className={styles.errorMessage}>{error}</p>}{" "}
-          {/* Show error message if any */}
+          {error && <p className={styles.errorMessage}>{error}</p>}
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
             <input
@@ -94,6 +121,11 @@ const AdminLogin = () => {
             Login
           </button>
         </form>
+
+        {/* ✅ Google Login Button */}
+        <button className={styles.googleLogin} onClick={handleGoogleLogin}>
+          <i className="fab fa-google"></i> Sign in with Google
+        </button>
 
         <p>
           Don't have an account?{" "}
