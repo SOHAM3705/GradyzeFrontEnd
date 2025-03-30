@@ -29,7 +29,7 @@ const TeacherLogin = () => {
 
       if (response.data.token) {
         sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("teacherId", response.data.teacherId);
+        sessionStorage.setItem("teacherId", response.data._id);
         sessionStorage.setItem("teacherName", response.data.name);
         sessionStorage.setItem("AdminId", response.data.adminId);
 

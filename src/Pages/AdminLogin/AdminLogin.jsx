@@ -23,12 +23,6 @@ const AdminLogin = () => {
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/admin/adminlogin",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // ✅ Send JWT token in header
-            "Content-Type": "application/json",
-          },
-        },
         formData
       );
 

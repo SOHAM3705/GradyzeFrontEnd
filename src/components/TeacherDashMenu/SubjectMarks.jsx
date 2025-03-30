@@ -413,6 +413,23 @@ const TeacherDashboard = () => {
       startIndex,
       startIndex + rowsPerPage
     );
+    const calculateTotalMarks = (student) => {
+      if (!student.marks || !Array.isArray(student.marks)) return 0;
+
+      return student.marks.reduce(
+        (total, mark) => total + (mark.score || 0),
+        0
+      );
+    };
+    const calculateTotalFullMarks = () => {
+      // Assuming all students have the same number of subjects
+      if (!filteredStudents.length || !filteredStudents[0].marks) return 0;
+
+      return filteredStudents[0].marks.reduce(
+        (total, mark) => total + (mark.fullMarks || 0),
+        0
+      );
+    };
 
     return paginatedStudents.map((student) => (
       <tr key={student._id} className="border-b hover:bg-gray-100">
