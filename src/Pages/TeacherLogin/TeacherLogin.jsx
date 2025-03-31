@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import styles from "./TeacherLogin.module.css";
 
@@ -7,6 +7,51 @@ const TeacherLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle query parameters (for Google OAuth callback)
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const token = queryParams.get("token");
+    const role = queryParams.get("role");
+
+    if (token && role === "teacher") {
+      // Only proceed if user is a teacher
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("role", "teacher");
+
+      // Get teacher details using the token
+      fetchTeacherDetails(token);
+
+      // Redirect to teacher dashboard
+      navigate("/teacherdash");
+    } else if (token && role !== "teacher") {
+      // Show error if user is not a teacher
+      setError("Only teacher accounts can access this page.");
+    }
+  }, [location, navigate]);
+
+  // Fetch teacher details using token
+  const fetchTeacherDetails = async (token) => {
+    try {
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/teacher/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        sessionStorage.setItem("teacherId", response.data._id);
+        sessionStorage.setItem("teacherName", response.data.name);
+        sessionStorage.setItem("AdminId", response.data.adminId);
+      }
+    } catch (err) {
+      console.error("Failed to fetch teacher details:", err);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -32,6 +77,7 @@ const TeacherLogin = () => {
         sessionStorage.setItem("teacherId", response.data.teacher._id);
         sessionStorage.setItem("teacherName", response.data.teacher.name);
         sessionStorage.setItem("AdminId", response.data.teacher.adminId);
+        sessionStorage.setItem("role", "teacher");
 
         console.log("✅ Teacher Data stored in sessionStorage");
 
@@ -49,41 +95,10 @@ const TeacherLogin = () => {
     }
   };
 
-  // ✅ Handle Google Login
-  const handleGoogleLogin = async () => {
-    try {
-      const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/auth/google",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // ✅ Send JWT token in header
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("🔹 Google Login Response:", response.data);
-
-      if (response.data.token) {
-        sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("teacherId", response.data.teacher._id);
-        sessionStorage.setItem("teacherName", response.data.teacher.name);
-        sessionStorage.setItem("AdminId", response.data.teacher.adminId);
-
-        console.log("✅ Google Token Stored:", response.data.token);
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-
-        navigate("/teacherdash");
-      } else {
-        throw new Error("Google login failed");
-      }
-    } catch (err) {
-      setError("Google login failed. Try again.");
-      console.error("❌ Google Login Error:", err);
-    }
+  // ✅ Handle Google Login - Fixed
+  const handleGoogleLogin = () => {
+    // Redirect to Google auth endpoint
+    window.location.href = "https://gradyzebackend.onrender.com/auth/google";
   };
 
   return (
@@ -134,7 +149,7 @@ const TeacherLogin = () => {
           </button>
         </form>
 
-        {/* ✅ Google Login Button */}
+        {/* ✅ Google Login Button - Fixed */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import styles from "./StudentLogin.module.css";
 
@@ -7,6 +7,34 @@ const StudentLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check for token in URL params (for Google OAuth redirect)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    const studentId = params.get("studentId");
+    const name = params.get("name");
+    const adminId = params.get("adminId");
+    const teacherId = params.get("teacherId");
+
+    if (token) {
+      // Store user data from URL params
+      sessionStorage.setItem("token", token);
+      if (studentId) sessionStorage.setItem("studentId", studentId);
+      if (name) sessionStorage.setItem("studentName", name);
+      if (adminId) sessionStorage.setItem("AdminId", adminId);
+      if (teacherId) sessionStorage.setItem("TeacherId", teacherId);
+
+      console.log("✅ OAuth redirect data stored in sessionStorage");
+
+      // Remove the token from URL for security
+      window.history.replaceState({}, document.title, "/studentlogin");
+
+      // Navigate to dashboard
+      navigate("/studentdash");
+    }
+  }, [location, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -50,37 +78,11 @@ const StudentLogin = () => {
     }
   };
 
-  // ✅ Handle Google Login
-  const handleGoogleLogin = async () => {
-    try {
-      const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/auth/google",
-        { withCredentials: true }
-      );
-
-      console.log("🔹 Google Login Response:", response.data);
-
-      if (response.data.token) {
-        sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("studentId", response.data.studentId);
-        sessionStorage.setItem("studentName", response.data.name);
-        sessionStorage.setItem("AdminId", response.data.adminId);
-        sessionStorage.setItem("TeacherId", response.data.teacherId);
-
-        console.log("✅ Google Token Stored:", response.data.token);
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-
-        navigate("/studentdash");
-      } else {
-        throw new Error("Google login failed");
-      }
-    } catch (err) {
-      setError("Google login failed. Try again.");
-      console.error("❌ Google Login Error:", err);
-    }
+  // Modified Google Login - redirects to backend OAuth URL
+  const handleGoogleLogin = () => {
+    // Redirect to the backend's Google OAuth URL
+    window.location.href =
+      "https://gradyzebackend.onrender.com/api/auth/google";
   };
 
   return (
@@ -131,7 +133,7 @@ const StudentLogin = () => {
           </button>
         </form>
 
-        {/* ✅ Google Login Button */}
+        {/* Modified Google Login Button */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>
