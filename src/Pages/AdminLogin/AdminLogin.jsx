@@ -97,7 +97,8 @@ const AdminLogin = () => {
   // Handle Google Login for admin
   const handleGoogleLogin = () => {
     // Redirect to Google auth endpoint
-    window.location.href = "https://gradyzebackend.onrender.com/auth/google";
+    window.location.href =
+      "https://gradyzebackend.onrender.com/api/auth/google";
   };
 
   return (
