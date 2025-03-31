@@ -28,7 +28,7 @@ const TestCreationSystem = () => {
   const fetchTests = async () => {
     try {
       const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/teachertes/tests"
+        "https://gradyzebackend.onrender.com/api/teachertest/tests"
       );
       setTests(response.data);
     } catch (error) {
@@ -60,7 +60,10 @@ const TestCreationSystem = () => {
         questions: parseInt(watch("questions")),
       };
 
-      const response = await axios.post("/api/tests", formData);
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teachertest/tests",
+        formData
+      );
 
       setTests([response.data, ...tests]);
       closeModal();
@@ -98,7 +101,9 @@ const TestCreationSystem = () => {
   const handleGoogleLogin = async () => {
     try {
       // This would be replaced with actual Google authentication
-      const response = await axios.post("/api/auth/google");
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/teachertest/tests"
+      );
       if (response.data.success) {
         setIsAuthenticated(true);
         localStorage.setItem("token", response.data.token);
@@ -161,7 +166,7 @@ const TestCreationSystem = () => {
               className="bg-white border border-gray-300 rounded-md px-4 py-2 flex items-center"
             >
               <img
-                src="/api/placeholder/20/20"
+                src="https://gradyzebackend.onrender.com/api/teachertest/tests"
                 alt="Google logo"
                 className="mr-2"
               />
