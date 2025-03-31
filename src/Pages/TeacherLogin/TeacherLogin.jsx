@@ -29,9 +29,9 @@ const TeacherLogin = () => {
 
       if (response.data.token) {
         sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("teacherId", response.data._id);
-        sessionStorage.setItem("teacherName", response.data.name);
-        sessionStorage.setItem("AdminId", response.data.adminId);
+        sessionStorage.setItem("teacherId", response.data.teacher._id);
+        sessionStorage.setItem("teacherName", response.data.teacher.name);
+        sessionStorage.setItem("AdminId", response.data.teacher.adminId);
 
         console.log("✅ Teacher Data stored in sessionStorage");
 
@@ -66,9 +66,9 @@ const TeacherLogin = () => {
 
       if (response.data.token) {
         sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("teacherId", response.data.teacherId);
-        sessionStorage.setItem("teacherName", response.data.name);
-        sessionStorage.setItem("AdminId", response.data.adminId);
+        sessionStorage.setItem("teacherId", response.data.teacher._id);
+        sessionStorage.setItem("teacherName", response.data.teacher.name);
+        sessionStorage.setItem("AdminId", response.data.teacher.adminId);
 
         console.log("✅ Google Token Stored:", response.data.token);
 
