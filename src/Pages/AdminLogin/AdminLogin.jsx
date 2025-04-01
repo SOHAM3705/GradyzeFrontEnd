@@ -52,6 +52,7 @@ const AdminLogin = () => {
       }
     } catch (err) {
       console.error("Failed to fetch admin details:", err);
+      setError("Failed to fetch admin details. Please try again.");
     }
   };
 
@@ -80,10 +81,7 @@ const AdminLogin = () => {
 
         console.log("✅ Token Stored in sessionStorage:", response.data.token);
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-
+        // Redirect to admin dashboard
         navigate("/admindash");
       } else {
         throw new Error("Token not received from server");
