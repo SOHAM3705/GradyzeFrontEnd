@@ -9,37 +9,31 @@ const TeacherLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle query parameters (for Google OAuth callback)
+  // ✅ Handle Google OAuth callback
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const token = queryParams.get("token");
     const role = queryParams.get("role");
 
-    if (token && role === "teacher") {
-      // Only proceed if user is a teacher
-      sessionStorage.setItem("token", token);
-      sessionStorage.setItem("role", "teacher");
-
-      // Get teacher details using the token
-      fetchTeacherDetails(token);
-
-      // Redirect to teacher dashboard
-      navigate("/teacherdash");
-    } else if (token && role !== "teacher") {
-      // Show error if user is not a teacher
-      setError("Only teacher accounts can access this page.");
+    if (token) {
+      if (role === "teacher") {
+        sessionStorage.setItem("token", token);
+        sessionStorage.setItem("role", "teacher");
+        fetchTeacherDetails(token);
+      } else {
+        setError("Only teacher accounts can access this page.");
+        setTimeout(() => navigate(`/${role}login`), 2000); // Redirect based on role
+      }
     }
   }, [location, navigate]);
 
-  // Fetch teacher details using token
+  // ✅ Fetch teacher details using token
   const fetchTeacherDetails = async (token) => {
     try {
       const response = await axios.get(
         "https://gradyzebackend.onrender.com/api/teacher/profile",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -47,19 +41,20 @@ const TeacherLogin = () => {
         sessionStorage.setItem("teacherId", response.data._id);
         sessionStorage.setItem("teacherName", response.data.name);
         sessionStorage.setItem("AdminId", response.data.adminId);
+        navigate("/teacherdash"); // ✅ Redirect to teacher dashboard
       }
     } catch (err) {
-      console.error("Failed to fetch teacher details:", err);
+      console.error("❌ Failed to fetch teacher details:", err);
+      setError("Authentication failed. Please try again.");
     }
   };
 
+  // ✅ Handle input changes
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  // ✅ Handle manual login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -70,8 +65,6 @@ const TeacherLogin = () => {
         formData
       );
 
-      console.log("🔹 Teacher Login Response:", response.data);
-
       if (response.data.token) {
         sessionStorage.setItem("token", response.data.token);
         sessionStorage.setItem("teacherId", response.data.teacher._id);
@@ -80,12 +73,7 @@ const TeacherLogin = () => {
         sessionStorage.setItem("role", "teacher");
 
         console.log("✅ Teacher Data stored in sessionStorage");
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-
-        navigate("/teacherdash");
+        navigate("/teacherdash"); // ✅ Redirect to teacher dashboard
       } else {
         throw new Error("Token missing in response");
       }
@@ -95,9 +83,8 @@ const TeacherLogin = () => {
     }
   };
 
-  // ✅ Handle Google Login - Fixed
+  // ✅ Handle Google Login
   const handleGoogleLogin = () => {
-    // Redirect to Google auth endpoint
     window.location.href =
       "https://gradyzebackend.onrender.com/api/auth/google";
   };
@@ -117,10 +104,11 @@ const TeacherLogin = () => {
           <h2>Teacher Login</h2>
         </div>
 
+        {/* Error Message */}
+        {error && <p className={styles.errorMessage}>{error}</p>}
+
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
-          {error && <p className={styles.errorMessage}>{error}</p>}
-
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
             <input
@@ -150,7 +138,7 @@ const TeacherLogin = () => {
           </button>
         </form>
 
-        {/* ✅ Google Login Button - Fixed */}
+        {/* ✅ Google Login Button */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>

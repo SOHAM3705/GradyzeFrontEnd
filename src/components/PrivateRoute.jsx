@@ -1,16 +1,16 @@
 import { Navigate } from "react-router-dom";
 
-const PrivateRoute = ({ children, role }) => {
-  // Dynamically get the stored role from localStorage
-  const userId = sessionStorage.getItem(`${role}Id`); // Use role dynamically
+const PrivateRoute = ({ children, allowedRoles }) => {
+  // ✅ Get token & role from sessionStorage
+  const token = sessionStorage.getItem("token");
+  const role = sessionStorage.getItem("role");
 
-  // Check if userId exists for the specified role
-  if (!userId) {
-    // If userId is not found for the given role, redirect to the login page
-    return <Navigate to={`/${role}login`} />;
+  // ✅ Check if user is authenticated and authorized
+  if (!token || !allowedRoles.includes(role)) {
+    return <Navigate to={`/${role ? role : "user"}login`} replace />;
   }
 
-  // If authenticated, allow access to the route
+  // ✅ If authenticated & authorized, render the protected page
   return children;
 };
 

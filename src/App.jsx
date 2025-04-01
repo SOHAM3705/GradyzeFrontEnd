@@ -92,7 +92,7 @@ function App() {
       <Route
         path="/admindash"
         element={
-          <PrivateRoute role="admin">
+          <PrivateRoute allowedRoles={["admin"]}>
             <AdminDash />
           </PrivateRoute>
         }
@@ -113,7 +113,7 @@ function App() {
       <Route
         path="/teacherdash"
         element={
-          <PrivateRoute role="teacher">
+          <PrivateRoute allowedRoles={["teacher"]}>
             <TeacherDash />
           </PrivateRoute>
         }
@@ -132,11 +132,10 @@ function App() {
         <Route path="prerequisite-test" element={<TeacherPrerequisiteTest />} />
         <Route path="assignment-manage" element={<AssignmentManage />} />
       </Route>
-
       <Route
         path="/studentdash"
         element={
-          <PrivateRoute role="student">
+          <PrivateRoute allowedRoles={["student"]}>
             <StudentDash />
           </PrivateRoute>
         }

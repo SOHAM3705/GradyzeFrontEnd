@@ -4,65 +4,58 @@ import axios from "axios";
 import styles from "./AdminLogin.module.css";
 
 const AdminLogin = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle query parameters (for Google OAuth callback)
+  // ✅ Handle OAuth callback (Google Login)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const token = queryParams.get("token");
     const role = queryParams.get("role");
 
-    if (token && role === "admin") {
-      // Only proceed if user is an admin
+    if (token && role) {
+      // ✅ Store token & role dynamically
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("role", role);
 
-      // Get admin details using the token
-      fetchAdminDetails(token);
-
-      // Redirect to admin dashboard
-      navigate("/admindash");
-    } else if (token && role !== "admin") {
-      // Show error if user is not an admin
-      setError("Only admin accounts can access this page.");
+      // ✅ Fetch user details dynamically based on role
+      fetchUserDetails(token, role);
     }
   }, [location, navigate]);
 
-  // Fetch admin details using token
-  const fetchAdminDetails = async (token) => {
+  // ✅ Fetch user details dynamically based on role
+  const fetchUserDetails = async (token, role) => {
     try {
       const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/admin/profile",
+        `https://gradyzebackend.onrender.com/api/${role}/profile`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (response.data) {
-        sessionStorage.setItem("adminId", response.data._id);
-        sessionStorage.setItem("adminName", response.data.name);
+        sessionStorage.setItem(`${role}Id`, response.data._id);
+        sessionStorage.setItem(`${role}Name`, response.data.name);
+
+        console.log(`✅ ${role} details fetched successfully`);
+
+        // ✅ Redirect to respective dashboard based on role
+        navigate(`/${role}dash`);
       }
     } catch (err) {
-      console.error("Failed to fetch admin details:", err);
-      setError("Failed to fetch admin details. Please try again.");
+      console.error("❌ Failed to fetch user details:", err);
+      setError("Authentication failed. Please try again.");
     }
   };
 
+  // ✅ Handle input changes
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  // ✅ Handle Admin Login (Manual Login)
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -71,17 +64,15 @@ const AdminLogin = () => {
         formData
       );
 
-      console.log("🔹 Login Response Data:", response.data);
-
       if (response.data.token) {
         sessionStorage.setItem("token", response.data.token);
         sessionStorage.setItem("adminId", response.data.adminId);
         sessionStorage.setItem("adminName", response.data.name);
         sessionStorage.setItem("role", "admin");
 
-        console.log("✅ Token Stored in sessionStorage:", response.data.token);
+        console.log("✅ Admin logged in successfully");
 
-        // Redirect to admin dashboard
+        // ✅ Redirect to Admin Dashboard
         navigate("/admindash");
       } else {
         throw new Error("Token not received from server");
@@ -92,9 +83,8 @@ const AdminLogin = () => {
     }
   };
 
-  // Handle Google Login for admin
+  // ✅ Handle Google Login
   const handleGoogleLogin = () => {
-    // Redirect to Google auth endpoint
     window.location.href =
       "https://gradyzebackend.onrender.com/api/auth/google";
   };
@@ -141,7 +131,7 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        {/* Google Login Button */}
+        {/* ✅ Google Login Button */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>
