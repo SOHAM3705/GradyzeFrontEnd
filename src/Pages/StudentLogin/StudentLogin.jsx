@@ -6,10 +6,14 @@ import styles from "./StudentLogin.module.css";
 const StudentLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Handle Google OAuth callback
+  const API_BASE_URL =
+    process.env.REACT_APP_API_URL || "https://gradyzebackend.onrender.com";
+
+  // Handle Google OAuth callback
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
@@ -19,7 +23,7 @@ const StudentLogin = () => {
       sessionStorage.setItem("role", "student");
 
       axios
-        .get("https://gradyzebackend.onrender.com/api/auth/verify", {
+        .get(`${API_BASE_URL}/api/auth/verify`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
@@ -32,24 +36,25 @@ const StudentLogin = () => {
           setError("Invalid or expired session. Please login again.");
         });
 
-      // ✅ Remove token from URL after processing
+      // Remove token from URL after processing
       window.history.replaceState({}, document.title, "/studentlogin");
     }
   }, [location, navigate]);
 
-  // ✅ Handle input changes
+  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // ✅ Handle Manual Login
+  // Handle Manual Login
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError(null);
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/student/studentlogin",
+        `${API_BASE_URL}/api/student/studentlogin`,
         formData
       );
 
@@ -67,13 +72,14 @@ const StudentLogin = () => {
       }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Handle Google Login
+  // Handle Google Login
   const handleGoogleLogin = () => {
-    window.location.href =
-      "https://gradyzebackend.onrender.com/api/auth/google?role=student";
+    window.location.href = `${API_BASE_URL}/api/auth/google?role=student`;
   };
 
   return (
@@ -93,6 +99,7 @@ const StudentLogin = () => {
 
         {/* Error Message */}
         {error && <p className={styles.errorMessage}>{error}</p>}
+        {loading && <p className={styles.loadingMessage}>Loading...</p>}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
@@ -125,7 +132,7 @@ const StudentLogin = () => {
           </button>
         </form>
 
-        {/* ✅ Google Login Button */}
+        {/* Google Login Button */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>

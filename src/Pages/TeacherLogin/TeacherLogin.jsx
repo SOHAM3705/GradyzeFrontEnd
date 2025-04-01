@@ -6,8 +6,12 @@ import styles from "./TeacherLogin.module.css";
 const TeacherLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const API_BASE_URL =
+    process.env.REACT_APP_API_URL || "https://gradyzebackend.onrender.com";
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -26,10 +30,9 @@ const TeacherLogin = () => {
 
   const fetchTeacherDetails = async (token) => {
     try {
-      const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/teacher/profile",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/teacher/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.data) {
         sessionStorage.setItem("teacherId", response.data._id);
@@ -49,11 +52,12 @@ const TeacherLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError(null);
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/login",
+        `${API_BASE_URL}/api/teacher/login`,
         formData
       );
 
@@ -69,12 +73,13 @@ const TeacherLogin = () => {
       }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    window.location.href =
-      "https://gradyzebackend.onrender.com/api/auth/google";
+    window.location.href = `${API_BASE_URL}/api/auth/google`;
   };
 
   return (
@@ -91,6 +96,7 @@ const TeacherLogin = () => {
         </div>
 
         {error && <p className={styles.errorMessage}>{error}</p>}
+        {loading && <p className={styles.loadingMessage}>Loading...</p>}
 
         <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>

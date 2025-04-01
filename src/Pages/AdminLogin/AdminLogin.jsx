@@ -6,13 +6,14 @@ import styles from "./AdminLogin.module.css";
 const AdminLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const API_BASE_URL =
     process.env.REACT_APP_API_URL || "https://gradyzebackend.onrender.com";
 
-  // ✅ Handle OAuth Callback (Google Login)
+  // Handle OAuth Callback (Google Login)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const token = queryParams.get("token");
@@ -23,7 +24,7 @@ const AdminLogin = () => {
     }
   }, [location, navigate]);
 
-  // ✅ Fetch User Role & Details
+  // Fetch User Role & Details
   const fetchUserRole = async (token) => {
     try {
       const roles = ["admin", "teacher", "student"];
@@ -58,14 +59,16 @@ const AdminLogin = () => {
     }
   };
 
-  // ✅ Handle Input Changes
+  // Handle Input Changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // ✅ Handle Manual Login (Email & Password)
+  // Handle Manual Login (Email & Password)
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null); // Clear any previous errors
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/admin/adminlogin`,
@@ -86,10 +89,12 @@ const AdminLogin = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
       console.error("❌ Login Error:", err.response?.data);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Handle Google Login
+  // Handle Google Login
   const handleGoogleLogin = () => {
     window.location.href = `${API_BASE_URL}/api/auth/google`;
   };
@@ -109,6 +114,7 @@ const AdminLogin = () => {
 
         <form onSubmit={handleSubmit}>
           {error && <p className={styles.errorMessage}>{error}</p>}
+          {loading && <p className={styles.loadingMessage}>Loading...</p>}
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
             <input
@@ -136,7 +142,7 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        {/* ✅ Google Login Button */}
+        {/* Google Login Button */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>
