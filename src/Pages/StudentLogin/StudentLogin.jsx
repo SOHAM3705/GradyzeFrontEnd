@@ -9,12 +9,14 @@ const StudentLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ✅ Handle Google OAuth callback
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
 
     if (token) {
       sessionStorage.setItem("token", token);
+      sessionStorage.setItem("role", "student");
 
       axios
         .get("https://gradyzebackend.onrender.com/api/auth/verify", {
@@ -30,17 +32,17 @@ const StudentLogin = () => {
           setError("Invalid or expired session. Please login again.");
         });
 
+      // ✅ Remove token from URL after processing
       window.history.replaceState({}, document.title, "/studentlogin");
     }
   }, [location, navigate]);
 
+  // ✅ Handle input changes
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  // ✅ Handle Manual Login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -56,6 +58,7 @@ const StudentLogin = () => {
         sessionStorage.setItem("studentId", response.data.studentId);
         sessionStorage.setItem("studentName", response.data.name);
         sessionStorage.setItem("AdminId", response.data.adminId);
+        sessionStorage.setItem("role", "student");
 
         console.log("✅ Student Data stored in sessionStorage");
         navigate("/studentdash");
@@ -67,6 +70,7 @@ const StudentLogin = () => {
     }
   };
 
+  // ✅ Handle Google Login
   const handleGoogleLogin = () => {
     window.location.href =
       "https://gradyzebackend.onrender.com/api/auth/google?role=student";
@@ -75,19 +79,23 @@ const StudentLogin = () => {
   return (
     <div className={styles.studentBg}>
       <div className={styles.loginContainer}>
+        {/* Back Button */}
         <Link to="/">
           <button className={styles.backButton_Slogin}>
             <i className="fas fa-arrow-left"></i>
           </button>
         </Link>
 
+        {/* Login Header */}
         <div className={styles.loginHeader}>
           <h2>Student Login</h2>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && <p className={styles.errorMessage}>{error}</p>}
+        {/* Error Message */}
+        {error && <p className={styles.errorMessage}>{error}</p>}
 
+        {/* Login Form */}
+        <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
             <input
@@ -117,13 +125,16 @@ const StudentLogin = () => {
           </button>
         </form>
 
+        {/* ✅ Google Login Button */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>
 
         <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
-          <Link to="/student-forget-password">Forgot Password?</Link>
+          <Link to="/student-forget-password" className={styles.StudentLogin_a}>
+            Forgot Password?
+          </Link>
         </p>
       </div>
     </div>

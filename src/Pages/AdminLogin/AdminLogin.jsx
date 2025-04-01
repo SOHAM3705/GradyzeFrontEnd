@@ -9,58 +9,66 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Handle OAuth callback (Google Login)
+  const API_BASE_URL =
+    process.env.REACT_APP_API_URL || "https://gradyzebackend.onrender.com";
+
+  // ✅ Handle OAuth Callback (Google Login)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const token = queryParams.get("token");
-    const role = queryParams.get("role");
 
-    if (token && role) {
-      // ✅ Store token & role dynamically
+    if (token) {
       sessionStorage.setItem("token", token);
-      sessionStorage.setItem("role", role);
-
-      // ✅ Fetch user details dynamically based on role
-      fetchUserDetails(token, role);
+      fetchUserRole(token);
     }
   }, [location, navigate]);
 
-  // ✅ Fetch user details dynamically based on role
-  const fetchUserDetails = async (token, role) => {
+  // ✅ Fetch User Role & Details
+  const fetchUserRole = async (token) => {
     try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/${role}/profile`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      const roles = ["admin", "teacher", "student"];
+      for (let role of roles) {
+        try {
+          const response = await axios.get(
+            `${API_BASE_URL}/api/${role}/profile`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (response.data) {
+            sessionStorage.setItem("role", role);
+            sessionStorage.setItem(`${role}Id`, response.data._id);
+            sessionStorage.setItem(`${role}Name`, response.data.name);
+
+            console.log(`✅ ${role} logged in successfully`);
+
+            // Redirect based on role
+            navigate(`/${role}dash`);
+            return;
+          }
+        } catch (error) {
+          // Ignore and try next role
         }
-      );
-
-      if (response.data) {
-        sessionStorage.setItem(`${role}Id`, response.data._id);
-        sessionStorage.setItem(`${role}Name`, response.data.name);
-
-        console.log(`✅ ${role} details fetched successfully`);
-
-        // ✅ Redirect to respective dashboard based on role
-        navigate(`/${role}dash`);
       }
+      setError("Authentication failed. User role not found.");
     } catch (err) {
-      console.error("❌ Failed to fetch user details:", err);
+      console.error("❌ Failed to fetch user role:", err);
       setError("Authentication failed. Please try again.");
     }
   };
 
-  // ✅ Handle input changes
+  // ✅ Handle Input Changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // ✅ Handle Admin Login (Manual Login)
+  // ✅ Handle Manual Login (Email & Password)
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/admin/adminlogin",
+        `${API_BASE_URL}/api/admin/adminlogin`,
         formData
       );
 
@@ -71,8 +79,6 @@ const AdminLogin = () => {
         sessionStorage.setItem("role", "admin");
 
         console.log("✅ Admin logged in successfully");
-
-        // ✅ Redirect to Admin Dashboard
         navigate("/admindash");
       } else {
         throw new Error("Token not received from server");
@@ -85,8 +91,7 @@ const AdminLogin = () => {
 
   // ✅ Handle Google Login
   const handleGoogleLogin = () => {
-    window.location.href =
-      "https://gradyzebackend.onrender.com/api/auth/google";
+    window.location.href = `${API_BASE_URL}/api/auth/google`;
   };
 
   return (

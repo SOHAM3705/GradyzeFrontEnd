@@ -9,52 +9,44 @@ const TeacherLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Handle Google OAuth callback
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const token = queryParams.get("token");
     const role = queryParams.get("role");
 
-    if (token) {
-      if (role === "teacher") {
-        sessionStorage.setItem("token", token);
-        sessionStorage.setItem("role", "teacher");
-        fetchTeacherDetails(token);
-      } else {
-        setError("Only teacher accounts can access this page.");
-        setTimeout(() => navigate(`/${role}login`), 2000); // Redirect based on role
-      }
+    if (token && role === "teacher") {
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("role", "teacher");
+      fetchTeacherDetails(token);
+    } else if (token) {
+      setError("Only teacher accounts can access this page.");
+      setTimeout(() => navigate(`/${role}login`), 2000);
     }
   }, [location, navigate]);
 
-  // ✅ Fetch teacher details using token
   const fetchTeacherDetails = async (token) => {
     try {
       const response = await axios.get(
         "https://gradyzebackend.onrender.com/api/teacher/profile",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data) {
         sessionStorage.setItem("teacherId", response.data._id);
         sessionStorage.setItem("teacherName", response.data.name);
         sessionStorage.setItem("AdminId", response.data.adminId);
-        navigate("/teacherdash"); // ✅ Redirect to teacher dashboard
+        navigate("/teacherdash");
       }
     } catch (err) {
-      console.error("❌ Failed to fetch teacher details:", err);
+      console.error("Authentication failed:", err);
       setError("Authentication failed. Please try again.");
     }
   };
 
-  // ✅ Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // ✅ Handle manual login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -71,19 +63,15 @@ const TeacherLogin = () => {
         sessionStorage.setItem("teacherName", response.data.teacher.name);
         sessionStorage.setItem("AdminId", response.data.teacher.adminId);
         sessionStorage.setItem("role", "teacher");
-
-        console.log("✅ Teacher Data stored in sessionStorage");
-        navigate("/teacherdash"); // ✅ Redirect to teacher dashboard
+        navigate("/teacherdash");
       } else {
         throw new Error("Token missing in response");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
-      console.error("❌ Login Error:", err.response?.data);
     }
   };
 
-  // ✅ Handle Google Login
   const handleGoogleLogin = () => {
     window.location.href =
       "https://gradyzebackend.onrender.com/api/auth/google";
@@ -92,22 +80,18 @@ const TeacherLogin = () => {
   return (
     <div className={styles.teacherBg}>
       <div className={styles.loginContainer}>
-        {/* Back Button */}
         <Link to="/">
           <button className={styles.backButton_Tlogin}>
             <i className="fas fa-arrow-left"></i>
           </button>
         </Link>
 
-        {/* Login Header */}
         <div className={styles.loginHeader}>
           <h2>Teacher Login</h2>
         </div>
 
-        {/* Error Message */}
         {error && <p className={styles.errorMessage}>{error}</p>}
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
@@ -138,7 +122,6 @@ const TeacherLogin = () => {
           </button>
         </form>
 
-        {/* ✅ Google Login Button */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>
