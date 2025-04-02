@@ -55,9 +55,6 @@ const TeacherDashboard = () => {
 
       console.log("Fetched Subject Students:", response.data); // Debugging
 
-      const key = `${selectedSubject.year}-${selectedSubject.division}`;
-      const filteredStudents = studentData[key] || [];
-
       const studentsBySubject = response.data.studentData || {}; // Students mapped by class name
       const subjects = response.data.subjects || []; // Subjects with _id, name, year, etc.
 
@@ -92,10 +89,12 @@ const TeacherDashboard = () => {
       );
     }
   };
+
   useEffect(() => {
     console.log("Selected Subject: ", selectedSubject);
     console.log("Filtered Students: ", filteredStudents);
   }, [selectedSubject, filteredStudents]);
+
   useEffect(() => {
     fetchTeacherData();
   }, []);
@@ -486,24 +485,7 @@ const TeacherDashboard = () => {
       )} initiated!`
     );
   };
-  {
-    filteredStudents.length > 0 ? (
-      filteredStudents.map((student, index) => (
-        <tr key={student._id}>
-          <td>{index + 1}</td>
-          <td>{student.rollNo}</td>
-          <td>{student.name}</td>
-          <td>
-            <input type="number" name="marks" />
-          </td>
-        </tr>
-      ))
-    ) : (
-      <tr>
-        <td colSpan="4">No students found.</td>
-      </tr>
-    );
-  }
+
   const renderModalContent = () => {
     if (!modalContent) return null;
 
