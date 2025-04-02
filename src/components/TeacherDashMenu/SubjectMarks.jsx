@@ -16,7 +16,6 @@ const TeacherDashboard = () => {
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(null);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
   const [summaryData, setSummaryData] = useState({
@@ -53,35 +52,33 @@ const TeacherDashboard = () => {
         }
       );
 
-      console.log("Fetched Subject Students:", response.data); // Debugging
+      console.log("Fetched Subject Students:", response.data);
 
-      const studentsBySubject = response.data.studentData || {}; // Students mapped by class name
-      const subjects = response.data.subjects || []; // Subjects with _id, name, year, etc.
+      const studentsBySubject = response.data.studentData || {};
+      const subjects = response.data.subjects || [];
 
-      // Map class names to subject IDs
       const classToSubjectMap = subjects.reduce((acc, subject) => {
-        const className = `${subject.year}-${subject.division}`; // Example: "First Year-A"
-        acc[className] = subject._id; // Map "First Year-A" -> "67e27ef5af8b67e5d965c05f"
+        const className = `${subject.year}-${subject.division}`;
+        acc[className] = subject._id;
         return acc;
       }, {});
 
       console.log("Class to Subject Mapping:", classToSubjectMap);
 
-      // Process students, now correctly mapping subjects
       const processedData = subjects.reduce((acc, subject) => {
-        const className = `${subject.year}-${subject.division}`; // Match class name
-        const subjectId = subject._id; // Subject ID from subjects array
+        const className = `${subject.year}-${subject.division}`;
+        const subjectId = subject._id;
 
         acc[subjectId] = {
-          students: studentsBySubject[className] || [], // Use correct mapping
-          examData: {}, // Placeholder for marks
+          students: studentsBySubject[className] || [],
+          examData: {},
         };
         return acc;
       }, {});
 
       console.log("Processed Students Data:", processedData);
 
-      setStudentsData(processedData); // Update state with correct student mapping
+      setStudentsData(processedData);
     } catch (error) {
       console.error(
         "Error fetching subject students data:",
@@ -705,7 +702,6 @@ const TeacherDashboard = () => {
                   </thead>
                   <tbody>
                     {subjectData.students.map((student, index) => {
-                      // Provide a safe default object for exam data
                       const studentExamData = examData[index] || {
                         q1q2: 0,
                         q3q4: 0,
@@ -802,7 +798,7 @@ const TeacherDashboard = () => {
                   onClick={handleSaveMarks}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
-                  Save Marks
+                  {modalContent.isUpdateMode ? "Update Marks" : "Save Marks"}
                 </button>
               </div>
             </div>
@@ -1023,7 +1019,6 @@ const TeacherDashboard = () => {
       );
       alert("Marks saved successfully!");
       closeModal();
-      // Refresh data
       fetchSubjectStudentsData();
     } catch (error) {
       console.error("Error saving marks:", error.response?.data || error);
@@ -1032,18 +1027,6 @@ const TeacherDashboard = () => {
           (error.response?.data?.message || error.message)
       );
     }
-  };
-
-  // Add a helper function to convert exam type to readable text
-  const examTypeToText = (type) => {
-    const types = {
-      "unit-test": "Unit Test",
-      "re-unit-test": "Re-Unit Test",
-      prelim: "Prelim",
-      reprelim: "Re-Prelim",
-    };
-
-    return types[type] || type;
   };
 
   const handleUpdateMarks = async (marksId) => {
@@ -1077,6 +1060,17 @@ const TeacherDashboard = () => {
     } catch (error) {
       console.error("Error deleting marks:", error);
     }
+  };
+
+  const examTypeToText = (type) => {
+    const types = {
+      "unit-test": "Unit Test",
+      "re-unit-test": "Re-Unit Test",
+      prelim: "Prelim",
+      reprelim: "Re-Prelim",
+    };
+
+    return types[type] || type;
   };
 
   return (
