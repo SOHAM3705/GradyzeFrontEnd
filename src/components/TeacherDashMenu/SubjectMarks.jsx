@@ -45,7 +45,7 @@ const TeacherDashboard = () => {
       }
 
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/students-by-subject/${teacherId}`,
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -53,12 +53,25 @@ const TeacherDashboard = () => {
 
       console.log("Fetched Subject Students:", response.data); // Debugging
 
-      const studentsBySubject = response.data.studentData || {}; // Ensure valid data
-      const subjects = response.data.subjects || [];
+      const studentsBySubject = response.data.studentData || {}; // Students mapped by class name
+      const subjects = response.data.subjects || []; // Subjects with _id, name, year, etc.
 
+      // Map class names to subject IDs
+      const classToSubjectMap = subjects.reduce((acc, subject) => {
+        const className = `${subject.year}-${subject.division}`; // Example: "First Year-A"
+        acc[className] = subject._id; // Map "First Year-A" -> "67e27ef5af8b67e5d965c05f"
+        return acc;
+      }, {});
+
+      console.log("Class to Subject Mapping:", classToSubjectMap);
+
+      // Process students, now correctly mapping subjects
       const processedData = subjects.reduce((acc, subject) => {
-        acc[subject._id] = {
-          students: studentsBySubject[subject._id] || [], // Fetch students per subject
+        const className = `${subject.year}-${subject.division}`; // Match class name
+        const subjectId = subject._id; // Subject ID from subjects array
+
+        acc[subjectId] = {
+          students: studentsBySubject[className] || [], // Use correct mapping
           examData: {}, // Placeholder for marks
         };
         return acc;
@@ -66,7 +79,7 @@ const TeacherDashboard = () => {
 
       console.log("Processed Students Data:", processedData);
 
-      setStudentsData(processedData); // Set state
+      setStudentsData(processedData); // Update state with correct student mapping
     } catch (error) {
       console.error(
         "Error fetching subject students data:",
