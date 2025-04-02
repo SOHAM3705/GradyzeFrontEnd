@@ -15,6 +15,8 @@ const TeacherDashboard = () => {
   const [selectedExamType, setSelectedExamType] = useState(null);
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
   const [summaryData, setSummaryData] = useState({
