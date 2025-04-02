@@ -37,42 +37,36 @@ const TeacherDashboard = () => {
   const fetchSubjectStudentsData = async () => {
     try {
       const token = sessionStorage.getItem("token");
-      const subjectDataPromises = subjectsList.map(async (subject) => {
-        // Log the subject being processed
-        console.log("Fetching data for subject:", subject);
+      const teacherId = sessionStorage.getItem("teacherId");
 
-        const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/subject/${subject._id}/students`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params: {
-              subjectId: subject._id, // Add explicit subjectId parameter
-              teacherId: teacherId,
-            },
-          }
-        );
+      if (!teacherId) {
+        console.error("No teacherId found in sessionStorage");
+        return;
+      }
 
-        // Log the response data
-        console.log(`Response for subject ${subject._id}:`, response.data);
-
-        return {
-          [subject._id]: {
-            students: response.data.students || [],
-            examData: response.data.examData || {},
-          },
-        };
-      });
-
-      const subjectDataResults = await Promise.all(subjectDataPromises);
-      const combinedStudentsData = subjectDataResults.reduce(
-        (acc, curr) => ({ ...acc, ...curr }),
-        {}
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/students-by-subject/${teacherId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      // Log the final combined data
-      console.log("Combined Students Data:", combinedStudentsData);
+      console.log("Fetched Subject Students:", response.data); // Debugging
 
-      setStudentsData(combinedStudentsData);
+      const studentsBySubject = response.data.studentData || {}; // Ensure valid data
+      const subjects = response.data.subjects || [];
+
+      const processedData = subjects.reduce((acc, subject) => {
+        acc[subject._id] = {
+          students: studentsBySubject[subject._id] || [], // Fetch students per subject
+          examData: {}, // Placeholder for marks
+        };
+        return acc;
+      }, {});
+
+      console.log("Processed Students Data:", processedData);
+
+      setStudentsData(processedData); // Set state
     } catch (error) {
       console.error(
         "Error fetching subject students data:",
@@ -183,9 +177,8 @@ const TeacherDashboard = () => {
         `https://gradyzebackend.onrender.com/api/teachermarks/subject-list/${teacherId}`
       );
 
-      console.log("Fetched Subject List:", response.data); // Debugging
+      console.log("Fetched Subject List:", response.data);
 
-      // Check if response.data and response.data.subjects are defined
       if (response.data && Array.isArray(response.data.subjects)) {
         setSubjectsList(response.data.subjects);
       } else {
@@ -193,12 +186,13 @@ const TeacherDashboard = () => {
           "Expected an array for subjects list data, got:",
           response.data
         );
-        setSubjectsList([]); // Reset to empty array if not valid
+        setSubjectsList([]);
       }
     } catch (error) {
       console.error("Error fetching subjects list:", error);
     }
   };
+
   const updateSummary = () => {
     const totalStudents = students.length;
     const passedStudents = students.filter(
@@ -323,7 +317,6 @@ const TeacherDashboard = () => {
         (value) => value
       );
 
-      // Use fallback to handle different subject object structures
       const subjectId = subject._id || subject.id;
       const subjectName = subject.name;
       const subjectYear = subject.year;
@@ -359,7 +352,7 @@ const TeacherDashboard = () => {
           <p>Year: {subjectYear}</p>
           <p>Semester: {subjectSemester}</p>
           <p>Divisions: {subjectDivisions.join(", ")}</p>
-          <p>Total Students: {subject.totalStudents || 0}</p>
+          <p>Total Students: {studentsData[subjectId]?.students.length || 0}</p>
           <div
             className={`status-badge ${getOverallStatus(
               subject
@@ -372,8 +365,8 @@ const TeacherDashboard = () => {
       );
     });
   };
+
   const getOverallStatus = (subject) => {
-    // Add default value for marksEntered
     const marksEntered = subject.marksEntered || {};
 
     const hasAnyMarksEntered = Object.values(marksEntered).some(
@@ -392,7 +385,6 @@ const TeacherDashboard = () => {
     }
   }, [activeTab, studentsData]);
 
-  // Modify updateSubjectSummary to handle undefined data safely
   const updateSubjectSummary = () => {
     let totalStudents = 0;
     let totalPassed = 0;
@@ -402,9 +394,9 @@ const TeacherDashboard = () => {
 
     subjectsList.forEach((subject) => {
       const subjectData = studentsData[subject._id];
-      if (!subjectData) return; // Skip if no data for this subject
+      if (!subjectData) return;
 
-      totalStudents += subject.totalStudents || 0;
+      totalStudents += subjectData.students.length;
 
       for (const examType in subject.marksEntered || {}) {
         if (subject.marksEntered[examType]) {
@@ -472,17 +464,6 @@ const TeacherDashboard = () => {
         examType
       )} initiated!`
     );
-  };
-
-  const examTypeToText = (type) => {
-    const types = {
-      "unit-test": "Unit Test",
-      "re-unit-test": "Re-Unit Test",
-      prelim: "Prelim",
-      reprelim: "Re-Prelim",
-    };
-
-    return types[type] || type;
   };
 
   const renderModalContent = () => {
@@ -664,109 +645,133 @@ const TeacherDashboard = () => {
 
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-lg relative">
-              {/* ... existing modal header ... */}
-              <table className="w-full mb-4">
-                <thead>
-                  <tr>
-                    <th className="text-left">Roll No.</th>
-                    <th className="text-left">Name</th>
-                    {isUnitTest ? (
-                      <>
-                        <th className="text-left">Q1/Q2 (15)</th>
-                        <th className="text-left">Q3/Q4 (15)</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="text-left">Q1/Q2 (17)</th>
-                        <th className="text-left">Q3/Q4 (18)</th>
-                        <th className="text-left">Q5/Q6 (17)</th>
-                        <th className="text-left">Q7/Q8 (18)</th>
-                      </>
-                    )}
-                    <th className="text-left">Total</th>
-                    <th className="text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subjectData.students.map((student, index) => {
-                    // Provide a safe default object for exam data
-                    const studentExamData = examData[index] || {
-                      q1q2: 0,
-                      q3q4: 0,
-                      q5q6: 0,
-                      q7q8: 0,
-                      total: 0,
-                      status: "",
-                    };
+            <div className="bg-white p-6 rounded shadow-lg w-full max-w-5xl relative">
+              <button
+                onClick={closeModal}
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl font-bold"
+              >
+                &times;
+              </button>
+              <div className="mb-4 border-b pb-2">
+                <h3 className="font-semibold text-gray-800">
+                  {examTypeToText(examType)} - Enter Student Marks
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {isUnitTest ? "Pass mark: 12" : "Pass mark: 28"}
+                </p>
+              </div>
+              <div className="overflow-x-auto max-h-[70vh]">
+                <table className="w-full mb-4">
+                  <thead className="bg-gray-100 sticky top-0">
+                    <tr>
+                      <th className="p-2 text-left">Roll No.</th>
+                      <th className="p-2 text-left">Name</th>
+                      {isUnitTest ? (
+                        <>
+                          <th className="p-2 text-center">Q1/Q2 (15)</th>
+                          <th className="p-2 text-center">Q3/Q4 (15)</th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="p-2 text-center">Q1/Q2 (17)</th>
+                          <th className="p-2 text-center">Q3/Q4 (18)</th>
+                          <th className="p-2 text-center">Q5/Q6 (17)</th>
+                          <th className="p-2 text-center">Q7/Q8 (18)</th>
+                        </>
+                      )}
+                      <th className="p-2 text-center">Total</th>
+                      <th className="p-2 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subjectData.students.map((student, index) => {
+                      // Provide a safe default object for exam data
+                      const studentExamData = examData[index] || {
+                        q1q2: 0,
+                        q3q4: 0,
+                        q5q6: 0,
+                        q7q8: 0,
+                        total: 0,
+                        status: "",
+                      };
 
-                    return (
-                      <tr key={student.rollNo} className="student-row border-b">
-                        <td className="p-2">{student.rollNo}</td>
-                        <td className="p-2">{student.name}</td>
-                        <td className="p-2">
-                          <input
-                            type="number"
-                            min="0"
-                            max={isUnitTest ? "15" : "17"}
-                            defaultValue={studentExamData.q1q2}
-                            className="q1q2-input w-16 p-1 border rounded"
-                            data-index={index}
-                            onChange={() => updateStudentRow(index)}
-                          />
-                        </td>
-
-                        <td className="p-2">
-                          <input
-                            type="number"
-                            min="0"
-                            max={isUnitTest ? "15" : "18"}
-                            value={studentExamData.q3q4}
-                            className="q3q4-input w-16 p-1 border rounded"
-                            data-index={index}
-                            onChange={() => updateStudentRow(index)}
-                          />
-                        </td>
-                        {!isUnitTest && (
-                          <>
-                            <td className="p-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max="17"
-                                value={studentExamData.q5q6}
-                                className="q5q6-input w-16 p-1 border rounded"
-                                data-index={index}
-                                onChange={() => updateStudentRow(index)}
-                              />
-                            </td>
-                            <td className="p-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max="18"
-                                value={studentExamData.q7q8}
-                                className="q7q8-input w-16 p-1 border rounded"
-                                data-index={index}
-                                onChange={() => updateStudentRow(index)}
-                              />
-                            </td>
-                          </>
-                        )}
-                        <td className="p-2 total-cell">
-                          {studentExamData.total}
-                        </td>
-                        <td
-                          className={`p-2 status-cell ${studentExamData.status.toLowerCase()}`}
+                      return (
+                        <tr
+                          key={student.rollNo}
+                          className="student-row border-b hover:bg-gray-50"
                         >
-                          {studentExamData.status}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <div className="flex justify-end gap-2">
+                          <td className="p-2">{student.rollNo}</td>
+                          <td className="p-2">{student.name}</td>
+                          <td className="p-2 text-center">
+                            <input
+                              type="number"
+                              min="0"
+                              max={isUnitTest ? "15" : "17"}
+                              defaultValue={studentExamData.q1q2}
+                              className="q1q2-input w-16 p-1 border rounded text-center"
+                              data-index={index}
+                              onChange={() => updateStudentRow(index)}
+                            />
+                          </td>
+                          <td className="p-2 text-center">
+                            <input
+                              type="number"
+                              min="0"
+                              max={isUnitTest ? "15" : "18"}
+                              defaultValue={studentExamData.q3q4}
+                              className="q3q4-input w-16 p-1 border rounded text-center"
+                              data-index={index}
+                              onChange={() => updateStudentRow(index)}
+                            />
+                          </td>
+                          {!isUnitTest && (
+                            <>
+                              <td className="p-2 text-center">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="17"
+                                  defaultValue={studentExamData.q5q6}
+                                  className="q5q6-input w-16 p-1 border rounded text-center"
+                                  data-index={index}
+                                  onChange={() => updateStudentRow(index)}
+                                />
+                              </td>
+                              <td className="p-2 text-center">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="18"
+                                  defaultValue={studentExamData.q7q8}
+                                  className="q7q8-input w-16 p-1 border rounded text-center"
+                                  data-index={index}
+                                  onChange={() => updateStudentRow(index)}
+                                />
+                              </td>
+                            </>
+                          )}
+                          <td className="p-2 total-cell text-center font-medium">
+                            {studentExamData.total}
+                          </td>
+                          <td
+                            className={`p-2 status-cell text-center ${
+                              studentExamData.status.toLowerCase() === "pass"
+                                ? "text-green-600"
+                                : studentExamData.status.toLowerCase() ===
+                                  "fail"
+                                ? "text-red-600"
+                                : ""
+                            }`}
+                          >
+                            {studentExamData.status}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={closeModal}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
@@ -837,30 +842,34 @@ const TeacherDashboard = () => {
   };
 
   const updateStudentRow = (index) => {
-    if (!modalContent || !modalContent.subjectId) return;
-
-    const subjectData = studentsData[modalContent.subjectId];
-    if (!subjectData) return;
+    if (!modalContent || !modalContent.subjectId || !modalContent.examType)
+      return;
 
     const row = document.querySelector(`.student-row:nth-child(${index + 1})`);
+    if (!row) return;
+
     const isUnitTest =
-      selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
+      modalContent.examType === "unit-test" ||
+      modalContent.examType === "re-unit-test";
+
     const q1q2Input = row.querySelector(".q1q2-input");
     const q3q4Input = row.querySelector(".q3q4-input");
-    const q5q6Input = row.querySelector(".q5q6-input");
-    const q7q8Input = row.querySelector(".q7q8-input");
+    const q5q6Input = isUnitTest ? null : row.querySelector(".q5q6-input");
+    const q7q8Input = isUnitTest ? null : row.querySelector(".q7q8-input");
 
     const q1q2 = parseInt(q1q2Input?.value) || 0;
     const q3q4 = parseInt(q3q4Input?.value) || 0;
-    const q5q6 = parseInt(q5q6Input?.value) || 0;
-    const q7q8 = parseInt(q7q8Input?.value) || 0;
+    const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
+    const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
 
-    const total = q1q2 + q3q4 + (isUnitTest ? 0 : q5q6 + q7q8);
+    const total = q1q2 + q3q4 + q5q6 + q7q8;
 
     const totalCell = row.querySelector(".total-cell");
-    totalCell.textContent = total;
+    if (totalCell) totalCell.textContent = total;
 
     const statusCell = row.querySelector(".status-cell");
+    if (!statusCell) return;
+
     const passingMark = isUnitTest ? 12 : 28;
     let status = "";
 
@@ -869,7 +878,13 @@ const TeacherDashboard = () => {
     }
 
     statusCell.textContent = status;
-    statusCell.className = "status-cell " + status.toLowerCase();
+    statusCell.className = `p-2 status-cell text-center ${
+      status.toLowerCase() === "pass"
+        ? "text-green-600"
+        : status.toLowerCase() === "fail"
+        ? "text-red-600"
+        : ""
+    }`;
   };
 
   const openStudentModal = async (studentId) => {
@@ -927,12 +942,11 @@ const TeacherDashboard = () => {
   };
 
   const handleSaveMarks = async () => {
-    if (!selectedSubjectId) return;
+    if (!selectedSubjectId || !selectedExamType) return;
 
     const subjectData = studentsData[selectedSubjectId];
     if (!subjectData) return;
 
-    const examData = subjectData.examData[selectedExamType];
     const students = subjectData.students;
     const isUnitTest =
       selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
@@ -940,18 +954,18 @@ const TeacherDashboard = () => {
 
     const rows = document.querySelectorAll(".student-row");
 
-    const marksToSave = rows.map((row, index) => {
+    const marksToSave = Array.from(rows).map((row, index) => {
       const q1q2Input = row.querySelector(".q1q2-input");
       const q3q4Input = row.querySelector(".q3q4-input");
-      const q5q6Input = row.querySelector(".q5q6-input");
-      const q7q8Input = row.querySelector(".q7q8-input");
+      const q5q6Input = isUnitTest ? null : row.querySelector(".q5q6-input");
+      const q7q8Input = isUnitTest ? null : row.querySelector(".q7q8-input");
 
       const q1q2 = parseInt(q1q2Input?.value) || 0;
       const q3q4 = parseInt(q3q4Input?.value) || 0;
-      const q5q6 = parseInt(q5q6Input?.value) || 0;
-      const q7q8 = parseInt(q7q8Input?.value) || 0;
+      const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
+      const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
 
-      const total = q1q2 + q3q4 + (isUnitTest ? 0 : q5q6 + q7q8);
+      const total = q1q2 + q3q4 + q5q6 + q7q8;
 
       let status = "";
       if (total > 0) {
@@ -962,25 +976,54 @@ const TeacherDashboard = () => {
         studentId: students[index]._id,
         subjectId: selectedSubjectId,
         examType: selectedExamType,
+        q1q2,
+        q3q4,
+        q5q6: isUnitTest ? 0 : q5q6,
+        q7q8: isUnitTest ? 0 : q7q8,
         marksObtained: total,
         status,
       };
     });
 
     try {
+      const token = sessionStorage.getItem("token");
       await axios.post(
         `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks`,
         marksToSave,
         {
-          params: { teacherId },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            teacherId,
+            subjectId: selectedSubjectId,
+            examType: selectedExamType,
+          },
         }
       );
       alert("Marks saved successfully!");
       closeModal();
-      fetchStudents();
+      // Refresh data
+      fetchSubjectStudentsData();
     } catch (error) {
-      console.error("Error saving marks:", error);
+      console.error("Error saving marks:", error.response?.data || error);
+      alert(
+        "Error saving marks: " +
+          (error.response?.data?.message || error.message)
+      );
     }
+  };
+
+  // Add a helper function to convert exam type to readable text
+  const examTypeToText = (type) => {
+    const types = {
+      "unit-test": "Unit Test",
+      "re-unit-test": "Re-Unit Test",
+      prelim: "Prelim",
+      reprelim: "Re-Prelim",
+    };
+
+    return types[type] || type;
   };
 
   const handleUpdateMarks = async (marksId) => {
