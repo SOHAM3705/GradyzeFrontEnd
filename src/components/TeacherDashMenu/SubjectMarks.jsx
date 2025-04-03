@@ -16,6 +16,9 @@ const TeacherDashboard = () => {
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [marksData, setMarksData] = useState({});
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [inputMarks, setInputMarks] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
   const [summaryData, setSummaryData] = useState({
@@ -32,6 +35,17 @@ const TeacherDashboard = () => {
     highestScore: 0,
   });
   const [studentsData, setStudentsData] = useState({});
+
+  const fetchMarksForSubject = async (subjectId) => {
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/get-marks/${subjectId}`
+      );
+      setMarksData(response.data);
+    } catch (error) {
+      console.error("Error fetching marks:", error);
+    }
+  };
 
   const teacherId = sessionStorage.getItem("teacherId");
 
@@ -371,7 +385,7 @@ const TeacherDashboard = () => {
           <p>Divisions: {subjectDivisions.join(", ")}</p>
           <p>Total Students: {studentsData[subjectId]?.students.length || 0}</p>
           <div
-            className={`status-badge ${getOverallStatus(
+            className={`status-badge \${getOverallStatus(
               subject
             ).toLowerCase()} text-sm font-semibold px-3 py-1 rounded mt-2`}
           >
@@ -477,7 +491,7 @@ const TeacherDashboard = () => {
 
     closeModal();
     alert(
-      `PDF generation for ${subject.name} - ${examTypeToText(
+      `PDF generation for \${subject.name} - \${examTypeToText(
         examType
       )} initiated!`
     );
@@ -727,6 +741,7 @@ const TeacherDashboard = () => {
                               className="q1q2-input w-16 p-1 border rounded text-center"
                               data-index={index}
                               onChange={() => updateStudentRow(index)}
+                              disabled={student.status === "Absent"}
                             />
                           </td>
                           <td className="p-2 text-center">
@@ -738,6 +753,7 @@ const TeacherDashboard = () => {
                               className="q3q4-input w-16 p-1 border rounded text-center"
                               data-index={index}
                               onChange={() => updateStudentRow(index)}
+                              disabled={student.status === "Absent"}
                             />
                           </td>
                           {!isUnitTest && (
@@ -751,6 +767,7 @@ const TeacherDashboard = () => {
                                   className="q5q6-input w-16 p-1 border rounded text-center"
                                   data-index={index}
                                   onChange={() => updateStudentRow(index)}
+                                  disabled={student.status === "Absent"}
                                 />
                               </td>
                               <td className="p-2 text-center">
@@ -762,6 +779,7 @@ const TeacherDashboard = () => {
                                   className="q7q8-input w-16 p-1 border rounded text-center"
                                   data-index={index}
                                   onChange={() => updateStudentRow(index)}
+                                  disabled={student.status === "Absent"}
                                 />
                               </td>
                             </>
@@ -770,7 +788,7 @@ const TeacherDashboard = () => {
                             {studentExamData.total}
                           </td>
                           <td
-                            className={`p-2 status-cell text-center ${
+                            className={`p-2 status-cell text-center \${
                               studentExamData.status.toLowerCase() === "pass"
                                 ? "text-green-600"
                                 : studentExamData.status.toLowerCase() ===
@@ -894,7 +912,7 @@ const TeacherDashboard = () => {
     }
 
     statusCell.textContent = status;
-    statusCell.className = `p-2 status-cell text-center ${
+    statusCell.className = `p-2 status-cell text-center \${
       status.toLowerCase() === "pass"
         ? "text-green-600"
         : status.toLowerCase() === "fail"
@@ -933,13 +951,14 @@ const TeacherDashboard = () => {
     });
   };
 
-  const openStudentsModal = (subjectId, examType) => {
+  const openStudentsModal = (subjectId, examType, existingMarks = []) => {
     setSelectedSubjectId(subjectId);
     setSelectedExamType(examType);
     setModalContent({
       type: "students-list",
       subjectId,
       examType,
+      existingMarks, // Pass existing marks to the modal
     });
   };
 
@@ -957,6 +976,7 @@ const TeacherDashboard = () => {
     openStudentsModal(selectedSubjectId, selectedExamType);
   };
 
+  // Add this function to handle saving marks
   const handleSaveMarks = async () => {
     if (!selectedSubjectId || !selectedExamType) return;
 
@@ -992,11 +1012,8 @@ const TeacherDashboard = () => {
         studentId: students[index]._id,
         subjectId: selectedSubjectId,
         examType: selectedExamType,
-        q1q2,
-        q3q4,
-        q5q6: isUnitTest ? 0 : q5q6,
-        q7q8: isUnitTest ? 0 : q7q8,
         marksObtained: total,
+        totalMarks: isUnitTest ? 30 : 70,
         status,
       };
     });
@@ -1004,16 +1021,11 @@ const TeacherDashboard = () => {
     try {
       const token = sessionStorage.getItem("token");
       await axios.post(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks`,
+        `https://gradyzebackend.onrender.com/api/teachermarks/add`,
         marksToSave,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-          },
-          params: {
-            teacherId,
-            subjectId: selectedSubjectId,
-            examType: selectedExamType,
           },
         }
       );
@@ -1036,7 +1048,7 @@ const TeacherDashboard = () => {
 
     try {
       await axios.put(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks/${marksId}`,
+        `https://gradyzebackend.onrender.com/api/teachermarks/update`,
         updatedMarks,
         { params: { teacherId } }
       );
@@ -1050,7 +1062,7 @@ const TeacherDashboard = () => {
   const handleDeleteMarks = async (marksId) => {
     try {
       await axios.delete(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/marks/${marksId}`,
+        `https://gradyzebackend.onrender.com/api/teachermarks/delete`,
         {
           params: { teacherId },
         }
