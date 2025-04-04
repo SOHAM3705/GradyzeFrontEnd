@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const TeacherDashboard = () => {
+  const [selectedYear, setSelectedYear] = useState("First");
+
   const [activeTab, setActiveTab] = useState("class-teacher");
   const [isClassTeacher, setIsClassTeacher] = useState(false);
   const [isSubjectTeacher, setIsSubjectTeacher] = useState(false);
@@ -976,6 +978,8 @@ const TeacherDashboard = () => {
   };
 
   const handleSaveMarks = async () => {
+    console.log(subject.year);
+    selectedYear = subject.year;
     if (!selectedSubjectId || !selectedExamType || !selectedYear) return;
 
     const subjectData = studentsData[selectedSubjectId];
