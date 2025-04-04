@@ -10,15 +10,14 @@ const TeacherDashboard = () => {
   const [subjectsList, setSubjectsList] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 5;
+
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedExamType, setSelectedExamType] = useState(null);
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [marksData, setMarksData] = useState({});
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [inputMarks, setInputMarks] = useState("");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
   const [summaryData, setSummaryData] = useState({
@@ -976,7 +975,6 @@ const TeacherDashboard = () => {
     openStudentsModal(selectedSubjectId, selectedExamType);
   };
 
-  // Add this function to handle saving marks
   const handleSaveMarks = async () => {
     if (!selectedSubjectId || !selectedExamType) return;
 
@@ -984,9 +982,18 @@ const TeacherDashboard = () => {
     if (!subjectData) return;
 
     const students = subjectData.students;
+
     const isUnitTest =
       selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
-    const passingMark = isUnitTest ? 12 : 28;
+    const isPrelim = selectedExamType === "prelim";
+
+    const totalMarks = isUnitTest ? 30 : isPrelim ? 70 : 0;
+    const passingMark = isUnitTest ? 12 : isPrelim ? 28 : 0;
+
+    if (totalMarks === 0) {
+      alert("Invalid exam type selected.");
+      return;
+    }
 
     const rows = document.querySelectorAll(".student-row");
 
@@ -1003,26 +1010,30 @@ const TeacherDashboard = () => {
 
       const total = q1q2 + q3q4 + q5q6 + q7q8;
 
-      let status = "";
-      if (total > 0) {
-        status = total >= passingMark ? "Pass" : "Fail";
-      }
+      const status = total > 0 ? (total >= passingMark ? "Pass" : "Fail") : "";
 
       return {
         studentId: students[index]._id,
         subjectId: selectedSubjectId,
         examType: selectedExamType,
         marksObtained: total,
-        totalMarks: isUnitTest ? 30 : 70,
+        totalMarks,
         status,
       };
     });
+
+    const filteredMarks = marksToSave.filter((m) => m.marksObtained > 0);
+
+    if (filteredMarks.length === 0) {
+      alert("Please enter marks for at least one student.");
+      return;
+    }
 
     try {
       const token = sessionStorage.getItem("token");
       await axios.post(
         `https://gradyzebackend.onrender.com/api/teachermarks/add`,
-        marksToSave,
+        filteredMarks,
         {
           headers: {
             Authorization: `Bearer ${token}`,
