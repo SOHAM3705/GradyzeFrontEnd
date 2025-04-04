@@ -537,41 +537,36 @@ const TeacherDashboard = () => {
         studentId: students[index]._id,
         year: selectedYear,
         examType: selectedExamType,
-        exams: [
-          {
-            subjectId: selectedSubjectId,
-            marksObtained: total,
-            totalMarks,
-            status,
-          },
-        ],
+        subjectId: selectedSubjectId,
+        marksObtained: total,
+        totalMarks,
+        status,
       };
     });
 
-    const filteredMarks = marksToSave.filter(
-      (m) => m.exams[0].marksObtained !== 0
-    );
+    const filteredMarks = marksToSave.filter((m) => m.marksObtained !== 0);
 
     if (filteredMarks.length === 0) {
       alert("Please enter marks for at least one student.");
       return;
     }
 
+    // Log the payload to verify its structure
+    console.log("Marks to Save:", filteredMarks);
+
     try {
       const token = sessionStorage.getItem("token");
 
-      // send one-by-one OR switch to bulk later
-      for (const mark of filteredMarks) {
-        await axios.post(
-          `https://gradyzebackend.onrender.com/api/teachermarks/add`,
-          mark,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      }
+      // Send the request with the filteredMarks array
+      await axios.post(
+        `https://gradyzebackend.onrender.com/api/teachermarks/add`,
+        filteredMarks,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       alert("Marks saved successfully!");
       closeModal();
