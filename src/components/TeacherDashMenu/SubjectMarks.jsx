@@ -497,7 +497,7 @@ const TeacherDashboard = () => {
     if (!subjectData) return;
 
     const students = subjectData.students;
-    const selectedYear = subject.year;
+    const selectedYear = subjectData.year; // Ensure year is captured correctly
 
     const isUnitTest =
       selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
@@ -535,7 +535,7 @@ const TeacherDashboard = () => {
       return {
         teacherId,
         studentId: students[index]._id,
-        year: selectedYear,
+        year: selectedYear, // Include year in the payload
         examType: selectedExamType,
         subjectId: selectedSubjectId,
         marksObtained: total,
