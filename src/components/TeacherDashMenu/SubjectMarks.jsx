@@ -497,7 +497,15 @@ const TeacherDashboard = () => {
     if (!subjectData) return;
 
     const students = subjectData.students;
-    const selectedYear = subjectData.year; // Ensure year is captured correctly
+    const selectedSubject = subjectsList.find(
+      (subject) => subject._id === selectedSubjectId
+    );
+    const selectedYear = selectedSubject ? selectedSubject.year : null; // Fetch year from subjectsList
+
+    if (!selectedYear) {
+      alert("Year is not available for the selected subject.");
+      return;
+    }
 
     const isUnitTest =
       selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
