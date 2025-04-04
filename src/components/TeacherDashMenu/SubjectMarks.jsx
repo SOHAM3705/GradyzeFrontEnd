@@ -497,7 +497,7 @@ const TeacherDashboard = () => {
     if (!subjectData) return;
 
     const students = subjectData.students;
-    const selectedYear = subjectData.year;
+    const selectedYear = subject.year;
 
     const isUnitTest =
       selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
