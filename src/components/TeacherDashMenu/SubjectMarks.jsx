@@ -976,7 +976,7 @@ const TeacherDashboard = () => {
   };
 
   const handleSaveMarks = async () => {
-    if (!selectedSubjectId || !selectedExamType) return;
+    if (!selectedSubjectId || !selectedExamType || !selectedYear) return;
 
     const subjectData = studentsData[selectedSubjectId];
     if (!subjectData) return;
@@ -996,6 +996,7 @@ const TeacherDashboard = () => {
     }
 
     const rows = document.querySelectorAll(".student-row");
+    const teacherId = sessionStorage.getItem("teacherId");
 
     const marksToSave = Array.from(rows).map((row, index) => {
       const q1q2Input = row.querySelector(".q1q2-input");
@@ -1010,19 +1011,30 @@ const TeacherDashboard = () => {
 
       const total = q1q2 + q3q4 + q5q6 + q7q8;
 
-      const status = total > 0 ? (total >= passingMark ? "Pass" : "Fail") : "";
+      let status = "";
+      if (total === -1) status = "Absent";
+      else if (total >= passingMark) status = "Pass";
+      else status = "Fail";
 
       return {
+        teacherId,
         studentId: students[index]._id,
-        subjectId: selectedSubjectId,
+        year: selectedYear,
         examType: selectedExamType,
-        marksObtained: total,
-        totalMarks,
-        status,
+        exams: [
+          {
+            subjectId: selectedSubjectId,
+            marksObtained: total,
+            totalMarks,
+            status,
+          },
+        ],
       };
     });
 
-    const filteredMarks = marksToSave.filter((m) => m.marksObtained > 0);
+    const filteredMarks = marksToSave.filter(
+      (m) => m.exams[0].marksObtained !== 0
+    );
 
     if (filteredMarks.length === 0) {
       alert("Please enter marks for at least one student.");
@@ -1031,15 +1043,20 @@ const TeacherDashboard = () => {
 
     try {
       const token = sessionStorage.getItem("token");
-      await axios.post(
-        `https://gradyzebackend.onrender.com/api/teachermarks/add`,
-        filteredMarks,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+
+      // send one-by-one OR switch to bulk later
+      for (const mark of filteredMarks) {
+        await axios.post(
+          `https://gradyzebackend.onrender.com/api/teachermarks/add`,
+          mark,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+
       alert("Marks saved successfully!");
       closeModal();
       fetchSubjectStudentsData();
