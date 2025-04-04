@@ -535,11 +535,6 @@ const TeacherDashboard = () => {
 
       const total = q1q2 + q3q4 + q5q6 + q7q8;
 
-      let status = "";
-      if (total === -1) status = "Absent";
-      else if (total >= passingMark) status = "Pass";
-      else status = "Fail";
-
       return {
         teacherId,
         studentId: students[index]._id,
@@ -547,8 +542,6 @@ const TeacherDashboard = () => {
         examType: selectedExamType,
         subjectId: selectedSubjectId,
         marksObtained: total,
-        totalMarks,
-        status,
       };
     });
 
