@@ -15,7 +15,6 @@ const TeacherDashboard = () => {
   const [selectedExamType, setSelectedExamType] = useState(null);
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState(null);
   const [marksData, setMarksData] = useState({});
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,6 +34,8 @@ const TeacherDashboard = () => {
   });
   const [studentsData, setStudentsData] = useState({});
 
+  const teacherId = sessionStorage.getItem("teacherId");
+
   const fetchMarksForSubject = async (subjectId) => {
     try {
       const response = await axios.get(
@@ -46,13 +47,9 @@ const TeacherDashboard = () => {
     }
   };
 
-  const teacherId = sessionStorage.getItem("teacherId");
-
   const fetchSubjectStudentsData = async () => {
     try {
       const token = sessionStorage.getItem("token");
-      const teacherId = sessionStorage.getItem("teacherId");
-
       if (!teacherId) {
         console.error("No teacherId found in sessionStorage");
         return;
@@ -65,8 +62,6 @@ const TeacherDashboard = () => {
         }
       );
 
-      console.log("Fetched Subject Students:", response.data);
-
       const studentsBySubject = response.data.studentData || {};
       const subjects = response.data.subjects || [];
 
@@ -75,8 +70,6 @@ const TeacherDashboard = () => {
         acc[className] = subject._id;
         return acc;
       }, {});
-
-      console.log("Class to Subject Mapping:", classToSubjectMap);
 
       const processedData = subjects.reduce((acc, subject) => {
         const className = `${subject.year}-${subject.division}`;
@@ -89,8 +82,6 @@ const TeacherDashboard = () => {
         return acc;
       }, {});
 
-      console.log("Processed Students Data:", processedData);
-
       setStudentsData(processedData);
     } catch (error) {
       console.error(
@@ -99,11 +90,6 @@ const TeacherDashboard = () => {
       );
     }
   };
-
-  useEffect(() => {
-    console.log("Selected Subject: ", selectedSubject);
-    console.log("Filtered Students: ", filteredStudents);
-  }, [selectedSubject, filteredStudents]);
 
   useEffect(() => {
     fetchTeacherData();
@@ -206,8 +192,6 @@ const TeacherDashboard = () => {
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/subject-list/${teacherId}`
       );
-
-      console.log("Fetched Subject List:", response.data);
 
       if (response.data && Array.isArray(response.data.subjects)) {
         setSubjectsList(response.data.subjects);
@@ -367,10 +351,18 @@ const TeacherDashboard = () => {
           <>
             {buttonsHtml}
             <button
-              onClick={() => generatePDF(subjectId)}
+              onClick={() =>
+                openStudentsModal(subjectId, selectedExamType, true)
+              }
               className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
             >
-              Generate PDF
+              Update Marks
+            </button>
+            <button
+              onClick={() => handleDeleteMarks(subjectId)}
+              className="bg-red-500 text-white px-4 py-2 rounded ml-2"
+            >
+              Delete Marks
             </button>
           </>
         );
@@ -384,7 +376,7 @@ const TeacherDashboard = () => {
           <p>Divisions: {subjectDivisions.join(", ")}</p>
           <p>Total Students: {studentsData[subjectId]?.students.length || 0}</p>
           <div
-            className={`status-badge \${getOverallStatus(
+            className={`status-badge ${getOverallStatus(
               subject
             ).toLowerCase()} text-sm font-semibold px-3 py-1 rounded mt-2`}
           >
@@ -467,33 +459,176 @@ const TeacherDashboard = () => {
     });
   };
 
-  const generatePDF = (subjectId) => {
-    openPdfExamTypeModal(subjectId);
-  };
-
-  const openPdfExamTypeModal = (subjectId) => {
+  const openExamModal = (subjectId) => {
     setSelectedSubjectId(subjectId);
     setModalContent({
-      type: "pdf-exam-selection",
+      type: "exam-selection",
       subjectId,
     });
   };
 
-  const handleSavePDF = () => {
-    const subject = subjectsList.find((s) => s._id == selectedSubjectId);
-    const examType = selectedExamType;
+  const openStudentsModal = (subjectId, examType, isUpdateMode = false) => {
+    setSelectedSubjectId(subjectId);
+    setSelectedExamType(examType);
+    setModalContent({
+      type: "students-list",
+      subjectId,
+      examType,
+      isUpdateMode,
+    });
+  };
 
-    if (!examType) {
+  const closeModal = () => {
+    setModalContent(null);
+  };
+
+  const handleContinueExam = () => {
+    if (!selectedExamType) {
       alert("Please select an exam type.");
       return;
     }
 
     closeModal();
-    alert(
-      `PDF generation for \${subject.name} - \${examTypeToText(
-        examType
-      )} initiated!`
+    openStudentsModal(selectedSubjectId, selectedExamType);
+  };
+
+  const handleSaveMarks = async () => {
+    const subjectData = studentsData[selectedSubjectId];
+    if (!subjectData) return;
+
+    const students = subjectData.students;
+    const selectedYear = subjectData.year;
+
+    const isUnitTest =
+      selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
+    const isPrelim = selectedExamType === "prelim";
+
+    const totalMarks = isUnitTest ? 30 : isPrelim ? 70 : 0;
+    const passingMark = isUnitTest ? 12 : isPrelim ? 28 : 0;
+
+    if (totalMarks === 0) {
+      alert("Invalid exam type selected.");
+      return;
+    }
+
+    const rows = document.querySelectorAll(".student-row");
+    const teacherId = sessionStorage.getItem("teacherId");
+
+    const marksToSave = Array.from(rows).map((row, index) => {
+      const q1q2Input = row.querySelector(".q1q2-input");
+      const q3q4Input = row.querySelector(".q3q4-input");
+      const q5q6Input = isUnitTest ? null : row.querySelector(".q5q6-input");
+      const q7q8Input = isUnitTest ? null : row.querySelector(".q7q8-input");
+
+      const q1q2 = parseInt(q1q2Input?.value) || 0;
+      const q3q4 = parseInt(q3q4Input?.value) || 0;
+      const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
+      const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
+
+      const total = q1q2 + q3q4 + q5q6 + q7q8;
+
+      let status = "";
+      if (total === -1) status = "Absent";
+      else if (total >= passingMark) status = "Pass";
+      else status = "Fail";
+
+      return {
+        teacherId,
+        studentId: students[index]._id,
+        year: selectedYear,
+        examType: selectedExamType,
+        exams: [
+          {
+            subjectId: selectedSubjectId,
+            marksObtained: total,
+            totalMarks,
+            status,
+          },
+        ],
+      };
+    });
+
+    const filteredMarks = marksToSave.filter(
+      (m) => m.exams[0].marksObtained !== 0
     );
+
+    if (filteredMarks.length === 0) {
+      alert("Please enter marks for at least one student.");
+      return;
+    }
+
+    try {
+      const token = sessionStorage.getItem("token");
+
+      // send one-by-one OR switch to bulk later
+      for (const mark of filteredMarks) {
+        await axios.post(
+          `https://gradyzebackend.onrender.com/api/teachermarks/add`,
+          mark,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+
+      alert("Marks saved successfully!");
+      closeModal();
+      fetchSubjectStudentsData();
+    } catch (error) {
+      console.error("Error saving marks:", error.response?.data || error);
+      alert(
+        "Error saving marks: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  };
+
+  const handleUpdateMarks = async (marksId) => {
+    const updatedMarks = {
+      // Include the updated marks data here
+    };
+
+    try {
+      await axios.put(
+        `https://gradyzebackend.onrender.com/api/teachermarks/update`,
+        updatedMarks,
+        { params: { teacherId } }
+      );
+      alert("Marks updated successfully!");
+      fetchStudents();
+    } catch (error) {
+      console.error("Error updating marks:", error);
+    }
+  };
+
+  const handleDeleteMarks = async (subjectId) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      await axios.delete(
+        `https://gradyzebackend.onrender.com/api/teachermarks/delete`,
+        {
+          params: { teacherId, subjectId },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert("Marks deleted successfully!");
+      fetchSubjectStudentsData();
+    } catch (error) {
+      console.error("Error deleting marks:", error);
+    }
+  };
+
+  const examTypeToText = (type) => {
+    const types = {
+      "unit-test": "Unit Test",
+      "re-unit-test": "Re-Unit Test",
+      prelim: "Prelim",
+      reprelim: "Re-Prelim",
+    };
+
+    return types[type] || type;
   };
 
   const renderModalContent = () => {
@@ -664,7 +799,7 @@ const TeacherDashboard = () => {
           </div>
         );
       case "students-list":
-        const { subjectId, examType } = modalContent;
+        const { subjectId, examType, isUpdateMode } = modalContent;
         const subjectData = studentsData[subjectId] || {
           students: [],
           examData: {},
@@ -787,7 +922,7 @@ const TeacherDashboard = () => {
                             {studentExamData.total}
                           </td>
                           <td
-                            className={`p-2 status-cell text-center \${
+                            className={`p-2 status-cell text-center ${
                               studentExamData.status.toLowerCase() === "pass"
                                 ? "text-green-600"
                                 : studentExamData.status.toLowerCase() ===
@@ -815,55 +950,7 @@ const TeacherDashboard = () => {
                   onClick={handleSaveMarks}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
-                  {modalContent.isUpdateMode ? "Update Marks" : "Save Marks"}
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      case "pdf-exam-selection":
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
-              <button
-                onClick={closeModal}
-                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
-              >
-                &times;
-              </button>
-              <div className="mb-4 border-b pb-2">
-                <h3 className="font-semibold text-gray-800">
-                  Select Exam Type for PDF
-                </h3>
-              </div>
-              <div className="mb-4">
-                <label className="block font-medium text-gray-600">
-                  Exam Type
-                </label>
-                <select
-                  value={selectedExamType}
-                  onChange={(e) => setSelectedExamType(e.target.value)}
-                  className="w-full p-2 border rounded mt-1"
-                >
-                  <option value="">Select an exam type</option>
-                  <option value="unit-test">Unit Test</option>
-                  <option value="re-unit-test">Re-Unit Test</option>
-                  <option value="prelim">Prelim</option>
-                  <option value="reprelim">Re-Prelim</option>
-                </select>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={closeModal}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSavePDF}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Generate PDF
+                  {isUpdateMode ? "Update Marks" : "Save Marks"}
                 </button>
               </div>
             </div>
@@ -911,7 +998,7 @@ const TeacherDashboard = () => {
     }
 
     statusCell.textContent = status;
-    statusCell.className = `p-2 status-cell text-center \${
+    statusCell.className = `p-2 status-cell text-center ${
       status.toLowerCase() === "pass"
         ? "text-green-600"
         : status.toLowerCase() === "fail"
@@ -940,179 +1027,6 @@ const TeacherDashboard = () => {
       console.error("Error fetching student details:", error);
       alert("Could not fetch student details");
     }
-  };
-
-  const openExamModal = (subjectId) => {
-    setSelectedSubjectId(subjectId);
-    setModalContent({
-      type: "exam-selection",
-      subjectId,
-    });
-  };
-
-  const openStudentsModal = (subjectId, examType, existingMarks = []) => {
-    setSelectedSubjectId(subjectId);
-    setSelectedExamType(examType);
-    setModalContent({
-      type: "students-list",
-      subjectId,
-      examType,
-      existingMarks, // Pass existing marks to the modal
-    });
-  };
-
-  const closeModal = () => {
-    setModalContent(null);
-  };
-
-  const handleContinueExam = () => {
-    if (!selectedExamType) {
-      alert("Please select an exam type.");
-      return;
-    }
-
-    closeModal();
-    openStudentsModal(selectedSubjectId, selectedExamType);
-  };
-
-  const handleSaveMarks = async () => {
-    console.log(subject.year);
-    const selectedYear = subject.year;
-    if (!selectedSubjectId || !selectedExamType || !selectedYear) return;
-
-    const subjectData = studentsData[selectedSubjectId];
-    if (!subjectData) return;
-
-    const students = subjectData.students;
-
-    const isUnitTest =
-      selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
-    const isPrelim = selectedExamType === "prelim";
-
-    const totalMarks = isUnitTest ? 30 : isPrelim ? 70 : 0;
-    const passingMark = isUnitTest ? 12 : isPrelim ? 28 : 0;
-
-    if (totalMarks === 0) {
-      alert("Invalid exam type selected.");
-      return;
-    }
-
-    const rows = document.querySelectorAll(".student-row");
-    const teacherId = sessionStorage.getItem("teacherId");
-
-    const marksToSave = Array.from(rows).map((row, index) => {
-      const q1q2Input = row.querySelector(".q1q2-input");
-      const q3q4Input = row.querySelector(".q3q4-input");
-      const q5q6Input = isUnitTest ? null : row.querySelector(".q5q6-input");
-      const q7q8Input = isUnitTest ? null : row.querySelector(".q7q8-input");
-
-      const q1q2 = parseInt(q1q2Input?.value) || 0;
-      const q3q4 = parseInt(q3q4Input?.value) || 0;
-      const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
-      const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
-
-      const total = q1q2 + q3q4 + q5q6 + q7q8;
-
-      let status = "";
-      if (total === -1) status = "Absent";
-      else if (total >= passingMark) status = "Pass";
-      else status = "Fail";
-
-      return {
-        teacherId,
-        studentId: students[index]._id,
-        year: selectedYear,
-        examType: selectedExamType,
-        exams: [
-          {
-            subjectId: selectedSubjectId,
-            marksObtained: total,
-            totalMarks,
-            status,
-          },
-        ],
-      };
-    });
-
-    const filteredMarks = marksToSave.filter(
-      (m) => m.exams[0].marksObtained !== 0
-    );
-
-    if (filteredMarks.length === 0) {
-      alert("Please enter marks for at least one student.");
-      return;
-    }
-
-    try {
-      const token = sessionStorage.getItem("token");
-
-      // send one-by-one OR switch to bulk later
-      for (const mark of filteredMarks) {
-        await axios.post(
-          `https://gradyzebackend.onrender.com/api/teachermarks/add`,
-          mark,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      }
-
-      alert("Marks saved successfully!");
-      closeModal();
-      fetchSubjectStudentsData();
-    } catch (error) {
-      console.error("Error saving marks:", error.response?.data || error);
-      alert(
-        "Error saving marks: " +
-          (error.response?.data?.message || error.message)
-      );
-    }
-  };
-
-  const handleUpdateMarks = async (marksId) => {
-    const updatedMarks = {
-      // Include the updated marks data here
-    };
-
-    try {
-      await axios.put(
-        `https://gradyzebackend.onrender.com/api/teachermarks/update`,
-        updatedMarks,
-        { params: { teacherId } }
-      );
-      alert("Marks updated successfully!");
-      fetchStudents();
-    } catch (error) {
-      console.error("Error updating marks:", error);
-    }
-  };
-
-  const handleDeleteMarks = async (marksId) => {
-    try {
-      await axios.delete(
-        `https://gradyzebackend.onrender.com/api/teachermarks/delete`,
-        {
-          params: { teacherId },
-        }
-      );
-      alert("Marks deleted successfully!");
-      fetchStudents();
-    } catch (error) {
-      console.error("Error deleting marks:", error);
-    }
-  };
-
-  const examTypeToText = (type) => {
-    const types = {
-      "unit-test": "Unit Test",
-      "re-unit-test": "Re-Unit Test",
-      prelim: "Prelim",
-      reprelim: "Re-Prelim",
-    };
-
-    return types[type] || type;
   };
 
   return (
