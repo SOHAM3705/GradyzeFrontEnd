@@ -528,7 +528,8 @@ const TeacherDashboard = () => {
       const q5q6Input = isUnitTest ? null : row.querySelector(".q5q6-input");
       const q7q8Input = isUnitTest ? null : row.querySelector(".q7q8-input");
 
-      const q1q2 = parseInt(q1q2Input?.value) || 0;
+      const q1q2 =
+        q1q2Input?.value === "AB" ? -1 : parseInt(q1q2Input?.value) || 0;
       const q3q4 = parseInt(q3q4Input?.value) || 0;
       const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
       const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
@@ -847,13 +848,15 @@ const TeacherDashboard = () => {
                   <tbody>
                     {subjectData.students.map((student, index) => {
                       const studentExamData = examData[index] || {
-                        q1q2: 0,
-                        q3q4: 0,
-                        q5q6: 0,
-                        q7q8: 0,
+                        q1q2: -1,
+                        q3q4: -1,
+                        q5q6: -1,
+                        q7q8: -1,
                         total: 0,
                         status: "",
                       };
+
+                      const isAbsent = student.status === "Absent";
 
                       return (
                         <tr
@@ -867,11 +870,15 @@ const TeacherDashboard = () => {
                               type="number"
                               min="0"
                               max={isUnitTest ? "15" : "17"}
-                              defaultValue={studentExamData.q1q2}
+                              defaultValue={
+                                studentExamData.q1q2 !== -1
+                                  ? studentExamData.q1q2
+                                  : ""
+                              }
                               className="q1q2-input w-16 p-1 border rounded text-center"
                               data-index={index}
                               onChange={() => updateStudentRow(index)}
-                              disabled={student.status === "Absent"}
+                              disabled={isAbsent}
                             />
                           </td>
                           <td className="p-2 text-center">
@@ -879,11 +886,15 @@ const TeacherDashboard = () => {
                               type="number"
                               min="0"
                               max={isUnitTest ? "15" : "18"}
-                              defaultValue={studentExamData.q3q4}
+                              defaultValue={
+                                studentExamData.q3q4 !== -1
+                                  ? studentExamData.q3q4
+                                  : ""
+                              }
                               className="q3q4-input w-16 p-1 border rounded text-center"
                               data-index={index}
                               onChange={() => updateStudentRow(index)}
-                              disabled={student.status === "Absent"}
+                              disabled={isAbsent}
                             />
                           </td>
                           {!isUnitTest && (
@@ -893,11 +904,15 @@ const TeacherDashboard = () => {
                                   type="number"
                                   min="0"
                                   max="17"
-                                  defaultValue={studentExamData.q5q6}
+                                  defaultValue={
+                                    studentExamData.q5q6 !== -1
+                                      ? studentExamData.q5q6
+                                      : ""
+                                  }
                                   className="q5q6-input w-16 p-1 border rounded text-center"
                                   data-index={index}
                                   onChange={() => updateStudentRow(index)}
-                                  disabled={student.status === "Absent"}
+                                  disabled={isAbsent}
                                 />
                               </td>
                               <td className="p-2 text-center">
@@ -905,11 +920,15 @@ const TeacherDashboard = () => {
                                   type="number"
                                   min="0"
                                   max="18"
-                                  defaultValue={studentExamData.q7q8}
+                                  defaultValue={
+                                    studentExamData.q7q8 !== -1
+                                      ? studentExamData.q7q8
+                                      : ""
+                                  }
                                   className="q7q8-input w-16 p-1 border rounded text-center"
                                   data-index={index}
                                   onChange={() => updateStudentRow(index)}
-                                  disabled={student.status === "Absent"}
+                                  disabled={isAbsent}
                                 />
                               </td>
                             </>
