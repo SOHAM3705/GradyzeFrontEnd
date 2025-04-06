@@ -10,8 +10,6 @@ const TeacherDashboard = () => {
   const [subjectsList, setSubjectsList] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const [selectedSubjectname, setselectedSubjectname] = useState(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedExamType, setSelectedExamType] = useState(null);
   const [division, setDivision] = useState("");
@@ -499,9 +497,10 @@ const TeacherDashboard = () => {
 
     const students = subjectData.students;
     const selectedSubject = subjectsList.find(
-      (subject) => subject.name === selectedSubjectname
+      (subject) => subject._id === selectedSubjectId
     );
     const selectedYear = selectedSubject ? selectedSubject.year : null; // Fetch year from subjectsList
+    const selectedsubjectname = selectedSubject ? selectedSubject.name : null; // Fetch subject name from subjectsList
 
     if (!selectedYear) {
       alert("Year is not available for the selected subject.");
@@ -542,7 +541,7 @@ const TeacherDashboard = () => {
         studentId: students[index]._id,
         year: selectedYear, // Include year in the payload
         examType: selectedExamType,
-        name: selectedSubjectname,
+        name: selectedsubjectname,
         marksObtained: total,
       };
     });
