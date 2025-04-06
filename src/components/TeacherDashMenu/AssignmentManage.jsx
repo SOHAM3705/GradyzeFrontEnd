@@ -135,7 +135,7 @@ const initialStudents = [
   },
 ];
 
-const AssignmentManage = () => {
+const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState("announcements");
   const [searchTerm, setSearchTerm] = useState("");
   const [classFilter, setClassFilter] = useState("all");
@@ -260,16 +260,16 @@ const AssignmentManage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-800">
               Teacher Dashboard
             </h1>
-            <div className="flex items-center">
-              <div className="relative mr-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
                 <input
                   type="text"
                   placeholder="Search..."
@@ -309,7 +309,7 @@ const AssignmentManage = () => {
                   </div>
                 )}
               </div>
-              <div className="ml-4 flex items-center">
+              <div className="flex items-center">
                 <img
                   src="/api/placeholder/40/40"
                   alt="Profile"
@@ -445,7 +445,7 @@ const AssignmentManage = () => {
               filteredAnnouncements.map((announcement) => (
                 <div
                   key={announcement.id}
-                  className="bg-white p-4 rounded-lg shadow"
+                  className="bg-white p-4 rounded-lg shadow-md"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -510,7 +510,7 @@ const AssignmentManage = () => {
               filteredAssignments.map((assignment) => (
                 <div
                   key={assignment.id}
-                  className="bg-white p-4 rounded-lg shadow"
+                  className="bg-white p-4 rounded-lg shadow-md"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -586,7 +586,7 @@ const AssignmentManage = () => {
 
         {/* Students Tab */}
         {activeTab === "students" && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -690,7 +690,7 @@ const AssignmentManage = () => {
 
         {/* Calendar Tab */}
         {activeTab === "calendar" && (
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium">April 2025</h2>
               <div className="flex space-x-2">
@@ -811,6 +811,7 @@ const AssignmentManage = () => {
             </div>
           </div>
         )}
+
         {/* Modals */}
         {modalType && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1570,4 +1571,4 @@ const AssignmentManage = () => {
   );
 };
 
-export default AssignmentManage;
+export default TeacherDashboard;
