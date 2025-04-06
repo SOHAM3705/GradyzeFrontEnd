@@ -541,7 +541,7 @@ const TeacherDashboard = () => {
         studentId: students[index]._id,
         year: selectedYear, // Include year in the payload
         examType: selectedExamType,
-        name: selectedsubjectname,
+        subjectName: selectedsubjectname,
         marksObtained: total,
       };
     });
