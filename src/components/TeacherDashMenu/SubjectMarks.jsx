@@ -11,7 +11,7 @@ const TeacherDashboard = () => {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
+  const [selectedSubjectname, setselectedSubjectname] = useState(null);
   const [selectedExamType, setSelectedExamType] = useState(null);
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
@@ -498,7 +498,7 @@ const TeacherDashboard = () => {
 
     const students = subjectData.students;
     const selectedSubject = subjectsList.find(
-      (subject) => subject._id === selectedSubjectId
+      (subject) => subject.name === selectedSubjectname
     );
     const selectedYear = selectedSubject ? selectedSubject.year : null; // Fetch year from subjectsList
 
@@ -541,7 +541,7 @@ const TeacherDashboard = () => {
         studentId: students[index]._id,
         year: selectedYear, // Include year in the payload
         examType: selectedExamType,
-        subjectId: selectedSubjectId,
+        name: selectedSubjectname,
         marksObtained: total,
       };
     });
@@ -583,10 +583,6 @@ const TeacherDashboard = () => {
   };
 
   const handleUpdateMarks = async (marksId) => {
-    const updatedMarks = {
-      // Include the updated marks data here
-    };
-
     try {
       await axios.put(
         `https://gradyzebackend.onrender.com/api/teachermarks/update`,

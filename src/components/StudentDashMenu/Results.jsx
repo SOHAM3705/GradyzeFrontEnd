@@ -50,48 +50,59 @@ const StudentMarks = () => {
       {error && <p className="text-center text-red-500 mb-4">{error}</p>}
 
       {!loading && !error && marksData.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {marksData.map((data, index) => (
+        <div className="flex flex-col gap-6">
+          {marksData.map((examEntry, index) => (
             <div
               key={index}
               className="bg-white p-6 rounded-xl shadow-md border border-gray-200"
             >
-              <div className="mb-2">
-                <h3 className="text-lg font-semibold">
-                  {data.studentId?.name || "Unknown"}
+              {/* Exam Header */}
+              <div className="mb-4">
+                <h3 className="text-xl font-semibold text-blue-600">
+                  {examEntry.examType} - {examEntry.year}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {data.studentId?.email || "N/A"}
+                  Student: {examEntry.studentId?.name || "Unknown"} (
+                  {examEntry.studentId?.email || "N/A"})
                 </p>
               </div>
-              <p className="text-sm text-gray-800 font-medium">
-                Exam Type: <span className="font-normal">{data.examType}</span>
-              </p>
-              <p className="text-sm text-gray-800 font-medium mb-2">
-                Year: <span className="font-normal">{data.year}</span>
-              </p>
 
-              <div className="mt-3 space-y-3">
-                {data.exams.map((exam, examIndex) => (
+              {/* Subjects List */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {examEntry.exams.map((subject, idx) => (
                   <div
-                    key={examIndex}
-                    className="bg-gray-50 p-3 rounded-md shadow-inner border border-gray-100"
+                    key={idx}
+                    className="bg-gray-50 p-4 rounded-lg border border-gray-100"
                   >
-                    <p className="text-sm text-gray-700 font-medium">
+                    <p className="text-sm font-medium">
                       Subject:{" "}
+                      <span className="font-normal">{subject.subjectName}</span>
+                    </p>
+                    <p className="text-sm font-medium">
+                      Marks Obtained:{" "}
                       <span className="font-normal">
-                        {exam.subjectId?.name || "N/A"} (
-                        {exam.subjectId?.code || "N/A"})
+                        {subject.marksObtained} / {subject.totalMarks}
                       </span>
                     </p>
-                    <p className="text-sm text-gray-700">
-                      Marks: {exam.marksObtained} / {exam.totalMarks}
+                    <p className="text-sm font-medium">
+                      Status:{" "}
+                      <span
+                        className={`font-bold ${
+                          subject.status === "Fail"
+                            ? "text-red-500"
+                            : subject.status === "Pass"
+                            ? "text-green-600"
+                            : "text-yellow-500"
+                        }`}
+                      >
+                        {subject.status}
+                      </span>
                     </p>
-                    <p className="text-sm text-gray-700">
-                      Status: {exam.status}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      Teacher: {exam.teacherId?.name || "N/A"}
+                    <p className="text-sm font-medium">
+                      Teacher:{" "}
+                      <span className="font-normal">
+                        {subject.teacherId?.name || "N/A"}
+                      </span>
                     </p>
                   </div>
                 ))}
