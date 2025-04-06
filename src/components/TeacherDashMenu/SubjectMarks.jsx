@@ -12,6 +12,7 @@ const TeacherDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedSubjectname, setselectedSubjectname] = useState(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedExamType, setSelectedExamType] = useState(null);
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
