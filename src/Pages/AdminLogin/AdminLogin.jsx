@@ -13,62 +13,82 @@ const AdminLogin = () => {
   const API_BASE_URL =
     process.env.REACT_APP_API_URL || "https://gradyzebackend.onrender.com";
 
-  // Handle OAuth Callback (Google Login)
+  // Handle OAuth Callback from Google
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const token = queryParams.get("token");
+    const loadGoogleScript = () => {
+      if (window._gsiInitialized) return;
 
-    if (token) {
-      sessionStorage.setItem("token", token);
-      fetchUserRole(token);
-    }
-  }, [location, navigate]);
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeGSI;
+      document.body.appendChild(script);
+    };
 
-  // Fetch User Role & Details
-  const fetchUserRole = async (token) => {
-    try {
-      const roles = ["admin", "teacher", "student"];
-      for (let role of roles) {
-        try {
-          const response = await axios.get(
-            `${API_BASE_URL}/api/${role}/profile`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+    const initializeGSI = () => {
+      const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-          if (response.data) {
-            sessionStorage.setItem("role", role);
-            sessionStorage.setItem(`${role}Id`, response.data._id);
-            sessionStorage.setItem(`${role}Name`, response.data.name);
+      if (window.google && window.google.accounts && GOOGLE_CLIENT_ID) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
 
-            console.log(`✅ ${role} logged in successfully`);
-
-            // Redirect based on role
-            navigate(`/${role}dash`);
-            return;
+        window.google.accounts.id.renderButton(
+          document.getElementById("gsi-button"),
+          {
+            theme: "outline",
+            size: "large",
           }
-        } catch (error) {
-          // Ignore and try next role
-        }
-      }
-      setError("Authentication failed. User role not found.");
-    } catch (err) {
-      console.error("❌ Failed to fetch user role:", err);
-      setError("Authentication failed. Please try again.");
-    }
-  };
+        );
 
-  // Handle Input Changes
+        window._gsiInitialized = true;
+      } else {
+        console.warn("❗ Google API not loaded or Client ID missing.");
+      }
+    };
+
+    const handleCredentialResponse = async (response) => {
+      try {
+        const res = await axios.post(`${API_BASE_URL}/api/auth/google`, {
+          credential: response.credential,
+        });
+
+        const { token, role, name, id } = res.data;
+
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", role);
+        localStorage.setItem(`${role}Id`, id);
+        localStorage.setItem(`${role}Name`, name);
+
+        console.log("✅ Google login success:", res.data);
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+
+        navigate(`/${role}dash`);
+      } catch (err) {
+        console.error("❌ Google login failed:", err);
+        setError("Google login failed. Try again.");
+      }
+    };
+
+    loadGoogleScript();
+  }, [navigate]);
+
+  // Manual login handler
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // Handle Manual Login (Email & Password)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null); // Clear any previous errors
+    setError(null);
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/admin/adminlogin`,
@@ -76,12 +96,15 @@ const AdminLogin = () => {
       );
 
       if (response.data.token) {
-        sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("adminId", response.data.adminId);
-        sessionStorage.setItem("adminName", response.data.name);
-        sessionStorage.setItem("role", "admin");
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("adminId", response.data.adminId);
+        localStorage.setItem("adminName", response.data.name);
+        localStorage.setItem("role", "admin");
 
-        console.log("✅ Admin logged in successfully");
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+
         navigate("/admindash");
       } else {
         throw new Error("Token not received from server");
@@ -92,11 +115,6 @@ const AdminLogin = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Handle Google Login
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE_URL}/api/auth/google`;
   };
 
   return (
@@ -143,9 +161,7 @@ const AdminLogin = () => {
         </form>
 
         {/* Google Login Button */}
-        <button className={styles.googleLogin} onClick={handleGoogleLogin}>
-          <i className="fab fa-google"></i> Sign in with Google
-        </button>
+        <div id="gsi-button" style={{ marginTop: "20px" }}></div>
 
         <p>
           Don't have an account?{" "}
