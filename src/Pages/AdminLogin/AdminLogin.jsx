@@ -27,7 +27,7 @@ const AdminLogin = () => {
     };
 
     const initializeGSI = () => {
-      const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+      const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
       if (window.google && window.google.accounts && GOOGLE_CLIENT_ID) {
         window.google.accounts.id.initialize({
