@@ -11,7 +11,7 @@ const AdminLogin = () => {
   const location = useLocation();
 
   const API_BASE_URL =
-    process.env.REACT_APP_API_URL || "https://gradyzebackend.onrender.com";
+    import.meta.env.VITE_API_URL || "https://gradyzebackend.onrender.com";
 
   // Handle OAuth Callback from Google
   useEffect(() => {
@@ -57,20 +57,17 @@ const AdminLogin = () => {
           credential: response.credential,
         });
 
-        const { token, role, name, id } = res.data;
+        const { token, role, name, adminId } = res.data;
 
         localStorage.setItem("token", token);
         localStorage.setItem("role", role);
-        localStorage.setItem(`${role}Id`, id);
-        localStorage.setItem(`${role}Name`, name);
+        localStorage.setItem("adminId", adminId);
+        localStorage.setItem("adminName", name);
 
         console.log("✅ Google login success:", res.data);
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-
-        navigate(`/${role}dash`);
+        // Navigate first, then consider if reload is necessary
+        navigate("/admindash");
       } catch (err) {
         console.error("❌ Google login failed:", err);
         setError("Google login failed. Try again.");
@@ -100,10 +97,6 @@ const AdminLogin = () => {
         localStorage.setItem("adminId", response.data.adminId);
         localStorage.setItem("adminName", response.data.name);
         localStorage.setItem("role", "admin");
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
 
         navigate("/admindash");
       } else {
