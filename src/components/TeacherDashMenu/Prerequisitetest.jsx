@@ -11,6 +11,16 @@ const TestCreationSystem = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [alert, setAlert] = useState({ show: false, message: "", type: "" });
 
+  // Google Classroom state variables
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [assignments, setAssignments] = useState([]);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
+  const [submissions, setSubmissions] = useState([]);
+  const [isClassroomModalOpen, setIsClassroomModalOpen] = useState(false);
+  const [viewSubmissions, setViewSubmissions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const {
     register,
     handleSubmit,
@@ -23,7 +33,10 @@ const TestCreationSystem = () => {
   // Load tests from API on component mount
   useEffect(() => {
     fetchTests();
-  }, []);
+    if (isAuthenticated) {
+      fetchGoogleClassroomCourses();
+    }
+  }, [isAuthenticated]);
 
   const fetchTests = async () => {
     try {
@@ -34,6 +47,72 @@ const TestCreationSystem = () => {
     } catch (error) {
       console.error("Error fetching tests:", error);
       showAlert("Failed to load tests", "error");
+    }
+  };
+
+  // Google Classroom API functions
+  const fetchGoogleClassroomCourses = async () => {
+    try {
+      setIsLoading(true);
+      // We'll call your backend API instead of directly calling Google
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/classroom/courses",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setCourses(response.data);
+    } catch (error) {
+      console.error("Error fetching Google Classroom courses:", error);
+      showAlert("Failed to load Google Classroom courses", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAssignments = async (courseId) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/classroom/assignments/${courseId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setAssignments(response.data);
+      setSelectedCourseId(courseId);
+      setViewSubmissions(false);
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+      showAlert("Failed to load assignments", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchSubmissions = async (assignmentId) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/classroom/submissions/${selectedCourseId}/${assignmentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setSubmissions(response.data);
+      setSelectedAssignmentId(assignmentId);
+      setViewSubmissions(true);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      showAlert("Failed to load student submissions", "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,6 +163,41 @@ const TestCreationSystem = () => {
     }
   };
 
+  const exportToPdf = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(
+        `https://gradyzebackend.onrender.com/api/classroom/export-pdf`,
+        {
+          courseId: selectedCourseId,
+          assignmentId: selectedAssignmentId,
+          submissions: submissions,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          responseType: "blob",
+        }
+      );
+
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `assignment_submissions_report.pdf`);
+      document.body.appendChild(link);
+      link.click();
+
+      showAlert("PDF exported successfully!", "success");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      showAlert("Failed to export PDF", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const showAlert = (message, type) => {
     setAlert({ show: true, message, type });
     setTimeout(() => setAlert({ show: false, message: "", type: "" }), 3000);
@@ -96,6 +210,18 @@ const TestCreationSystem = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     reset();
+  };
+
+  const openClassroomModal = () => {
+    setIsClassroomModalOpen(true);
+    if (courses.length === 0) {
+      fetchGoogleClassroomCourses();
+    }
+  };
+
+  const closeClassroomModal = () => {
+    setIsClassroomModalOpen(false);
+    setViewSubmissions(false);
   };
 
   const handleGoogleLogin = async () => {
@@ -114,6 +240,15 @@ const TestCreationSystem = () => {
       showAlert("Failed to sign in", "error");
     }
   };
+
+  const filteredSubmissions = submissions.filter((submission) => {
+    if (!searchQuery) return true;
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      submission.studentName.toLowerCase().includes(searchLower) ||
+      submission.rollNo.toLowerCase().includes(searchLower)
+    );
+  });
 
   // Generate semester options based on selected year
   const getSemesterOptions = () => {
@@ -175,18 +310,26 @@ const TestCreationSystem = () => {
           </div>
         )}
 
-        {/* Create Test Button */}
-        <button
-          onClick={openModal}
-          disabled={!isAuthenticated}
-          className={`block mx-auto mb-8 px-6 py-3 rounded-md text-white font-medium transition-all ${
-            isAuthenticated
-              ? "bg-blue-600 hover:bg-blue-400 hover:-translate-y-0.5 hover:shadow-md"
-              : "bg-gray-400 cursor-not-allowed"
-          }`}
-        >
-          Create New Test
-        </button>
+        {/* Buttons Container */}
+        <div className="flex justify-center gap-4 mb-8">
+          {/* Create Test Button */}
+          <button
+            onClick={openModal}
+            className="px-6 py-3 rounded-md text-white font-medium transition-all bg-blue-600 hover:bg-blue-500"
+          >
+            Create New Test
+          </button>
+
+          {/* View Google Classroom Assignments Button */}
+          {isAuthenticated && (
+            <button
+              onClick={openClassroomModal}
+              className="px-6 py-3 rounded-md text-white font-medium transition-all bg-green-600 hover:bg-green-500"
+            >
+              View Google Classroom Assignments
+            </button>
+          )}
+        </div>
 
         {/* Alert */}
         {alert.show && (
@@ -375,6 +518,203 @@ const TestCreationSystem = () => {
           </div>
         )}
 
+        {/* Google Classroom Modal */}
+        {isClassroomModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 overflow-y-auto">
+            <div className="bg-white rounded-lg max-w-4xl mx-auto my-8 p-6 shadow-xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">
+                  {viewSubmissions
+                    ? "Assignment Submissions"
+                    : "Google Classroom Assignments"}
+                </h2>
+                <button
+                  onClick={closeClassroomModal}
+                  className="text-gray-500 text-2xl font-bold hover:text-gray-800"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {!viewSubmissions ? (
+                // Course and Assignment Selection View
+                <div>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-3">Your Courses</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {courses.length === 0 ? (
+                        <p>Loading your courses...</p>
+                      ) : (
+                        courses.map((course) => (
+                          <button
+                            key={course.id}
+                            onClick={() => fetchAssignments(course.id)}
+                            className={`px-4 py-2 rounded-md ${
+                              selectedCourseId === course.id
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-200 text-gray-800"
+                            }`}
+                          >
+                            {course.name}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedCourseId && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">
+                        Assignments
+                      </h3>
+                      <div className="space-y-3">
+                        {assignments.length === 0 ? (
+                          <p>No assignments found for this course.</p>
+                        ) : (
+                          assignments.map((assignment) => (
+                            <div
+                              key={assignment.id}
+                              className="p-4 border border-gray-200 rounded-md hover:bg-gray-50"
+                            >
+                              <div className="flex justify-between">
+                                <h4 className="font-medium">
+                                  {assignment.title}
+                                </h4>
+                                <button
+                                  onClick={() =>
+                                    fetchSubmissions(assignment.id)
+                                  }
+                                  className="px-3 py-1 bg-green-600 text-white text-sm rounded-md"
+                                >
+                                  View Submissions
+                                </button>
+                              </div>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {assignment.description || "No description"}
+                              </p>
+                              <div className="text-sm text-gray-500 mt-2">
+                                {assignment.dueDate
+                                  ? `Due: ${new Date(
+                                      assignment.dueDate
+                                    ).toLocaleDateString()}`
+                                  : "No due date"}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Submissions View
+                <div>
+                  <div className="flex justify-between mb-4">
+                    <input
+                      type="text"
+                      placeholder="Search by name or roll number..."
+                      className="px-4 py-2 border border-gray-300 rounded-md w-64"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <div className="space-x-2">
+                      <button
+                        onClick={exportToPdf}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                      >
+                        Export to PDF
+                      </button>
+                      <button
+                        onClick={() => setViewSubmissions(false)}
+                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"
+                      >
+                        Back to Assignments
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="p-3 text-left border border-gray-300">
+                            Roll No.
+                          </th>
+                          <th className="p-3 text-left border border-gray-300">
+                            Student Name
+                          </th>
+                          <th className="p-3 text-left border border-gray-300">
+                            Status
+                          </th>
+                          <th className="p-3 text-left border border-gray-300">
+                            Submission Date
+                          </th>
+                          <th className="p-3 text-left border border-gray-300">
+                            Grade
+                          </th>
+                          <th className="p-3 text-left border border-gray-300">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredSubmissions.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan="6"
+                              className="p-3 text-center border border-gray-300"
+                            >
+                              No submissions found or matching your search.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredSubmissions.map((submission) => (
+                            <tr key={submission.id}>
+                              <td className="p-3 border border-gray-300">
+                                {submission.rollNo}
+                              </td>
+                              <td className="p-3 border border-gray-300">
+                                {submission.studentName}
+                              </td>
+                              <td
+                                className={`p-3 border border-gray-300 font-medium ${
+                                  submission.status === "Submitted"
+                                    ? "text-green-600"
+                                    : submission.status === "Late"
+                                    ? "text-orange-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {submission.status}
+                              </td>
+                              <td className="p-3 border border-gray-300">
+                                {submission.submissionDate || "N/A"}
+                              </td>
+                              <td className="p-3 border border-gray-300">
+                                {submission.grade || "Not graded"}
+                              </td>
+                              <td className="p-3 border border-gray-300">
+                                <button
+                                  onClick={() =>
+                                    window.open(submission.detailUrl, "_blank")
+                                  }
+                                  className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md"
+                                >
+                                  View Details
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Confirmation Dialog */}
         {isConfirmDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -406,7 +746,7 @@ const TestCreationSystem = () => {
         {isLoading && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
             <div className="bg-white rounded-lg p-6 text-center">
-              <p className="mb-4">Creating your test...</p>
+              <p className="mb-4">Loading data...</p>
               <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-400 rounded-full animate-pulse"

@@ -15,6 +15,7 @@ const TeacherDashboard = () => {
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
   const [marksData, setMarksData] = useState({});
+  const [marksEnteredState, setMarksEnteredState] = useState({});
 
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
@@ -345,10 +346,19 @@ const TeacherDashboard = () => {
         </button>
       );
 
-      if (hasAnyMarksEntered) {
+      const showUpdate =
+        marksEnteredState[subjectId] ||
+        Object.values(subject.marksEntered || {}).some((value) => value);
+
+      if (showUpdate) {
         buttonsHtml = (
           <>
-            {buttonsHtml}
+            <button
+              onClick={() => openExamModal(subjectId)}
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+            >
+              Add Marks
+            </button>
             <button
               onClick={() =>
                 openStudentsModal(subjectId, selectedExamType, true)
@@ -499,8 +509,8 @@ const TeacherDashboard = () => {
     const selectedSubject = subjectsList.find(
       (subject) => subject._id === selectedSubjectId
     );
-    const selectedYear = selectedSubject ? selectedSubject.year : null; // Fetch year from subjectsList
-    const selectedsubjectname = selectedSubject ? selectedSubject.name : null; // Fetch subject name from subjectsList
+    const selectedYear = selectedSubject ? selectedSubject.year : null;
+    const selectedsubjectname = selectedSubject ? selectedSubject.name : null;
 
     if (!selectedYear) {
       alert("Year is not available for the selected subject.");
@@ -539,7 +549,7 @@ const TeacherDashboard = () => {
       return {
         teacherId,
         studentId: students[index]._id,
-        year: selectedYear, // Include year in the payload
+        year: selectedYear,
         examType: selectedExamType,
         subjectName: selectedsubjectname,
         marksObtained: total,
@@ -553,13 +563,11 @@ const TeacherDashboard = () => {
       return;
     }
 
-    // Log the payload to verify its structure
     console.log("Marks to Save:", filteredMarks);
 
     try {
       const token = sessionStorage.getItem("token");
 
-      // Send the request with the filteredMarks array
       await axios.post(
         `https://gradyzebackend.onrender.com/api/teachermarks/add`,
         filteredMarks,
@@ -569,6 +577,12 @@ const TeacherDashboard = () => {
           },
         }
       );
+
+      // ✅ Update subject state to mark as "marks entered"
+      setMarksEnteredState((prev) => ({
+        ...prev,
+        [selectedSubjectId]: true,
+      }));
 
       alert("Marks saved successfully!");
       closeModal();
