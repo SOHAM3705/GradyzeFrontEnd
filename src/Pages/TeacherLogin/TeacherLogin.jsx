@@ -79,7 +79,7 @@ const TeacherLogin = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE_URL}/api/auth/google`;
+    window.location.href = `${API_BASE_URL}/api/auth/google?role=teacher`;
   };
 
   return (

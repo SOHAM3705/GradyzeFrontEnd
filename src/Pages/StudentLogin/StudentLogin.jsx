@@ -15,19 +15,20 @@ const StudentLogin = () => {
 
   // Handle Google OAuth callback
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token");
+    const queryParams = new URLSearchParams(location.search);
+    const token = queryParams.get("token");
+    const role = queryParams.get("role");
 
-    if (token) {
+    if (token && role === "student") {
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("role", "student");
 
       axios
-        .get(`${API_BASE_URL}/api/auth/verify`, {
+        .get(`${API_BASE_URL}/api/student/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
-          sessionStorage.setItem("studentId", res.data.studentId);
+          sessionStorage.setItem("studentId", res.data._id);
           sessionStorage.setItem("studentName", res.data.name);
           sessionStorage.setItem("AdminId", res.data.adminId);
           navigate("/studentdash");
@@ -35,18 +36,19 @@ const StudentLogin = () => {
         .catch(() => {
           setError("Invalid or expired session. Please login again.");
         });
-
-      // Remove token from URL after processing
-      window.history.replaceState({}, document.title, "/studentlogin");
+    } else if (token && role !== "student") {
+      setError("Only student accounts can access this page.");
+      setTimeout(() => navigate(`/${role}login`), 2000);
     }
+
+    // Remove token and role from URL
+    window.history.replaceState({}, document.title, "/studentlogin");
   }, [location, navigate]);
 
-  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // Handle Manual Login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -77,7 +79,6 @@ const StudentLogin = () => {
     }
   };
 
-  // Handle Google Login
   const handleGoogleLogin = () => {
     window.location.href = `${API_BASE_URL}/api/auth/google?role=student`;
   };
@@ -85,23 +86,19 @@ const StudentLogin = () => {
   return (
     <div className={styles.studentBg}>
       <div className={styles.loginContainer}>
-        {/* Back Button */}
         <Link to="/">
           <button className={styles.backButton_Slogin}>
             <i className="fas fa-arrow-left"></i>
           </button>
         </Link>
 
-        {/* Login Header */}
         <div className={styles.loginHeader}>
           <h2>Student Login</h2>
         </div>
 
-        {/* Error Message */}
         {error && <p className={styles.errorMessage}>{error}</p>}
         {loading && <p className={styles.loadingMessage}>Loading...</p>}
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <i className="fas fa-envelope"></i>
@@ -132,7 +129,6 @@ const StudentLogin = () => {
           </button>
         </form>
 
-        {/* Google Login Button */}
         <button className={styles.googleLogin} onClick={handleGoogleLogin}>
           <i className="fab fa-google"></i> Sign in with Google
         </button>
