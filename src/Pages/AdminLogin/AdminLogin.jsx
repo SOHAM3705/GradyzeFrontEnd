@@ -54,7 +54,7 @@ const AdminLogin = () => {
     const handleCredentialResponse = async (response) => {
       try {
         const res = await axios.post(`${API_BASE_URL}/api/auth/google`, {
-          credential: response.credential,
+          token: response.credential,
         });
 
         const { token, role, name, adminId } = res.data;
