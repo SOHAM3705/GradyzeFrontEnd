@@ -10,8 +10,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "https://gradyzebackend.onrender.com";
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   // Handle OAuth Callback from Google
   useEffect(() => {

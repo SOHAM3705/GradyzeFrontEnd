@@ -10,8 +10,7 @@ const StudentLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const API_BASE_URL =
-    process.env.REACT_APP_API_URL || "https://gradyzebackend.onrender.com";
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   // Handle Google OAuth callback
   useEffect(() => {
@@ -27,7 +26,7 @@ const StudentLogin = () => {
     };
 
     const initializeGSI = () => {
-      const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+      const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
       if (window.google && window.google.accounts && GOOGLE_CLIENT_ID) {
         window.google.accounts.id.initialize({
