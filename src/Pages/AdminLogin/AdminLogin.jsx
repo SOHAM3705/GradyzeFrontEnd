@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import styles from "./TeacherLogin.module.css";
+import styles from "./AdminLogin.module.css";
 
 const TeacherLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
