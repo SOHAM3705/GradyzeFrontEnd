@@ -59,10 +59,10 @@ const AdminLogin = () => {
 
         const { token, role, name, adminId } = res.data;
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
-        localStorage.setItem("adminId", adminId);
-        localStorage.setItem("adminName", name);
+        sessionStorage.setItem("token", token);
+        sessionStorage.setItem("role", role);
+        sessionStorage.setItem("adminId", adminId);
+        sessionStorage.setItem("adminName", name);
 
         console.log("✅ Google login success:", res.data);
 
@@ -93,10 +93,10 @@ const AdminLogin = () => {
       );
 
       if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("adminId", response.data.adminId);
-        localStorage.setItem("adminName", response.data.name);
-        localStorage.setItem("role", "admin");
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("adminId", response.data.adminId);
+        sessionStorage.setItem("adminName", response.data.name);
+        sessionStorage.setItem("role", "admin");
 
         navigate("/admindash");
       } else {
