@@ -871,6 +871,7 @@ const TeacherDashboard = () => {
                     <tr>
                       <th className="p-2 text-left">Roll No.</th>
                       <th className="p-2 text-left">Name</th>
+                      <th className="p-2 text-left">Absent</th>
                       {isUnitTest ? (
                         <>
                           <th className="p-2 text-center">Q1/Q2 (15)</th>
@@ -899,7 +900,7 @@ const TeacherDashboard = () => {
                         status: "",
                       };
 
-                      const isAbsent = student.status === "Absent";
+                      const isAbsent = studentExamData.status === "Absent";
 
                       return (
                         <tr
@@ -908,6 +909,15 @@ const TeacherDashboard = () => {
                         >
                           <td className="p-2">{student.rollNo}</td>
                           <td className="p-2">{student.name}</td>
+                          <td className="p-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isAbsent}
+                              onChange={(e) =>
+                                handleAbsentChange(e, index, student._id)
+                              }
+                            />
+                          </td>
                           <td className="p-2 text-center">
                             <input
                               type="number"
@@ -1063,6 +1073,64 @@ const TeacherDashboard = () => {
         ? "text-red-600"
         : ""
     }`;
+  };
+
+  const handleAbsentChange = (event, index, studentId) => {
+    const isAbsent = event.target.checked;
+    const subjectId = modalContent.subjectId;
+    const examType = modalContent.examType;
+
+    setStudentsData((prev) => {
+      const updatedExamData = prev[subjectId].examData[examType].map(
+        (studentData, i) =>
+          i === index
+            ? {
+                ...studentData,
+                q1q2: isAbsent ? -1 : studentData.q1q2,
+                q3q4: isAbsent ? -1 : studentData.q3q4,
+                q5q6: isAbsent ? -1 : studentData.q5q6,
+                q7q8: isAbsent ? -1 : studentData.q7q8,
+                total: isAbsent ? 0 : studentData.total,
+                status: isAbsent ? "Absent" : studentData.status,
+              }
+            : studentData
+      );
+
+      return {
+        ...prev,
+        [subjectId]: {
+          ...prev[subjectId],
+          examData: {
+            ...prev[subjectId].examData,
+            [examType]: updatedExamData,
+          },
+        },
+      };
+    });
+
+    // Update the row in the DOM
+    const row = document.querySelector(`.student-row:nth-child(${index + 1})`);
+    if (row) {
+      const inputs = row.querySelectorAll("input[type='number']");
+      inputs.forEach((input) => {
+        input.disabled = isAbsent;
+        if (isAbsent) {
+          input.value = "";
+        }
+      });
+
+      const totalCell = row.querySelector(".total-cell");
+      if (totalCell)
+        totalCell.textContent = isAbsent ? 0 : totalCell.textContent;
+
+      const statusCell = row.querySelector(".status-cell");
+      if (statusCell) {
+        statusCell.textContent = isAbsent ? "Absent" : statusCell.textContent;
+        statusCell.className = `p-2 status-cell text-center ${
+          isAbsent ? "" : statusCell.className
+        }`;
+      }
+    }
   };
 
   const renderDeleteConfirmationModal = () => {
