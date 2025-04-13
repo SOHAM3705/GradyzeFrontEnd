@@ -544,7 +544,7 @@ const TeacherDashboard = () => {
       const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
       const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
 
-      const total = q1q2 + q3q4 + q5q6 + q7q8;
+      const total = q1q2 === -1 ? -1 : q1q2 + q3q4 + q5q6 + q7q8;
 
       return {
         teacherId,
@@ -552,7 +552,13 @@ const TeacherDashboard = () => {
         year: selectedYear,
         examType: selectedExamType,
         subjectName: selectedsubjectname,
-        marksObtained: total,
+        marksObtained: {
+          q1q2,
+          q3q4,
+          q5q6,
+          q7q8,
+          total,
+        },
       };
     });
 
