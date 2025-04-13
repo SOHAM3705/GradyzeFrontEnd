@@ -486,6 +486,21 @@ const TeacherDashboard = () => {
       examType,
       isUpdateMode,
     });
+
+    // Fetch existing marks data for the selected subject and exam type
+    const subjectData = studentsData[subjectId];
+    if (subjectData && subjectData.examData[examType]) {
+      setStudentsData((prev) => ({
+        ...prev,
+        [subjectId]: {
+          ...prev[subjectId],
+          examData: {
+            ...prev[subjectId].examData,
+            [examType]: subjectData.examData[examType],
+          },
+        },
+      }));
+    }
   };
 
   const closeModal = () => {
