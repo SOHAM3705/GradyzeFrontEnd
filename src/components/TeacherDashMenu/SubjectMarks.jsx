@@ -360,9 +360,7 @@ const TeacherDashboard = () => {
               Add Marks
             </button>
             <button
-              onClick={() =>
-                openStudentsModal(subjectId, selectedExamType, true)
-              }
+              onClick={() => openExamModal(subjectId, true)} // Pass true to indicate update mode
               className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
             >
               Update Marks
@@ -468,11 +466,12 @@ const TeacherDashboard = () => {
     });
   };
 
-  const openExamModal = (subjectId) => {
+  const openExamModal = (subjectId, isUpdateMode = false) => {
     setSelectedSubjectId(subjectId);
     setModalContent({
       type: "exam-selection",
       subjectId,
+      isUpdateMode, // Pass the update mode to the modal content
     });
   };
 
@@ -498,7 +497,11 @@ const TeacherDashboard = () => {
     }
 
     closeModal();
-    openStudentsModal(selectedSubjectId, selectedExamType);
+    openStudentsModal(
+      selectedSubjectId,
+      selectedExamType,
+      modalContent?.isUpdateMode
+    );
   };
 
   const handleSaveMarks = async () => {
