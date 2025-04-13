@@ -16,6 +16,8 @@ const TeacherDashboard = () => {
   const [year, setYear] = useState("");
   const [marksData, setMarksData] = useState({});
   const [marksEnteredState, setMarksEnteredState] = useState({});
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [subjectToDelete, setSubjectToDelete] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
@@ -619,20 +621,27 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleDeleteMarks = async (subjectId) => {
+  const handleDeleteMarks = (subjectId) => {
+    setSubjectToDelete(subjectId);
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDeleteMarks = async () => {
     try {
       const token = sessionStorage.getItem("token");
       await axios.delete(
         `https://gradyzebackend.onrender.com/api/teachermarks/delete`,
         {
-          params: { teacherId, subjectId },
+          params: { teacherId, subjectId: subjectToDelete },
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       alert("Marks deleted successfully!");
+      setShowDeleteConfirmation(false);
       fetchSubjectStudentsData();
     } catch (error) {
       console.error("Error deleting marks:", error);
+      alert("Error deleting marks. Please try again.");
     }
   };
 
@@ -1041,6 +1050,42 @@ const TeacherDashboard = () => {
     }`;
   };
 
+  const renderDeleteConfirmationModal = () => {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
+        <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+          <button
+            onClick={() => setShowDeleteConfirmation(false)}
+            className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+          >
+            &times;
+          </button>
+          <div className="mb-4 border-b pb-2">
+            <h3 className="font-semibold text-gray-800">Confirm Deletion</h3>
+          </div>
+          <p className="mb-4">
+            Are you sure you want to delete the marks for all students in this
+            subject?
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowDeleteConfirmation(false)}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDeleteMarks}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const openStudentModal = async (studentId) => {
     try {
       const token = sessionStorage.getItem("token");
@@ -1254,6 +1299,8 @@ const TeacherDashboard = () => {
           {renderModalContent()}
         </div>
       )}
+      {showDeleteConfirmation && renderDeleteConfirmationModal()}
+      {renderModalContent()}
     </div>
   );
 };
