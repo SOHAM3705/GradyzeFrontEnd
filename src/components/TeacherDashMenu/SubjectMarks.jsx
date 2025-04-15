@@ -16,8 +16,6 @@ const TeacherDashboard = () => {
   const [year, setYear] = useState("");
   const [marksData, setMarksData] = useState({});
   const [marksEnteredState, setMarksEnteredState] = useState({});
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [subjectToDelete, setSubjectToDelete] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
@@ -362,7 +360,9 @@ const TeacherDashboard = () => {
               Add Marks
             </button>
             <button
-              onClick={() => openExamModal(subjectId, true)} // Pass true to indicate update mode
+              onClick={() =>
+                openStudentsModal(subjectId, selectedExamType, true)
+              }
               className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
             >
               Update Marks
@@ -468,12 +468,11 @@ const TeacherDashboard = () => {
     });
   };
 
-  const openExamModal = (subjectId, isUpdateMode = false) => {
+  const openExamModal = (subjectId) => {
     setSelectedSubjectId(subjectId);
     setModalContent({
       type: "exam-selection",
       subjectId,
-      isUpdateMode, // Pass the update mode to the modal content
     });
   };
 
@@ -486,21 +485,6 @@ const TeacherDashboard = () => {
       examType,
       isUpdateMode,
     });
-
-    // Fetch existing marks data for the selected subject and exam type
-    const subjectData = studentsData[subjectId];
-    if (subjectData && subjectData.examData[examType]) {
-      setStudentsData((prev) => ({
-        ...prev,
-        [subjectId]: {
-          ...prev[subjectId],
-          examData: {
-            ...prev[subjectId].examData,
-            [examType]: subjectData.examData[examType],
-          },
-        },
-      }));
-    }
   };
 
   const closeModal = () => {
@@ -514,11 +498,7 @@ const TeacherDashboard = () => {
     }
 
     closeModal();
-    openStudentsModal(
-      selectedSubjectId,
-      selectedExamType,
-      modalContent?.isUpdateMode
-    );
+    openStudentsModal(selectedSubjectId, selectedExamType);
   };
 
   const handleSaveMarks = async () => {
@@ -564,7 +544,7 @@ const TeacherDashboard = () => {
       const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
       const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
 
-      const total = q1q2 === -1 ? -1 : q1q2 + q3q4 + q5q6 + q7q8;
+      const total = q1q2 + q3q4 + q5q6 + q7q8;
 
       return {
         teacherId,
@@ -572,13 +552,7 @@ const TeacherDashboard = () => {
         year: selectedYear,
         examType: selectedExamType,
         subjectName: selectedsubjectname,
-        marksObtained: {
-          q1q2,
-          q3q4,
-          q5q6,
-          q7q8,
-          total,
-        },
+        marksObtained: total,
       };
     });
 
@@ -636,27 +610,20 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleDeleteMarks = (subjectId) => {
-    setSubjectToDelete(subjectId);
-    setShowDeleteConfirmation(true);
-  };
-
-  const confirmDeleteMarks = async () => {
+  const handleDeleteMarks = async (subjectId) => {
     try {
       const token = sessionStorage.getItem("token");
       await axios.delete(
         `https://gradyzebackend.onrender.com/api/teachermarks/delete`,
         {
-          params: { teacherId, subjectId: subjectToDelete },
+          params: { teacherId, subjectId },
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       alert("Marks deleted successfully!");
-      setShowDeleteConfirmation(false);
       fetchSubjectStudentsData();
     } catch (error) {
       console.error("Error deleting marks:", error);
-      alert("Error deleting marks. Please try again.");
     }
   };
 
@@ -871,7 +838,6 @@ const TeacherDashboard = () => {
                     <tr>
                       <th className="p-2 text-left">Roll No.</th>
                       <th className="p-2 text-left">Name</th>
-                      <th className="p-2 text-left">Absent</th>
                       {isUnitTest ? (
                         <>
                           <th className="p-2 text-center">Q1/Q2 (15)</th>
@@ -900,7 +866,7 @@ const TeacherDashboard = () => {
                         status: "",
                       };
 
-                      const isAbsent = studentExamData.status === "Absent";
+                      const isAbsent = student.status === "Absent";
 
                       return (
                         <tr
@@ -909,15 +875,6 @@ const TeacherDashboard = () => {
                         >
                           <td className="p-2">{student.rollNo}</td>
                           <td className="p-2">{student.name}</td>
-                          <td className="p-2 text-center">
-                            <input
-                              type="checkbox"
-                              checked={isAbsent}
-                              onChange={(e) =>
-                                handleAbsentChange(e, index, student._id)
-                              }
-                            />
-                          </td>
                           <td className="p-2 text-center">
                             <input
                               type="number"
@@ -1073,100 +1030,6 @@ const TeacherDashboard = () => {
         ? "text-red-600"
         : ""
     }`;
-  };
-
-  const handleAbsentChange = (event, index, studentId) => {
-    const isAbsent = event.target.checked;
-    const subjectId = modalContent.subjectId;
-    const examType = modalContent.examType;
-
-    setStudentsData((prev) => {
-      const updatedExamData = prev[subjectId].examData[examType].map(
-        (studentData, i) =>
-          i === index
-            ? {
-                ...studentData,
-                q1q2: isAbsent ? -1 : studentData.q1q2,
-                q3q4: isAbsent ? -1 : studentData.q3q4,
-                q5q6: isAbsent ? -1 : studentData.q5q6,
-                q7q8: isAbsent ? -1 : studentData.q7q8,
-                total: isAbsent ? 0 : studentData.total,
-                status: isAbsent ? "Absent" : studentData.status,
-              }
-            : studentData
-      );
-
-      return {
-        ...prev,
-        [subjectId]: {
-          ...prev[subjectId],
-          examData: {
-            ...prev[subjectId].examData,
-            [examType]: updatedExamData,
-          },
-        },
-      };
-    });
-
-    // Update the row in the DOM
-    const row = document.querySelector(`.student-row:nth-child(${index + 1})`);
-    if (row) {
-      const inputs = row.querySelectorAll("input[type='number']");
-      inputs.forEach((input) => {
-        input.disabled = isAbsent;
-        if (isAbsent) {
-          input.value = "";
-        }
-      });
-
-      const totalCell = row.querySelector(".total-cell");
-      if (totalCell)
-        totalCell.textContent = isAbsent ? 0 : totalCell.textContent;
-
-      const statusCell = row.querySelector(".status-cell");
-      if (statusCell) {
-        statusCell.textContent = isAbsent ? "Absent" : statusCell.textContent;
-        statusCell.className = `p-2 status-cell text-center ${
-          isAbsent ? "" : statusCell.className
-        }`;
-      }
-    }
-  };
-
-  const renderDeleteConfirmationModal = () => {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
-        <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
-          <button
-            onClick={() => setShowDeleteConfirmation(false)}
-            className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
-          >
-            &times;
-          </button>
-          <div className="mb-4 border-b pb-2">
-            <h3 className="font-semibold text-gray-800">Confirm Deletion</h3>
-          </div>
-          <p className="mb-4">
-            Are you sure you want to delete the marks for all students in this
-            subject?
-          </p>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setShowDeleteConfirmation(false)}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmDeleteMarks}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   const openStudentModal = async (studentId) => {
@@ -1382,8 +1245,6 @@ const TeacherDashboard = () => {
           {renderModalContent()}
         </div>
       )}
-      {showDeleteConfirmation && renderDeleteConfirmationModal()}
-      {renderModalContent()}
     </div>
   );
 };
