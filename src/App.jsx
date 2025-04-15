@@ -102,7 +102,7 @@ function App() {
         <Route path="notifications" element={<Notification />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="subscription-plan" element={<SubscriptionPlan />} />
-        <Route path="AdminStudentManage" element={<StudentManagement />} />
+        <Route path="StudentManage" element={<StudentManagement />} />
         <Route path="FacultyManage" element={<FacultyManagement />} />
         <Route path="students-marks" element={<AdminStudentMarks />} />
         <Route path="" element={<AdminOverview />} />
