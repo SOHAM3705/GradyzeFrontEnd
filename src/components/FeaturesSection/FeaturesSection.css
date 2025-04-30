@@ -2,6 +2,7 @@
 .features-section {
   background: #f3f4f6;
   padding: 5rem 2rem;
+  margin-top: 2rem; /* Add margin to separate from the previous section */
 }
 
 .section-header {
@@ -64,6 +65,10 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .features-section {
+    padding: 3rem 1rem; /* Reduce padding on mobile */
+  }
+
   .features-grid {
     grid-template-columns: 1fr;
     padding: 0.5rem;
@@ -75,5 +80,17 @@
 
   .feature-card {
     padding: 1.5rem;
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .feature-card p {
+    font-size: 0.9rem;
   }
 }

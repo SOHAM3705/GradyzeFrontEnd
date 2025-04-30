@@ -1,11 +1,12 @@
+/* src/LoginSection.module.css */
 .loginSection {
-  height: 100vh;
+  padding: 4rem 2rem; /* Add padding to separate from the hero section */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
   text-align: center;
+  background-color: #f9fafb; /* Light background color */
 }
 
 .decorativeLine {
@@ -15,13 +16,11 @@
 }
 
 .top {
-  margin-top: 0;
-  margin-bottom: 50px;
+  margin-bottom: 2rem;
 }
 
 .bottom {
-  margin-top: 90px;
-  margin-bottom: 0;
+  margin-top: 2rem;
 }
 
 .sectionHeader {
@@ -54,7 +53,9 @@
   transition: transform 0.3s;
   text-decoration: none;
   height: 350px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .loginCard:hover {
@@ -62,7 +63,6 @@
 }
 
 .cardIcon {
-  margin-top: 20px;
   font-size: 2.5rem;
   color: #2563eb;
   margin-bottom: 1rem;
@@ -102,9 +102,30 @@
   color: white;
 }
 
-/* Responsive Design */
+/* Responsive design */
 @media (max-width: 768px) {
+  .loginSection {
+    padding: 2rem;
+  }
+
   .loginCards {
     grid-template-columns: 1fr;
+  }
+
+  .loginCard {
+    height: auto;
+  }
+
+  .sectionHeader h2 {
+    font-size: 2rem;
+  }
+
+  .sectionHeader p {
+    font-size: 1rem;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 0.8rem 1.5rem;
   }
 }

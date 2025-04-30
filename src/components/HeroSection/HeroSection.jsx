@@ -16,7 +16,7 @@ const HeroSection = () => {
       <div className={styles.heroContainer}>
         <div className={styles.heroContent}>
           <h1>Ready to Revolutionize Marks Management?</h1>
-          <p>
+          <p className={styles.heroDescription}>
             Gradyze offers a comprehensive platform designed to streamline and
             digitize the process of managing academic marks for schools and
             colleges. Facilitate seamless coordination among Admin, Teacher, and

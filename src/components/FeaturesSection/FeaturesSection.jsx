@@ -70,15 +70,15 @@ const FeaturesSection = () => {
           </p>
         </div>
 
-        {/* Realibilty */}
+        {/* Reliability */}
         <div className="feature-card">
           <div className="feature-icon">
             <i className="fas fa-thumbs-up"></i>
           </div>
-          <h3>Realibilty</h3>
+          <h3>Reliability</h3>
           <p>
             Gradyze ensures reliable, accurate, and transparent evaluations,
-            empowering teachers, students, and administrators effortlessly.
+            empowering teachers, students, and administrators effortlessly.
           </p>
         </div>
       </div>
