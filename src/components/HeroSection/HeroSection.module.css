@@ -153,10 +153,6 @@
     padding: 1.5rem;
   }
 
-  .heroContent .heroDescription {
-    display: none; /* Hide the description on mobile */
-  }
-
   .heroButtons {
     flex-direction: column; /* Stack buttons vertically on mobile */
     gap: 1rem;
@@ -179,7 +175,7 @@
   }
 
   .heroContent .heroDescription {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
   .btn {
