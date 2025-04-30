@@ -1,3 +1,4 @@
+// src/HeroSection.jsx
 import React from "react";
 import styles from "./HeroSection.module.css";
 
@@ -13,7 +14,6 @@ const HeroSection = () => {
   return (
     <div className={styles.hero}>
       <div className={styles.heroContainer}>
-        {/* Left-aligned text */}
         <div className={styles.heroContent}>
           <h1>Ready to Revolutionize Marks Management?</h1>
           <p>
@@ -22,7 +22,7 @@ const HeroSection = () => {
             colleges. Facilitate seamless coordination among Admin, Teacher, and
             Student roles.
           </p>
-          <div className={styles.hero_Buttons}>
+          <div className={styles.heroButtons}>
             <button
               onClick={scrollToLogin}
               className={`${styles.btn} ${styles.primaryBtn}`}

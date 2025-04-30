@@ -1,4 +1,4 @@
-/* Google Font */
+/* src/HeroSection.module.css */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
 
 /* Full-page hero section */
@@ -45,7 +45,7 @@
 .heroContainer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   max-width: 1200px;
   margin: auto;
   padding: 2rem;
@@ -60,11 +60,10 @@
   border-radius: 10px;
   padding: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 60%;
-  text-align: center; /* Align text to the left */
+  max-width: 80%;
+  text-align: center; /* Align text to the center */
   animation: slideIn 1s ease-in-out;
   color: white; /* Ensure text is white */
-  margin-left: 240px;
 }
 
 .heroContent h1 {
@@ -80,13 +79,11 @@
 }
 
 /* Buttons container */
-.hero_Buttons {
-  margin-left: 100px;
+.heroButtons {
   display: flex;
-  flex-direction: row; /* Stack buttons vertically */
-  /* Align buttons to the left */
+  flex-direction: row; /* Stack buttons horizontally */
+  justify-content: center; /* Center align buttons */
   gap: 1rem;
-  margin-right: 80px;
 }
 
 /* Button styles */
@@ -152,18 +149,20 @@
   .heroContent {
     max-width: 100%;
     text-align: center;
+    padding: 1.5rem;
   }
 
   .heroButtons {
-    align-items: center;
+    flex-direction: column; /* Stack buttons vertically on mobile */
+    gap: 1rem;
   }
 
   .heroContent h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
 
   .heroContent p {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
   .btn {

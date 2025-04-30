@@ -40,6 +40,9 @@ const Navbar = () => {
       </div>
       {isMobile && (
         <div className={`mobile-links-container ${isOpen ? "open" : ""}`}>
+          <div className="mobile-logo">
+            <img src={Navlogo} alt="Logo" />
+          </div>
           <div className="mobile-links">
             <a href="#pricingsection" onClick={toggleMenu}>
               Pricing
