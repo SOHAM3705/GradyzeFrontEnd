@@ -1,6 +1,6 @@
 // src/Testimonials.jsx
 import React from "react";
-import "./Testimonials.css";
+import styles from "./Testimonials.module.css";
 
 const testimonials = [
   {
@@ -31,19 +31,19 @@ const testimonials = [
 
 const Testimonials = () => {
   return (
-    <div className="testimonialsSection">
-      <h2 className="sectionTitle">What Our Clients Say</h2>
-      <div className="testimonialsContainer">
+    <div className={styles.testimonialsSection}>
+      <h2 className={styles.sectionTitle}>What Our Clients Say</h2>
+      <div className={styles.testimonialsContainer}>
         {testimonials.map((testimonial) => (
-          <div key={testimonial.id} className="testimonialCard">
+          <div key={testimonial.id} className={styles.testimonialCard}>
             <img
               src={testimonial.image}
               alt={testimonial.name}
-              className="testimonialImage"
+              className={styles.testimonialImage}
             />
-            <p className="testimonialText">{testimonial.testimonial}</p>
-            <h3 className="testimonialName">{testimonial.name}</h3>
-            <p className="testimonialTitle">{testimonial.title}</p>
+            <p className={styles.testimonialText}>{testimonial.testimonial}</p>
+            <h3 className={styles.testimonialName}>{testimonial.name}</h3>
+            <p className={styles.testimonialTitle}>{testimonial.title}</p>
           </div>
         ))}
       </div>
