@@ -12,6 +12,7 @@ const Footer = () => {
       behavior: "smooth", // This makes the scroll smooth
     });
   }
+
   return (
     <footer className="footer">
       <div className="footer-content">
@@ -31,7 +32,6 @@ const Footer = () => {
             <li>
               <Link
                 to="/aboutus"
-                onAnimationEnd={null}
                 onClick={(e) => {
                   e.preventDefault();
                   scrollToTop();
@@ -49,7 +49,6 @@ const Footer = () => {
             <li>
               <Link
                 to="/privacypolicy"
-                onAnimationEnd={null}
                 onClick={(e) => {
                   e.preventDefault();
                   scrollToTop();
@@ -62,7 +61,6 @@ const Footer = () => {
             <li>
               <Link
                 to="/documentation"
-                onAnimationEnd={null}
                 onClick={(e) => {
                   e.preventDefault();
                   scrollToTop();
@@ -75,7 +73,6 @@ const Footer = () => {
             <li>
               <Link
                 to="/contactus"
-                onAnimationEnd={null}
                 onClick={(e) => {
                   e.preventDefault();
                   scrollToTop();

@@ -1,4 +1,6 @@
+// src/SubscriptionPlan.jsx
 import React from "react";
+import { FaCheckCircle } from "react-icons/fa";
 
 const SubscriptionPlan = () => {
   return (
@@ -70,7 +72,7 @@ const SubscriptionPlan = () => {
         ].map((plan, index) => (
           <div
             key={index}
-            className={`rounded-lg shadow-lg p-6 transform transition-transform duration-300 hover:translate-y-[-0.5rem] hover:shadow-xl w-72 flex flex-col justify-between 
+            className={`rounded-lg shadow-lg p-6 transform transition-transform duration-300 hover:translate-y-[-0.5rem] hover:shadow-xl w-full sm:w-72 flex flex-col justify-between
               ${
                 plan.highlight
                   ? "bg-blue-900 text-white border-4 border-yellow-300 scale-105"
@@ -100,7 +102,7 @@ const SubscriptionPlan = () => {
               <ul className="features space-y-2 mb-6">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="feature flex items-center">
-                    ✅ {feature}
+                    <FaCheckCircle className="text-green-500 mr-2" /> {feature}
                   </li>
                 ))}
               </ul>
