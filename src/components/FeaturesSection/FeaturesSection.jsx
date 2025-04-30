@@ -72,7 +72,7 @@ const FeaturesSection = () => {
 
         {/* Reliability */}
         <div className="feature-card">
-          <div className="featuresection-icon">
+          <div className="feature-icon">
             <i className="fas fa-thumbs-up"></i>
           </div>
           <h3>Reliability</h3>

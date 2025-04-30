@@ -1,6 +1,6 @@
-// src/Testimonials.jsx
 import React from "react";
 import styles from "./Testimonials.module.css";
+import { FaQuoteLeft } from "react-icons/fa";
 
 const testimonials = [
   {
@@ -32,18 +32,28 @@ const testimonials = [
 const Testimonials = () => {
   return (
     <div className={styles.testimonialsSection}>
-      <h2 className={styles.sectionTitle}>What Our Clients Say</h2>
+      <div className={styles.headerContainer}>
+        <h2 className={styles.sectionTitle}>What Our Clients Say</h2>
+        <div className={styles.titleUnderline}></div>
+      </div>
       <div className={styles.testimonialsContainer}>
         {testimonials.map((testimonial) => (
           <div key={testimonial.id} className={styles.testimonialCard}>
-            <img
-              src={testimonial.image}
-              alt={testimonial.name}
-              className={styles.testimonialImage}
-            />
+            <div className={styles.imageContainer}>
+              <img
+                src={testimonial.image}
+                alt={testimonial.name}
+                className={styles.testimonialImage}
+              />
+            </div>
+            <div className={styles.quoteIcon}>
+              <FaQuoteLeft />
+            </div>
             <p className={styles.testimonialText}>{testimonial.testimonial}</p>
-            <h3 className={styles.testimonialName}>{testimonial.name}</h3>
-            <p className={styles.testimonialTitle}>{testimonial.title}</p>
+            <div className={styles.testimonialInfo}>
+              <h3 className={styles.testimonialName}>{testimonial.name}</h3>
+              <p className={styles.testimonialTitle}>{testimonial.title}</p>
+            </div>
           </div>
         ))}
       </div>
