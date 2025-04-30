@@ -5,7 +5,7 @@ import { FaCheckCircle } from "react-icons/fa";
 const SubscriptionPlan = () => {
   return (
     <div
-      className="min-h-screen bg-blue-50 flex flex-col items-center p-8"
+      className=" bg-blue-50 flex flex-col items-center p-8"
       id="pricingsection"
     >
       {/* Header Section */}
