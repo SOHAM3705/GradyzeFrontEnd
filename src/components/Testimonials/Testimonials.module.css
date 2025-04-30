@@ -82,10 +82,14 @@
   .testimonialsContainer {
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
   .testimonialCard {
     width: 100%;
     max-width: 400px;
+    justify-content: center;
+    text-align: center;
   }
 }

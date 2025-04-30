@@ -1,11 +1,61 @@
 // src/SubscriptionPlan.jsx
 import React from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import { motion } from "framer-motion";
+import "./SubscriptionPlan.css";
 
 const SubscriptionPlan = () => {
+  const plans = [
+    {
+      title: "BASIC",
+      price: "₹0",
+      features: [
+        "Faculty Management",
+        "Student Management",
+        "Notification",
+        "Feedback",
+        "Student Mark",
+        "Free Access Only for 7 Days",
+      ],
+      highlight: false,
+    },
+    {
+      title: "PROFESSIONAL",
+      price: "₹8999",
+      features: [
+        "Student Analysis",
+        "Faculty Analysis",
+        "Class Analysis",
+        "Student Attendance",
+        "Auto-Grading",
+        "Smart Analytics",
+        "Admin Dashboard",
+        "Custom Reports",
+        "Cloud Storage",
+        "24/7 Support",
+      ],
+      highlight: true, // Highlighting this plan
+    },
+    {
+      title: "ORGANIZATION",
+      price: "₹5999",
+      features: [
+        "Faculty Management",
+        "Student Management",
+        "Report Export",
+        "Student Dashboard",
+        "Teacher Dashboard",
+        "Departmental Reports",
+        "Multi-User Access",
+        "Role-Based Permissions",
+      ],
+      highlight: false,
+    },
+  ];
+
   return (
     <div
-      className=" bg-blue-50 flex flex-col items-center p-8"
+      className="min-h-screen bg-blue-50 flex flex-col items-center p-8"
       id="pricingsection"
     >
       {/* Header Section */}
@@ -22,63 +72,19 @@ const SubscriptionPlan = () => {
 
       {/* Pricing Plans Container */}
       <div className="pricing-container flex flex-wrap justify-center gap-10 max-w-5xl mx-auto">
-        {/* Plan Component */}
-        {[
-          {
-            title: "BASIC",
-            price: "₹0",
-            features: [
-              "Faculty Management",
-              "Student Management",
-              "Notification",
-              "Feedback",
-              "Student Mark",
-              "Free Access Only for 7 Days",
-            ],
-            highlight: false,
-          },
-          {
-            title: "PROFESSIONAL",
-            price: "₹8999",
-            features: [
-              "Student Analysis",
-              "Faculty Analysis",
-              "Class Analysis",
-              "Student Attendance",
-              "Auto-Grading",
-              "Smart Analytics",
-              "Admin Dashboard",
-              "Custom Reports",
-              "Cloud Storage",
-              "24/7 Support",
-            ],
-            highlight: true, // Highlighting this plan
-          },
-          {
-            title: "ORGANIZATION",
-            price: "₹5999",
-            features: [
-              "Faculty Management",
-              "Student Management",
-              "Report Export",
-              "Student Dashboard",
-              "Teacher Dashboard",
-              "Departmental Reports",
-              "Multi-User Access",
-              "Role-Based Permissions",
-            ],
-            highlight: false,
-          },
-        ].map((plan, index) => (
-          <div
+        {plans.map((plan, index) => (
+          <motion.div
             key={index}
             className={`rounded-lg shadow-lg p-6 transform transition-transform duration-300 hover:translate-y-[-0.5rem] hover:shadow-xl w-full sm:w-72 flex flex-col justify-between
               ${
                 plan.highlight
                   ? "bg-blue-900 text-white border-4 border-yellow-300 scale-105"
                   : "bg-white text-gray-900"
-              }
-            `}
+              }`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.2 }}
+            whileHover={{ scale: 1.05 }}
           >
             <div>
               <div
@@ -107,7 +113,7 @@ const SubscriptionPlan = () => {
                 ))}
               </ul>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
