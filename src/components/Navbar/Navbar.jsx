@@ -38,23 +38,25 @@ const Navbar = () => {
           </div>
         )}
       </div>
-      {isMobile && isOpen && (
-        <div className="mobile-links">
-          <a href="#pricingsection" onClick={toggleMenu}>
-            Pricing
-          </a>
-          <a href="#features" onClick={toggleMenu}>
-            Features
-          </a>
-          <Link to="/aboutus" onClick={toggleMenu}>
-            About
-          </Link>
-          <Link to="/contactus" onClick={toggleMenu}>
-            Contact
-          </Link>
-          <a href="#login" className="login-btn" onClick={toggleMenu}>
-            Login
-          </a>
+      {isMobile && (
+        <div className={`mobile-links-container ${isOpen ? "open" : ""}`}>
+          <div className="mobile-links">
+            <a href="#pricingsection" onClick={toggleMenu}>
+              Pricing
+            </a>
+            <a href="#features" onClick={toggleMenu}>
+              Features
+            </a>
+            <Link to="/aboutus" onClick={toggleMenu}>
+              About
+            </Link>
+            <Link to="/contactus" onClick={toggleMenu}>
+              Contact
+            </Link>
+            <a href="#login" className="login-btn" onClick={toggleMenu}>
+              Login
+            </a>
+          </div>
         </div>
       )}
     </nav>
