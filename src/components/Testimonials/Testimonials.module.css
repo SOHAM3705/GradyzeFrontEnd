@@ -91,5 +91,6 @@
     max-width: 400px;
     justify-content: center;
     text-align: center;
+    align-items: center;
   }
 }
