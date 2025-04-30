@@ -164,9 +164,9 @@
 }
 
 .feature {
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   color: #475569;
-  margin-bottom: 1rem;
+  margin-bottom: 0.4rem;
   display: flex;
   align-items: flex-start;
 }

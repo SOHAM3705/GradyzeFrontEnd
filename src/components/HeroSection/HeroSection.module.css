@@ -171,11 +171,11 @@
 /* Additional responsive design for zoom levels */
 @media (min-width: 769px) and (max-width: 1024px) {
   .heroContent h1 {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
   }
 
   .heroContent .heroDescription {
-    font-size: 1rem;
+    font-size: 0.5rem;
   }
 
   .btn {
@@ -186,11 +186,11 @@
 
 @media (min-width: 1025px) and (max-width: 1200px) {
   .heroContent h1 {
-    font-size: 2.8rem;
+    font-size: 2.4rem;
   }
 
   .heroContent .heroDescription {
-    font-size: 1.3rem;
+    font-size: 1rem;
   }
 
   .btn {

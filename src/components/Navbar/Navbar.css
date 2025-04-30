@@ -14,11 +14,14 @@
   font-size: 1.2rem; /* Increase font size for all text */
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+}
+
 .logo img {
   width: 150px; /* Adjust size to be smaller */
   height: auto;
-  display: block;
-  margin: 0 auto; /* Center align the image */
 }
 
 .nav-links {
