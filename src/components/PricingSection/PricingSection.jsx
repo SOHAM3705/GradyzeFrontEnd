@@ -1,6 +1,7 @@
 import React from "react";
 import { FaCheckCircle, FaStar, FaTrophy, FaBuilding } from "react-icons/fa";
 import "./SubscriptionPlan.css";
+import { Link } from "react-router-dom";
 
 const SubscriptionPlan = () => {
   const plans = [
