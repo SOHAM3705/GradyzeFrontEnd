@@ -12,7 +12,7 @@ const FeaturesSection = () => {
       <div className="features-grid">
         {/* Centralized Performance Data */}
         <div className="feature-card">
-          <div className="feature-icon">
+          <div className="featuresection-icon">
             <i className="fas fa-database"></i>
           </div>
           <h3>Centralized Performance Data</h3>
@@ -24,7 +24,7 @@ const FeaturesSection = () => {
 
         {/* Learning Challenge Detection */}
         <div className="feature-card">
-          <div className="feature-icon">
+          <div className="featuresection-icon">
             <i className="fas fa-search-plus"></i>
           </div>
           <h3>Learning Challenge Detection</h3>
@@ -36,7 +36,7 @@ const FeaturesSection = () => {
 
         {/* Data-Driven Academic Support */}
         <div className="feature-card">
-          <div className="feature-icon">
+          <div className="featuresection-icon">
             <i className="fas fa-chart-bar"></i>
           </div>
           <h3>Data-Driven Academic Support</h3>
@@ -48,7 +48,7 @@ const FeaturesSection = () => {
 
         {/* Administrative Efficiency */}
         <div className="feature-card">
-          <div className="feature-icon">
+          <div className="featuresection-icon">
             <i className="fas fa-cogs"></i>
           </div>
           <h3>Administrative Efficiency</h3>
@@ -60,7 +60,7 @@ const FeaturesSection = () => {
 
         {/* Enhanced Communication */}
         <div className="feature-card">
-          <div className="feature-icon">
+          <div className="featuresection-icon">
             <i className="fas fa-comments"></i>
           </div>
           <h3>Enhanced Communication</h3>
@@ -72,7 +72,7 @@ const FeaturesSection = () => {
 
         {/* Reliability */}
         <div className="feature-card">
-          <div className="feature-icon">
+          <div className="featuresection-icon">
             <i className="fas fa-thumbs-up"></i>
           </div>
           <h3>Reliability</h3>

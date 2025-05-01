@@ -43,7 +43,7 @@
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
 }
 
-.feature-icon {
+.featuresection-icon {
   font-size: 2.5rem;
   color: #2563eb;
   margin-bottom: 1.5rem;
@@ -82,7 +82,7 @@
     padding: 1.5rem;
   }
 
-  .feature-icon {
+  .featuresection-icon {
     font-size: 2rem;
   }
 

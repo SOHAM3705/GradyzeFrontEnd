@@ -13,7 +13,7 @@ const HeroSection = () => {
 
   return (
     <div
-      className="relative h-[90vh] flex items-center justify-center text-center text-white mb-8"
+      className="relative h-[100vh] flex items-center justify-center text-center text-white mb-8"
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
