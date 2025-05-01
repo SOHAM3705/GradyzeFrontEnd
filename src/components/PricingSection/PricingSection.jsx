@@ -112,17 +112,17 @@ const SubscriptionPlan = () => {
                 </li>
               ))}
             </ul>
-            <Link to="/adminsignup">
-              <button
-                className={`plan-button ${
-                  plan.highlight ? "highlight-button" : ""
-                }`}
-                style={{
-                  background: plan.highlight ? "#4f46e5" : "transparent",
-                }}
-              >
-                {plan.buttonText}
-              </button>
+
+            <Link
+              to="/adminsignup"
+              className={`plan-button ${
+                plan.highlight ? "highlight-button" : ""
+              }`}
+              style={{
+                background: plan.highlight ? "#4f46e5" : "transparent",
+              }}
+            >
+              {plan.buttonText}
             </Link>
           </div>
         ))}
