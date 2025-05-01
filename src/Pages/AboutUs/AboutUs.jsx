@@ -32,7 +32,7 @@ const AboutUs = () => {
   return (
     <div className={styles.container}>
       <Link to="/" className={styles.backButton}>
-        <i className="fas fa-arrow-left"></i> Back to Home
+        <i className="fas fa-arrow-left"></i>
       </Link>
       <header className={styles.header}>
         <h1>About Gradyze</h1>
