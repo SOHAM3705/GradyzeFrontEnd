@@ -1,3 +1,4 @@
+/* src/AboutUs.module.css */
 /* Google Font */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
 
@@ -7,6 +8,37 @@ body {
   padding: 0;
   background-color: #f8f9fa;
   color: #333;
+}
+
+.container {
+  padding: 20px;
+}
+
+/* Back to Main Website Button */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: whitesmoke;
+  color: #000;
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.backButton i {
+  font-size: 1.5rem;
+}
+
+.backButton:hover {
+  background: ivory;
+  transform: translateX(-5px);
 }
 
 /* Header */
@@ -69,6 +101,7 @@ body {
   border-radius: 10px;
   color: white;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
 .roleCard h3 {
@@ -124,6 +157,7 @@ body {
   border-radius: 10px;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   width: 200px;
+  margin-bottom: 20px;
 }
 
 .statBox h3 {
@@ -154,40 +188,28 @@ body {
     text-align: center;
   }
 
+  .about img {
+    max-width: 100%;
+    height: auto;
+  }
+
   .roles {
     flex-direction: column;
     align-items: center;
   }
 
   .roleCard {
-    width: 80%;
-    margin-bottom: 20px;
+    width: 100%;
+    max-width: 400px;
   }
-}
 
-/* Back to Main Website Button */
-.backButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: whitesmoke;
-  color: #000;
-  text-decoration: none;
-  font-size: 1.2rem;
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: 8px;
-  position: absolute;
-  top: 20px;
-  left: 30px;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
+  .stats {
+    flex-direction: column;
+    align-items: center;
+  }
 
-.backButton i {
-  font-size: 1.5rem;
-}
-
-.backButton:hover {
-  background: ivory;
-  transform: translateX(-5px);
+  .statBox {
+    width: 100%;
+    max-width: 300px;
+  }
 }

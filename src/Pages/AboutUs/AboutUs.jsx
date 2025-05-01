@@ -1,3 +1,4 @@
+// src/AboutUs.jsx
 import React, { useEffect } from "react";
 import styles from "./AboutUs.module.css";
 import { Link } from "react-router-dom";
@@ -29,9 +30,9 @@ const AboutUs = () => {
   }, []);
 
   return (
-    <div>
+    <div className={styles.container}>
       <Link to="/" className={styles.backButton}>
-        <i className="fas fa-arrow-left"></i>
+        <i className="fas fa-arrow-left"></i> Back to Home
       </Link>
       <header className={styles.header}>
         <h1>About Gradyze</h1>
@@ -48,7 +49,7 @@ const AboutUs = () => {
             and generate reports.
           </p>
         </div>
-        <img src="aboutus.webp" alt="Our Team" />
+        <img src="aboutus.webp" alt="Our Team" className={styles.aboutImage} />
       </section>
 
       <section className={styles.roles}>
