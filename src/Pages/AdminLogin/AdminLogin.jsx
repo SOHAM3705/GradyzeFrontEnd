@@ -1,3 +1,4 @@
+// src/AdminLogin.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -118,7 +119,7 @@ const AdminLogin = () => {
     <div className={styles.adminBg}>
       <div className={styles.loginContainer}>
         <Link to="/">
-          <button className={styles.backButton_Alogin}>
+          <button className={styles.backButtonAlogin}>
             <i className="fas fa-arrow-left"></i>
           </button>
         </Link>
@@ -141,6 +142,7 @@ const AdminLogin = () => {
               required
             />
           </div>
+
           <div className={styles.inputGroup}>
             <i className="fas fa-lock"></i>
             <input
@@ -152,12 +154,12 @@ const AdminLogin = () => {
               required
             />
           </div>
+
           <button className={styles.submitAdminbut} type="submit">
             Login
           </button>
         </form>
 
-        {/* Google Login Button */}
         <div
           ref={gsiContainerRef}
           style={{ marginTop: "20px", width: "100%" }}
@@ -165,13 +167,13 @@ const AdminLogin = () => {
 
         <p>
           Don't have an account?{" "}
-          <Link to="/adminsignup" className={styles.AdminSignup_a}>
+          <Link to="/adminsignup" className={styles.AdminSignupA}>
             Sign Up
           </Link>
         </p>
 
         <p>
-          <Link to="/forgetpassword" className={styles.AdminSignup_a}>
+          <Link to="/forgotpassword" className={styles.AdminSignupA}>
             Forgot Password?
           </Link>
         </p>

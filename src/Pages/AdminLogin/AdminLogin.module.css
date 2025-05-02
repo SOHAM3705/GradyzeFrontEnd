@@ -78,6 +78,22 @@
   background: #5b21b6;
 }
 
+/* Links */
+p {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.AdminSignupA {
+  color: #7c3aed;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.AdminSignupA:hover {
+  text-decoration: underline;
+}
+
 /* Align the back button and heading */
 .loginHeader {
   display: flex;
@@ -85,6 +101,7 @@
   justify-content: center;
   gap: 15px;
   margin-bottom: 20px;
+  position: relative;
 }
 
 /* Circular Back Button */
@@ -111,16 +128,6 @@
 .backButtonAlogin:hover {
   transform: rotate(180deg);
   background: #5b21b6;
-}
-
-.AdminSignupA {
-  color: #7c3aed;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.AdminSignupA:hover {
-  text-decoration: underline;
 }
 
 /* Error and Loading Messages */
