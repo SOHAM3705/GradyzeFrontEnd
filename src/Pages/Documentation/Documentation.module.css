@@ -180,7 +180,6 @@
   }
 
   .backButton {
-    top: 10px;
-    left: 10px;
+    visibility: hidden;
   }
 }
