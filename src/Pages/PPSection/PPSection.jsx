@@ -1,6 +1,6 @@
 // src/PrivacyPolicy.jsx
 import React from "react";
-import "./PPSection.css"; // Import the CSS file
+import "./PrivacyPolicy.css"; // Import the CSS file
 import { Link } from "react-router-dom";
 
 const PrivacyPolicy = () => {

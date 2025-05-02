@@ -14,7 +14,6 @@
 
 .docsNavbar {
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-around;
   background-color: #007bff;
   padding: 15px;
@@ -69,13 +68,13 @@
 }
 
 .docsTitle {
-  font-size: 2.5rem;
+  font-size: 2.5em;
   margin-bottom: 20px;
   color: #007bff;
 }
 
 .docsSubtitle {
-  font-size: 1.8rem;
+  font-size: 1.8em;
   margin-bottom: 15px;
   color: #444;
   border-bottom: 2px solid #007bff;
@@ -140,6 +139,7 @@
   top: 20px;
   left: 20px;
   transition: background 0.3s ease, transform 0.2s ease;
+  z-index: 10; /* Ensure it stays on top */
 }
 
 .backButton i {
