@@ -1,3 +1,5 @@
+/* src/TeacherLogin.module.css */
+
 /* Background Styling */
 .teacherBg {
   display: flex;
@@ -14,7 +16,8 @@
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   text-align: center;
-  width: 350px;
+  width: 100%;
+  max-width: 400px;
   transition: transform 0.3s ease-in-out;
   position: relative;
 }
@@ -55,7 +58,7 @@
 }
 
 /* Buttons */
-.Tlogin_but {
+.TloginBut {
   width: 100%;
   padding: 12px;
   border: none;
@@ -74,18 +77,18 @@ p {
   font-size: 14px;
 }
 
-.TeacherLogin_a {
+.teacherLoginA {
   color: #059669;
   text-decoration: none;
   font-weight: bold;
 }
 
-.TeacherLogin_a:hover {
-  text-decoration: none;
+.teacherLoginA:hover {
+  text-decoration: underline;
 }
 
 /* Back Button */
-.backButton_Tlogin {
+.backButtonTlogin {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -102,13 +105,37 @@ p {
 }
 
 /* Ensure the arrow is visible */
-.backButton_Tlogin i {
+.backButtonTlogin i {
   color: white;
   font-size: 18px;
 }
 
 /* Rotate and Darken on Hover */
-.backButton_Tlogin:hover {
+.backButtonTlogin:hover {
   transform: rotate(180deg);
   background: #034d44;
+}
+
+/* Error and Loading Messages */
+.errorMessage {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.loadingMessage {
+  color: #059669;
+  margin-bottom: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .loginContainer {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .backButtonTlogin {
+    top: 10px;
+    left: 10px;
+  }
 }

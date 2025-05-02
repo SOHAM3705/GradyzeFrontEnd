@@ -1,3 +1,5 @@
+/* src/AdminLogin.module.css */
+
 /* Google Font */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css");
@@ -18,7 +20,8 @@
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   text-align: center;
-  width: 350px;
+  width: 100%;
+  max-width: 400px;
   transition: transform 0.3s ease-in-out;
 }
 
@@ -85,7 +88,7 @@
 }
 
 /* Circular Back Button */
-.backButton_Alogin {
+.backButtonAlogin {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -99,23 +102,47 @@
 }
 
 /* Arrow Icon */
-.backButton_Alogin i {
+.backButtonAlogin i {
   color: white;
   font-size: 18px;
 }
 
 /* Rotate and Darken on Hover */
-.backButton_Alogin:hover {
+.backButtonAlogin:hover {
   transform: rotate(180deg);
   background: #5b21b6;
 }
 
-.AdminSignup_a {
+.AdminSignupA {
   color: #7c3aed;
   text-decoration: none;
   font-weight: bold;
 }
 
-.AdminSignup_a:hover {
-  text-decoration: none;
+.AdminSignupA:hover {
+  text-decoration: underline;
+}
+
+/* Error and Loading Messages */
+.errorMessage {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.loadingMessage {
+  color: #7c3aed;
+  margin-bottom: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .loginContainer {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .backButtonAlogin {
+    top: 10px;
+    left: 10px;
+  }
 }
