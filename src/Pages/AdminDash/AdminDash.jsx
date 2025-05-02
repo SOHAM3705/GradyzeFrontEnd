@@ -61,14 +61,12 @@ function AdminDash() {
       label: "Faculty Management",
       path: "/admindash/FacultyManage",
     },
-
     {
       icon: "👥",
       label: "Student Management",
       path: "/admindash/StudentManage",
     },
     { icon: "📝", label: "Students' Marks", path: "/admindash/students-marks" },
-
     {
       icon: "📅",
       label: "Attendance Reports",
@@ -88,7 +86,7 @@ function AdminDash() {
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="bg-white w-64 shadow-lg">
-        <div className="h-16 bg-primary flex items-center justify-center">
+        <div className="h-16 bg-[#7c3aed] flex items-center justify-center">
           <h2 className="text-xl font-bold text-white">Admin Portal</h2>
         </div>
         <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
@@ -96,7 +94,7 @@ function AdminDash() {
             <Link
               key={item.path}
               to={item.path}
-              className="flex items-center px-4 py-3 text-gray-700 hover:bg-primary-light hover:text-primary-dark rounded-lg transition-colors duration-200 hover:text-white"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#7c3aed] hover:text-white rounded-lg transition-colors duration-200"
             >
               <span className="mr-3">{item.icon}</span>
               <span className="font-medium">{item.label}</span>
@@ -106,7 +104,7 @@ function AdminDash() {
         <div className="p-4 absolute bottom-0 w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark"
+            className="w-full bg-[#7c3aed] text-white py-2 px-4 rounded-lg hover:bg-[#6d28d9]"
           >
             Sign Out
           </button>
