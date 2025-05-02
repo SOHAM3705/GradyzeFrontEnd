@@ -164,7 +164,7 @@ const AdminLogin = () => {
         <div
           ref={gsiContainerRef}
           style={{
-            marginTop: "20px",
+            marginTop: "10px",
             width: "100%", // Ensures full width
             minHeight: "40px",
             display: "flex",

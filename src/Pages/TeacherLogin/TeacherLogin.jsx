@@ -162,7 +162,7 @@ const TeacherLogin = () => {
         <div
           id="gsi-button"
           style={{
-            marginTop: "20px",
+            marginTop: "10px",
             width: "100%", // Ensures full width
             minHeight: "40px",
             display: "flex",
