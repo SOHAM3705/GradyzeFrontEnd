@@ -53,6 +53,7 @@ const AdminLogin = () => {
           theme: "outline",
           size: "large",
           width: "100%",
+          text: "Login_with",
         });
 
         setGsiRendered(true);
@@ -162,7 +163,13 @@ const AdminLogin = () => {
 
         <div
           ref={gsiContainerRef}
-          style={{ marginTop: "20px", width: "100%" }}
+          style={{
+            marginTop: "20px",
+            width: "100%", // Ensures full width
+            minHeight: "40px",
+            display: "flex",
+            justifyContent: "center",
+          }}
         ></div>
 
         <p>

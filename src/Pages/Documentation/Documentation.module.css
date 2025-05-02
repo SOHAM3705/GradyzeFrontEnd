@@ -1,8 +1,8 @@
-/* Documentation.module.css */
+/* src/Documentation.module.css */
 
 .docsContainer {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   line-height: 1.8;
@@ -14,6 +14,7 @@
 
 .docsNavbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-around;
   background-color: #007bff;
   padding: 15px;
@@ -68,13 +69,13 @@
 }
 
 .docsTitle {
-  font-size: 2.5em;
+  font-size: 2.5rem;
   margin-bottom: 20px;
   color: #007bff;
 }
 
 .docsSubtitle {
-  font-size: 1.8em;
+  font-size: 1.8rem;
   margin-bottom: 15px;
   color: #444;
   border-bottom: 2px solid #007bff;
@@ -137,7 +138,7 @@
   border-radius: 8px;
   position: absolute;
   top: 20px;
-  left: 30px;
+  left: 20px;
   transition: background 0.3s ease, transform 0.2s ease;
 }
 
@@ -151,4 +152,35 @@
   color: rgb(255, 255, 255);
   transform: translateX(-5px);
   text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .docsNavbar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .docsNavbar button {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .docsContent {
+    padding: 10px;
+  }
+
+  .docsTitle {
+    font-size: 2rem;
+  }
+
+  .docsSubtitle {
+    font-size: 1.5rem;
+  }
+
+  .backButton {
+    top: 10px;
+    left: 10px;
+  }
 }

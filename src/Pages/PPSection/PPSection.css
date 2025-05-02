@@ -1,5 +1,10 @@
-/* PrivacyPolicy.css */
+/* src/PrivacyPolicy.css */
 
+/* Google Font */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css");
+
+/* Privacy Policy Container */
 .privacy-policy {
   font-family: Arial, sans-serif;
   max-width: 800px;
@@ -8,6 +13,7 @@
   line-height: 1.6;
 }
 
+/* Headings */
 .privacy-policy h1 {
   font-size: 2em;
   margin-bottom: 20px;
@@ -21,11 +27,13 @@
   color: #444;
 }
 
+/* Paragraphs */
 .privacy-policy p {
   margin-bottom: 20px;
   color: #555;
 }
 
+/* Lists */
 .privacy-policy ul {
   margin-left: 20px;
   list-style-type: disc;
@@ -35,10 +43,12 @@
   margin-bottom: 10px;
 }
 
+/* Strong Text */
 .privacy-policy strong {
   font-weight: bold;
 }
 
+/* Links */
 .privacy-policy a {
   color: #007bff;
   text-decoration: none;
@@ -76,4 +86,16 @@
   color: rgb(255, 255, 255);
   transform: translateX(-5px);
   text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .privacy-policy {
+    padding: 10px;
+  }
+
+  .back-button {
+    top: 10px;
+    left: 10px;
+  }
 }

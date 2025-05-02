@@ -42,7 +42,7 @@ const StudentLogin = () => {
         {
           theme: "outline",
           size: "large",
-          text: "signin_with", // Forces "Sign in with Google"
+          text: "Login_with", // Forces "Sign in with Google"
           width: "100%", // Fix for shrinking issue
         }
       );
@@ -158,7 +158,16 @@ const StudentLogin = () => {
           </button>
         </form>
 
-        <div id="gsi-button" style={{ marginTop: "20px", width: "100%" }}></div>
+        <div
+          id="gsi-button"
+          style={{
+            marginTop: "20px",
+            width: "100%", // Ensures full width
+            minHeight: "40px",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        ></div>
 
         <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
