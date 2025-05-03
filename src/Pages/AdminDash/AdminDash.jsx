@@ -1,56 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, Hand } from "lucide-react";
+import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
 
 function AdminDash() {
-  const [adminName, setAdminName] = useState(""); // ✅ Empty initially
+  const [adminName, setAdminName] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Fetch latest admin name
   useEffect(() => {
     const fetchAdminName = async () => {
       try {
         const token = sessionStorage.getItem("token");
         if (!token) {
-          console.error("🚨 No token found, redirecting to login.");
           navigate("/adminlogin");
           return;
         }
 
         const response = await axios.get(
           "https://gradyzebackend.onrender.com/api/adminsetting/admin-name",
-          {
-            headers: { Authorization: `Bearer ${token}` }, // ✅ Send token
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         setAdminName(response.data.adminName || "Admin");
       } catch (error) {
-        console.error(
-          "❌ Error fetching admin name:",
-          error.response?.data || error
-        );
+        console.error("Error fetching admin name:", error);
       }
     };
 
     fetchAdminName();
   }, []);
 
-  // ✅ Handle logout and clear session
   const handleLogout = () => {
-    console.log("🔴 Logging out...");
-    sessionStorage.removeItem("adminId");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("adminName");
     sessionStorage.clear();
-
-    // ✅ Force a refresh to clear any cached user data
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-
+    setTimeout(() => window.location.reload(), 500);
     navigate("/adminlogin");
   };
 
@@ -85,8 +69,14 @@ function AdminDash() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <div className="bg-white w-64 shadow-lg">
-        <div className="h-16 bg-[#7c3aed] flex items-center justify-center">
+      {/* Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:relative md:translate-x-0`}
+      >
+        <div className="h-16 bg-[#7c3aed] flex items-center justify-center md:justify-start px-4">
           <h2 className="text-xl font-bold text-white">Admin Portal</h2>
         </div>
         <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
@@ -94,6 +84,7 @@ function AdminDash() {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => setSidebarOpen(false)}
               className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#7c3aed] hover:text-white rounded-lg transition-colors duration-200"
             >
               <span className="mr-3">{item.icon}</span>
@@ -111,11 +102,31 @@ function AdminDash() {
         </div>
       </div>
 
+      {/* Backdrop for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black bg-opacity-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
-          <div className="text-lg font-semibold text-gray-800">
-            Welcome, {adminName || "Loading...."}
+        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
+          {/* Sidebar toggle button on small screens */}
+          <button
+            className="md:hidden text-gray-600 focus:outline-none"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu size={28} />
+          </button>
+
+          <div className="text-lg font-semibold text-gray-800 ml-2">
+            Welcome, {adminName || "Loading..."}
           </div>
+
+          {/* Placeholder for alignment */}
+          <div className="w-8 md:hidden" />
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
