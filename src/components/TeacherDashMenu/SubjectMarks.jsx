@@ -527,24 +527,34 @@ const TeacherDashboard = () => {
     rows.forEach((row, index) => {
       const isAbsent = row.querySelector(".absent-checkbox").checked;
       const studentId = students[index]._id;
+      const teacherId = sessionStorage.getItem("teacherId");
+
+      if (!teacherId) {
+        console.error("Teacher ID not found in sessionStorage.");
+        return;
+      }
 
       if (isAbsent) {
         marksToSave.push({
           studentId,
-          teacherId: sessionStorage.getItem("teacherId"),
           examType: selectedExamType,
           year: selectedYear,
-          subjectName: selectedSubjectName,
-          isAbsent: true,
-          marks: {
-            q1q2: -1,
-            q3q4: 0,
-            q5q6: 0,
-            q7q8: 0,
-            total: -1,
-          },
-          totalMarks: 0,
-          status: "Absent",
+          exams: [
+            {
+              subjectName: selectedSubjectName,
+              teacherId,
+              marksObtained: {
+                q1q2: -1,
+                q3q4: 0,
+                q5q6: 0,
+                q7q8: 0,
+                total: -1,
+              },
+              totalMarks: 0,
+              status: "Absent",
+              dateAdded: new Date(),
+            },
+          ],
         });
       } else {
         const q1q2 = parseInt(row.querySelector(".q1q2-input").value) || 0;
@@ -555,25 +565,30 @@ const TeacherDashboard = () => {
         const q7q8 = isUnitTest
           ? 0
           : parseInt(row.querySelector(".q7q8-input")?.value) || 0;
+
         const total = q1q2 + q3q4 + q5q6 + q7q8;
         const status = total >= passingMarks ? "Pass" : "Fail";
 
         marksToSave.push({
           studentId,
-          teacherId: sessionStorage.getItem("teacherId"),
           examType: selectedExamType,
           year: selectedYear,
-          subjectName: selectedSubjectName,
-          isAbsent: false,
-          marks: {
-            q1q2,
-            q3q4,
-            q5q6,
-            q7q8,
-            total,
-          },
-          totalMarks,
-          status,
+          exams: [
+            {
+              subjectName: selectedSubjectName,
+              teacherId,
+              marksObtained: {
+                q1q2,
+                q3q4,
+                q5q6,
+                q7q8,
+                total,
+              },
+              totalMarks,
+              status,
+              dateAdded: new Date(),
+            },
+          ],
         });
       }
     });
@@ -583,7 +598,12 @@ const TeacherDashboard = () => {
       await axios.post(
         `https://gradyzebackend.onrender.com/api/teachermarks/add-marks`,
         marksToSave,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       alert("Marks saved successfully!");
       closeModal();
