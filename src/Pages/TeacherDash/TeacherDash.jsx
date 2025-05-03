@@ -78,7 +78,7 @@ function TeacherDash() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:relative md:translate-x-0`}
       >
-        <div className="h-16 bg-[#2563eb] flex items-center justify-center md:justify-start px-4">
+        <div className="h-16 bg-[#10B981] flex items-center justify-center md:justify-start px-4">
           <h2 className="text-xl font-bold text-white">Teacher Portal</h2>
         </div>
         <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
@@ -87,7 +87,7 @@ function TeacherDash() {
               key={item.path}
               to={item.path}
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#2563eb] hover:text-white rounded-lg transition-colors duration-200"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
             >
               <span className="mr-3 text-xl">{item.icon}</span>
               <span className="font-medium text-lg">{item.label}</span>
@@ -97,7 +97,7 @@ function TeacherDash() {
         <div className="p-4 absolute bottom-0 w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
+            className="w-full bg-[#10B981] text-white py-2 px-4 rounded-lg hover:bg-[#059669] text-lg"
           >
             Sign Out
           </button>
