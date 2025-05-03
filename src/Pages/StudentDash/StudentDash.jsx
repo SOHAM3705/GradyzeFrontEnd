@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, Hand, Menu } from "lucide-react";
+import { LogOut, Hand } from "lucide-react";
 import axios from "axios";
-import "./StudentDash.css";
 
 function StudentDash() {
   const [studentName, setStudentName] = useState("Student");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,7 +13,7 @@ function StudentDash() {
       try {
         const token = sessionStorage.getItem("token");
         if (!token) {
-          console.error("No token found, redirecting to login.");
+          console.error("🚨 No token found, redirecting to login.");
           navigate("/studentlogin");
           return;
         }
@@ -30,7 +28,7 @@ function StudentDash() {
         setStudentName(response.data.studentName || "Student");
       } catch (error) {
         console.error(
-          "Error fetching student name:",
+          "❌ Error fetching student name:",
           error.response?.data || error
         );
       }
@@ -69,59 +67,48 @@ function StudentDash() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-50">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="student-menu-button md:hidden p-4 focus:outline-none"
-      >
-        <Menu size={24} />
-      </button>
-
       {/* Sidebar */}
-      <div
-        className={`student-sidebar bg-white w-full md:w-64 shadow-lg ${
-          isMenuOpen ? "open" : ""
-        }`}
-      >
-        <div className="student-header h-16 flex items-center justify-center">
-          <h2 className="text-2xl font-bold text-white">Student Portal</h2>
+      <div className="bg-white md:w-64 w-full md:shadow-lg flex flex-col justify-between">
+        {/* Logo/Header */}
+        <div className="h-16 bg-[#2563eb] flex items-center justify-center">
+          <h2 className="text-xl md:text-2xl font-bold text-white">
+            Student Portal
+          </h2>
         </div>
-        <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
+
+        {/* Menu Items */}
+        <nav className="p-4 flex-1 overflow-y-auto flex flex-col gap-2">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors duration-200"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#2563eb] hover:text-white rounded-lg transition-colors duration-200"
             >
               <span className="mr-3 text-xl">{item.icon}</span>
               <span className="font-medium text-lg">{item.label}</span>
             </Link>
           ))}
         </nav>
-        <div className="p-4 absolute bottom-0 w-full md:w-64">
+
+        {/* Logout Button */}
+        <div className="p-4">
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
+            className="w-full bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
           >
             Sign Out
           </button>
         </div>
       </div>
 
-      {/* Content */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
-          <div className="text-2xl font-semibold text-gray-800">
-            Welcome, {studentName || "Loading..."}
+        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
+          <div className="text-lg md:text-2xl font-semibold text-gray-800">
+            Welcome, {studentName}
           </div>
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="student-menu-button md:hidden bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
-          >
-            <Menu size={24} />
-          </button>
         </header>
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
         </main>
       </div>
@@ -129,7 +116,7 @@ function StudentDash() {
       {/* Logout Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 w-96 shadow-lg mx-4 text-center">
+          <div className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md shadow-lg mx-4 text-center">
             <div className="flex items-center justify-center text-red-600 mb-4">
               <Hand
                 size={40}
@@ -137,7 +124,7 @@ function StudentDash() {
                 className="animate-waving-hand"
               />
             </div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-3">
               Confirm Logout
             </h3>
             <p className="text-gray-600 mb-6 text-lg">
