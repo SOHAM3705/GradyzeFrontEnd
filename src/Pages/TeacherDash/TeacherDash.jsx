@@ -6,7 +6,7 @@ import axios from "axios";
 function TeacherDash() {
   const [teacherName, setTeacherName] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,6 +40,7 @@ function TeacherDash() {
 
   const handleLogout = () => {
     sessionStorage.clear();
+    setTimeout(() => window.location.reload(), 500);
     navigate("/teacherlogin");
   };
 
@@ -69,30 +70,31 @@ function TeacherDash() {
   ];
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`bg-white z-40 md:relative fixed md:flex flex-col w-64 h-full shadow-lg transition-transform duration-300 ${
-          isMenuOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:relative md:translate-x-0`}
       >
-        <div className="bg-[#2563eb] h-16 flex items-center justify-center">
+        <div className="h-16 bg-[#2563eb] flex items-center justify-center md:justify-start px-4">
           <h2 className="text-xl font-bold text-white">Teacher Portal</h2>
         </div>
-        <nav className="flex-1 p-4 overflow-y-auto">
+        <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#2563eb] hover:text-white rounded-lg transition duration-200"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#2563eb] hover:text-white rounded-lg transition-colors duration-200"
             >
               <span className="mr-3 text-xl">{item.icon}</span>
               <span className="font-medium text-lg">{item.label}</span>
             </Link>
           ))}
         </nav>
-        <div className="p-4">
+        <div className="p-4 absolute bottom-0 w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
             className="w-full bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
@@ -102,23 +104,34 @@ function TeacherDash() {
         </div>
       </div>
 
+      {/* Backdrop for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black bg-opacity-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
-        {/* Mobile Header */}
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 md:px-6">
-          <div className="text-lg md:text-2xl font-semibold text-gray-800">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
+          {/* Sidebar toggle button on small screens */}
+          <button
+            className="md:hidden text-gray-600 focus:outline-none"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu size={28} />
+          </button>
+
+          <div className="text-lg font-semibold text-gray-800 ml-2">
             Welcome, {teacherName || "Loading..."}
           </div>
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden bg-[#2563eb] text-white p-2 rounded-lg hover:bg-[#1d4ed8]"
-          >
-            <Menu size={24} />
-          </button>
+
+          {/* Placeholder for alignment */}
+          <div className="w-8 md:hidden" />
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
       </div>
@@ -134,22 +147,22 @@ function TeacherDash() {
                 className="animate-waving-hand"
               />
             </div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-xl font-semibold text-gray-800 mb-3">
               Confirm Logout
             </h3>
-            <p className="text-gray-600 mb-6 text-lg">
+            <p className="text-gray-600 mb-6 text-sm">
               Are you sure you want to logout? 👋
             </p>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition text-lg"
+                className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLogout}
-                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red-700 transition text-lg"
+                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red-700 transition"
               >
                 <LogOut size={18} />
                 <span>Logout</span>
