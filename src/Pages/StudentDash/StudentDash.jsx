@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
-import "./StudentDash.css"; // Optional for custom styles
 
 function StudentDash() {
   const [studentName, setStudentName] = useState("Student");
