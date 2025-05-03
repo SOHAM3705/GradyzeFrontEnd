@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const StudentMarks = () => {
   const [studentId, setStudentId] = useState("");
@@ -13,7 +14,7 @@ const StudentMarks = () => {
     setError("");
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentResult/marks/${studentId}`
+        `${API_BASE_URL}/api/studentResult/marks/${studentId}`
       );
       setMarksData(response.data.data);
     } catch (error) {

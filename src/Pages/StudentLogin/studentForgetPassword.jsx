@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "@fortawesome/fontawesome-free/css/all.min.css"; // Ensure FontAwesome is loaded
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const studentForgetPassword = () => {
   const [email, setEmail] = useState("");
@@ -22,7 +23,7 @@ const studentForgetPassword = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/password/studentpassword/verify-email",
+        `${API_BASE_URL}/api/password/studentpassword/verify-email`,
         { email }
       );
       setMessage(response.data.message);

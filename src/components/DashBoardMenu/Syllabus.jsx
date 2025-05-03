@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const SyllabusManagement = () => {
   const [syllabusData, setSyllabusData] = useState([]);
@@ -41,7 +42,7 @@ const SyllabusManagement = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/syllabi/getsyllabi/${adminId}`
+          `${API_BASE_URL}/api/syllabi/getsyllabi/${adminId}`
         );
 
         console.log("Received syllabus data from API:", response.data);
@@ -86,7 +87,7 @@ const SyllabusManagement = () => {
       formData.append("file", file);
 
       const fileResponse = await axios.post(
-        "https://gradyzebackend.onrender.com/api/syllabi/upload",
+        `${API_BASE_URL}/api/syllabi/upload`,
         formData,
         {
           headers: {
@@ -106,7 +107,7 @@ const SyllabusManagement = () => {
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/syllabi/putsyllabi",
+        `${API_BASE_URL}/api/syllabi/putsyllabi`,
         syllabusData
       );
 
@@ -127,7 +128,7 @@ const SyllabusManagement = () => {
 
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/syllabi/files/${fileId}`,
+        `${API_BASE_URL}/api/syllabi/files/${fileId}`,
         { responseType: "blob" }
       );
 
@@ -153,12 +154,9 @@ const SyllabusManagement = () => {
         return;
       }
 
-      await axios.delete(
-        `https://gradyzebackend.onrender.com/api/syllabi/delete/${syllabusId}`,
-        {
-          data: { adminId },
-        }
-      );
+      await axios.delete(`${API_BASE_URL}/api/syllabi/delete/${syllabusId}`, {
+        data: { adminId },
+      });
 
       setSyllabusData((prevData) =>
         prevData.filter((syllabus) => syllabus._id !== syllabusId)

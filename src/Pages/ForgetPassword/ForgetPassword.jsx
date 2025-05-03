@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ const ForgetPassword = () => {
       console.log("🔍 Sending password reset request for:", email);
       const trimmedEmail = email.trim();
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/password/verify-email",
+        `${API_BASE_URL}/api/password/verify-email`,
         { email: trimmedEmail }
       );
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const ChangePassword = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -59,7 +60,7 @@ const ChangePassword = () => {
       console.log("📤 Payload:", { token, newPassword, confirmPassword });
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/password/change-password",
+        `${API_BASE_URL}/api/password/change-password`,
         { token, newPassword, confirmPassword },
         {
           headers: {

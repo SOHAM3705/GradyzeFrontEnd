@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./contactus.module.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const ContactUs = () => {
 
     try {
       const response = await axios.post(
-        `https://gradyzebackend.onrender.com/api/Gsheet/contactus`,
+        `${API_BASE_URL}/api/Gsheet/contactus`,
         formData
       );
       setResponseMessage(response.data.message);

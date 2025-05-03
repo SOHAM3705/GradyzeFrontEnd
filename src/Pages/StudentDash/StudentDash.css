@@ -1,0 +1,29 @@
+/* StudentDash.css */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+.student-sidebar {
+  transition: transform 0.3s ease-in-out;
+}
+
+.student-header {
+  background-color: #2563eb;
+}
+
+.student-menu-button {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .student-menu-button {
+    display: block;
+  }
+
+  .student-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .student-sidebar.open {
+    transform: translateX(0);
+  }
+}

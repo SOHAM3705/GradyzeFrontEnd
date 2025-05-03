@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const AdminFeedback = () => {
   const [formData, setFormData] = useState({
@@ -28,7 +29,7 @@ const AdminFeedback = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/Gsheet/student/submit-feedback",
+        `${API_BASE_URL}/api/Gsheet/student/submit-feedback`,
         formData
       );
 

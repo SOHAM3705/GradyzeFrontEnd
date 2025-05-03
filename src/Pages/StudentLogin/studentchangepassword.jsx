@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "@fortawesome/fontawesome-free/css/all.min.css"; // FontAwesome Icons
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const studentChangePassword = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -47,7 +48,7 @@ const studentChangePassword = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/password/studentpassword/change-password",
+        `${API_BASE_URL}/api/password/studentpassword/change-password`,
         { token, newPassword, confirmPassword }
       );
 

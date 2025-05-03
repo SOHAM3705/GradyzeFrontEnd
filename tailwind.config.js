@@ -43,4 +43,8 @@ module.exports = {
     },
   },
   plugins: [],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
 };

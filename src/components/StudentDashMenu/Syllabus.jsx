@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const TeacherSyllabusView = () => {
   const [syllabusData, setSyllabusData] = useState([]);
@@ -40,7 +41,7 @@ const TeacherSyllabusView = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/teachersyllabi/teacher/${adminId}`,
+          `${API_BASE_URL}/api/teachersyllabi/teacher/${adminId}`,
           { withCredentials: true } // ✅ Ensures token is sent with the request
         );
 
@@ -70,7 +71,7 @@ const TeacherSyllabusView = () => {
 
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachersyllabi/files/${fileId}`,
+        `${API_BASE_URL}/api/teachersyllabi/files/${fileId}`,
         { responseType: "blob" } // ✅ Ensures binary file download
       );
 

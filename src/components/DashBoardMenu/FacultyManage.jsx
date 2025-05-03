@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../../config";
 
 const subjectsData = {
   "Computer Science": {
@@ -104,7 +105,7 @@ const FacultyManagementSystem = () => {
     try {
       const adminId = sessionStorage.getItem("adminId");
       const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/teacher/teacherslist",
+        `${API_BASE_URL}/api/teacher/teacherslist`,
         {
           params: { adminId },
         }
@@ -186,7 +187,7 @@ const FacultyManagementSystem = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-teacher",
+        `${API_BASE_URL}/api/teacher/add-teacher`,
         facultyData,
         {
           headers: {
@@ -233,7 +234,7 @@ const FacultyManagementSystem = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/add-subject",
+        `${API_BASE_URL}/api/teacher/add-subject`,
         subjectData,
         {
           headers: {
@@ -296,7 +297,7 @@ const FacultyManagementSystem = () => {
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/remove-subject",
+        `${API_BASE_URL}/api/teacher/remove-subject`,
         payload,
         {
           headers: {
@@ -350,7 +351,7 @@ const FacultyManagementSystem = () => {
       }
 
       const response = await axios.delete(
-        `https://gradyzebackend.onrender.com/api/teacher/delete/${teacherToDelete}`,
+        `${API_BASE_URL}/api/teacher/delete/${teacherToDelete}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -412,7 +413,7 @@ const FacultyManagementSystem = () => {
       }
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/teacher/remove-class",
+        `${API_BASE_URL}/api/teacher/remove-class`,
         {
           teacherId: selectedFacultyId,
           adminId,

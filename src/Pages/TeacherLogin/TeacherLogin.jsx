@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import styles from "./TeacherLogin.module.css";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const TeacherLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -10,8 +11,6 @@ const TeacherLogin = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const gsiRendered = useRef(false); // Prevent duplicate renders
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   // Google Sign-In
   useEffect(() => {

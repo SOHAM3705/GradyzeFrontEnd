@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import styles from "./Documentation.module.css"; // Import scoped CSS
 import { Link } from "react-router-dom";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Documentation = () => {
   const [activeSection, setActiveSection] = useState("endUser");

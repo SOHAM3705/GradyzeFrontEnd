@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
+import "./TeacherDash.css";
 
 function TeacherDash() {
   const [teacherName, setTeacherName] = useState("");
@@ -39,16 +40,10 @@ function TeacherDash() {
   }, [navigate]);
 
   const handleLogout = () => {
-    console.log("Logging out...");
     sessionStorage.removeItem("teacherId");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("teacherName");
     sessionStorage.clear();
-
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-
     navigate("/teacherlogin");
   };
 
@@ -82,18 +77,18 @@ function TeacherDash() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="md:hidden p-4 focus:outline-none"
+        className="teacher-menu-button md:hidden p-4 focus:outline-none"
       >
         <Menu size={24} />
       </button>
 
       {/* Sidebar */}
       <div
-        className={`bg-white w-full md:w-64 shadow-lg transform transition-transform duration-300 ease-in-out ${
-          isMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`teacher-sidebar bg-white w-full md:w-64 shadow-lg ${
+          isMenuOpen ? "open" : ""
         }`}
       >
-        <div className="h-16 bg-[#059669] flex items-center justify-center">
+        <div className="teacher-header h-16 flex items-center justify-center">
           <h2 className="text-2xl font-bold text-white">Teacher Portal</h2>
         </div>
         <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
@@ -101,7 +96,7 @@ function TeacherDash() {
             <Link
               key={item.path}
               to={item.path}
-              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#059669] hover:text-white rounded-lg transition-colors duration-200"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors duration-200"
             >
               <span className="mr-3 text-xl">{item.icon}</span>
               <span className="font-medium text-lg">{item.label}</span>
@@ -111,7 +106,7 @@ function TeacherDash() {
         <div className="p-4 absolute bottom-0 w-full md:w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full bg-[#059669] text-white py-2 px-4 rounded-lg hover:bg-[#047857] text-lg"
+            className="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
           >
             Sign Out
           </button>
@@ -122,11 +117,11 @@ function TeacherDash() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
           <div className="text-2xl font-semibold text-gray-800">
-            Welcome, {teacherName || "Loading...."}
+            Welcome, {teacherName || "Loading..."}
           </div>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden bg-[#059669] text-white py-2 px-4 rounded-lg hover:bg-[#047857] text-lg"
+            className="teacher-menu-button md:hidden bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
           >
             <Menu size={24} />
           </button>

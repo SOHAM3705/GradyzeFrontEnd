@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import axios from "axios";
 import styles from "./AdminSignUp.module.css";
 import { Link, useNavigate } from "react-router-dom";
-
 const AdminSignUp = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -13,6 +12,7 @@ const AdminSignUp = () => {
   });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const handleChange = (e) => {
     setFormData({
@@ -25,7 +25,7 @@ const AdminSignUp = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/admin/signup",
+        `${API_BASE_URL}/api/admin/signup`,
         formData
       );
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../../config"; // Adjust the import path as necessary
 
 const AdminFeedbackForm = () => {
   const [formData, setFormData] = useState({
@@ -30,7 +31,7 @@ const AdminFeedbackForm = () => {
 
     try {
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/Gsheet/admin/submit-feedback",
+        `${API_BASE_URL}/api/Gsheet/admin/submit-feedback`,
         formData
       );
 

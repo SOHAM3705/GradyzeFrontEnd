@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const NotificationCenter = () => {
   const [notifications, setNotifications] = useState([]);
@@ -12,7 +13,7 @@ const NotificationCenter = () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          "https://gradyzebackend.onrender.com/api/studentnotification/notifications"
+          `${API_BASE_URL}/api/studentnotification/notifications`
         );
 
         console.log("📩 Fetched Notifications:", response.data);
@@ -40,7 +41,7 @@ const NotificationCenter = () => {
 
   // Construct file URL
   const getFileUrl = (fileId) => {
-    return `https://gradyzebackend.onrender.com/api/studentnotification/files/${fileId}`;
+    return `${API_BASE_URL}/api/studentnotification/files/${fileId}`;
   };
 
   // Open file in new tab instead of downloading

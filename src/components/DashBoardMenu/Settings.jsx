@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const ProfileSettings = () => {
         }
 
         const response = await axios.get(
-          "https://gradyzebackend.onrender.com/api/adminsetting/profile",
+          `${API_BASE_URL}/api/adminsetting/profile`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -90,7 +91,7 @@ const ProfileSettings = () => {
 
       // Step 1: Upload Profile Photo
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/adminsetting/profile/upload",
+        `${API_BASE_URL}/api/adminsetting/profile/upload`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -102,7 +103,7 @@ const ProfileSettings = () => {
 
       // Step 2: Update Profile Photo in User Collection
       await axios.post(
-        "https://gradyzebackend.onrender.com/api/adminsetting/update-profile-photo",
+        `${API_BASE_URL}/api/adminsetting/update-profile-photo`,
         {
           email: profileData.email,
           profilePhotoUrl: newProfilePhotoUrl,
@@ -142,7 +143,7 @@ const ProfileSettings = () => {
       }
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/adminsetting/update-name-email",
+        `${API_BASE_URL}/api/adminsetting/update-name-email`,
         {
           oldEmail: profileData.oldEmail,
           newEmail: profileData.email,
@@ -233,7 +234,7 @@ const ProfileSettings = () => {
       }
 
       await axios.post(
-        "https://gradyzebackend.onrender.com/api/adminsetting/change-password",
+        `${API_BASE_URL}/api/adminsetting/change-password`,
         {
           currentPassword,
           newPassword,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Notification = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +27,7 @@ const Notification = () => {
         }
 
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/notifications/getnotificationlist/${adminId}`
+          `${API_BASE_URL}/api/notifications/getnotificationlist/${adminId}`
         );
 
         console.log("Fetched Notifications:", response.data);
@@ -65,7 +66,7 @@ const Notification = () => {
         formData.append("file", file);
 
         const fileResponse = await axios.post(
-          "https://gradyzebackend.onrender.com/api/notifications/upload",
+          `${API_BASE_URL}/api/notifications/upload`,
           formData,
           {
             headers: {
@@ -94,7 +95,7 @@ const Notification = () => {
       };
 
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/notifications/createnotification",
+        `${API_BASE_URL}/api/notifications/createnotification`,
         payload
       );
 
@@ -122,7 +123,7 @@ const Notification = () => {
   };
 
   const getFileUrl = (fileId) => {
-    return `https://gradyzebackend.onrender.com/api/notifications/files/${fileId}`;
+    return `${API_BASE_URL}/api/notifications/files/${fileId}`;
   };
 
   const handleDownload = async (fileId) => {
@@ -133,7 +134,7 @@ const Notification = () => {
 
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/notifications/files/${fileId}`,
+        `${API_BASE_URL}/api/notifications/files/${fileId}`,
         { responseType: "blob" }
       );
 
@@ -159,7 +160,7 @@ const Notification = () => {
       }
 
       await axios.delete(
-        `https://gradyzebackend.onrender.com/api/notifications/delete/${notificationId}`,
+        `${API_BASE_URL}/api/notifications/delete/${notificationId}`,
         {
           data: { adminId },
         }

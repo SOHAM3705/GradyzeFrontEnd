@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
-const vmApiUrl = import.meta.env.VITE_API_URL;
+import "./AdminDash.css";
 
 function AdminDash() {
   const [adminName, setAdminName] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,9 +20,12 @@ function AdminDash() {
           return;
         }
 
-        const response = await axios.get("vmApiUrl/adminsetting/admin-name", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "https://gradyzebackend.onrender.com/api/adminsetting/admin-name",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         setAdminName(response.data.adminName || "Admin");
       } catch (error) {
@@ -37,16 +40,10 @@ function AdminDash() {
   }, [navigate]);
 
   const handleLogout = () => {
-    console.log("Logging out...");
     sessionStorage.removeItem("adminId");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("adminName");
     sessionStorage.clear();
-
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-
     navigate("/adminlogin");
   };
 
@@ -80,53 +77,59 @@ function AdminDash() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
       {/* Mobile Menu Button */}
       <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="p-4 focus:outline-none lg:hidden"
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className="admin-menu-button md:hidden p-4 focus:outline-none"
       >
         <Menu size={24} />
       </button>
 
       {/* Sidebar */}
       <div
-        className={`bg-white w-64 shadow-lg transform transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
+        className={`admin-sidebar bg-white w-full md:w-64 shadow-lg ${
+          isMenuOpen ? "open" : ""
+        }`}
       >
-        <div className="h-16 bg-[#7c3aed] flex items-center justify-center">
-          <h2 className="text-xl font-bold text-white">Admin Portal</h2>
+        <div className="admin-header h-16 flex items-center justify-center">
+          <h2 className="text-2xl font-bold text-white">Admin Portal</h2>
         </div>
         <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#7c3aed] hover:text-white rounded-lg transition-colors duration-200"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors duration-200"
             >
-              <span className="mr-3">{item.icon}</span>
-              <span className="font-medium">{item.label}</span>
+              <span className="mr-3 text-xl">{item.icon}</span>
+              <span className="font-medium text-lg">{item.label}</span>
             </Link>
           ))}
         </nav>
-        <div className="p-4 absolute bottom-0 w-64">
+        <div className="p-4 absolute bottom-0 w-full md:w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full bg-[#7c3aed] text-white py-2 px-4 rounded-lg hover:bg-[#6d28d9]"
+            className="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
           >
             Sign Out
           </button>
         </div>
       </div>
 
+      {/* Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
-          <div className="text-lg font-semibold text-gray-800">
-            Welcome, {adminName || "Loading...."}
+          <div className="text-2xl font-semibold text-gray-800">
+            Welcome, {adminName || "Loading..."}
           </div>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="admin-menu-button md:hidden bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
+          >
+            <Menu size={24} />
+          </button>
         </header>
-
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
@@ -143,22 +146,22 @@ function AdminDash() {
                 className="animate-waving-hand"
               />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
               Confirm Logout
             </h3>
-            <p className="text-gray-600 mb-6 text-sm">
+            <p className="text-gray-600 mb-6 text-lg">
               Are you sure you want to logout? 👋
             </p>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+                className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition text-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLogout}
-                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red-700 transition"
+                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red-700 transition text-lg"
               >
                 <LogOut size={18} />
                 <span>Logout</span>
