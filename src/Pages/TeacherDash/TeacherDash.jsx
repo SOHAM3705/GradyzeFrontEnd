@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, Hand } from "lucide-react";
+import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
 
 function TeacherDash() {
@@ -14,7 +14,7 @@ function TeacherDash() {
       try {
         const token = sessionStorage.getItem("token");
         if (!token) {
-          console.error("🚨 No token found, redirecting to login.");
+          console.error("No token found, redirecting to login.");
           navigate("/teacherlogin");
           return;
         }
@@ -29,7 +29,7 @@ function TeacherDash() {
         setTeacherName(response.data.teacherName || "Teacher");
       } catch (error) {
         console.error(
-          "❌ Error fetching teacher name:",
+          "Error fetching teacher name:",
           error.response?.data || error
         );
       }
@@ -39,7 +39,7 @@ function TeacherDash() {
   }, [navigate]);
 
   const handleLogout = () => {
-    console.log("🔴 Logging out...");
+    console.log("Logging out...");
     sessionStorage.removeItem("teacherId");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("teacherName");
@@ -79,9 +79,17 @@ function TeacherDash() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className="md:hidden p-4 focus:outline-none"
+      >
+        <Menu size={24} />
+      </button>
+
       {/* Sidebar */}
       <div
-        className={`bg-white w-full md:w-64 shadow-lg transition-transform duration-300 ${
+        className={`bg-white w-full md:w-64 shadow-lg transform transition-transform duration-300 ease-in-out ${
           isMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
@@ -100,14 +108,6 @@ function TeacherDash() {
             </Link>
           ))}
         </nav>
-        <div className="p-4 flex justify-end md:hidden">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="bg-[#059669] text-white py-2 px-4 rounded-lg hover:bg-[#047857] text-lg"
-          >
-            {isMenuOpen ? "Close" : "Menu"}
-          </button>
-        </div>
         <div className="p-4 absolute bottom-0 w-full md:w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
@@ -128,7 +128,7 @@ function TeacherDash() {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden bg-[#059669] text-white py-2 px-4 rounded-lg hover:bg-[#047857] text-lg"
           >
-            {isMenuOpen ? "Close" : "Menu"}
+            <Menu size={24} />
           </button>
         </header>
         <main className="flex-1 overflow-y-auto p-6">

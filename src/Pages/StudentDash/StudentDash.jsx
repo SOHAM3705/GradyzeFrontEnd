@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, Hand } from "lucide-react";
+import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
 
 function StudentDash() {
@@ -14,7 +14,7 @@ function StudentDash() {
       try {
         const token = sessionStorage.getItem("token");
         if (!token) {
-          console.error("🚨 No token found, redirecting to login.");
+          console.error("No token found, redirecting to login.");
           navigate("/studentlogin");
           return;
         }
@@ -29,7 +29,7 @@ function StudentDash() {
         setStudentName(response.data.studentName || "Student");
       } catch (error) {
         console.error(
-          "❌ Error fetching student name:",
+          "Error fetching student name:",
           error.response?.data || error
         );
       }
@@ -68,9 +68,17 @@ function StudentDash() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className="md:hidden p-4 focus:outline-none"
+      >
+        <Menu size={24} />
+      </button>
+
       {/* Sidebar */}
       <div
-        className={`bg-white w-full md:w-64 shadow-lg transition-transform duration-300 ${
+        className={`bg-white w-full md:w-64 shadow-lg transform transition-transform duration-300 ease-in-out ${
           isMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
@@ -89,14 +97,6 @@ function StudentDash() {
             </Link>
           ))}
         </nav>
-        <div className="p-4 flex justify-end md:hidden">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
-          >
-            {isMenuOpen ? "Close" : "Menu"}
-          </button>
-        </div>
         <div className="p-4 absolute bottom-0 w-full md:w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
@@ -117,7 +117,7 @@ function StudentDash() {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
           >
-            {isMenuOpen ? "Close" : "Menu"}
+            <Menu size={24} />
           </button>
         </header>
         <main className="flex-1 overflow-y-auto p-6">
@@ -151,7 +151,7 @@ function StudentDash() {
               </button>
               <button
                 onClick={handleLogout}
-                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red- 700 transition text-lg"
+                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red-700 transition text-lg"
               >
                 <LogOut size={18} />
                 <span>Logout</span>

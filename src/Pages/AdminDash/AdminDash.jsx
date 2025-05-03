@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
+const vmApiUrl = import.meta.env.VITE_API_URL;
 
 function AdminDash() {
   const [adminName, setAdminName] = useState("");
@@ -19,12 +20,9 @@ function AdminDash() {
           return;
         }
 
-        const response = await axios.get(
-          "https://gradyzebackend.onrender.com/api/adminsetting/admin-name",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get("vmApiUrl/adminsetting/admin-name", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         setAdminName(response.data.adminName || "Admin");
       } catch (error) {
