@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { API_BASE_URL } from "../../config"; // Adjust the import path as necessary
 
 const Notification = () => {
   const [isOpen, setIsOpen] = useState(false);

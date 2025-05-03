@@ -510,91 +510,86 @@ const TeacherDashboard = () => {
       (subject) => subject._id === selectedSubjectId
     );
     const selectedYear = selectedSubject ? selectedSubject.year : null;
-    const selectedsubjectname = selectedSubject ? selectedSubject.name : null;
+    const selectedSubjectName = selectedSubject ? selectedSubject.name : null;
 
-    if (!selectedYear) {
-      alert("Year is not available for the selected subject.");
+    if (!selectedYear || !selectedSubjectName) {
+      alert("Subject information is incomplete.");
       return;
     }
 
-    const isUnitTest =
-      selectedExamType === "unit-test" || selectedExamType === "re-unit-test";
-    const isPrelim = selectedExamType === "prelim";
+    const isUnitTest = selectedExamType.includes("unit");
+    const totalMarks = isUnitTest ? 30 : 70;
+    const passingMarks = isUnitTest ? 12 : 28;
 
-    const totalMarks = isUnitTest ? 30 : isPrelim ? 70 : 0;
-    const passingMark = isUnitTest ? 12 : isPrelim ? 28 : 0;
-
-    if (totalMarks === 0) {
-      alert("Invalid exam type selected.");
-      return;
-    }
-
+    const marksToSave = [];
     const rows = document.querySelectorAll(".student-row");
-    const teacherId = sessionStorage.getItem("teacherId");
 
-    const marksToSave = Array.from(rows).map((row, index) => {
-      const q1q2Input = row.querySelector(".q1q2-input");
-      const q3q4Input = row.querySelector(".q3q4-input");
-      const q5q6Input = isUnitTest ? null : row.querySelector(".q5q6-input");
-      const q7q8Input = isUnitTest ? null : row.querySelector(".q7q8-input");
+    rows.forEach((row, index) => {
+      const isAbsent = row.querySelector(".absent-checkbox").checked;
+      const studentId = students[index]._id;
 
-      const q1q2 =
-        q1q2Input?.value === "AB" ? -1 : parseInt(q1q2Input?.value) || 0;
-      const q3q4 = parseInt(q3q4Input?.value) || 0;
-      const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
-      const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
+      if (isAbsent) {
+        marksToSave.push({
+          studentId,
+          teacherId: sessionStorage.getItem("teacherId"),
+          examType: selectedExamType,
+          year: selectedYear,
+          subjectName: selectedSubjectName,
+          isAbsent: true,
+          marks: {
+            q1q2: -1,
+            q3q4: 0,
+            q5q6: 0,
+            q7q8: 0,
+            total: -1,
+          },
+          totalMarks: 0,
+          status: "Absent",
+        });
+      } else {
+        const q1q2 = parseInt(row.querySelector(".q1q2-input").value) || 0;
+        const q3q4 = parseInt(row.querySelector(".q3q4-input").value) || 0;
+        const q5q6 = isUnitTest
+          ? 0
+          : parseInt(row.querySelector(".q5q6-input")?.value) || 0;
+        const q7q8 = isUnitTest
+          ? 0
+          : parseInt(row.querySelector(".q7q8-input")?.value) || 0;
+        const total = q1q2 + q3q4 + q5q6 + q7q8;
+        const status = total >= passingMarks ? "Pass" : "Fail";
 
-      const total = q1q2 === -1 ? -1 : q1q2 + q3q4 + q5q6 + q7q8;
-
-      return {
-        teacherId,
-        studentId: students[index]._id,
-        year: selectedYear,
-        examType: selectedExamType,
-        subjectName: selectedsubjectname,
-        marksObtained: {
-          q1q2,
-          q3q4,
-          q5q6,
-          q7q8,
-          total,
-        },
-      };
+        marksToSave.push({
+          studentId,
+          teacherId: sessionStorage.getItem("teacherId"),
+          examType: selectedExamType,
+          year: selectedYear,
+          subjectName: selectedSubjectName,
+          isAbsent: false,
+          marks: {
+            q1q2,
+            q3q4,
+            q5q6,
+            q7q8,
+            total,
+          },
+          totalMarks,
+          status,
+        });
+      }
     });
-
-    const filteredMarks = marksToSave.filter((m) => m.marksObtained !== 0);
-
-    if (filteredMarks.length === 0) {
-      alert("Please enter marks for at least one student.");
-      return;
-    }
-
-    console.log("Marks to Save:", filteredMarks);
 
     try {
       const token = sessionStorage.getItem("token");
-
       await axios.post(
-        `https://gradyzebackend.onrender.com/api/teachermarks/add`,
-        filteredMarks,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `https://gradyzebackend.onrender.com/api/teachermarks/add-marks`,
+        marksToSave,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      // ✅ Update subject state to mark as "marks entered"
-      setMarksEnteredState((prev) => ({
-        ...prev,
-        [selectedSubjectId]: true,
-      }));
-
       alert("Marks saved successfully!");
       closeModal();
       fetchSubjectStudentsData();
     } catch (error) {
-      console.error("Error saving marks:", error.response?.data || error);
+      console.error("Error saving marks:", error);
       alert(
         "Error saving marks: " +
           (error.response?.data?.message || error.message)
@@ -842,19 +837,20 @@ const TeacherDashboard = () => {
                 <table className="w-full mb-4">
                   <thead className="bg-gray-100 sticky top-0">
                     <tr>
+                      <th className="p-2 text-left">Absent</th>
                       <th className="p-2 text-left">Roll No.</th>
                       <th className="p-2 text-left">Name</th>
                       {isUnitTest ? (
                         <>
-                          <th className="p-2 text-center">Q1/Q2 (15)</th>
-                          <th className="p-2 text-center">Q3/Q4 (15)</th>
+                          <th className="p-2 text-center">Q1/Q2 (Max 15)</th>
+                          <th className="p-2 text-center">Q3/Q4 (Max 15)</th>
                         </>
                       ) : (
                         <>
-                          <th className="p-2 text-center">Q1/Q2 (17)</th>
-                          <th className="p-2 text-center">Q3/Q4 (18)</th>
-                          <th className="p-2 text-center">Q5/Q6 (17)</th>
-                          <th className="p-2 text-center">Q7/Q8 (18)</th>
+                          <th className="p-2 text-center">Q1/Q2 (Max 17)</th>
+                          <th className="p-2 text-center">Q3/Q4 (Max 18)</th>
+                          <th className="p-2 text-center">Q5/Q6 (Max 17)</th>
+                          <th className="p-2 text-center">Q7/Q8 (Max 18)</th>
                         </>
                       )}
                       <th className="p-2 text-center">Total</th>
@@ -863,107 +859,147 @@ const TeacherDashboard = () => {
                   </thead>
                   <tbody>
                     {subjectData.students.map((student, index) => {
-                      const studentExamData = examData[index] || {
-                        q1q2: -1,
-                        q3q4: -1,
-                        q5q6: -1,
-                        q7q8: -1,
-                        total: 0,
-                        status: "",
-                      };
-
-                      const isAbsent = student.status === "Absent";
+                      const maxQ1Q2 = isUnitTest ? 15 : 17;
+                      const maxQ3Q4 = isUnitTest ? 15 : 18;
+                      const maxQ5Q6 = isUnitTest ? 0 : 17;
+                      const maxQ7Q8 = isUnitTest ? 0 : 18;
 
                       return (
                         <tr
-                          key={student.rollNo}
+                          key={student._id}
                           className="student-row border-b hover:bg-gray-50"
                         >
+                          {/* Absent Checkbox */}
+                          <td className="p-2 text-center">
+                            <input
+                              type="checkbox"
+                              className="absent-checkbox"
+                              onChange={(e) => {
+                                const row = e.target.closest("tr");
+                                const inputs = row.querySelectorAll(
+                                  'input[type="number"]'
+                                );
+                                inputs.forEach((input) => {
+                                  input.disabled = e.target.checked;
+                                  if (e.target.checked) {
+                                    input.value = "";
+                                  }
+                                });
+                                updateStudentRow(index);
+                              }}
+                            />
+                          </td>
+
                           <td className="p-2">{student.rollNo}</td>
                           <td className="p-2">{student.name}</td>
+
+                          {/* Q1/Q2 Input */}
                           <td className="p-2 text-center">
                             <input
                               type="number"
                               min="0"
-                              max={isUnitTest ? "15" : "17"}
-                              defaultValue={
-                                studentExamData.q1q2 !== -1
-                                  ? studentExamData.q1q2
-                                  : ""
-                              }
+                              max={maxQ1Q2}
                               className="q1q2-input w-16 p-1 border rounded text-center"
-                              data-index={index}
-                              onChange={() => updateStudentRow(index)}
-                              disabled={isAbsent}
+                              onChange={(e) => {
+                                // Enforce max value
+                                if (parseInt(e.target.value) > maxQ1Q2) {
+                                  e.target.value = maxQ1Q2;
+                                }
+                                updateStudentRow(index);
+                              }}
+                              onBlur={(e) => {
+                                if (
+                                  e.target.value === "" ||
+                                  parseInt(e.target.value) < 0
+                                ) {
+                                  e.target.value = "0";
+                                }
+                                updateStudentRow(index);
+                              }}
                             />
                           </td>
+
+                          {/* Q3/Q4 Input */}
                           <td className="p-2 text-center">
                             <input
                               type="number"
                               min="0"
-                              max={isUnitTest ? "15" : "18"}
-                              defaultValue={
-                                studentExamData.q3q4 !== -1
-                                  ? studentExamData.q3q4
-                                  : ""
-                              }
+                              max={maxQ3Q4}
                               className="q3q4-input w-16 p-1 border rounded text-center"
-                              data-index={index}
-                              onChange={() => updateStudentRow(index)}
-                              disabled={isAbsent}
+                              onChange={(e) => {
+                                if (parseInt(e.target.value) > maxQ3Q4) {
+                                  e.target.value = maxQ3Q4;
+                                }
+                                updateStudentRow(index);
+                              }}
+                              onBlur={(e) => {
+                                if (
+                                  e.target.value === "" ||
+                                  parseInt(e.target.value) < 0
+                                ) {
+                                  e.target.value = "0";
+                                }
+                                updateStudentRow(index);
+                              }}
                             />
                           </td>
+
+                          {/* Conditionally render Q5/Q6 and Q7/Q8 for non-unit tests */}
                           {!isUnitTest && (
                             <>
                               <td className="p-2 text-center">
                                 <input
                                   type="number"
                                   min="0"
-                                  max="17"
-                                  defaultValue={
-                                    studentExamData.q5q6 !== -1
-                                      ? studentExamData.q5q6
-                                      : ""
-                                  }
+                                  max={maxQ5Q6}
                                   className="q5q6-input w-16 p-1 border rounded text-center"
-                                  data-index={index}
-                                  onChange={() => updateStudentRow(index)}
-                                  disabled={isAbsent}
+                                  onChange={(e) => {
+                                    if (parseInt(e.target.value) > maxQ5Q6) {
+                                      e.target.value = maxQ5Q6;
+                                    }
+                                    updateStudentRow(index);
+                                  }}
+                                  onBlur={(e) => {
+                                    if (
+                                      e.target.value === "" ||
+                                      parseInt(e.target.value) < 0
+                                    ) {
+                                      e.target.value = "0";
+                                    }
+                                    updateStudentRow(index);
+                                  }}
                                 />
                               </td>
                               <td className="p-2 text-center">
                                 <input
                                   type="number"
                                   min="0"
-                                  max="18"
-                                  defaultValue={
-                                    studentExamData.q7q8 !== -1
-                                      ? studentExamData.q7q8
-                                      : ""
-                                  }
+                                  max={maxQ7Q8}
                                   className="q7q8-input w-16 p-1 border rounded text-center"
-                                  data-index={index}
-                                  onChange={() => updateStudentRow(index)}
-                                  disabled={isAbsent}
+                                  onChange={(e) => {
+                                    if (parseInt(e.target.value) > maxQ7Q8) {
+                                      e.target.value = maxQ7Q8;
+                                    }
+                                    updateStudentRow(index);
+                                  }}
+                                  onBlur={(e) => {
+                                    if (
+                                      e.target.value === "" ||
+                                      parseInt(e.target.value) < 0
+                                    ) {
+                                      e.target.value = "0";
+                                    }
+                                    updateStudentRow(index);
+                                  }}
                                 />
                               </td>
                             </>
                           )}
+
                           <td className="p-2 total-cell text-center font-medium">
-                            {studentExamData.total}
+                            0
                           </td>
-                          <td
-                            className={`p-2 status-cell text-center ${
-                              studentExamData.status.toLowerCase() === "pass"
-                                ? "text-green-600"
-                                : studentExamData.status.toLowerCase() ===
-                                  "fail"
-                                ? "text-red-600"
-                                : ""
-                            }`}
-                          >
-                            {studentExamData.status}
-                          </td>
+                          <td className="p-2 status-cell text-center">-</td>
                         </tr>
                       );
                     })}
@@ -993,49 +1029,44 @@ const TeacherDashboard = () => {
   };
 
   const updateStudentRow = (index) => {
-    if (!modalContent || !modalContent.subjectId || !modalContent.examType)
-      return;
-
     const row = document.querySelector(`.student-row:nth-child(${index + 1})`);
     if (!row) return;
 
-    const isUnitTest =
-      modalContent.examType === "unit-test" ||
-      modalContent.examType === "re-unit-test";
-
-    const q1q2Input = row.querySelector(".q1q2-input");
-    const q3q4Input = row.querySelector(".q3q4-input");
-    const q5q6Input = isUnitTest ? null : row.querySelector(".q5q6-input");
-    const q7q8Input = isUnitTest ? null : row.querySelector(".q7q8-input");
-
-    const q1q2 = parseInt(q1q2Input?.value) || 0;
-    const q3q4 = parseInt(q3q4Input?.value) || 0;
-    const q5q6 = isUnitTest ? 0 : parseInt(q5q6Input?.value) || 0;
-    const q7q8 = isUnitTest ? 0 : parseInt(q7q8Input?.value) || 0;
-
-    const total = q1q2 + q3q4 + q5q6 + q7q8;
-
-    const totalCell = row.querySelector(".total-cell");
-    if (totalCell) totalCell.textContent = total;
-
-    const statusCell = row.querySelector(".status-cell");
-    if (!statusCell) return;
-
+    const isUnitTest = selectedExamType.includes("unit");
     const passingMark = isUnitTest ? 12 : 28;
-    let status = "";
+    const isAbsent = row.querySelector(".absent-checkbox").checked;
 
-    if (total > 0) {
-      status = total >= passingMark ? "Pass" : "Fail";
+    if (isAbsent) {
+      row.querySelector(".total-cell").textContent = "Absent";
+      row.querySelector(".status-cell").textContent = "Absent";
+      row.querySelector(".status-cell").className =
+        "p-2 status-cell text-center text-gray-600";
+      return;
     }
 
-    statusCell.textContent = status;
-    statusCell.className = `p-2 status-cell text-center ${
-      status.toLowerCase() === "pass"
-        ? "text-green-600"
-        : status.toLowerCase() === "fail"
-        ? "text-red-600"
-        : ""
-    }`;
+    const q1q2 = parseInt(row.querySelector(".q1q2-input").value) || 0;
+    const q3q4 = parseInt(row.querySelector(".q3q4-input").value) || 0;
+    const q5q6 = isUnitTest
+      ? 0
+      : parseInt(row.querySelector(".q5q6-input")?.value) || 0;
+    const q7q8 = isUnitTest
+      ? 0
+      : parseInt(row.querySelector(".q7q8-input")?.value) || 0;
+    const total = q1q2 + q3q4 + q5q6 + q7q8;
+
+    row.querySelector(".total-cell").textContent = total;
+
+    const statusCell = row.querySelector(".status-cell");
+    if (total > 0) {
+      const status = total >= passingMark ? "Pass" : "Fail";
+      statusCell.textContent = status;
+      statusCell.className = `p-2 status-cell text-center ${
+        status === "Pass" ? "text-green-600" : "text-red-600"
+      }`;
+    } else {
+      statusCell.textContent = "-";
+      statusCell.className = "p-2 status-cell text-center";
+    }
   };
 
   const openStudentModal = async (studentId) => {

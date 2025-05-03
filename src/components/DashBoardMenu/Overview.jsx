@@ -12,7 +12,7 @@ import {
   faBell,
   faEllipsisV,
 } from "@fortawesome/free-solid-svg-icons";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { API_BASE_URL } from "../../config"; // Adjust the import path as necessary
 
 const AdminOverview = () => {
   useEffect(() => {
