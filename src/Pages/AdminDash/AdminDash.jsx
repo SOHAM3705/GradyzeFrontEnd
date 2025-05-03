@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
-import "./AdminDash.css";
 
 function AdminDash() {
   const [adminName, setAdminName] = useState("");
@@ -26,7 +25,6 @@ function AdminDash() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
         setAdminName(response.data.adminName || "Admin");
       } catch (error) {
         console.error(
@@ -40,9 +38,6 @@ function AdminDash() {
   }, [navigate]);
 
   const handleLogout = () => {
-    sessionStorage.removeItem("adminId");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("adminName");
     sessionStorage.clear();
     navigate("/adminlogin");
   };
@@ -81,25 +76,27 @@ function AdminDash() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="admin-menu-button md:hidden p-4 focus:outline-none"
+        className="md:hidden p-4 absolute top-4 left-4 z-50 bg-white rounded-md shadow-md"
       >
         <Menu size={24} />
       </button>
 
       {/* Sidebar */}
       <div
-        className={`admin-sidebar bg-white w-full md:w-64 shadow-lg ${
-          isMenuOpen ? "open" : ""
-        }`}
+        className={`fixed md:static top-0 left-0 h-full w-64 bg-white shadow-lg z-40 transform transition-transform duration-300 ${
+          isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
       >
-        <div className="admin-header h-16 flex items-center justify-center">
+        <div className="bg-violet-600 h-16 flex items-center justify-center">
           <h2 className="text-2xl font-bold text-white">Admin Portal</h2>
         </div>
+
         <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => setIsMenuOpen(false)}
               className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors duration-200"
             >
               <span className="mr-3 text-xl">{item.icon}</span>
@@ -107,7 +104,8 @@ function AdminDash() {
             </Link>
           ))}
         </nav>
-        <div className="p-4 absolute bottom-0 w-full md:w-64">
+
+        <div className="p-4 absolute bottom-0 w-full">
           <button
             onClick={() => setShowLogoutModal(true)}
             className="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
@@ -117,18 +115,12 @@ function AdminDash() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
+        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
           <div className="text-2xl font-semibold text-gray-800">
             Welcome, {adminName || "Loading..."}
           </div>
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="admin-menu-button md:hidden bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
-          >
-            <Menu size={24} />
-          </button>
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
