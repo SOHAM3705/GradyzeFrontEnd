@@ -6,7 +6,7 @@ import axios from "axios";
 function StudentDash() {
   const [studentName, setStudentName] = useState("Student");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,6 +40,7 @@ function StudentDash() {
 
   const handleLogout = () => {
     sessionStorage.clear();
+    setTimeout(() => window.location.reload(), 500);
     navigate("/studentlogin");
   };
 
@@ -64,29 +65,23 @@ function StudentDash() {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="md:hidden p-4 focus:outline-none bg-white shadow z-10"
-      >
-        <Menu size={24} />
-      </button>
-
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`bg-white w-full md:w-64 shadow-lg z-20 md:block ${
-          isMenuOpen ? "block" : "hidden"
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:relative md:translate-x-0`}
       >
-        <div className="h-16 bg-[#2563eb] flex items-center justify-center">
-          <h2 className="text-2xl font-bold text-white">Student Portal</h2>
+        <div className="h-16 bg-[#2563eb] flex items-center justify-center md:justify-start px-4">
+          <h2 className="text-xl font-bold text-white">Student Portal</h2>
         </div>
         <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => setSidebarOpen(false)}
               className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#2563eb] hover:text-white rounded-lg transition-colors duration-200"
             >
               <span className="mr-3 text-xl">{item.icon}</span>
@@ -94,7 +89,7 @@ function StudentDash() {
             </Link>
           ))}
         </nav>
-        <div className="p-4 absolute bottom-0 w-full md:w-64">
+        <div className="p-4 absolute bottom-0 w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
             className="w-full bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
@@ -104,20 +99,33 @@ function StudentDash() {
         </div>
       </div>
 
+      {/* Backdrop for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black bg-opacity-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
-          <div className="text-2xl font-semibold text-gray-800">
-            Welcome, {studentName}
-          </div>
-          {/* Menu toggle for small screens */}
+          {/* Sidebar toggle button on small screens */}
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden bg-[#2563eb] text-white py-2 px-3 rounded-lg hover:bg-[#1d4ed8]"
+            className="md:hidden text-gray-600 focus:outline-none"
+            onClick={() => setSidebarOpen(true)}
           >
-            <Menu size={22} />
+            <Menu size={28} />
           </button>
+
+          <div className="text-lg font-semibold text-gray-800 ml-2">
+            Welcome, {studentName || "Loading..."}
+          </div>
+
+          {/* Placeholder for alignment */}
+          <div className="w-8 md:hidden" />
         </header>
+
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
@@ -134,22 +142,22 @@ function StudentDash() {
                 className="animate-waving-hand"
               />
             </div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-xl font-semibold text-gray-800 mb-3">
               Confirm Logout
             </h3>
-            <p className="text-gray-600 mb-6 text-lg">
+            <p className="text-gray-600 mb-6 text-sm">
               Are you sure you want to logout? 👋
             </p>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition text-lg"
+                className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLogout}
-                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red-700 transition text-lg"
+                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red-700 transition"
               >
                 <LogOut size={18} />
                 <span>Logout</span>
