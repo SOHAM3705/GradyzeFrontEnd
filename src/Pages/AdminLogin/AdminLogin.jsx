@@ -180,7 +180,7 @@ const AdminLogin = () => {
         </p>
 
         <p>
-          <Link to="/forgotpassword" className={styles.AdminSignupA}>
+          <Link to="/forgetpassword" className={styles.AdminSignupA}>
             Forgot Password?
           </Link>
         </p>

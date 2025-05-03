@@ -6,6 +6,7 @@ import axios from "axios";
 function StudentDash() {
   const [studentName, setStudentName] = useState("Student");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,8 +67,13 @@ function StudentDash() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="bg-white w-64 shadow-lg">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div
+        className={`bg-white w-full md:w-64 shadow-lg transition-transform duration-300 ${
+          isMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
         <div className="h-16 bg-[#2563eb] flex items-center justify-center">
           <h2 className="text-2xl font-bold text-white">Student Portal</h2>
         </div>
@@ -83,7 +89,15 @@ function StudentDash() {
             </Link>
           ))}
         </nav>
-        <div className="p-4 absolute bottom-0 w-64">
+        <div className="p-4 flex justify-end md:hidden">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
+          >
+            {isMenuOpen ? "Close" : "Menu"}
+          </button>
+        </div>
+        <div className="p-4 absolute bottom-0 w-full md:w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
             className="w-full bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
@@ -93,17 +107,25 @@ function StudentDash() {
         </div>
       </div>
 
+      {/* Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
           <div className="text-2xl font-semibold text-gray-800">
             Welcome, {studentName}
           </div>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
+          >
+            {isMenuOpen ? "Close" : "Menu"}
+          </button>
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
       </div>
 
+      {/* Logout Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-96 shadow-lg mx-4 text-center">
@@ -129,7 +151,7 @@ function StudentDash() {
               </button>
               <button
                 onClick={handleLogout}
-                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red-700 transition text-lg"
+                className="px-5 py-2 bg-red-600 text-white rounded-lg flex items-center space-x-2 hover:bg-red- 700 transition text-lg"
               >
                 <LogOut size={18} />
                 <span>Logout</span>

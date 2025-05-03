@@ -171,7 +171,7 @@ const StudentLogin = () => {
 
         <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
-          <Link to="/student-forgot-password" className={styles.StudentLoginA}>
+          <Link to="/student-forget-password" className={styles.StudentLoginA}>
             Forgot Password?
           </Link>
         </p>

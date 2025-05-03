@@ -6,9 +6,9 @@ import axios from "axios";
 function TeacherDash() {
   const [teacherName, setTeacherName] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Fetch latest teacher name from API (like admin)
   useEffect(() => {
     const fetchTeacherName = async () => {
       try {
@@ -22,7 +22,7 @@ function TeacherDash() {
         const response = await axios.get(
           "https://gradyzebackend.onrender.com/api/teachersetting/teacher-name",
           {
-            headers: { Authorization: `Bearer ${token}` }, // ✅ Send token
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
@@ -38,7 +38,6 @@ function TeacherDash() {
     fetchTeacherName();
   }, [navigate]);
 
-  // ✅ Handle logout and clear session (same as admin)
   const handleLogout = () => {
     console.log("🔴 Logging out...");
     sessionStorage.removeItem("teacherId");
@@ -46,7 +45,6 @@ function TeacherDash() {
     sessionStorage.removeItem("teacherName");
     sessionStorage.clear();
 
-    // ✅ Force a refresh to clear any cached user data
     setTimeout(() => {
       window.location.reload();
     }, 500);
@@ -80,8 +78,13 @@ function TeacherDash() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="bg-white w-64 shadow-lg">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div
+        className={`bg-white w-full md:w-64 shadow-lg transition-transform duration-300 ${
+          isMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
         <div className="h-16 bg-[#059669] flex items-center justify-center">
           <h2 className="text-2xl font-bold text-white">Teacher Portal</h2>
         </div>
@@ -97,7 +100,15 @@ function TeacherDash() {
             </Link>
           ))}
         </nav>
-        <div className="p-4 absolute bottom-0 w-64">
+        <div className="p-4 flex justify-end md:hidden">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="bg-[#059669] text-white py-2 px-4 rounded-lg hover:bg-[#047857] text-lg"
+          >
+            {isMenuOpen ? "Close" : "Menu"}
+          </button>
+        </div>
+        <div className="p-4 absolute bottom-0 w-full md:w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
             className="w-full bg-[#059669] text-white py-2 px-4 rounded-lg hover:bg-[#047857] text-lg"
@@ -107,13 +118,19 @@ function TeacherDash() {
         </div>
       </div>
 
+      {/* Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
           <div className="text-2xl font-semibold text-gray-800">
             Welcome, {teacherName || "Loading...."}
           </div>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden bg-[#059669] text-white py-2 px-4 rounded-lg hover:bg-[#047857] text-lg"
+          >
+            {isMenuOpen ? "Close" : "Menu"}
+          </button>
         </header>
-
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>

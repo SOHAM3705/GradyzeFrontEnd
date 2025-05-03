@@ -172,7 +172,7 @@ const TeacherLogin = () => {
 
         <p>Don't have an account? Contact Your College/School Admin</p>
         <p>
-          <Link to="/teacher-forgot-password" className={styles.teacherLoginA}>
+          <Link to="/teacher-forget-password" className={styles.teacherLoginA}>
             Forgot Password?
           </Link>
         </p>
