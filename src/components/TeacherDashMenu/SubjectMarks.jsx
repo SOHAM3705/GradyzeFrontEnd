@@ -16,6 +16,10 @@ const TeacherDashboard = () => {
   const [year, setYear] = useState("");
   const [marksData, setMarksData] = useState({});
   const [marksEnteredState, setMarksEnteredState] = useState({});
+  const [existingMarks, setExistingMarks] = useState({});
+  const [isMarksExist, setIsMarksExist] = useState(false);
+  const [deleteSubjectId, setDeleteSubjectId] = useState(null);
+  const [selectedDeleteExamType, setSelectedDeleteExamType] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
@@ -36,14 +40,31 @@ const TeacherDashboard = () => {
 
   const teacherId = sessionStorage.getItem("teacherId");
 
-  const fetchMarksForSubject = async (subjectId) => {
+  const checkExistingMarks = async (subjectId, examType) => {
     try {
+      const token = sessionStorage.getItem("token");
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/get-marks/${subjectId}`
+        `https://gradyzebackend.onrender.com/api/teachermarks/student-marks`,
+        {
+          params: {
+            subjectId,
+            examType,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-      setMarksData(response.data);
+
+      if (response.data && response.data.length > 0) {
+        setExistingMarks(response.data[0]); // Assuming first record contains the marks
+        setIsMarksExist(true);
+        return true;
+      }
+      setIsMarksExist(false);
+      return false;
     } catch (error) {
-      console.error("Error fetching marks:", error);
+      console.error("Error checking existing marks:", error);
+      setIsMarksExist(false);
+      return false;
     }
   };
 
@@ -338,44 +359,21 @@ const TeacherDashboard = () => {
       const subjectDivisions = subject.divisions || [subject.division];
 
       let buttonsHtml = (
-        <button
-          onClick={() => openExamModal(subjectId)}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Add Marks
-        </button>
+        <>
+          <button
+            onClick={() => openExamModal(subjectId)}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Add Marks
+          </button>
+          <button
+            onClick={() => setDeleteSubjectId(subject._id)}
+            className="bg-red-500 text-white px-4 py-2 rounded ml-2"
+          >
+            Delete Marks
+          </button>
+        </>
       );
-
-      const showUpdate =
-        marksEnteredState[subjectId] ||
-        Object.values(subject.marksEntered || {}).some((value) => value);
-
-      if (showUpdate) {
-        buttonsHtml = (
-          <>
-            <button
-              onClick={() => openExamModal(subjectId)}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Add Marks
-            </button>
-            <button
-              onClick={() =>
-                openStudentsModal(subjectId, selectedExamType, true)
-              }
-              className="bg-yellow-500 text-white px-4 py-2 rounded ml-2"
-            >
-              Update Marks
-            </button>
-            <button
-              onClick={() => handleDeleteMarks(subjectId)}
-              className="bg-red-500 text-white px-4 py-2 rounded ml-2"
-            >
-              Delete Marks
-            </button>
-          </>
-        );
-      }
 
       return (
         <div key={subjectId} className="bg-white p-4 rounded shadow mb-4">
@@ -468,11 +466,14 @@ const TeacherDashboard = () => {
     });
   };
 
-  const openExamModal = (subjectId) => {
+  const openExamModal = async (subjectId) => {
     setSelectedSubjectId(subjectId);
+    const hasMarks = await checkExistingMarks(subjectId, selectedExamType);
+
     setModalContent({
       type: "exam-selection",
       subjectId,
+      hasExistingMarks: hasMarks,
     });
   };
 
@@ -617,34 +618,38 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleUpdateMarks = async (marksId) => {
-    try {
-      await axios.put(
-        `https://gradyzebackend.onrender.com/api/teachermarks/update`,
-        updatedMarks,
-        { params: { teacherId } }
-      );
-      alert("Marks updated successfully!");
-      fetchStudents();
-    } catch (error) {
-      console.error("Error updating marks:", error);
-    }
-  };
+  const handleDeleteMarks = async () => {
+    if (!deleteSubjectId || !selectedDeleteExamType) return;
 
-  const handleDeleteMarks = async (subjectId) => {
     try {
       const token = sessionStorage.getItem("token");
+      const teacherId = sessionStorage.getItem("teacherId");
+      const subjectName = subjectsList.find(
+        (sub) => sub._id === deleteSubjectId
+      )?.name;
+
       await axios.delete(
-        `https://gradyzebackend.onrender.com/api/teachermarks/delete`,
+        `https://gradyzebackend.onrender.com/api/teachermarks/delete-marks`,
         {
-          params: { teacherId, subjectId },
+          data: {
+            subjectName,
+            teacherId,
+            examType: selectedDeleteExamType,
+          },
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
       alert("Marks deleted successfully!");
+      setDeleteSubjectId(null);
+      setSelectedDeleteExamType("");
       fetchSubjectStudentsData();
     } catch (error) {
       console.error("Error deleting marks:", error);
+      alert(
+        "Error deleting marks: " +
+          (error.response?.data?.message || error.message)
+      );
     }
   };
 
@@ -1043,6 +1048,50 @@ const TeacherDashboard = () => {
             </div>
           </div>
         );
+      case "delete-confirmation":
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+            <div className="bg-white p-6 rounded shadow-lg w-96">
+              <h3 className="text-lg font-semibold mb-4">Delete Marks</h3>
+
+              <div className="mb-4">
+                <label className="block mb-2">
+                  Select Exam Type to Delete:
+                </label>
+                <select
+                  value={selectedDeleteExamType}
+                  onChange={(e) => setSelectedDeleteExamType(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select Exam Type</option>
+                  <option value="unit-test">Unit Test</option>
+                  <option value="re-unit-test">Re-Unit Test</option>
+                  <option value="prelim">Prelim</option>
+                  <option value="reprelim">Re-Prelim</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setDeleteSubjectId(null);
+                    setSelectedDeleteExamType("");
+                  }}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteMarks}
+                  disabled={!selectedDeleteExamType}
+                  className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                >
+                  Confirm Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -1300,6 +1349,48 @@ const TeacherDashboard = () => {
           </div>
 
           {renderModalContent()}
+        </div>
+      )}
+
+      {deleteSubjectId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+          <div className="bg-white p-6 rounded shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-4">Delete Marks</h3>
+
+            <div className="mb-4">
+              <label className="block mb-2">Select Exam Type to Delete:</label>
+              <select
+                value={selectedDeleteExamType}
+                onChange={(e) => setSelectedDeleteExamType(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select Exam Type</option>
+                <option value="unit-test">Unit Test</option>
+                <option value="re-unit-test">Re-Unit Test</option>
+                <option value="prelim">Prelim</option>
+                <option value="reprelim">Re-Prelim</option>
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setDeleteSubjectId(null);
+                  setSelectedDeleteExamType("");
+                }}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteMarks}
+                disabled={!selectedDeleteExamType}
+                className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
