@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, Hand } from "lucide-react";
+import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
+import "./StudentDash.css"; // Optional for custom styles
 
 function StudentDash() {
   const [studentName, setStudentName] = useState("Student");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,9 +40,6 @@ function StudentDash() {
   }, [navigate]);
 
   const handleLogout = () => {
-    sessionStorage.removeItem("studentId");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("studentName");
     sessionStorage.clear();
     navigate("/studentlogin");
   };
@@ -67,17 +66,24 @@ function StudentDash() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="bg-white md:w-64 w-full md:shadow-lg flex flex-col justify-between">
-        {/* Logo/Header */}
-        <div className="h-16 bg-[#2563eb] flex items-center justify-center">
-          <h2 className="text-xl md:text-2xl font-bold text-white">
-            Student Portal
-          </h2>
-        </div>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className="md:hidden p-4 focus:outline-none bg-white shadow z-10"
+      >
+        <Menu size={24} />
+      </button>
 
-        {/* Menu Items */}
-        <nav className="p-4 flex-1 overflow-y-auto flex flex-col gap-2">
+      {/* Sidebar */}
+      <div
+        className={`bg-white w-full md:w-64 shadow-lg z-20 md:block ${
+          isMenuOpen ? "block" : "hidden"
+        }`}
+      >
+        <div className="h-16 bg-[#2563eb] flex items-center justify-center">
+          <h2 className="text-2xl font-bold text-white">Student Portal</h2>
+        </div>
+        <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
           {menuItems.map((item) => (
             <Link
               key={item.path}
@@ -89,9 +95,7 @@ function StudentDash() {
             </Link>
           ))}
         </nav>
-
-        {/* Logout Button */}
-        <div className="p-4">
+        <div className="p-4 absolute bottom-0 w-full md:w-64">
           <button
             onClick={() => setShowLogoutModal(true)}
             className="w-full bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
@@ -104,11 +108,18 @@ function StudentDash() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
-          <div className="text-lg md:text-2xl font-semibold text-gray-800">
+          <div className="text-2xl font-semibold text-gray-800">
             Welcome, {studentName}
           </div>
+          {/* Menu toggle for small screens */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden bg-[#2563eb] text-white py-2 px-3 rounded-lg hover:bg-[#1d4ed8]"
+          >
+            <Menu size={22} />
+          </button>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
       </div>
@@ -116,7 +127,7 @@ function StudentDash() {
       {/* Logout Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md shadow-lg mx-4 text-center">
+          <div className="bg-white rounded-2xl p-8 w-96 shadow-lg mx-4 text-center">
             <div className="flex items-center justify-center text-red-600 mb-4">
               <Hand
                 size={40}
@@ -124,7 +135,7 @@ function StudentDash() {
                 className="animate-waving-hand"
               />
             </div>
-            <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
               Confirm Logout
             </h3>
             <p className="text-gray-600 mb-6 text-lg">

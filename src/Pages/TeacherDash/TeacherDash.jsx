@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Hand, Menu } from "lucide-react";
 import axios from "axios";
-import "./TeacherDash.css";
 
 function TeacherDash() {
   const [teacherName, setTeacherName] = useState("");
@@ -40,9 +39,6 @@ function TeacherDash() {
   }, [navigate]);
 
   const handleLogout = () => {
-    sessionStorage.removeItem("teacherId");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("teacherName");
     sessionStorage.clear();
     navigate("/teacherlogin");
   };
@@ -73,60 +69,56 @@ function TeacherDash() {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="teacher-menu-button md:hidden p-4 focus:outline-none"
-      >
-        <Menu size={24} />
-      </button>
-
+    <div className="flex h-screen">
       {/* Sidebar */}
       <div
-        className={`teacher-sidebar bg-white w-full md:w-64 shadow-lg ${
-          isMenuOpen ? "open" : ""
-        }`}
+        className={`bg-white z-40 md:relative fixed md:flex flex-col w-64 h-full shadow-lg transition-transform duration-300 ${
+          isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
       >
-        <div className="teacher-header h-16 flex items-center justify-center">
-          <h2 className="text-2xl font-bold text-white">Teacher Portal</h2>
+        <div className="bg-[#2563eb] h-16 flex items-center justify-center">
+          <h2 className="text-xl font-bold text-white">Teacher Portal</h2>
         </div>
-        <nav className="p-4 overflow-y-auto h-[calc(100vh-8rem)]">
+        <nav className="flex-1 p-4 overflow-y-auto">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors duration-200"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#2563eb] hover:text-white rounded-lg transition duration-200"
             >
               <span className="mr-3 text-xl">{item.icon}</span>
               <span className="font-medium text-lg">{item.label}</span>
             </Link>
           ))}
         </nav>
-        <div className="p-4 absolute bottom-0 w-full md:w-64">
+        <div className="p-4">
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
+            className="w-full bg-[#2563eb] text-white py-2 px-4 rounded-lg hover:bg-[#1d4ed8] text-lg"
           >
             Sign Out
           </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 relative">
-          <div className="text-2xl font-semibold text-gray-800">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+        {/* Mobile Header */}
+        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 md:px-6">
+          <div className="text-lg md:text-2xl font-semibold text-gray-800">
             Welcome, {teacherName || "Loading..."}
           </div>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="teacher-menu-button md:hidden bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-lg"
+            className="md:hidden bg-[#2563eb] text-white p-2 rounded-lg hover:bg-[#1d4ed8]"
           >
             <Menu size={24} />
           </button>
         </header>
-        <main className="flex-1 overflow-y-auto p-6">
+
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
         </main>
       </div>
