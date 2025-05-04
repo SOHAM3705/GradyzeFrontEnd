@@ -957,7 +957,7 @@ const TeacherDashboard = () => {
 
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-5xl relative">
+            <div className="bg-white p-6 rounded shadow-lg w-full max-w-5xl relative pl-4">
               <button
                 onClick={closeModal}
                 className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl font-bold"
@@ -1026,7 +1026,7 @@ const TeacherDashboard = () => {
                                     input.value = "";
                                   }
                                 });
-                                updateStudentRow(index);
+                                updateStudentRow(student._id);
                               }}
                             />
                           </td>
@@ -1053,7 +1053,7 @@ const TeacherDashboard = () => {
                                 ) {
                                   e.target.value = isUnitTest ? 15 : 17;
                                 }
-                                updateStudentRow(index);
+                                updateStudentRow(student._id);
                               }}
                               onBlur={(e) => {
                                 if (
@@ -1062,7 +1062,7 @@ const TeacherDashboard = () => {
                                 ) {
                                   e.target.value = "0";
                                 }
-                                updateStudentRow(index);
+                                updateStudentRow(student._id);
                               }}
                             />
                           </td>
@@ -1085,7 +1085,7 @@ const TeacherDashboard = () => {
                                 ) {
                                   e.target.value = isUnitTest ? 15 : 18;
                                 }
-                                updateStudentRow(index);
+                                updateStudentRow(student._id);
                               }}
                               onBlur={(e) => {
                                 if (
@@ -1094,7 +1094,7 @@ const TeacherDashboard = () => {
                                 ) {
                                   e.target.value = "0";
                                 }
-                                updateStudentRow(index);
+                                updateStudentRow(student._id);
                               }}
                             />
                           </td>
@@ -1116,7 +1116,7 @@ const TeacherDashboard = () => {
                                     if (parseInt(e.target.value) > 17) {
                                       e.target.value = 17;
                                     }
-                                    updateStudentRow(index);
+                                    updateStudentRow(student._id);
                                   }}
                                   onBlur={(e) => {
                                     if (
@@ -1125,7 +1125,7 @@ const TeacherDashboard = () => {
                                     ) {
                                       e.target.value = "0";
                                     }
-                                    updateStudentRow(index);
+                                    updateStudentRow(student._id);
                                   }}
                                 />
                               </td>
@@ -1143,7 +1143,7 @@ const TeacherDashboard = () => {
                                     if (parseInt(e.target.value) > 18) {
                                       e.target.value = 18;
                                     }
-                                    updateStudentRow(index);
+                                    updateStudentRow(student._id);
                                   }}
                                   onBlur={(e) => {
                                     if (
@@ -1152,7 +1152,7 @@ const TeacherDashboard = () => {
                                     ) {
                                       e.target.value = "0";
                                     }
-                                    updateStudentRow(index);
+                                    updateStudentRow(student._id);
                                   }}
                                 />
                               </td>
