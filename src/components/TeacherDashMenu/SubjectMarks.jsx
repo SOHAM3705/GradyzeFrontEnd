@@ -230,7 +230,6 @@ const TeacherDashboard = () => {
             {student.marks?.[subject._id]?.["unit-test"] || 0}
           </td>
         ))}
-        <td className="p-2">{calculateOverallScore(student, "unit-test")}%</td>
         <td className={`p-2 ${student.status}`}>
           {student.status?.charAt(0).toUpperCase() + student.status?.slice(1)}
         </td>
