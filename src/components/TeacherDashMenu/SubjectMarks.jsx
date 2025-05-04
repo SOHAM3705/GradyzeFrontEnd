@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { ClipLoader } from "react-spinners";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState("class-teacher");
@@ -20,7 +23,9 @@ const TeacherDashboard = () => {
   const [isMarksExist, setIsMarksExist] = useState(false);
   const [deleteSubjectId, setDeleteSubjectId] = useState(null);
   const [selectedDeleteExamType, setSelectedDeleteExamType] = useState("");
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState(null);
   const [summaryData, setSummaryData] = useState({
@@ -477,15 +482,49 @@ const TeacherDashboard = () => {
     });
   };
 
-  const openStudentsModal = (subjectId, examType, isUpdateMode = false) => {
-    setSelectedSubjectId(subjectId);
-    setSelectedExamType(examType);
-    setModalContent({
-      type: "students-list",
-      subjectId,
-      examType,
-      isUpdateMode,
-    });
+  // Enhanced openStudentsModal with loading state and error handling
+  const openStudentsModal = async (subjectId, examType) => {
+    try {
+      setIsLoading(true);
+      setModalContent({
+        type: "loading",
+        message: "Fetching student marks...",
+      });
+
+      const token = sessionStorage.getItem("token");
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/get-marks/${subjectId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { examType },
+        }
+      );
+
+      const existingMarks = response.data.examData || {};
+      const hasExistingMarks = Object.keys(existingMarks).length > 0;
+
+      setIsLoading(false);
+      setModalContent({
+        type: "students-list",
+        subjectId,
+        examType,
+        isUpdateMode: hasExistingMarks,
+        existingMarks,
+        lastUpdated: response.data.lastUpdated, // Assuming your API returns this
+      });
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error fetching existing marks:", error);
+      toast.error("Failed to load marks. Please try again.");
+      // Fallback to empty form
+      setModalContent({
+        type: "students-list",
+        subjectId,
+        examType,
+        isUpdateMode: false,
+        existingMarks: {},
+      });
+    }
   };
 
   const closeModal = () => {
@@ -502,7 +541,35 @@ const TeacherDashboard = () => {
     openStudentsModal(selectedSubjectId, selectedExamType);
   };
 
+  const validateMarks = () => {
+    const rows = document.querySelectorAll(".student-row");
+    let isValid = true;
+
+    rows.forEach((row) => {
+      const isAbsent = row.querySelector(".absent-checkbox").checked;
+      if (isAbsent) return;
+
+      const inputs = row.querySelectorAll('input[type="number"]');
+      inputs.forEach((input) => {
+        if (!input.value && input.value !== "0") {
+          input.style.borderColor = "red";
+          isValid = false;
+        } else {
+          input.style.borderColor = "";
+        }
+      });
+    });
+
+    if (!isValid) {
+      toast.warning("Please fill all mark fields or mark as absent");
+      return false;
+    }
+    return true;
+  };
+
   const handleSaveMarks = async () => {
+    if (!validateMarks()) return;
+
     const subjectData = studentsData[selectedSubjectId];
     if (!subjectData) return;
 
@@ -595,6 +662,7 @@ const TeacherDashboard = () => {
     });
 
     try {
+      setIsSaving(true);
       const token = sessionStorage.getItem("token");
       await axios.post(
         `https://gradyzebackend.onrender.com/api/teachermarks/add-marks`,
@@ -606,15 +674,33 @@ const TeacherDashboard = () => {
           },
         }
       );
-      alert("Marks saved successfully!");
+      setIsSaving(false);
+      toast.success("Marks saved successfully!");
       closeModal();
       fetchSubjectStudentsData();
     } catch (error) {
+      setIsSaving(false);
       console.error("Error saving marks:", error);
-      alert(
-        "Error saving marks: " +
-          (error.response?.data?.message || error.message)
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save marks. Please try again."
       );
+    }
+  };
+
+  const handleExamTypeChange = (e) => {
+    if (selectedExamType && modalContent?.isUpdateMode) {
+      setConfirmAction({
+        title: "Unsaved Changes",
+        message: "Changing exam type will lose your unsaved changes. Continue?",
+        onConfirm: () => {
+          setSelectedExamType(e.target.value);
+          openStudentsModal(selectedSubjectId, e.target.value);
+        },
+      });
+    } else {
+      setSelectedExamType(e.target.value);
+      openStudentsModal(selectedSubjectId, e.target.value);
     }
   };
 
@@ -664,7 +750,47 @@ const TeacherDashboard = () => {
     return types[type] || type;
   };
 
+  const renderConfirmationDialog = () => {
+    if (!confirmAction) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
+        <div className="bg-white p-6 rounded shadow-lg w-96">
+          <h3 className="text-lg font-semibold mb-4">{confirmAction.title}</h3>
+          <p className="mb-4">{confirmAction.message}</p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setConfirmAction(null)}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                confirmAction.onConfirm();
+                setConfirmAction(null);
+              }}
+              className="bg-red-500 text-white px-4 py-2 rounded"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderModalContent = () => {
+    if (modalContent?.type === "loading") {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+          <div className="bg-white p-8 rounded shadow-lg flex flex-col items-center">
+            <ClipLoader size={50} color="#3B82F6" />
+            <p className="mt-4 text-lg">{modalContent.message}</p>
+          </div>
+        </div>
+      );
+    }
     if (!modalContent) return null;
 
     switch (modalContent.type) {
@@ -804,7 +930,7 @@ const TeacherDashboard = () => {
                 </label>
                 <select
                   value={selectedExamType}
-                  onChange={(e) => setSelectedExamType(e.target.value)}
+                  onChange={handleExamTypeChange}
                   className="w-full p-2 border rounded mt-1"
                 >
                   <option value="">Select an exam type</option>
@@ -1040,9 +1166,21 @@ const TeacherDashboard = () => {
                 </button>
                 <button
                   onClick={handleSaveMarks}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  disabled={isSaving}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
                 >
-                  {isUpdateMode ? "Update Marks" : "Save Marks"}
+                  {isSaving ? (
+                    <>
+                      <ClipLoader
+                        size={20}
+                        color="#ffffff"
+                        className="inline mr-2"
+                      />
+                      Saving...
+                    </>
+                  ) : (
+                    `${modalContent?.isUpdateMode ? "Update" : "Save"} Marks`
+                  )}
                 </button>
               </div>
             </div>
@@ -1162,6 +1300,8 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 p-4">
+      <ToastContainer position="top-right" autoClose={5000} />
+
       <div className="bg-green-600 text-white p-5 rounded shadow-md mb-4 flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Teacher Dashboard</h1>
         <div className="flex gap-3">
@@ -1393,6 +1533,8 @@ const TeacherDashboard = () => {
           </div>
         </div>
       )}
+
+      {renderConfirmationDialog()}
     </div>
   );
 };
