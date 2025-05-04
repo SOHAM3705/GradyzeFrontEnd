@@ -45,34 +45,6 @@ const TeacherDashboard = () => {
 
   const teacherId = sessionStorage.getItem("teacherId");
 
-  const checkExistingMarks = async (subjectName, examType) => {
-    try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/student-marks`,
-        {
-          params: {
-            subjectName, // Changed from subjectId to subjectName
-            examType,
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data && response.data.length > 0) {
-        setExistingMarks(response.data[0]);
-        setIsMarksExist(true);
-        return true;
-      }
-      setIsMarksExist(false);
-      return false;
-    } catch (error) {
-      console.error("Error checking existing marks:", error);
-      setIsMarksExist(false);
-      return false;
-    }
-  };
-
   const fetchSubjectStudentsData = async () => {
     try {
       const token = sessionStorage.getItem("token");
@@ -479,13 +451,11 @@ const TeacherDashboard = () => {
     }
 
     setSelectedSubjectId(subjectId);
-    const hasMarks = await checkExistingMarks(subject.name, selectedExamType);
 
     setModalContent({
       type: "exam-selection",
       subjectId,
       subjectName: subject.name, // Pass subjectName to modal
-      hasExistingMarks: hasMarks,
     });
   };
 
