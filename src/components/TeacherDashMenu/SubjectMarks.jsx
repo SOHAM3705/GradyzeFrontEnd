@@ -30,16 +30,9 @@ const TeacherDashboard = () => {
   const [modalContent, setModalContent] = useState(null);
   const [summaryData, setSummaryData] = useState({
     totalStudents: 0,
-    passRate: 0,
-    classAverage: 0,
-    highestPerformer: "N/A",
-    atRiskCount: "0%",
   });
   const [subjectSummaryData, setSubjectSummaryData] = useState({
     totalStudents: 0,
-    passRate: 0,
-    averageScore: 0,
-    highestScore: 0,
   });
   const [studentsData, setStudentsData] = useState({});
 
@@ -207,53 +200,8 @@ const TeacherDashboard = () => {
 
   const updateSummary = () => {
     const totalStudents = students.length;
-    const passedStudents = students.filter(
-      (student) => student.status === "pass"
-    ).length;
-    const passRate = Math.round((passedStudents / totalStudents) * 100);
-
-    let totalPercentage = 0;
-    let studentsWithScores = 0;
-
-    students.forEach((student) => {
-      const score = calculateOverallScore(student, "unit-test");
-      if (score !== "N/A") {
-        totalPercentage += parseInt(score);
-        studentsWithScores++;
-      }
-    });
-
-    const classAverage =
-      studentsWithScores > 0
-        ? Math.round(totalPercentage / studentsWithScores)
-        : 0;
-
-    let highestScore = 0;
-    let highestPerformer = null;
-
-    students.forEach((student) => {
-      const score = calculateOverallScore(student, "unit-test");
-      if (score !== "N/A" && parseInt(score) > highestScore) {
-        highestScore = parseInt(score);
-        highestPerformer = student;
-      }
-    });
-
-    const atRiskCount = students.filter((student) => {
-      const score = calculateOverallScore(student, "unit-test");
-      return score !== "N/A" && parseInt(score) < 40;
-    }).length;
-
-    const atRiskPercentage = Math.round((atRiskCount / totalStudents) * 100);
-
     setSummaryData({
       totalStudents,
-      passRate,
-      classAverage,
-      highestPerformer: highestPerformer
-        ? `${highestPerformer.name} (${highestScore}%)`
-        : "N/A",
-      atRiskCount: `${atRiskCount} (${atRiskPercentage}%)`,
     });
   };
 
@@ -271,27 +219,6 @@ const TeacherDashboard = () => {
     setCurrentPage(1);
   };
 
-  const calculateOverallScore = (student, examType = "unit-test") => {
-    let totalMarks = 0;
-    let totalFullMarks = 0;
-    let subjectsWithMarks = 0;
-
-    for (const subjectId in student.marks) {
-      const subjectMarks = student.marks[subjectId][examType];
-      if (subjectMarks && subjectMarks > 0) {
-        const subject = subjects.find((s) => s._id == subjectId);
-        totalMarks += subjectMarks;
-        totalFullMarks += subject.fullMarks[examType];
-        subjectsWithMarks++;
-      }
-    }
-
-    if (subjectsWithMarks === 0) return "N/A";
-
-    const percentage = Math.round((totalMarks / totalFullMarks) * 100);
-    return percentage;
-  };
-
   const renderStudents = () => {
     return filteredStudents.map((student) => (
       <tr key={student._id} className="border-b hover:bg-gray-100">
@@ -306,14 +233,6 @@ const TeacherDashboard = () => {
         <td className="p-2">{calculateOverallScore(student, "unit-test")}%</td>
         <td className={`p-2 ${student.status}`}>
           {student.status?.charAt(0).toUpperCase() + student.status?.slice(1)}
-        </td>
-        <td className="p-2">
-          <button
-            onClick={() => openStudentModal(student._id)}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            View
-          </button>
         </td>
       </tr>
     ));
@@ -393,53 +312,16 @@ const TeacherDashboard = () => {
 
   const updateSubjectSummary = () => {
     let totalStudents = 0;
-    let totalPassed = 0;
-    let totalMarks = 0;
-    let totalWithMarks = 0;
-    let highestMark = 0;
 
     subjectsList.forEach((subject) => {
       const subjectData = studentsData[subject._id];
       if (!subjectData) return;
 
       totalStudents += subjectData.students.length;
-
-      for (const examType in subject.marksEntered || {}) {
-        if (subject.marksEntered[examType]) {
-          const examData = subjectData.examData[examType] || [];
-
-          examData.forEach((studentExamData) => {
-            if (studentExamData && studentExamData.total > 0) {
-              totalWithMarks++;
-              totalMarks += studentExamData.total;
-
-              const isUnitTest =
-                examType === "unit-test" || examType === "re-unit-test";
-              const passingMark = isUnitTest ? 12 : 28;
-
-              if (studentExamData.total >= passingMark) {
-                totalPassed++;
-              }
-
-              if (studentExamData.total > highestMark) {
-                highestMark = studentExamData.total;
-              }
-            }
-          });
-        }
-      }
     });
-
-    const passRate =
-      totalWithMarks > 0 ? Math.round((totalPassed / totalWithMarks) * 100) : 0;
-    const averageScore =
-      totalWithMarks > 0 ? Math.round(totalMarks / totalWithMarks) : 0;
 
     setSubjectSummaryData({
       totalStudents,
-      passRate,
-      averageScore,
-      highestScore: highestMark,
     });
   };
 
@@ -787,121 +669,6 @@ const TeacherDashboard = () => {
     if (!modalContent) return null;
 
     switch (modalContent.type) {
-      case "student-details":
-        const { student } = modalContent;
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
-              <button
-                onClick={closeModal}
-                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
-              >
-                &times;
-              </button>
-              <div className="mb-4 border-b pb-2">
-                <h3 className="font-semibold text-gray-800">
-                  {student.name} - Performance Details
-                </h3>
-              </div>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block font-medium text-gray-600">
-                    Roll No.
-                  </label>
-                  <span className="block mt-1">{student.rollNo}</span>
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-600">
-                    Division
-                  </label>
-                  <span className="block mt-1">{division}</span>
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-600">
-                    Status
-                  </label>
-                  <span className={`block mt-1 ${student.status}`}>
-                    {student.status?.charAt(0).toUpperCase() +
-                      student.status?.slice(1)}
-                  </span>
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-600">
-                    Overall Score
-                  </label>
-                  <span className="block mt-1">
-                    {calculateOverallScore(student, "unit-test")}%
-                  </span>
-                </div>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-2">
-                Academic Performance
-              </h3>
-              <div className="chart-container h-64 mb-4 bg-gray-100">
-                <p>Chart would be rendered here.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {subjects.map((subject) => (
-                  <div
-                    key={subject._id}
-                    className="bg-white p-4 rounded shadow"
-                  >
-                    <h3 className="text-lg font-semibold mb-2">
-                      {subject.name}
-                    </h3>
-                    <table className="w-full">
-                      <thead>
-                        <tr>
-                          <th className="text-left">Exam Type</th>
-                          <th className="text-left">Marks Obtained</th>
-                          <th className="text-left">Full Marks</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.keys(subject.fullMarks).map((examType) => (
-                          <tr key={examType}>
-                            <td>
-                              {examType
-                                .replace(/-/g, " ")
-                                .charAt(0)
-                                .toUpperCase() +
-                                examType.replace(/-/g, " ").slice(1)}
-                            </td>
-                            <td>
-                              {student.marks[subject._id]?.[examType] || 0}
-                            </td>
-                            <td>{subject.fullMarks[examType]}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  onClick={() =>
-                    alert("Send report functionality would be implemented here")
-                  }
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-                >
-                  Send Report to Parents
-                </button>
-                <button
-                  onClick={() =>
-                    alert(
-                      "Download report functionality would be implemented here"
-                    )
-                  }
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Download Report
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-
       case "exam-selection":
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
@@ -1317,34 +1084,11 @@ const TeacherDashboard = () => {
     }
   };
 
-  const openStudentModal = async (studentId) => {
-    try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/student/${studentId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setModalContent({
-        student: response.data,
-        type: "student-details",
-      });
-    } catch (error) {
-      console.error("Error fetching student details:", error);
-      alert("Could not fetch student details");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 p-4">
       <ToastContainer position="top-right" autoClose={5000} />
 
-      <div className="bg-green-600 text-white p-5 rounded shadow-md mb-4 flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Teacher Dashboard</h1>
+      <div className="flex justify-between items-center mb-4">
         <div className="flex gap-3">
           <button
             onClick={() =>
@@ -1363,31 +1107,30 @@ const TeacherDashboard = () => {
             Email Reports
           </button>
         </div>
-      </div>
-
-      <div className="flex gap-3 mb-4">
-        <button
-          onClick={() => setActiveTab("class-teacher")}
-          className={`px-4 py-2 rounded ${
-            activeTab === "class-teacher"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-300 text-gray-700"
-          }`}
-          disabled={isSubjectTeacher && !isClassTeacher}
-        >
-          Class Teacher
-        </button>
-        <button
-          onClick={() => setActiveTab("subject-teacher")}
-          className={`px-4 py-2 rounded ${
-            activeTab === "subject-teacher"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-300 text-gray-700"
-          }`}
-          disabled={isClassTeacher && !isSubjectTeacher}
-        >
-          Subject Teacher
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setActiveTab("class-teacher")}
+            className={`px-4 py-2 rounded ${
+              activeTab === "class-teacher"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-gray-700"
+            }`}
+            disabled={isSubjectTeacher && !isClassTeacher}
+          >
+            Class Teacher
+          </button>
+          <button
+            onClick={() => setActiveTab("subject-teacher")}
+            className={`px-4 py-2 rounded ${
+              activeTab === "subject-teacher"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-gray-700"
+            }`}
+            disabled={isClassTeacher && !isSubjectTeacher}
+          >
+            Subject Teacher
+          </button>
+        </div>
       </div>
 
       {activeTab === "class-teacher" && (
@@ -1417,36 +1160,6 @@ const TeacherDashboard = () => {
             <div className="bg-white p-4 rounded shadow">
               <h3 className="text-lg font-semibold mb-2">Total Students</h3>
               <p className="text-2xl font-bold">{summaryData.totalStudents}</p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Overall Pass Rate</h3>
-              <p className="text-2xl font-bold">{summaryData.passRate}%</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                <div
-                  className="bg-blue-500 h-2.5 rounded-full"
-                  style={{ width: `${summaryData.passRate}%` }}
-                ></div>
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Class Average</h3>
-              <p className="text-2xl font-bold">{summaryData.classAverage}%</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                <div
-                  className="bg-blue-500 h-2.5 rounded-full"
-                  style={{ width: `${summaryData.classAverage}%` }}
-                ></div>
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Highest Performer</h3>
-              <p className="text-xl font-bold">
-                {summaryData.highestPerformer}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">At-Risk Students</h3>
-              <p className="text-xl font-bold">{summaryData.atRiskCount}</p>
             </div>
           </div>
 
@@ -1483,7 +1196,6 @@ const TeacherDashboard = () => {
                     ))}
                     <th className="p-2 text-left">Overall Score</th>
                     <th className="p-2 text-left">Status</th>
-                    <th className="p-2 text-left">Action</th>
                   </tr>
                 </thead>
                 <tbody>{renderStudents()}</tbody>
@@ -1503,24 +1215,6 @@ const TeacherDashboard = () => {
               <h3 className="text-lg font-semibold mb-2">Total Students</h3>
               <p className="text-2xl font-bold">
                 {subjectSummaryData.totalStudents}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Pass Rate</h3>
-              <p className="text-2xl font-bold">
-                {subjectSummaryData.passRate}%
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Average Score</h3>
-              <p className="text-2xl font-bold">
-                {subjectSummaryData.averageScore}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Highest Score</h3>
-              <p className="text-2xl font-bold">
-                {subjectSummaryData.highestScore}
               </p>
             </div>
           </div>
