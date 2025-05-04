@@ -45,14 +45,14 @@ const TeacherDashboard = () => {
 
   const teacherId = sessionStorage.getItem("teacherId");
 
-  const checkExistingMarks = async (subjectName, examType) => {
+  const checkExistingMarks = async (subjectId, examType) => {
     try {
       const token = sessionStorage.getItem("token");
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/student-marks`,
         {
           params: {
-            subjectName,
+            subjectId,
             examType,
           },
           headers: { Authorization: `Bearer ${token}` },
@@ -366,7 +366,7 @@ const TeacherDashboard = () => {
       let buttonsHtml = (
         <>
           <button
-            onClick={() => openExamModal(subjectName)}
+            onClick={() => openExamModal(subjectId)}
             className="bg-blue-500 text-white px-4 py-2 rounded"
           >
             Add Marks
@@ -471,19 +471,19 @@ const TeacherDashboard = () => {
     });
   };
 
-  const openExamModal = async (subjectName) => {
-    setSelectedSubjectId(subjectName);
-    const hasMarks = await checkExistingMarks(subjectName, selectedExamType);
+  const openExamModal = async (subjectId) => {
+    setSelectedSubjectId(subjectId);
+    const hasMarks = await checkExistingMarks(subjectId, selectedExamType);
 
     setModalContent({
       type: "exam-selection",
-      subjectName,
+      subjectId,
       hasExistingMarks: hasMarks,
     });
   };
 
   // Enhanced openStudentsModal with loading state and error handling
-  const openStudentsModal = async (subjectName, examType) => {
+  const openStudentsModal = async (subjectId, examType) => {
     try {
       setIsLoading(true);
       setModalContent({
@@ -493,7 +493,7 @@ const TeacherDashboard = () => {
 
       const token = sessionStorage.getItem("token");
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/get-marks/${subjectName}`,
+        `https://gradyzebackend.onrender.com/api/teachermarks/get-marks/${subjectId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: { examType },
@@ -506,7 +506,7 @@ const TeacherDashboard = () => {
       setIsLoading(false);
       setModalContent({
         type: "students-list",
-        subjectName,
+        subjectId,
         examType,
         isUpdateMode: hasExistingMarks,
         existingMarks,
@@ -519,7 +519,7 @@ const TeacherDashboard = () => {
       // Fallback to empty form
       setModalContent({
         type: "students-list",
-        subjectName,
+        subjectId,
         examType,
         isUpdateMode: false,
         existingMarks: {},
@@ -575,7 +575,7 @@ const TeacherDashboard = () => {
 
     const students = subjectData.students;
     const selectedSubject = subjectsList.find(
-      (subject) => subject.name === selectedSubjectId
+      (subject) => subject._id === selectedSubjectId
     );
     const selectedYear = selectedSubject ? selectedSubject.year : null;
     const selectedSubjectName = selectedSubject ? selectedSubject.name : null;
@@ -958,8 +958,8 @@ const TeacherDashboard = () => {
           </div>
         );
       case "students-list":
-        const { subjectName, examType, isUpdateMode } = modalContent;
-        const subjectData = studentsData[subjectName] || {
+        const { subjectId, examType, isUpdateMode } = modalContent;
+        const subjectData = studentsData[subjectId] || {
           students: [],
           examData: {},
         };
