@@ -533,6 +533,8 @@ const TeacherDashboard = () => {
 
     rows.forEach((row) => {
       const isAbsent = row.querySelector(".absent-checkbox").checked;
+
+      // Skip validation for absent students
       if (isAbsent) return;
 
       const inputs = row.querySelectorAll('input[type="number"]');
@@ -578,7 +580,6 @@ const TeacherDashboard = () => {
     }
 
     const isUnitTest = selectedExamType.includes("unit");
-    const totalMarks = isUnitTest ? 30 : 70;
     const passingMarks = isUnitTest ? 12 : 28;
 
     const marksToSave = [];
@@ -605,9 +606,9 @@ const TeacherDashboard = () => {
               teacherId,
               marksObtained: {
                 q1q2: -1,
-                q3q4: 0,
-                q5q6: 0,
-                q7q8: 0,
+                q3q4: -1,
+                q5q6: -1,
+                q7q8: -1,
                 total: -1,
               },
               totalMarks: 0,
@@ -644,7 +645,7 @@ const TeacherDashboard = () => {
                 q7q8,
                 total,
               },
-              totalMarks,
+              totalMarks: isUnitTest ? 30 : 70,
               status,
               dateAdded: new Date(),
             },
@@ -1014,7 +1015,7 @@ const TeacherDashboard = () => {
                             <input
                               type="checkbox"
                               className="absent-checkbox"
-                              checked={isAbsent}
+                              defaultChecked={isAbsent} // Changed from checked to defaultChecked
                               onChange={(e) => {
                                 const row = e.target.closest("tr");
                                 const inputs = row.querySelectorAll(
@@ -1024,6 +1025,23 @@ const TeacherDashboard = () => {
                                   input.disabled = e.target.checked;
                                   if (e.target.checked) {
                                     input.value = "";
+                                  } else {
+                                    // Reset to default values when unchecked
+                                    const marksData =
+                                      existingMarks[student._id]?.[examType]
+                                        ?.marksObtained;
+                                    if (marksData) {
+                                      row.querySelector(".q1q2-input").value =
+                                        marksData.q1q2 || 0;
+                                      row.querySelector(".q3q4-input").value =
+                                        marksData.q3q4 || 0;
+                                      if (!isUnitTest) {
+                                        row.querySelector(".q5q6-input").value =
+                                          marksData.q5q6 || 0;
+                                        row.querySelector(".q7q8-input").value =
+                                          marksData.q7q8 || 0;
+                                      }
+                                    }
                                   }
                                 });
                                 updateStudentRow(student._id);
