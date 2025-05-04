@@ -45,14 +45,14 @@ const TeacherDashboard = () => {
 
   const teacherId = sessionStorage.getItem("teacherId");
 
-  const checkExistingMarks = async (subjectId, examType) => {
+  const checkExistingMarks = async (subjectName, examType) => {
     try {
       const token = sessionStorage.getItem("token");
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/student-marks`,
         {
           params: {
-            subjectId,
+            subjectName, // Changed from subjectId to subjectName
             examType,
           },
           headers: { Authorization: `Bearer ${token}` },
@@ -60,7 +60,7 @@ const TeacherDashboard = () => {
       );
 
       if (response.data && response.data.length > 0) {
-        setExistingMarks(response.data[0]); // Assuming first record contains the marks
+        setExistingMarks(response.data[0]);
         setIsMarksExist(true);
         return true;
       }
@@ -472,12 +472,19 @@ const TeacherDashboard = () => {
   };
 
   const openExamModal = async (subjectId) => {
+    const subject = subjectsList.find((sub) => sub._id === subjectId);
+    if (!subject) {
+      toast.error("Subject not found");
+      return;
+    }
+
     setSelectedSubjectId(subjectId);
-    const hasMarks = await checkExistingMarks(subjectId, selectedExamType);
+    const hasMarks = await checkExistingMarks(subject.name, selectedExamType);
 
     setModalContent({
       type: "exam-selection",
       subjectId,
+      subjectName: subject.name, // Pass subjectName to modal
       hasExistingMarks: hasMarks,
     });
   };
@@ -491,32 +498,41 @@ const TeacherDashboard = () => {
         message: "Fetching student marks...",
       });
 
+      // Get the subject name first
+      const subject = subjectsList.find((sub) => sub._id === subjectId);
+      if (!subject) {
+        throw new Error("Subject not found");
+      }
+
       const token = sessionStorage.getItem("token");
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/get-marks/${subjectId}`,
+        `https://gradyzebackend.onrender.com/api/teachermarks/marks-by-subject`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          params: { examType },
+          params: {
+            subjectName: subject.name,
+            examType,
+          },
         }
       );
 
-      const existingMarks = response.data.examData || {};
+      const existingMarks = response.data || {};
       const hasExistingMarks = Object.keys(existingMarks).length > 0;
 
       setIsLoading(false);
       setModalContent({
         type: "students-list",
         subjectId,
+        subjectName: subject.name, // Pass subjectName to modal
         examType,
         isUpdateMode: hasExistingMarks,
         existingMarks,
-        lastUpdated: response.data.lastUpdated, // Assuming your API returns this
+        lastUpdated: response.data.lastUpdated,
       });
     } catch (error) {
       setIsLoading(false);
       console.error("Error fetching existing marks:", error);
       toast.error("Failed to load marks. Please try again.");
-      // Fallback to empty form
       setModalContent({
         type: "students-list",
         subjectId,
@@ -577,8 +593,14 @@ const TeacherDashboard = () => {
     const selectedSubject = subjectsList.find(
       (subject) => subject._id === selectedSubjectId
     );
-    const selectedYear = selectedSubject ? selectedSubject.year : null;
-    const selectedSubjectName = selectedSubject ? selectedSubject.name : null;
+
+    if (!selectedSubject) {
+      toast.error("Subject information not found");
+      return;
+    }
+
+    const selectedYear = selectedSubject.year;
+    const selectedSubjectName = selectedSubject.name;
 
     if (!selectedYear || !selectedSubjectName) {
       alert("Subject information is incomplete.");
