@@ -980,14 +980,10 @@ const TeacherDashboard = () => {
           </div>
         );
       case "students-list":
-        const { subjectId, examType, isUpdateMode } = modalContent;
-        const subjectData = studentsData[subjectId] || {
-          students: [],
-          examData: {},
-        };
-        const examData = subjectData.examData[examType] || [];
-        const isUnitTest =
-          examType === "unit-test" || examType === "re-unit-test";
+        const { subjectId, examType, existingMarks, isUpdateMode } =
+          modalContent;
+        const subjectData = studentsData[subjectId] || { students: [] };
+        const isUnitTest = examType.includes("unit");
 
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
@@ -1032,21 +1028,23 @@ const TeacherDashboard = () => {
                   </thead>
                   <tbody>
                     {subjectData.students.map((student, index) => {
-                      const maxQ1Q2 = isUnitTest ? 15 : 17;
-                      const maxQ3Q4 = isUnitTest ? 15 : 18;
-                      const maxQ5Q6 = isUnitTest ? 0 : 17;
-                      const maxQ7Q8 = isUnitTest ? 0 : 18;
+                      const studentMarks =
+                        existingMarks[student._id]?.[examType];
+                      const isAbsent = studentMarks?.status === "Absent";
+                      const marksData = studentMarks?.marksObtained;
 
                       return (
                         <tr
                           key={student._id}
                           className="student-row border-b hover:bg-gray-50"
+                          data-id={student._id}
                         >
                           {/* Absent Checkbox */}
                           <td className="p-2 text-center">
                             <input
                               type="checkbox"
                               className="absent-checkbox"
+                              checked={isAbsent}
                               onChange={(e) => {
                                 const row = e.target.closest("tr");
                                 const inputs = row.querySelectorAll(
@@ -1071,12 +1069,19 @@ const TeacherDashboard = () => {
                             <input
                               type="number"
                               min="0"
-                              max={maxQ1Q2}
+                              max={isUnitTest ? 15 : 17}
                               className="q1q2-input w-16 p-1 border rounded text-center"
+                              defaultValue={
+                                isAbsent ? "" : marksData?.q1q2 || 0
+                              }
+                              disabled={isAbsent}
                               onChange={(e) => {
                                 // Enforce max value
-                                if (parseInt(e.target.value) > maxQ1Q2) {
-                                  e.target.value = maxQ1Q2;
+                                if (
+                                  parseInt(e.target.value) >
+                                  (isUnitTest ? 15 : 17)
+                                ) {
+                                  e.target.value = isUnitTest ? 15 : 17;
                                 }
                                 updateStudentRow(index);
                               }}
@@ -1097,11 +1102,18 @@ const TeacherDashboard = () => {
                             <input
                               type="number"
                               min="0"
-                              max={maxQ3Q4}
+                              max={isUnitTest ? 15 : 18}
                               className="q3q4-input w-16 p-1 border rounded text-center"
+                              defaultValue={
+                                isAbsent ? "" : marksData?.q3q4 || 0
+                              }
+                              disabled={isAbsent}
                               onChange={(e) => {
-                                if (parseInt(e.target.value) > maxQ3Q4) {
-                                  e.target.value = maxQ3Q4;
+                                if (
+                                  parseInt(e.target.value) >
+                                  (isUnitTest ? 15 : 18)
+                                ) {
+                                  e.target.value = isUnitTest ? 15 : 18;
                                 }
                                 updateStudentRow(index);
                               }}
@@ -1124,11 +1136,15 @@ const TeacherDashboard = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  max={maxQ5Q6}
+                                  max={17}
                                   className="q5q6-input w-16 p-1 border rounded text-center"
+                                  defaultValue={
+                                    isAbsent ? "" : marksData?.q5q6 || 0
+                                  }
+                                  disabled={isAbsent}
                                   onChange={(e) => {
-                                    if (parseInt(e.target.value) > maxQ5Q6) {
-                                      e.target.value = maxQ5Q6;
+                                    if (parseInt(e.target.value) > 17) {
+                                      e.target.value = 17;
                                     }
                                     updateStudentRow(index);
                                   }}
@@ -1147,11 +1163,15 @@ const TeacherDashboard = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  max={maxQ7Q8}
+                                  max={18}
                                   className="q7q8-input w-16 p-1 border rounded text-center"
+                                  defaultValue={
+                                    isAbsent ? "" : marksData?.q7q8 || 0
+                                  }
+                                  disabled={isAbsent}
                                   onChange={(e) => {
-                                    if (parseInt(e.target.value) > maxQ7Q8) {
-                                      e.target.value = maxQ7Q8;
+                                    if (parseInt(e.target.value) > 18) {
+                                      e.target.value = 18;
                                     }
                                     updateStudentRow(index);
                                   }}
@@ -1170,9 +1190,19 @@ const TeacherDashboard = () => {
                           )}
 
                           <td className="p-2 total-cell text-center font-medium">
-                            0
+                            {isAbsent ? "Absent" : marksData?.total || 0}
                           </td>
-                          <td className="p-2 status-cell text-center">-</td>
+                          <td
+                            className={`p-2 status-cell text-center ${
+                              studentMarks?.status === "Pass"
+                                ? "text-green-600"
+                                : studentMarks?.status === "Fail"
+                                ? "text-red-600"
+                                : ""
+                            }`}
+                          >
+                            {studentMarks?.status || "-"}
+                          </td>
                         </tr>
                       );
                     })}
@@ -1201,13 +1231,14 @@ const TeacherDashboard = () => {
                       Saving...
                     </>
                   ) : (
-                    `${modalContent?.isUpdateMode ? "Update" : "Save"} Marks`
+                    `${isUpdateMode ? "Update" : "Save"} Marks`
                   )}
                 </button>
               </div>
             </div>
           </div>
         );
+
       case "delete-confirmation":
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
@@ -1257,8 +1288,8 @@ const TeacherDashboard = () => {
     }
   };
 
-  const updateStudentRow = (index) => {
-    const row = document.querySelector(`.student-row:nth-child(${index + 1})`);
+  const updateStudentRow = (studentId) => {
+    const row = document.querySelector(`.student-row[data-id="${studentId}"]`);
     if (!row) return;
 
     const isUnitTest = selectedExamType.includes("unit");
