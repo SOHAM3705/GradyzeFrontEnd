@@ -1149,16 +1149,16 @@ const TeacherDashboard = () => {
             <div className="bg-white p-4 rounded shadow">
               <h3 className="text-lg font-semibold mb-2">Total Students</h3>
               <p className="text-2xl font-bold">{summaryData.totalStudents}</p>
-              <button
-                onClick={() =>
-                  alert("PDF export functionality would be implemented here")
-                }
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"
-              >
-                Export PDF
-              </button>
             </div>
           </div>
+          <button
+            onClick={() =>
+              alert("PDF export functionality would be implemented here")
+            }
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"
+          >
+            Export PDF
+          </button>
 
           <div className="bg-white p-4 rounded shadow mb-4">
             <div className="flex justify-between items-center mb-4">
