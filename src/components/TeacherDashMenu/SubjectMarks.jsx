@@ -1098,16 +1098,6 @@ const TeacherDashboard = () => {
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-3">
           <button
-            onClick={() =>
-              alert("PDF export functionality would be implemented here")
-            }
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Export PDF
-          </button>
-        </div>
-        <div className="flex gap-3">
-          <button
             onClick={() => setActiveTab("class-teacher")}
             className={`px-4 py-2 rounded ${
               activeTab === "class-teacher"
