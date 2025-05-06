@@ -1151,19 +1151,19 @@ const TeacherDashboard = () => {
               <p className="text-2xl font-bold">{summaryData.totalStudents}</p>
             </div>
           </div>
-          <button
-            onClick={() =>
-              alert("PDF export functionality would be implemented here")
-            }
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"
-          >
-            Export PDF
-          </button>
 
           <div className="bg-white p-4 rounded shadow mb-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Student Performance</h2>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    alert("PDF export functionality would be implemented here")
+                  }
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"
+                >
+                  Export PDF
+                </button>
                 <input
                   type="text"
                   placeholder="Search students..."
