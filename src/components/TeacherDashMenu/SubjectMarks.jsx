@@ -139,30 +139,6 @@ const TeacherDashboard = () => {
     }
   };
 
-  const fetchStudents = async () => {
-    try {
-      const token = sessionStorage.getItem("token");
-      if (!token) {
-        console.error("No token found, redirecting to login.");
-        window.location.href = "/teacherlogin";
-        return;
-      }
-
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/students`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (Array.isArray(response.data.students)) {
-        setStudents(response.data.students);
-      } else {
-        console.error("Unexpected API response:", response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching students:", error.response?.data || error);
-    }
-  };
-
   const fetchSubjects = async () => {
     try {
       const response = await axios.get(
@@ -219,24 +195,72 @@ const TeacherDashboard = () => {
     setCurrentPage(1);
   };
 
+  const handleClassExport = async (exportType) => {
+    try {
+      setIsLoading(true);
+      const token = sessionStorage.getItem("token");
+
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/export-class-marks`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            year,
+            division,
+            exportType,
+          },
+          responseType: "blob",
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `Class_${year}_${division}_Marks.${exportType}`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error exporting class marks:", error);
+      toast.error("Failed to export marks. Please try again.");
+    }
+  };
+
   const renderStudents = () => {
     return filteredStudents.map((student) => (
       <tr key={student._id} className="border-b hover:bg-gray-100">
         <td className="p-2">{student.rollNo}</td>
         <td className="p-2">{student.name}</td>
-        <td className="p-2">{division}</td>
-        {subjects.map((subject) => (
-          <td key={subject._id} className="p-2">
-            {student.marks?.[subject._id]?.["unit-test"] || 0}
-          </td>
-        ))}
-        <td className={`p-2 ${student.status}`}>
-          {student.status?.charAt(0).toUpperCase() + student.status?.slice(1)}
+        {subjects.map((subject) => {
+          const marks = student.marks?.[subject._id] || {};
+          const total = Object.values(marks).reduce((sum, exam) => {
+            return sum + (exam.marksObtained?.total || 0);
+          }, 0);
+
+          return (
+            <td key={subject._id} className="p-2">
+              {total || "-"}
+            </td>
+          );
+        })}
+        <td className="p-2 font-semibold">
+          {subjects.reduce((sum, subject) => {
+            const marks = student.marks?.[subject._id] || {};
+            const subjectTotal = Object.values(marks).reduce((s, exam) => {
+              return s + (exam.marksObtained?.total || 0);
+            }, 0);
+            return sum + subjectTotal;
+          }, 0)}
         </td>
       </tr>
     ));
   };
-
   const renderSubjects = () => {
     if (!subjectsList || subjectsList.length === 0) {
       return <p>No subjects available.</p>;
@@ -262,18 +286,16 @@ const TeacherDashboard = () => {
             Add Marks
           </button>
           <button
+            onClick={() => openExportModal(subjectId)}
+            className="bg-green-500 text-white px-4 py-2 rounded ml-2"
+          >
+            Export
+          </button>
+          <button
             onClick={() => setDeleteSubjectId(subject._id)}
             className="bg-red-500 text-white px-4 py-2 rounded ml-2"
           >
             Delete Marks
-          </button>
-          <button
-            onClick={() =>
-              alert("Export PDF functionality would be implemented here")
-            }
-            className="bg-green-500 text-white px-4 py-2 rounded ml-2"
-          >
-            Export PDF
           </button>
         </>
       );
@@ -400,6 +422,52 @@ const TeacherDashboard = () => {
         existingMarks: {},
       });
     }
+  };
+  const handleExport = async (exportType, subjectId, examType) => {
+    try {
+      setIsLoading(true);
+      const token = sessionStorage.getItem("token");
+      const subject = subjectsList.find((sub) => sub._id === subjectId);
+
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/export-marks`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            subjectName: subject.name,
+            examType,
+            exportType, // 'pdf' or 'excel'
+          },
+          responseType: "blob", // Important for file downloads
+        }
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${subject.name}_${examType}_marks.${exportType}`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error exporting marks:", error);
+      toast.error("Failed to export marks. Please try again.");
+    }
+  };
+
+  const openExportModal = (subjectId) => {
+    setModalContent({
+      type: "export-selection",
+      subjectId,
+      subjectName: subjectsList.find((sub) => sub._id === subjectId)?.name,
+    });
   };
 
   const closeModal = () => {
@@ -621,6 +689,37 @@ const TeacherDashboard = () => {
     }
   };
 
+  const fetchStudents = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.error("No token found, redirecting to login.");
+        window.location.href = "/teacherlogin";
+        return;
+      }
+
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            year,
+            division,
+          },
+        }
+      );
+
+      if (Array.isArray(response.data.students)) {
+        setStudents(response.data.students);
+        setSubjects(response.data.subjects || []);
+      } else {
+        console.error("Unexpected API response:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching students:", error.response?.data || error);
+    }
+  };
+
   const examTypeToText = (type) => {
     const types = {
       "unit-test": "Unit Test",
@@ -724,6 +823,71 @@ const TeacherDashboard = () => {
             </div>
           </div>
         );
+
+      case "export-selection":
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+            <div className="bg-white p-6 rounded shadow-lg w-96">
+              <h3 className="text-lg font-semibold mb-4">
+                Export Marks for {modalContent.subjectName}
+              </h3>
+
+              <div className="mb-4">
+                <label className="block mb-2">Exam Type:</label>
+                <select
+                  value={selectedExamType}
+                  onChange={(e) => setSelectedExamType(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="">Select Exam Type</option>
+                  <option value="unit-test">Unit Test</option>
+                  <option value="re-unit-test">Re-Unit Test</option>
+                  <option value="term">Term</option>
+                  <option value="final">Final</option>
+                </select>
+              </div>
+
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={() =>
+                    handleExport(
+                      "pdf",
+                      modalContent.subjectId,
+                      selectedExamType
+                    )
+                  }
+                  disabled={!selectedExamType || isLoading}
+                  className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                >
+                  {isLoading ? "Exporting..." : "Export PDF"}
+                </button>
+                <button
+                  onClick={() =>
+                    handleExport(
+                      "excel",
+                      modalContent.subjectId,
+                      selectedExamType
+                    )
+                  }
+                  disabled={!selectedExamType || isLoading}
+                  className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                >
+                  {isLoading ? "Exporting..." : "Export Excel"}
+                </button>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={closeModal}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
       case "students-list":
         const { subjectId, examType, existingMarks, isUpdateMode } =
           modalContent;
@@ -1156,14 +1320,22 @@ const TeacherDashboard = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Student Performance</h2>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    alert("PDF export functionality would be implemented here")
-                  }
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"
-                >
-                  Export PDF
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleClassExport("pdf")}
+                    disabled={isLoading}
+                    className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                  >
+                    {isLoading ? "Exporting..." : "Export PDF"}
+                  </button>
+                  <button
+                    onClick={() => handleClassExport("excel")}
+                    disabled={isLoading}
+                    className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                  >
+                    {isLoading ? "Exporting..." : "Export Excel"}
+                  </button>
+                </div>
                 <input
                   type="text"
                   placeholder="Search students..."
@@ -1185,14 +1357,12 @@ const TeacherDashboard = () => {
                   <tr className="bg-gray-200">
                     <th className="p-2 text-left">Roll No.</th>
                     <th className="p-2 text-left">Student Name</th>
-                    <th className="p-2 text-left">Division</th>
                     {subjects.map((subject) => (
                       <th key={subject._id} className="p-2 text-left">
                         {subject.name}
                       </th>
                     ))}
-                    <th className="p-2 text-left">Overall Score</th>
-                    <th className="p-2 text-left">Status</th>
+                    <th className="p-2 text-left">Total</th>
                   </tr>
                 </thead>
                 <tbody>{renderStudents()}</tbody>
