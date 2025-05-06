@@ -267,6 +267,14 @@ const TeacherDashboard = () => {
           >
             Delete Marks
           </button>
+          <button
+            onClick={() =>
+              alert("Export PDF functionality would be implemented here")
+            }
+            className="bg-green-500 text-white px-4 py-2 rounded ml-2"
+          >
+            Export PDF
+          </button>
         </>
       );
 
@@ -1097,14 +1105,6 @@ const TeacherDashboard = () => {
           >
             Export PDF
           </button>
-          <button
-            onClick={() =>
-              alert("Email reports functionality would be implemented here")
-            }
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Email Reports
-          </button>
         </div>
         <div className="flex gap-3">
           <button
@@ -1159,6 +1159,14 @@ const TeacherDashboard = () => {
             <div className="bg-white p-4 rounded shadow">
               <h3 className="text-lg font-semibold mb-2">Total Students</h3>
               <p className="text-2xl font-bold">{summaryData.totalStudents}</p>
+              <button
+                onClick={() =>
+                  alert("PDF export functionality would be implemented here")
+                }
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"
+              >
+                Export PDF
+              </button>
             </div>
           </div>
 
