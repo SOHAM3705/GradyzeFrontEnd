@@ -691,6 +691,7 @@ const TeacherDashboard = () => {
 
   const fetchStudents = async () => {
     try {
+      setIsLoading(true);
       const token = sessionStorage.getItem("token");
       if (!token) {
         console.error("No token found, redirecting to login.");
@@ -702,21 +703,21 @@ const TeacherDashboard = () => {
         `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          params: {
-            year,
-            division,
-          },
         }
       );
 
-      if (Array.isArray(response.data.students)) {
+      if (response.data && Array.isArray(response.data.students)) {
         setStudents(response.data.students);
         setSubjects(response.data.subjects || []);
       } else {
         console.error("Unexpected API response:", response.data);
+        toast.error("Failed to load student data");
       }
     } catch (error) {
       console.error("Error fetching students:", error.response?.data || error);
+      toast.error(error.response?.data?.message || "Failed to fetch students");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -842,8 +843,8 @@ const TeacherDashboard = () => {
                   <option value="">Select Exam Type</option>
                   <option value="unit-test">Unit Test</option>
                   <option value="re-unit-test">Re-Unit Test</option>
-                  <option value="term">Term</option>
-                  <option value="final">Final</option>
+                  <option value="prelim">Prelim</option>
+                  <option value="re-prelim">Re-Prelim</option>
                 </select>
               </div>
 
