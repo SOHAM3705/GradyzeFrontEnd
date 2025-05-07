@@ -103,6 +103,64 @@ const TeacherDashboard = () => {
     }
   }, [students, division, selectedExamType, searchQuery]);
 
+  const fetchMarksByExamType = async (examType) => {
+    try {
+      setIsLoading(true);
+      const token = sessionStorage.getItem("token");
+
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/class-marks`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            year,
+            division,
+            examType: examType || undefined, // Send undefined if no exam type selected
+          },
+        }
+      );
+
+      // Process the marks data to match your student/subject structure
+      const processedMarks = {};
+      response.data.forEach((mark) => {
+        if (!processedMarks[mark.studentId]) {
+          processedMarks[mark.studentId] = {};
+        }
+
+        mark.exams.forEach((exam) => {
+          if (!processedMarks[mark.studentId][exam.subjectName]) {
+            processedMarks[mark.studentId][exam.subjectName] = {};
+          }
+
+          processedMarks[mark.studentId][exam.subjectName][mark.examType] = {
+            marksObtained: exam.marksObtained,
+            status: exam.status,
+          };
+        });
+      });
+
+      // Update students with marks
+      setStudents((prevStudents) =>
+        prevStudents.map((student) => ({
+          ...student,
+          marks: processedMarks[student._id] || {},
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching marks:", error);
+      toast.error("Failed to fetch marks. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update the exam type change handler
+  const handleExamTypeChange = async (e) => {
+    const selectedType = e.target.value;
+    setSelectedExamType(selectedType);
+    await fetchMarksByExamType(selectedType);
+  };
+
   const fetchTeacherData = async () => {
     try {
       const response = await axios.get(
@@ -233,34 +291,47 @@ const TeacherDashboard = () => {
   };
 
   const renderStudents = () => {
-    return filteredStudents.map((student) => (
-      <tr key={student._id} className="border-b hover:bg-gray-100">
-        <td className="p-2">{student.rollNo}</td>
-        <td className="p-2">{student.name}</td>
-        {subjects.map((subject) => {
-          const marks = student.marks?.[subject._id] || {};
-          const total = Object.values(marks).reduce((sum, exam) => {
-            return sum + (exam.marksObtained?.total || 0);
-          }, 0);
+    return filteredStudents.map((student) => {
+      // Calculate totals for the selected exam type (or all if none selected)
+      const subjectTotals = {};
+      let overallTotal = 0;
 
-          return (
+      subjects.forEach((subject) => {
+        const marks = student.marks?.[subject.name] || {};
+
+        // If exam type is selected, only show that type
+        const relevantMarks = selectedExamType
+          ? { [selectedExamType]: marks[selectedExamType] }
+          : marks;
+
+        const subjectTotal = Object.values(relevantMarks).reduce(
+          (sum, exam) => {
+            return sum + (exam.marksObtained?.total || 0);
+          },
+          0
+        );
+
+        subjectTotals[subject._id] = subjectTotal;
+        overallTotal += subjectTotal;
+      });
+
+      return (
+        <tr key={student._id} className="border-b hover:bg-gray-100">
+          <td className="p-2">{student.rollNo}</td>
+          <td className="p-2">{student.name}</td>
+
+          {subjects.map((subject) => (
             <td key={subject._id} className="p-2">
-              {total || "-"}
+              {subjectTotals[subject._id] || "-"}
             </td>
-          );
-        })}
-        <td className="p-2 font-semibold">
-          {subjects.reduce((sum, subject) => {
-            const marks = student.marks?.[subject._id] || {};
-            const subjectTotal = Object.values(marks).reduce((s, exam) => {
-              return s + (exam.marksObtained?.total || 0);
-            }, 0);
-            return sum + subjectTotal;
-          }, 0)}
-        </td>
-      </tr>
-    ));
+          ))}
+
+          <td className="p-2 font-semibold">{overallTotal || "-"}</td>
+        </tr>
+      );
+    });
   };
+
   const renderSubjects = () => {
     if (!subjectsList || subjectsList.length === 0) {
       return <p>No subjects available.</p>;
@@ -638,22 +709,6 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleExamTypeChange = (e) => {
-    if (selectedExamType && modalContent?.isUpdateMode) {
-      setConfirmAction({
-        title: "Unsaved Changes",
-        message: "Changing exam type will lose your unsaved changes. Continue?",
-        onConfirm: () => {
-          setSelectedExamType(e.target.value);
-          openStudentsModal(selectedSubjectId, e.target.value);
-        },
-      });
-    } else {
-      setSelectedExamType(e.target.value);
-      openStudentsModal(selectedSubjectId, e.target.value);
-    }
-  };
-
   const handleDeleteMarks = async () => {
     if (!deleteSubjectId || !selectedDeleteExamType) return;
 
@@ -693,29 +748,50 @@ const TeacherDashboard = () => {
     try {
       setIsLoading(true);
       const token = sessionStorage.getItem("token");
-      if (!token) {
-        console.error("No token found, redirecting to login.");
-        window.location.href = "/teacherlogin";
-        return;
-      }
 
-      const response = await axios.get(
+      // First fetch students
+      const studentsResponse = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Then fetch their marks (all exam types initially)
+      const marksResponse = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/class-marks`,
         {
           headers: { Authorization: `Bearer ${token}` },
+          params: { year, division },
         }
       );
 
-      if (response.data && Array.isArray(response.data.students)) {
-        setStudents(response.data.students);
-        setSubjects(response.data.subjects || []);
-      } else {
-        console.error("Unexpected API response:", response.data);
-        toast.error("Failed to load student data");
-      }
+      const processedMarks = {};
+      marksResponse.data.forEach((mark) => {
+        if (!processedMarks[mark.studentId]) {
+          processedMarks[mark.studentId] = {};
+        }
+
+        mark.exams.forEach((exam) => {
+          if (!processedMarks[mark.studentId][exam.subjectName]) {
+            processedMarks[mark.studentId][exam.subjectName] = {};
+          }
+
+          processedMarks[mark.studentId][exam.subjectName][mark.examType] = {
+            marksObtained: exam.marksObtained,
+            status: exam.status,
+          };
+        });
+      });
+      setStudents(
+        studentsResponse.data.students.map((student) => ({
+          ...student,
+          marks: processedMarks[student._id] || {},
+        }))
+      );
+
+      setSubjects(studentsResponse.data.subjects || []);
     } catch (error) {
-      console.error("Error fetching students:", error.response?.data || error);
-      toast.error(error.response?.data?.message || "Failed to fetch students");
+      console.error("Error fetching students:", error);
+      toast.error("Failed to fetch student data");
     } finally {
       setIsLoading(false);
     }
