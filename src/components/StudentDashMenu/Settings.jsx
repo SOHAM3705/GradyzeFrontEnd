@@ -71,7 +71,12 @@ const ProfileSettings = () => {
     if (file) {
       setSelectedFile(file);
       const reader = new FileReader();
-      reader.onload = () => setProfileImage(reader.result);
+      reader.onload = () => {
+        setProfileData((prev) => ({
+          ...prev,
+          profileImage: reader.result,
+        }));
+      };
       reader.readAsDataURL(file);
     }
   };
