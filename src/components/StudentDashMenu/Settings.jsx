@@ -97,7 +97,7 @@ const ProfileSettings = () => {
 
       // Step 2: Update Profile Photo in User Collection
       await axios.post(
-        `${API_BASE_URL}/api/studentetting/update-profile-photo`,
+        `${API_BASE_URL}/api/studentsetting/update-profile-photo`,
         {
           email: profileData.email,
           profilePhotoUrl: newProfilePhotoUrl,
