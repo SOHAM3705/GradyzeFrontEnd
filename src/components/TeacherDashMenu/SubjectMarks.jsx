@@ -298,30 +298,50 @@ const TeacherDashboard = () => {
       toast.error("Failed to export marks. Please try again.");
     }
   };
-
   const renderStudents = () => {
+    if (isLoading) {
+      return (
+        <tr>
+          <td colSpan={subjects.length + 3} className="text-center py-4">
+            <ClipLoader size={30} color="#3B82F6" />
+          </td>
+        </tr>
+      );
+    }
+
+    if (filteredStudents.length === 0) {
+      return (
+        <tr>
+          <td colSpan={subjects.length + 3} className="text-center py-4">
+            No students found
+          </td>
+        </tr>
+      );
+    }
+
     return filteredStudents.map((student) => {
-      // Calculate totals for the selected exam type (or all if none selected)
-      const subjectTotals = {};
-      let overallTotal = 0;
+      // Calculate totals for each subject and overall
+      let totalMarks = 0;
+      let hasMarks = false;
 
-      subjects.forEach((subject) => {
+      const subjectMarks = subjects.map((subject) => {
         const marks = student.marks?.[subject.name] || {};
-
-        // If exam type is selected, only show that type
         const relevantMarks = selectedExamType
-          ? { [selectedExamType]: marks[selectedExamType] }
-          : marks;
+          ? marks[selectedExamType]
+          : Object.values(marks).find((m) => m?.marksObtained?.total >= 0) ||
+            marks[Object.keys(marks)[0]];
 
-        const subjectTotal = Object.values(relevantMarks).reduce(
-          (sum, exam) => {
-            return sum + (exam.marksObtained?.total || 0);
-          },
-          0
-        );
+        const marksValue = relevantMarks?.marksObtained?.total ?? "-";
 
-        subjectTotals[subject._id] = subjectTotal;
-        overallTotal += subjectTotal;
+        if (typeof marksValue === "number" && marksValue >= 0) {
+          totalMarks += marksValue;
+          hasMarks = true;
+        }
+
+        return {
+          value: marksValue === -1 ? "Absent" : marksValue,
+          status: relevantMarks?.status || "-",
+        };
       });
 
       return (
@@ -329,13 +349,27 @@ const TeacherDashboard = () => {
           <td className="p-2">{student.rollNo}</td>
           <td className="p-2">{student.name}</td>
 
-          {subjects.map((subject) => (
-            <td key={subject._id} className="p-2">
-              {subjectTotals[subject._id] || "-"}
+          {subjectMarks.map((mark, index) => (
+            <td key={subjects[index]._id} className="p-2 text-center">
+              <div
+                className={`${
+                  mark.status === "Pass"
+                    ? "text-green-600"
+                    : mark.status === "Fail"
+                    ? "text-red-600"
+                    : mark.status === "Absent"
+                    ? "text-gray-500"
+                    : ""
+                }`}
+              >
+                {mark.value}
+              </div>
             </td>
           ))}
 
-          <td className="p-2 font-semibold">{overallTotal || "-"}</td>
+          <td className="p-2 font-semibold text-center bg-gray-50">
+            {hasMarks ? totalMarks : "-"}
+          </td>
         </tr>
       );
     });
@@ -1438,25 +1472,30 @@ const TeacherDashboard = () => {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-200">
-                    <th className="p-2 text-left">Roll No.</th>
-                    <th className="p-2 text-left">Student Name</th>
+                    <th className="p-2 text-left border">Roll No.</th>
+                    <th className="p-2 text-left border">Student Name</th>
                     {subjects.map((subject) => (
-                      <th key={subject._id} className="p-2 text-left">
+                      <th key={subject._id} className="p-2 text-center border">
                         {subject.name}
+                        {selectedExamType && (
+                          <div className="text-xs font-normal">
+                            ({examTypeToText(selectedExamType)})
+                          </div>
+                        )}
                       </th>
                     ))}
-                    <th className="p-2 text-left">Total</th>
+                    <th className="p-2 text-center border bg-gray-100">
+                      Total
+                    </th>
                   </tr>
                 </thead>
                 <tbody>{renderStudents()}</tbody>
               </table>
             </div>
-            <div className="flex justify-center gap-2 mt-4"></div>
           </div>
-
           {renderModalContent()}
         </div>
       )}
