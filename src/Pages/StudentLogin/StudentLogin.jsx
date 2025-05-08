@@ -65,6 +65,7 @@ const StudentLogin = () => {
         sessionStorage.setItem("studentId", studentId);
         sessionStorage.setItem("studentName", name);
         sessionStorage.setItem("adminId", adminId);
+        sessionStorage.setItem("teacherId", response.data.teacherId);
 
         navigate("/studentdash");
       } catch (err) {
