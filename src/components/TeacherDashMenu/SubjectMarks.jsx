@@ -253,30 +253,6 @@ const TeacherDashboard = () => {
     });
   };
 
-  const filterStudents = () => {
-    let filtered = students;
-
-    // If viewing a retest exam, only show students who failed/absent in previous exam
-    if (
-      selectedExamType === "re-unit-test" ||
-      selectedExamType === "reprelim"
-    ) {
-      filtered = getStudentsForRetest(students, selectedExamType);
-    }
-
-    filtered = filtered
-      .filter((student) => {
-        const matchesSearch =
-          student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          student.rollNo?.toString().includes(searchQuery);
-        return matchesSearch;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    setFilteredStudents(filtered);
-    setCurrentPage(1);
-  };
-
   const handleClassExport = async (exportType) => {
     try {
       setIsLoading(true);
@@ -391,6 +367,38 @@ const TeacherDashboard = () => {
           </td>
         </tr>
       );
+    });
+  };
+  // Add this debugging function
+  const debugRetestFiltering = (students, examType) => {
+    console.log("Debugging retest filtering for:", examType);
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+
+    students.forEach((student) => {
+      console.log(`Student: ${student.name} (${student.rollNo})`);
+      let needsRetest = false;
+
+      for (const subjectName in student.marks) {
+        const subjectMarks = student.marks[subjectName];
+        const previousMarks = subjectMarks[previousExamType];
+
+        if (previousMarks) {
+          console.log(`  Subject: ${subjectName}`, {
+            status: previousMarks.status,
+            marks: previousMarks.marksObtained?.total,
+          });
+
+          if (
+            previousMarks.status === "Fail" ||
+            previousMarks.status === "Absent"
+          ) {
+            needsRetest = true;
+          }
+        }
+      }
+
+      console.log(`  Needs retest: ${needsRetest}`);
     });
   };
 
@@ -914,19 +922,75 @@ const TeacherDashboard = () => {
     }
   };
 
-  const getStudentsForRetest = (students, examType, subjectName) => {
+  // Unified filtering approach
+  const getStudentsForRetest = (students, examType, subjectName = null) => {
     const previousExamType =
       examType === "re-unit-test" ? "unit-test" : "prelim";
 
     return students.filter((student) => {
-      const studentMarks = student.marks?.[subjectName] || {};
-      const previousMarks = studentMarks[previousExamType];
+      // For subject teacher view (filter by specific subject)
+      if (subjectName) {
+        const subjectMarks = student.marks?.[subjectName] || {};
+        const previousMarks = subjectMarks[previousExamType];
+        return (
+          previousMarks &&
+          (previousMarks.status === "Fail" || previousMarks.status === "Absent")
+        );
+      }
 
-      return (
-        previousMarks &&
-        (previousMarks.status === "Fail" || previousMarks.status === "Absent")
-      );
+      // For class teacher view (check all subjects)
+      for (const subName in student.marks) {
+        const subjectMarks = student.marks[subName];
+        const previousMarks = subjectMarks[previousExamType];
+        if (
+          previousMarks &&
+          (previousMarks.status === "Fail" || previousMarks.status === "Absent")
+        ) {
+          return true;
+        }
+      }
+      return false;
     });
+  };
+
+  // Updated filterStudents function
+  const filterStudents = () => {
+    let filtered = students;
+
+    if (
+      selectedExamType === "re-unit-test" ||
+      selectedExamType === "reprelim"
+    ) {
+      // For subject teacher view
+      if (activeTab === "subject-teacher" && selectedSubjectId) {
+        const subject = subjectsList.find((s) => s._id === selectedSubjectId);
+        if (subject) {
+          filtered = getStudentsForRetest(
+            students,
+            selectedExamType,
+            subject.name
+          );
+        }
+      }
+      // For class teacher view
+      else {
+        filtered = getStudentsForRetest(students, selectedExamType);
+      }
+
+      console.log(`Filtered students for ${selectedExamType}:`, filtered);
+    }
+
+    filtered = filtered
+      .filter((student) => {
+        const matchesSearch =
+          student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          student.rollNo?.toString().includes(searchQuery);
+        return matchesSearch;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    setFilteredStudents(filtered);
+    setCurrentPage(1);
   };
 
   const examTypeToText = (type) => {
