@@ -103,57 +103,6 @@ const TeacherDashboard = () => {
     }
   }, [students, division, selectedExamType, searchQuery]);
 
-  const fetchMarksByExamType = async (examType) => {
-    try {
-      setIsLoading(true);
-      const token = sessionStorage.getItem("token");
-
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/class-marks`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: {
-            year,
-            division,
-            examType: examType || undefined, // Send undefined if no exam type selected
-          },
-        }
-      );
-
-      // Process the marks data to match your student/subject structure
-      const processedMarks = {};
-      response.data.forEach((mark) => {
-        if (!processedMarks[mark.studentId]) {
-          processedMarks[mark.studentId] = {};
-        }
-
-        mark.exams.forEach((exam) => {
-          if (!processedMarks[mark.studentId][exam.subjectName]) {
-            processedMarks[mark.studentId][exam.subjectName] = {};
-          }
-
-          processedMarks[mark.studentId][exam.subjectName][mark.examType] = {
-            marksObtained: exam.marksObtained,
-            status: exam.status,
-          };
-        });
-      });
-
-      // Update students with marks
-      setStudents((prevStudents) =>
-        prevStudents.map((student) => ({
-          ...student,
-          marks: processedMarks[student._id] || {},
-        }))
-      );
-    } catch (error) {
-      console.error("Error fetching marks:", error);
-      toast.error("Failed to fetch marks. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleExamTypeChange = (e) => {
     if (selectedExamType && modalContent?.isUpdateMode) {
       setConfirmAction({
@@ -298,76 +247,50 @@ const TeacherDashboard = () => {
       toast.error("Failed to export marks. Please try again.");
     }
   };
+
   const renderStudents = () => {
-    if (isLoading) {
-      return (
-        <tr>
-          <td colSpan={subjects.length + 3} className="text-center py-4">
-            <ClipLoader size={30} color="#3B82F6" />
-          </td>
-        </tr>
-      );
-    }
-
-    if (filteredStudents.length === 0) {
-      return (
-        <tr>
-          <td colSpan={subjects.length + 3} className="text-center py-4">
-            No students found
-          </td>
-        </tr>
-      );
-    }
-
     return filteredStudents.map((student) => {
-      // Calculate totals for each subject and overall
+      // Calculate totals
       let totalMarks = 0;
       let hasMarks = false;
 
-      const subjectMarks = subjects.map((subject) => {
-        const marks = student.marks?.[subject.name] || {};
-        const relevantMarks = selectedExamType
-          ? marks[selectedExamType]
-          : Object.values(marks).find((m) => m?.marksObtained?.total >= 0) ||
-            marks[Object.keys(marks)[0]];
+      const subjectCells = subjects.map((subject) => {
+        const subjectMarks = student.marks?.[subject.name] || {};
 
-        const marksValue = relevantMarks?.marksObtained?.total ?? "-";
+        // Get marks for selected exam type or all exam types
+        const marksToShow = selectedExamType
+          ? subjectMarks[selectedExamType]
+          : Object.values(subjectMarks)[0]; // Show first exam type if none selected
+
+        const marksValue = marksToShow?.marksObtained?.total ?? "-";
+        const status = marksToShow?.status || "-";
 
         if (typeof marksValue === "number" && marksValue >= 0) {
           totalMarks += marksValue;
           hasMarks = true;
         }
 
-        return {
-          value: marksValue === -1 ? "Absent" : marksValue,
-          status: relevantMarks?.status || "-",
-        };
+        return (
+          <td key={subject._id} className="p-2 text-center border">
+            <div
+              className={`
+              ${status === "Pass" ? "text-green-600" : ""}
+              ${status === "Fail" ? "text-red-600" : ""}
+              ${status === "Absent" ? "text-gray-500" : ""}
+            `}
+            >
+              {marksValue === -1 ? "Absent" : marksValue}
+            </div>
+          </td>
+        );
       });
 
       return (
         <tr key={student._id} className="border-b hover:bg-gray-100">
-          <td className="p-2">{student.rollNo}</td>
-          <td className="p-2">{student.name}</td>
-
-          {subjectMarks.map((mark, index) => (
-            <td key={subjects[index]._id} className="p-2 text-center">
-              <div
-                className={`${
-                  mark.status === "Pass"
-                    ? "text-green-600"
-                    : mark.status === "Fail"
-                    ? "text-red-600"
-                    : mark.status === "Absent"
-                    ? "text-gray-500"
-                    : ""
-                }`}
-              >
-                {mark.value}
-              </div>
-            </td>
-          ))}
-
-          <td className="p-2 font-semibold text-center bg-gray-50">
+          <td className="p-2 border">{student.rollNo}</td>
+          <td className="p-2 border">{student.name}</td>
+          {subjectCells}
+          <td className="p-2 border font-semibold text-center bg-gray-50">
             {hasMarks ? totalMarks : "-"}
           </td>
         </tr>
@@ -792,46 +715,15 @@ const TeacherDashboard = () => {
       setIsLoading(true);
       const token = sessionStorage.getItem("token");
 
-      // First fetch students
-      const studentsResponse = await axios.get(
+      const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Then fetch their marks (all exam types initially)
-      const marksResponse = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/class-marks`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { year, division },
-        }
-      );
-
-      const processedMarks = {};
-      marksResponse.data.forEach((mark) => {
-        if (!processedMarks[mark.studentId]) {
-          processedMarks[mark.studentId] = {};
-        }
-
-        mark.exams.forEach((exam) => {
-          if (!processedMarks[mark.studentId][exam.subjectName]) {
-            processedMarks[mark.studentId][exam.subjectName] = {};
-          }
-
-          processedMarks[mark.studentId][exam.subjectName][mark.examType] = {
-            marksObtained: exam.marksObtained,
-            status: exam.status,
-          };
-        });
-      });
-      setStudents(
-        studentsResponse.data.students.map((student) => ({
-          ...student,
-          marks: processedMarks[student._id] || {},
-        }))
-      );
-
-      setSubjects(studentsResponse.data.subjects || []);
+      setStudents(response.data.students);
+      setSubjects(response.data.subjects || []);
+      setYear(response.data.year);
+      setDivision(response.data.division);
     } catch (error) {
       console.error("Error fetching students:", error);
       toast.error("Failed to fetch student data");
