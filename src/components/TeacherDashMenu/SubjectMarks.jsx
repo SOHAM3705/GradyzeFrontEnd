@@ -104,20 +104,75 @@ const TeacherDashboard = () => {
     }
   }, [students, division, selectedExamType, searchQuery]);
 
+  const getRetestStatus = (student, examType) => {
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+    const failedSubjects = [];
+
+    for (const subjectName in student.marks) {
+      const subjectMarks = student.marks[subjectName];
+      if (
+        subjectMarks[previousExamType] &&
+        (subjectMarks[previousExamType].status === "Fail" ||
+          subjectMarks[previousExamType].status === "Absent")
+      ) {
+        failedSubjects.push(subjectName);
+      }
+    }
+
+    return failedSubjects.length > 0
+      ? `Retest for: ${failedSubjects.join(", ")}`
+      : "No retest needed";
+  };
+
   const handleExamTypeChange = (e) => {
+    const newExamType = e.target.value;
+
+    // If there are unsaved changes, show confirmation
     if (selectedExamType && modalContent?.isUpdateMode) {
       setConfirmAction({
         title: "Unsaved Changes",
         message: "Changing exam type will lose your unsaved changes. Continue?",
         onConfirm: () => {
-          setSelectedExamType(e.target.value);
-          openStudentsModal(selectedSubjectId, e.target.value);
+          handleExamTypeSelection(newExamType);
         },
       });
-    } else {
-      setSelectedExamType(e.target.value);
-      openStudentsModal(selectedSubjectId, e.target.value);
+      return;
     }
+
+    // Special handling for retest exams
+    if (
+      (newExamType === "re-unit-test" || newExamType === "reprelim") &&
+      selectedExamType !== "re-unit-test" &&
+      selectedExamType !== "reprelim"
+    ) {
+      setConfirmAction({
+        title: "View Retest Students",
+        message: `This will only show students who failed or were absent in the ${
+          newExamType === "re-unit-test" ? "Unit Test" : "Prelim"
+        }. Continue?`,
+        onConfirm: () => {
+          handleExamTypeSelection(newExamType);
+        },
+      });
+      return;
+    }
+
+    // Regular exam type change
+    handleExamTypeSelection(newExamType);
+  };
+
+  // Helper function to handle the actual exam type selection
+  const handleExamTypeSelection = (examType) => {
+    setSelectedExamType(examType);
+
+    // Only open modal if we have a subject selected
+    if (selectedSubjectId) {
+      openStudentsModal(selectedSubjectId, examType);
+    }
+
+    // Clear any existing confirmations
+    setConfirmAction(null);
   };
 
   const fetchTeacherData = async () => {
@@ -199,7 +254,17 @@ const TeacherDashboard = () => {
   };
 
   const filterStudents = () => {
-    let filtered = students
+    let filtered = students;
+
+    // If viewing a retest exam, only show students who failed/absent in previous exam
+    if (
+      selectedExamType === "re-unit-test" ||
+      selectedExamType === "reprelim"
+    ) {
+      filtered = getStudentsForRetest(students, selectedExamType);
+    }
+
+    filtered = filtered
       .filter((student) => {
         const matchesSearch =
           student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -257,6 +322,16 @@ const TeacherDashboard = () => {
             <ClipLoader size={30} color="#3B82F6" />
           </td>
         </tr>
+      );
+    }
+    if (
+      selectedExamType === "re-unit-test" ||
+      selectedExamType === "reprelim"
+    ) {
+      subjectCells.push(
+        <td key="retest-status" className="p-2 text-left border text-xs">
+          {getRetestStatus(student, selectedExamType)}
+        </td>
       );
     }
 
@@ -425,7 +500,6 @@ const TeacherDashboard = () => {
     });
   };
 
-  // Enhanced openStudentsModal with loading state and error handling
   const openStudentsModal = async (subjectId, examType) => {
     try {
       setIsLoading(true);
@@ -455,15 +529,34 @@ const TeacherDashboard = () => {
       const existingMarks = response.data || {};
       const hasExistingMarks = Object.keys(existingMarks).length > 0;
 
+      // Get all students for this subject
+      const allStudents = studentsData[subjectId]?.students || [];
+
+      // Filter students if this is a retest
+      let studentsToShow = allStudents;
+      if (examType === "re-unit-test" || examType === "reprelim") {
+        const previousExamType =
+          examType === "re-unit-test" ? "unit-test" : "prelim";
+
+        studentsToShow = allStudents.filter((student) => {
+          const studentMarks = existingMarks[student._id]?.[previousExamType];
+          return (
+            studentMarks &&
+            (studentMarks.status === "Fail" || studentMarks.status === "Absent")
+          );
+        });
+      }
+
       setIsLoading(false);
       setModalContent({
         type: "students-list",
         subjectId,
-        subjectName: subject.name, // Pass subjectName to modal
+        subjectName: subject.name,
         examType,
         isUpdateMode: hasExistingMarks,
         existingMarks,
         lastUpdated: response.data.lastUpdated,
+        studentsToShow, // Pass the filtered students
       });
     } catch (error) {
       setIsLoading(false);
@@ -475,9 +568,11 @@ const TeacherDashboard = () => {
         examType,
         isUpdateMode: false,
         existingMarks: {},
+        studentsToShow: studentsData[subjectId]?.students || [],
       });
     }
   };
+
   const handleExport = async (exportType, subjectId, examType) => {
     try {
       setIsLoading(true);
@@ -573,7 +668,6 @@ const TeacherDashboard = () => {
     const subjectData = studentsData[selectedSubjectId];
     if (!subjectData) return;
 
-    const students = subjectData.students;
     const selectedSubject = subjectsList.find(
       (subject) => subject._id === selectedSubjectId
     );
@@ -597,9 +691,9 @@ const TeacherDashboard = () => {
     const marksToSave = [];
     const rows = document.querySelectorAll(".student-row");
 
-    rows.forEach((row, index) => {
+    rows.forEach((row) => {
       const isAbsent = row.querySelector(".absent-checkbox").checked;
-      const studentId = students[index]._id;
+      const studentId = row.getAttribute("data-id");
       const teacherId = sessionStorage.getItem("teacherId");
 
       if (!teacherId) {
@@ -642,6 +736,26 @@ const TeacherDashboard = () => {
         const total = q1q2 + q3q4 + q5q6 + q7q8;
         const status = total >= passingMarks ? "Pass" : "Fail";
 
+        // For retests, check if they've improved from previous attempt
+        let finalStatus = status;
+        if (
+          selectedExamType === "re-unit-test" ||
+          selectedExamType === "reprelim"
+        ) {
+          const previousExamType =
+            selectedExamType === "re-unit-test" ? "unit-test" : "prelim";
+          const previousMarks =
+            modalContent.existingMarks[studentId]?.[previousExamType];
+
+          if (
+            previousMarks &&
+            previousMarks.status === "Fail" &&
+            status === "Pass"
+          ) {
+            finalStatus = "Improved";
+          }
+        }
+
         marksToSave.push({
           studentId,
           examType: selectedExamType,
@@ -658,7 +772,7 @@ const TeacherDashboard = () => {
                 total,
               },
               totalMarks: isUnitTest ? 30 : 70,
-              status,
+              status: finalStatus,
               dateAdded: new Date(),
             },
           ],
@@ -691,6 +805,21 @@ const TeacherDashboard = () => {
           "Failed to save marks. Please try again."
       );
     }
+  };
+
+  const needsRetest = (studentId, subjectName, examType) => {
+    if (examType !== "re-unit-test" && examType !== "reprelim") return false;
+
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+    const studentMarks =
+      modalContent?.existingMarks[studentId]?.[previousExamType];
+
+    return (
+      studentMarks &&
+      studentMarks.subjectName === subjectName &&
+      (studentMarks.status === "Fail" || studentMarks.status === "Absent")
+    );
   };
 
   const handleDeleteMarks = async () => {
@@ -820,6 +949,28 @@ const TeacherDashboard = () => {
     }
   };
 
+  const getStudentsForRetest = (students, examType) => {
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+
+    return students.filter((student) => {
+      // Check all subjects for this student
+      for (const subjectName in student.marks) {
+        const subjectMarks = student.marks[subjectName];
+
+        // Check if student failed or was absent in the previous exam
+        if (
+          subjectMarks[previousExamType] &&
+          (subjectMarks[previousExamType].status === "Fail" ||
+            subjectMarks[previousExamType].status === "Absent")
+        ) {
+          return true;
+        }
+      }
+      return false;
+    });
+  };
+
   const examTypeToText = (type) => {
     const types = {
       "unit-test": "Unit Test",
@@ -905,6 +1056,17 @@ const TeacherDashboard = () => {
                   <option value="prelim">Prelim</option>
                   <option value="reprelim">Re-Prelim</option>
                 </select>
+                {selectedExamType === "re-unit-test" ||
+                selectedExamType === "reprelim" ? (
+                  <div className="mt-2 p-2 bg-yellow-50 text-yellow-800 text-sm rounded">
+                    Note: Only students who failed or were absent in the
+                    previous{" "}
+                    {selectedExamType === "re-unit-test"
+                      ? "Unit Test"
+                      : "Prelim"}{" "}
+                    will be shown.
+                  </div>
+                ) : null}
               </div>
               <div className="flex justify-end gap-2">
                 <button
@@ -1036,11 +1198,25 @@ const TeacherDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {subjectData.students.map((student, index) => {
+                    {modalContent.studentsToShow.map((student, index) => {
                       const studentMarks =
-                        existingMarks[student._id]?.[examType];
+                        modalContent.existingMarks[student._id]?.[examType];
                       const isAbsent = studentMarks?.status === "Absent";
                       const marksData = studentMarks?.marksObtained;
+
+                      // Add a badge showing previous exam status if this is a retest
+                      const previousExamStatus =
+                        examType === "re-unit-test" ||
+                        examType === "reprelim" ? (
+                          <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                            Previous:{" "}
+                            {modalContent.existingMarks[student._id]?.[
+                              examType === "re-unit-test"
+                                ? "unit-test"
+                                : "prelim"
+                            ]?.status || "N/A"}
+                          </span>
+                        ) : null;
 
                       return (
                         <tr
@@ -1053,7 +1229,7 @@ const TeacherDashboard = () => {
                             <input
                               type="checkbox"
                               className="absent-checkbox"
-                              defaultChecked={isAbsent} // Changed from checked to defaultChecked
+                              defaultChecked={isAbsent}
                               onChange={(e) => {
                                 const row = e.target.closest("tr");
                                 const inputs = row.querySelectorAll(
@@ -1066,8 +1242,9 @@ const TeacherDashboard = () => {
                                   } else {
                                     // Reset to default values when unchecked
                                     const marksData =
-                                      existingMarks[student._id]?.[examType]
-                                        ?.marksObtained;
+                                      modalContent.existingMarks[student._id]?.[
+                                        examType
+                                      ]?.marksObtained;
                                     if (marksData) {
                                       row.querySelector(".q1q2-input").value =
                                         marksData.q1q2 || 0;
@@ -1088,7 +1265,10 @@ const TeacherDashboard = () => {
                           </td>
 
                           <td className="p-2">{student.rollNo}</td>
-                          <td className="p-2">{student.name}</td>
+                          <td className="p-2">
+                            {student.name}
+                            {previousExamStatus}
+                          </td>
 
                           {/* Q1/Q2 Input */}
                           <td className="p-2 text-center">
