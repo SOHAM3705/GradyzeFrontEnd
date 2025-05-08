@@ -105,13 +105,6 @@ const ProfileSettings = () => {
       const newProfilePhotoUrl = response.data.profilePhotoUrl;
 
       // Step 2: Update Profile Photo in User Collection
-      await axios.post(
-        "https://gradyzebackend.onrender.com/api/teachersetting/update-profile-photo",
-        {
-          email: profileData.email,
-          profilePhotoUrl: newProfilePhotoUrl,
-        }
-      );
 
       console.log("✅ Profile Photo Updated in User Collection");
 
