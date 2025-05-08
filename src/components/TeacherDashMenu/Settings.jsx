@@ -44,8 +44,12 @@ const ProfileSettings = () => {
         );
 
         if (response.data) {
+          const backendBaseURL = "https://gradyzebackend.onrender.com";
+
           setProfileData({
-            profileImage: response.data.profilePhotoUrl || "/profile.png",
+            profileImage: response.data.profilePhotoUrl
+              ? `${backendBaseURL}${response.data.profilePhotoUrl}`
+              : "/profile.png",
             name: response.data.name || "",
             email: response.data.email || "",
             oldEmail: response.data.email || "",
