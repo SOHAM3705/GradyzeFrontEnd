@@ -763,40 +763,44 @@ const TeacherDashboard = () => {
 
       // 3. Process marks data to match student/subject structure
       const processedMarks = {};
+
+      // First, create a map of all unique subjects
+      const subjectsMap = {};
+
       marksResponse.data.forEach((mark) => {
-        if (!processedMarks[mark.studentId]) {
-          processedMarks[mark.studentId] = {};
+        mark.exams.forEach((exam) => {
+          if (!subjectsMap[exam.subjectName]) {
+            subjectsMap[exam.subjectName] = {
+              name: exam.subjectName,
+              _id: exam.subjectName, // Using name as ID if real ID not available
+            };
+          }
+        });
+      });
+
+      // Then process student marks
+      marksResponse.data.forEach((mark) => {
+        if (!processedMarks[mark.studentId._id]) {
+          processedMarks[mark.studentId._id] = {};
         }
 
         mark.exams.forEach((exam) => {
-          if (!processedMarks[mark.studentId][exam.subjectName]) {
-            processedMarks[mark.studentId][exam.subjectName] = {};
+          if (!processedMarks[mark.studentId._id][exam.subjectName]) {
+            processedMarks[mark.studentId._id][exam.subjectName] = {};
           }
-          processedMarks[mark.studentId][exam.subjectName][mark.examType] = {
-            marksObtained: exam.marksObtained,
-            status: exam.status,
-          };
+
+          processedMarks[mark.studentId._id][exam.subjectName][mark.examType] =
+            {
+              marksObtained: exam.marksObtained,
+              status: exam.status,
+            };
         });
       });
 
-      // 4. Get unique subjects from the marks data (for this class)
-      const subjectsInClass = new Set();
-      Object.values(processedMarks).forEach((studentMarks) => {
-        Object.keys(studentMarks).forEach((subjectName) => {
-          subjectsInClass.add(subjectName);
-        });
-      });
+      // 4. Get unique subjects as an array
+      const relevantSubjects = Object.values(subjectsMap);
 
-      // 5. Create subjects array with proper structure
-      const relevantSubjects = Array.from(subjectsInClass).map(
-        (subjectName) => ({
-          name: subjectName,
-          // Add other subject properties if available
-          _id: subjectName, // Using name as ID if real ID not available
-        })
-      );
-
-      // 6. Combine student data with marks
+      // 5. Combine student data with marks
       const studentsWithMarks = studentsResponse.data.students.map(
         (student) => ({
           ...student,
