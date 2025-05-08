@@ -101,7 +101,6 @@ const TeacherNotification = () => {
       alert("Notification sent successfully!");
     } catch (error) {
       console.error("Error sending notification:", error);
-      alert("Failed to send notification");
     } finally {
       setIsSending(false);
     }
