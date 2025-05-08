@@ -32,25 +32,29 @@ const ProfileSettings = () => {
       try {
         const token = sessionStorage.getItem("token");
         if (!token) {
-          navigate("/stduentlogin");
+          navigate("/studentlogin"); // ✅ Fixed typo: "stduentlogin" -> "studentlogin"
           return;
         }
 
         const response = await axios.get(
-          `${API_BASE_URL}/api/studentsetting/profile`,
+          "https://gradyzebackend.onrender.com/api/studentsetting/profile", // ✅ Use full backend URL consistently
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
 
         if (response.data) {
+          const backendBaseURL = "https://gradyzebackend.onrender.com";
+
           setProfileData({
+            profileImage: response.data.profilePhotoUrl
+              ? `${backendBaseURL}${response.data.profilePhotoUrl}` // ✅ Append backend base URL
+              : "/profile.png",
             name: response.data.name || "",
             email: response.data.email || "",
             oldEmail: response.data.email || "",
             gender: response.data.gender || "",
           });
-          setProfileImage(response.data.profilePhotoUrl || "/profile.png");
         }
       } catch (error) {
         setError("Failed to load profile data");

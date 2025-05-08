@@ -324,16 +324,6 @@ const TeacherDashboard = () => {
         </tr>
       );
     }
-    if (
-      selectedExamType === "re-unit-test" ||
-      selectedExamType === "reprelim"
-    ) {
-      subjectCells.push(
-        <td key="retest-status" className="p-2 text-left border text-xs">
-          {getRetestStatus(student, selectedExamType)}
-        </td>
-      );
-    }
 
     if (filteredStudents.length === 0) {
       return (
@@ -349,11 +339,12 @@ const TeacherDashboard = () => {
       let totalMarks = 0;
       let hasMarks = false;
 
+      // First create subject cells
       const subjectCells = subjects.map((subject) => {
         const subjectMarks = student.marks?.[subject.name] || {};
         const marksToShow = selectedExamType
           ? subjectMarks[selectedExamType]
-          : Object.values(subjectMarks)[0]; // Show first exam type if none selected
+          : Object.values(subjectMarks)[0];
 
         const marksValue = marksToShow?.marksObtained?.total ?? "-";
         const status = marksToShow?.status || "-";
@@ -377,6 +368,18 @@ const TeacherDashboard = () => {
           </td>
         );
       });
+
+      // Then add retest status column if needed
+      if (
+        selectedExamType === "re-unit-test" ||
+        selectedExamType === "reprelim"
+      ) {
+        subjectCells.push(
+          <td key="retest-status" className="p-2 text-left border text-xs">
+            {getRetestStatus(student, selectedExamType)}
+          </td>
+        );
+      }
 
       return (
         <tr key={student._id} className="border-b hover:bg-gray-100">
@@ -1618,6 +1621,10 @@ const TeacherDashboard = () => {
                         )}
                       </th>
                     ))}
+                    {(selectedExamType === "re-unit-test" ||
+                      selectedExamType === "reprelim") && (
+                      <th className="p-2 text-left border">Retest Reason</th>
+                    )}
                     <th className="p-2 text-center border bg-gray-100">
                       Total
                     </th>
