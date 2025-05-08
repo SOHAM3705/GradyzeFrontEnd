@@ -1183,9 +1183,13 @@ const TeacherDashboard = () => {
         );
 
       case "students-list":
-        const { subjectId, examType, existingMarks, isUpdateMode } =
-          modalContent;
-        const subjectData = studentsData[subjectId] || { students: [] };
+        const {
+          subjectId,
+          examType,
+          existingMarks,
+          isUpdateMode,
+          studentsToShow,
+        } = modalContent;
         const isUnitTest = examType.includes("unit");
 
         return (
@@ -1211,14 +1215,7 @@ const TeacherDashboard = () => {
                     <tr>
                       <th className="p-2 text-left">Absent</th>
                       <th className="p-2 text-left">Roll No.</th>
-                      <td className="p-2">
-                        <div>{student.name}</div>
-                        {getRetestInfo(
-                          student._id,
-                          modalContent.subjectName,
-                          examType
-                        )}
-                      </td>
+                      <th className="p-2 text-left">Name</th>
                       {isUnitTest ? (
                         <>
                           <th className="p-2 text-center">Q1/Q2 (Max 15)</th>
@@ -1237,25 +1234,11 @@ const TeacherDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {modalContent.studentsToShow.map((student, index) => {
+                    {studentsToShow.map((student) => {
                       const studentMarks =
-                        modalContent.existingMarks[student._id]?.[examType];
+                        existingMarks[student._id]?.[examType];
                       const isAbsent = studentMarks?.status === "Absent";
                       const marksData = studentMarks?.marksObtained;
-
-                      // Add a badge showing previous exam status if this is a retest
-                      const previousExamStatus =
-                        examType === "re-unit-test" ||
-                        examType === "reprelim" ? (
-                          <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                            Previous:{" "}
-                            {modalContent.existingMarks[student._id]?.[
-                              examType === "re-unit-test"
-                                ? "unit-test"
-                                : "prelim"
-                            ]?.status || "N/A"}
-                          </span>
-                        ) : null;
 
                       return (
                         <tr
@@ -1281,9 +1264,8 @@ const TeacherDashboard = () => {
                                   } else {
                                     // Reset to default values when unchecked
                                     const marksData =
-                                      modalContent.existingMarks[student._id]?.[
-                                        examType
-                                      ]?.marksObtained;
+                                      existingMarks[student._id]?.[examType]
+                                        ?.marksObtained;
                                     if (marksData) {
                                       row.querySelector(".q1q2-input").value =
                                         marksData.q1q2 || 0;
@@ -1306,7 +1288,11 @@ const TeacherDashboard = () => {
                           <td className="p-2">{student.rollNo}</td>
                           <td className="p-2">
                             {student.name}
-                            {previousExamStatus}
+                            {getRetestInfo(
+                              student._id,
+                              modalContent.subjectName,
+                              examType
+                            )}
                           </td>
 
                           {/* Q1/Q2 Input */}
