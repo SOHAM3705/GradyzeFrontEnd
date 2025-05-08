@@ -154,11 +154,20 @@ const TeacherDashboard = () => {
     }
   };
 
-  // Update the exam type change handler
-  const handleExamTypeChange = async (e) => {
-    const selectedType = e.target.value;
-    setSelectedExamType(selectedType);
-    await fetchMarksByExamType(selectedType);
+  const handleExamTypeChange = (e) => {
+    if (selectedExamType && modalContent?.isUpdateMode) {
+      setConfirmAction({
+        title: "Unsaved Changes",
+        message: "Changing exam type will lose your unsaved changes. Continue?",
+        onConfirm: () => {
+          setSelectedExamType(e.target.value);
+          openStudentsModal(selectedSubjectId, e.target.value);
+        },
+      });
+    } else {
+      setSelectedExamType(e.target.value);
+      openStudentsModal(selectedSubjectId, e.target.value);
+    }
   };
 
   const fetchTeacherData = async () => {
