@@ -250,6 +250,26 @@ const TeacherDashboard = () => {
   };
 
   const renderStudents = () => {
+    if (isLoading) {
+      return (
+        <tr>
+          <td colSpan={subjects.length + 3} className="text-center py-4">
+            <ClipLoader size={30} color="#3B82F6" />
+          </td>
+        </tr>
+      );
+    }
+
+    if (filteredStudents.length === 0) {
+      return (
+        <tr>
+          <td colSpan={subjects.length + 3} className="text-center py-4">
+            No students found
+          </td>
+        </tr>
+      );
+    }
+
     return filteredStudents.map((student) => {
       let totalMarks = 0;
       let hasMarks = false;
@@ -708,56 +728,84 @@ const TeacherDashboard = () => {
     }
   };
 
-  // Modify fetchStudents to filter subjects
   const fetchStudents = async () => {
     try {
       setIsLoading(true);
       const token = sessionStorage.getItem("token");
 
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // 1. Get class students and teacher's assigned division
+      const [studentsResponse, divisionResponse] = await Promise.all([
+        axios.get(
+          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        ),
+        axios.get(
+          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/divisions`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        ),
+      ]);
 
-      // Get the teacher's assigned class info
-      const classResponse = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/divisions`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const assignedYear = divisionResponse.data.year;
+      const assignedDivision = divisionResponse.data.division;
 
-      const assignedYear = classResponse.data.year;
-      const assignedDivision = classResponse.data.division;
-
-      // Filter subjects to only those matching the assigned class
-      const relevantSubjects = response.data.subjects.filter((subject) => {
-        return (
-          subject.year === assignedYear && subject.division === assignedDivision
-        );
-      });
-
-      // Filter students' marks to only show marks for relevant subjects
-      const studentsWithFilteredMarks = response.data.students.map(
-        (student) => {
-          const filteredMarks = {};
-          Object.keys(student.marks || {}).forEach((subjectName) => {
-            // Check if this subject is in our relevant subjects list
-            if (relevantSubjects.some((sub) => sub.name === subjectName)) {
-              filteredMarks[subjectName] = student.marks[subjectName];
-            }
-          });
-          return {
-            ...student,
-            marks: filteredMarks,
-          };
+      // 2. Get all marks for this class (from any teacher)
+      const marksResponse = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/class-marks`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { year: assignedYear, division: assignedDivision },
         }
       );
 
-      setStudents(studentsWithFilteredMarks);
+      // 3. Process marks data to match student/subject structure
+      const processedMarks = {};
+      marksResponse.data.forEach((mark) => {
+        if (!processedMarks[mark.studentId]) {
+          processedMarks[mark.studentId] = {};
+        }
+
+        mark.exams.forEach((exam) => {
+          if (!processedMarks[mark.studentId][exam.subjectName]) {
+            processedMarks[mark.studentId][exam.subjectName] = {};
+          }
+          processedMarks[mark.studentId][exam.subjectName][mark.examType] = {
+            marksObtained: exam.marksObtained,
+            status: exam.status,
+          };
+        });
+      });
+
+      // 4. Get unique subjects from the marks data (for this class)
+      const subjectsInClass = new Set();
+      Object.values(processedMarks).forEach((studentMarks) => {
+        Object.keys(studentMarks).forEach((subjectName) => {
+          subjectsInClass.add(subjectName);
+        });
+      });
+
+      // 5. Create subjects array with proper structure
+      const relevantSubjects = Array.from(subjectsInClass).map(
+        (subjectName) => ({
+          name: subjectName,
+          // Add other subject properties if available
+          _id: subjectName, // Using name as ID if real ID not available
+        })
+      );
+
+      // 6. Combine student data with marks
+      const studentsWithMarks = studentsResponse.data.students.map(
+        (student) => ({
+          ...student,
+          marks: processedMarks[student._id] || {},
+        })
+      );
+
+      setStudents(studentsWithMarks);
       setSubjects(relevantSubjects);
       setYear(assignedYear);
       setDivision(assignedDivision);
     } catch (error) {
-      console.error("Error fetching students:", error);
+      console.error("Error fetching data:", error);
       toast.error("Failed to fetch student data");
     } finally {
       setIsLoading(false);
@@ -1344,7 +1392,6 @@ const TeacherDashboard = () => {
                 onChange={(e) => setSelectedExamType(e.target.value)}
                 className="p-2 border rounded"
               >
-                <option value="">All Exams</option>
                 <option value="unit-test">Unit Test</option>
                 <option value="re-unit-test">Re-Unit Test</option>
                 <option value="prelim">Prelim</option>
