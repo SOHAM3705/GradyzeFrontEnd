@@ -45,9 +45,10 @@ const ProfileSettings = () => {
         );
 
         if (response.data) {
+          const timestamp = Date.now(); // 👈 Used to bust cache
           setProfileData({
             profileImage: response.data.profilePhotoUrl
-              ? `${API_BASE_URL}${response.data.profilePhotoUrl}` // ✅ FIX HERE
+              ? `${API_BASE_URL}${response.data.profilePhotoUrl}?t=${timestamp}`
               : "/profile.png",
             name: response.data.name || "",
             email: response.data.email || "",

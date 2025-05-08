@@ -508,43 +508,34 @@ const TeacherDashboard = () => {
         message: "Fetching student marks...",
       });
 
-      // Get the subject name first
       const subject = subjectsList.find((sub) => sub._id === subjectId);
-      if (!subject) {
-        throw new Error("Subject not found");
-      }
+      if (!subject) throw new Error("Subject not found");
 
       const token = sessionStorage.getItem("token");
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/marks-by-subject`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          params: {
-            subjectName: subject.name,
-            examType,
-          },
+          params: { subjectName: subject.name, examType },
         }
       );
 
       const existingMarks = response.data || {};
-      const hasExistingMarks = Object.keys(existingMarks).length > 0;
-
-      // Get all students for this subject
       const allStudents = studentsData[subjectId]?.students || [];
 
-      // Filter students if this is a retest
       let studentsToShow = allStudents;
       if (examType === "re-unit-test" || examType === "reprelim") {
-        const previousExamType =
-          examType === "re-unit-test" ? "unit-test" : "prelim";
+        studentsToShow = getStudentsForRetest(
+          allStudents,
+          examType,
+          subject.name
+        );
 
-        studentsToShow = allStudents.filter((student) => {
-          const studentMarks = existingMarks[student._id]?.[previousExamType];
-          return (
-            studentMarks &&
-            (studentMarks.status === "Fail" || studentMarks.status === "Absent")
-          );
-        });
+        if (studentsToShow.length === 0) {
+          toast.info(`No students need retest for ${subject.name} ${examType}`);
+          setIsLoading(false);
+          return;
+        }
       }
 
       setIsLoading(false);
@@ -553,23 +544,16 @@ const TeacherDashboard = () => {
         subjectId,
         subjectName: subject.name,
         examType,
-        isUpdateMode: hasExistingMarks,
+        isUpdateMode: Object.keys(existingMarks).length > 0,
         existingMarks,
         lastUpdated: response.data.lastUpdated,
-        studentsToShow, // Pass the filtered students
+        studentsToShow,
       });
     } catch (error) {
       setIsLoading(false);
-      console.error("Error fetching existing marks:", error);
+      console.error("Error:", error);
       toast.error("Failed to load marks. Please try again.");
-      setModalContent({
-        type: "students-list",
-        subjectId,
-        examType,
-        isUpdateMode: false,
-        existingMarks: {},
-        studentsToShow: studentsData[subjectId]?.students || [],
-      });
+      setModalContent(null);
     }
   };
 
@@ -665,50 +649,29 @@ const TeacherDashboard = () => {
   const handleSaveMarks = async () => {
     if (!validateMarks()) return;
 
-    const subjectData = studentsData[selectedSubjectId];
-    if (!subjectData) return;
-
-    const selectedSubject = subjectsList.find(
-      (subject) => subject._id === selectedSubjectId
-    );
-
-    if (!selectedSubject) {
-      toast.error("Subject information not found");
-      return;
-    }
-
-    const selectedYear = selectedSubject.year;
-    const selectedSubjectName = selectedSubject.name;
-
-    if (!selectedYear || !selectedSubjectName) {
-      alert("Subject information is incomplete.");
+    const subject = subjectsList.find((sub) => sub._id === selectedSubjectId);
+    if (!subject) {
+      toast.error("Subject not found");
       return;
     }
 
     const isUnitTest = selectedExamType.includes("unit");
     const passingMarks = isUnitTest ? 12 : 28;
-
     const marksToSave = [];
     const rows = document.querySelectorAll(".student-row");
 
     rows.forEach((row) => {
       const isAbsent = row.querySelector(".absent-checkbox").checked;
       const studentId = row.getAttribute("data-id");
-      const teacherId = sessionStorage.getItem("teacherId");
-
-      if (!teacherId) {
-        console.error("Teacher ID not found in sessionStorage.");
-        return;
-      }
 
       if (isAbsent) {
         marksToSave.push({
           studentId,
           examType: selectedExamType,
-          year: selectedYear,
+          year: subject.year,
           exams: [
             {
-              subjectName: selectedSubjectName,
+              subjectName: subject.name,
               teacherId,
               marksObtained: {
                 q1q2: -1,
@@ -732,12 +695,11 @@ const TeacherDashboard = () => {
         const q7q8 = isUnitTest
           ? 0
           : parseInt(row.querySelector(".q7q8-input")?.value) || 0;
-
         const total = q1q2 + q3q4 + q5q6 + q7q8;
-        const status = total >= passingMarks ? "Pass" : "Fail";
 
-        // For retests, check if they've improved from previous attempt
-        let finalStatus = status;
+        let status = total >= passingMarks ? "Pass" : "Fail";
+
+        // Special handling for retests
         if (
           selectedExamType === "re-unit-test" ||
           selectedExamType === "reprelim"
@@ -747,32 +709,22 @@ const TeacherDashboard = () => {
           const previousMarks =
             modalContent.existingMarks[studentId]?.[previousExamType];
 
-          if (
-            previousMarks &&
-            previousMarks.status === "Fail" &&
-            status === "Pass"
-          ) {
-            finalStatus = "Improved";
+          if (previousMarks?.status === "Fail" && status === "Pass") {
+            status = "Improved";
           }
         }
 
         marksToSave.push({
           studentId,
           examType: selectedExamType,
-          year: selectedYear,
+          year: subject.year,
           exams: [
             {
-              subjectName: selectedSubjectName,
+              subjectName: subject.name,
               teacherId,
-              marksObtained: {
-                q1q2,
-                q3q4,
-                q5q6,
-                q7q8,
-                total,
-              },
+              marksObtained: { q1q2, q3q4, q5q6, q7q8, total },
               totalMarks: isUnitTest ? 30 : 70,
-              status: finalStatus,
+              status,
               dateAdded: new Date(),
             },
           ],
@@ -786,24 +738,16 @@ const TeacherDashboard = () => {
       await axios.post(
         `https://gradyzebackend.onrender.com/api/teachermarks/add-marks`,
         marksToSave,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setIsSaving(false);
       toast.success("Marks saved successfully!");
       closeModal();
       fetchSubjectStudentsData();
     } catch (error) {
-      setIsSaving(false);
       console.error("Error saving marks:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to save marks. Please try again."
-      );
+      toast.error(error.response?.data?.message || "Failed to save marks");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -819,6 +763,24 @@ const TeacherDashboard = () => {
       studentMarks &&
       studentMarks.subjectName === subjectName &&
       (studentMarks.status === "Fail" || studentMarks.status === "Absent")
+    );
+  };
+
+  const getRetestInfo = (studentId, subjectName, examType) => {
+    if (examType !== "re-unit-test" && examType !== "reprelim") return null;
+
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+    const previousMarks =
+      modalContent?.existingMarks[studentId]?.[previousExamType];
+
+    if (!previousMarks) return null;
+
+    return (
+      <div className="text-xs text-gray-600 mt-1">
+        Previous {previousExamType}: {previousMarks.marksObtained?.total || 0}/
+        {previousMarks.totalMarks} ({previousMarks.status})
+      </div>
     );
   };
 
@@ -949,25 +911,18 @@ const TeacherDashboard = () => {
     }
   };
 
-  const getStudentsForRetest = (students, examType) => {
+  const getStudentsForRetest = (students, examType, subjectName) => {
     const previousExamType =
       examType === "re-unit-test" ? "unit-test" : "prelim";
 
     return students.filter((student) => {
-      // Check all subjects for this student
-      for (const subjectName in student.marks) {
-        const subjectMarks = student.marks[subjectName];
+      const studentMarks = student.marks?.[subjectName] || {};
+      const previousMarks = studentMarks[previousExamType];
 
-        // Check if student failed or was absent in the previous exam
-        if (
-          subjectMarks[previousExamType] &&
-          (subjectMarks[previousExamType].status === "Fail" ||
-            subjectMarks[previousExamType].status === "Absent")
-        ) {
-          return true;
-        }
-      }
-      return false;
+      return (
+        previousMarks &&
+        (previousMarks.status === "Fail" || previousMarks.status === "Absent")
+      );
     });
   };
 
@@ -1058,13 +1013,23 @@ const TeacherDashboard = () => {
                 </select>
                 {selectedExamType === "re-unit-test" ||
                 selectedExamType === "reprelim" ? (
-                  <div className="mt-2 p-2 bg-yellow-50 text-yellow-800 text-sm rounded">
-                    Note: Only students who failed or were absent in the
-                    previous{" "}
-                    {selectedExamType === "re-unit-test"
-                      ? "Unit Test"
-                      : "Prelim"}{" "}
-                    will be shown.
+                  <div className="mt-2 p-2 bg-blue-50 text-blue-800 text-sm rounded">
+                    <p>
+                      Only students who failed or were absent in the previous{" "}
+                      {selectedExamType === "re-unit-test"
+                        ? "Unit Test"
+                        : "Prelim"}{" "}
+                      will be shown.
+                    </p>
+                    {selectedSubjectId && (
+                      <p className="mt-1 font-medium">
+                        Subject:{" "}
+                        {
+                          subjectsList.find((s) => s._id === selectedSubjectId)
+                            ?.name
+                        }
+                      </p>
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -1179,7 +1144,14 @@ const TeacherDashboard = () => {
                     <tr>
                       <th className="p-2 text-left">Absent</th>
                       <th className="p-2 text-left">Roll No.</th>
-                      <th className="p-2 text-left">Name</th>
+                      <td className="p-2">
+                        <div>{student.name}</div>
+                        {getRetestInfo(
+                          student._id,
+                          modalContent.subjectName,
+                          examType
+                        )}
+                      </td>
                       {isUnitTest ? (
                         <>
                           <th className="p-2 text-center">Q1/Q2 (Max 15)</th>
