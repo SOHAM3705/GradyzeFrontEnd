@@ -35,6 +35,7 @@ const TeacherDashboard = () => {
     totalStudents: 0,
   });
   const [studentsData, setStudentsData] = useState({});
+  const [filteredSubjects, setFilteredSubjects] = useState([]);
 
   const teacherId = sessionStorage.getItem("teacherId");
 
@@ -250,14 +251,11 @@ const TeacherDashboard = () => {
 
   const renderStudents = () => {
     return filteredStudents.map((student) => {
-      // Calculate totals
       let totalMarks = 0;
       let hasMarks = false;
 
       const subjectCells = subjects.map((subject) => {
         const subjectMarks = student.marks?.[subject.name] || {};
-
-        // Get marks for selected exam type or all exam types
         const marksToShow = selectedExamType
           ? subjectMarks[selectedExamType]
           : Object.values(subjectMarks)[0]; // Show first exam type if none selected
@@ -710,6 +708,7 @@ const TeacherDashboard = () => {
     }
   };
 
+  // Modify fetchStudents to filter subjects
   const fetchStudents = async () => {
     try {
       setIsLoading(true);
@@ -720,10 +719,43 @@ const TeacherDashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setStudents(response.data.students);
-      setSubjects(response.data.subjects || []);
-      setYear(response.data.year);
-      setDivision(response.data.division);
+      // Get the teacher's assigned class info
+      const classResponse = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/divisions`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const assignedYear = classResponse.data.year;
+      const assignedDivision = classResponse.data.division;
+
+      // Filter subjects to only those matching the assigned class
+      const relevantSubjects = response.data.subjects.filter((subject) => {
+        return (
+          subject.year === assignedYear && subject.division === assignedDivision
+        );
+      });
+
+      // Filter students' marks to only show marks for relevant subjects
+      const studentsWithFilteredMarks = response.data.students.map(
+        (student) => {
+          const filteredMarks = {};
+          Object.keys(student.marks || {}).forEach((subjectName) => {
+            // Check if this subject is in our relevant subjects list
+            if (relevantSubjects.some((sub) => sub.name === subjectName)) {
+              filteredMarks[subjectName] = student.marks[subjectName];
+            }
+          });
+          return {
+            ...student,
+            marks: filteredMarks,
+          };
+        }
+      );
+
+      setStudents(studentsWithFilteredMarks);
+      setSubjects(relevantSubjects);
+      setYear(assignedYear);
+      setDivision(assignedDivision);
     } catch (error) {
       console.error("Error fetching students:", error);
       toast.error("Failed to fetch student data");
