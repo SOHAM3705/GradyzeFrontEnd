@@ -753,7 +753,11 @@ const TeacherDashboard = () => {
         `https://gradyzebackend.onrender.com/api/teachermarks/class-marks`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          params: { year: assignedYear, division: assignedDivision },
+          params: {
+            teacherId: sessionStorage.getItem("teacherId"),
+            year: assignedYear,
+            division: assignedDivision,
+          },
         }
       );
 
