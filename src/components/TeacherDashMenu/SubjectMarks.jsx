@@ -292,10 +292,10 @@ const TeacherDashboard = () => {
           <td key={subject._id} className="p-2 text-center border">
             <div
               className={`
-              ${status === "Pass" ? "text-green-600" : ""}
-              ${status === "Fail" ? "text-red-600" : ""}
-              ${status === "Absent" ? "text-gray-500" : ""}
-            `}
+                ${status === "Pass" ? "text-green-600" : ""}
+                ${status === "Fail" ? "text-red-600" : ""}
+                ${status === "Absent" ? "text-gray-500" : ""}
+              `}
             >
               {marksValue === -1 ? "Absent" : marksValue}
             </div>
