@@ -72,12 +72,12 @@ const AdminFeedbackForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-5 bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold text-purple-700 mb-4">
+    <div className="flex justify-center items-center min-h-screen p-4 bg-gray-100">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+        <h1 className="text-xl sm:text-2xl font-bold text-purple-700 mb-4">
           Gradyze Feedback
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-6 text-sm sm:text-base">
           We value your insights and opinions!
         </p>
 
@@ -114,6 +114,25 @@ const AdminFeedbackForm = () => {
               name="email"
               placeholder="Enter your email"
               value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+
+          <div className="mb-4 text-left">
+            <label
+              className="block text-gray-700 font-bold mb-2"
+              htmlFor="position"
+            >
+              Position
+            </label>
+            <input
+              type="text"
+              id="position"
+              name="position"
+              placeholder="Enter your position"
+              value={formData.position}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
