@@ -70,19 +70,19 @@ const AdminFeedback = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-5 bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold text-[#2563eb] mb-4">
+    <div className="flex justify-center items-center min-h-screen p-2 sm:p-5 bg-gray-100">
+      <div className="bg-white p-4 sm:p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+        <h1 className="text-lg sm:text-2xl font-bold text-[#2563eb] mb-2 sm:mb-4">
           Gradyze Feedback
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
           We value your insights and opinions!
         </p>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4 text-left">
+          <div className="mb-2 sm:mb-4 text-left">
             <label
-              className="block text-gray-700 font-bold mb-2"
+              className="block text-gray-700 font-bold mb-1 sm:mb-2 text-sm sm:text-base"
               htmlFor="name"
             >
               Name
@@ -95,13 +95,13 @@ const AdminFeedback = () => {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+              className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-sm sm:text-base"
             />
           </div>
 
-          <div className="mb-4 text-left">
+          <div className="mb-2 sm:mb-4 text-left">
             <label
-              className="block text-gray-700 font-bold mb-2"
+              className="block text-gray-700 font-bold mb-1 sm:mb-2 text-sm sm:text-base"
               htmlFor="email"
             >
               Email
@@ -114,13 +114,13 @@ const AdminFeedback = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+              className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-sm sm:text-base"
             />
           </div>
 
-          <div className="mb-4 text-left">
+          <div className="mb-2 sm:mb-4 text-left">
             <label
-              className="block text-gray-700 font-bold mb-2"
+              className="block text-gray-700 font-bold mb-1 sm:mb-2 text-sm sm:text-base"
               htmlFor="feedback"
             >
               Project Feedback
@@ -132,13 +132,13 @@ const AdminFeedback = () => {
               value={formData.feedback}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+              className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-sm sm:text-base"
             />
           </div>
 
-          <div className="mb-4 text-left">
+          <div className="mb-2 sm:mb-4 text-left">
             <label
-              className="block text-gray-700 font-bold mb-2"
+              className="block text-gray-700 font-bold mb-1 sm:mb-2 text-sm sm:text-base"
               htmlFor="opinions"
             >
               Opinions
@@ -150,20 +150,20 @@ const AdminFeedback = () => {
               value={formData.opinions}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+              className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-sm sm:text-base"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-[#2563eb] text-white py-2 rounded-md hover:bg-[#1e4db7] transition duration-300"
+            className="w-full bg-[#2563eb] text-white py-1 sm:py-2 rounded-md hover:bg-[#1e4db7] transition duration-300 text-sm sm:text-base"
           >
             {loading ? "Submitting..." : "Submit Feedback"}
           </button>
 
           {message.text && (
             <div
-              className={`mt-4 p-2 rounded ${
+              className={`mt-2 sm:mt-4 p-1 sm:p-2 rounded text-xs sm:text-sm ${
                 message.type === "success"
                   ? "bg-green-500 text-white"
                   : "bg-red-500 text-white"

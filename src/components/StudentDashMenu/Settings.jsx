@@ -32,12 +32,12 @@ const ProfileSettings = () => {
       try {
         const token = sessionStorage.getItem("token");
         if (!token) {
-          navigate("/studentlogin"); // ✅ Fixed typo: "stduentlogin" -> "studentlogin"
+          navigate("/studentlogin");
           return;
         }
 
         const response = await axios.get(
-          "https://gradyzebackend.onrender.com/api/studentsetting/profile", // ✅ Use full backend URL consistently
+          "https://gradyzebackend.onrender.com/api/studentsetting/profile",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -48,7 +48,7 @@ const ProfileSettings = () => {
 
           setProfileData({
             profileImage: response.data.profilePhotoUrl
-              ? `${backendBaseURL}${response.data.profilePhotoUrl}` // ✅ Append backend base URL
+              ? `${backendBaseURL}${response.data.profilePhotoUrl}`
               : "/profile.png",
             name: response.data.name || "",
             email: response.data.email || "",
@@ -242,19 +242,19 @@ const ProfileSettings = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-4 sm:p-6">
       {notification && (
-        <div className="fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg animate-slide-in">
+        <div className="fixed top-5 right-5 bg-green-600 text-white px-3 sm:px-4 py-2 rounded shadow-lg animate-slide-in text-sm sm:text-base">
           {notification}
         </div>
       )}
       {error && (
-        <div className="fixed top-5 right-5 bg-red-600 text-white px-4 py-2 rounded shadow-lg animate-slide-in">
+        <div className="fixed top-5 right-5 bg-red-600 text-white px-3 sm:px-4 py-2 rounded shadow-lg animate-slide-in text-sm sm:text-base">
           {error}
         </div>
       )}
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-6 flex gap-6">
-        <div className="w-32 h-32 rounded-lg overflow-hidden shadow-md">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6 flex flex-col sm:flex-row gap-4 sm:gap-6">
+        <div className="w-24 sm:w-32 h-24 sm:h-32 rounded-lg overflow-hidden shadow-md">
           <img
             src={profileImage}
             alt="Profile"
@@ -262,22 +262,27 @@ const ProfileSettings = () => {
           />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800">
+          <h1 className="text-lg sm:text-2xl font-semibold text-gray-800">
             Profile Settings
           </h1>
-          <p className="text-gray-500">Manage your account information</p>
+          <p className="text-gray-500 text-sm sm:text-base">
+            Manage your account information
+          </p>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-lg">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
         {!showChangePassword ? (
-          <form onSubmit={handleProfileSubmit} className="space-y-6">
+          <form
+            onSubmit={handleProfileSubmit}
+            className="space-y-4 sm:space-y-6"
+          >
             <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold border-b pb-1 sm:pb-2 mb-2 sm:mb-4">
                 Personal Information
               </h2>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-medium">
+              <div className="mb-2 sm:mb-4">
+                <label className="block text-gray-700 font-medium text-sm sm:text-base">
                   Full Name
                 </label>
                 <input
@@ -288,12 +293,12 @@ const ProfileSettings = () => {
                     setProfileData({ ...profileData, name: e.target.value })
                   }
                   placeholder="Enter your name"
-                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                 <div>
-                  <label className="block text-gray-700 font-medium">
+                  <label className="block text-gray-700 font-medium text-sm sm:text-base">
                     Email Address
                   </label>
                   <input
@@ -304,11 +309,11 @@ const ProfileSettings = () => {
                       setProfileData({ ...profileData, email: e.target.value })
                     }
                     placeholder="Enter your email"
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-700 font-medium">
+                  <label className="block text-gray-700 font-medium text-sm sm:text-base">
                     Gender
                   </label>
                   <select
@@ -317,7 +322,7 @@ const ProfileSettings = () => {
                     onChange={(e) =>
                       setProfileData({ ...profileData, gender: e.target.value })
                     }
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
                   >
                     <option value="">Select Gender</option>
                     <option value="male">Male</option>
@@ -326,92 +331,95 @@ const ProfileSettings = () => {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mt-2 sm:mt-4">
                 <div>
-                  <label className="block text-gray-700 font-medium">
+                  <label className="block text-gray-700 font-medium text-sm sm:text-base">
                     Profile Picture
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md text-sm sm:text-base"
                   />
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-2 sm:gap-4 mt-4 sm:mt-6">
               <button
                 type="submit"
                 disabled={isLoading}
                 className={`${
                   isLoading ? "bg-blue-500" : "bg-blue-600 hover:bg-blue-700"
-                } text-white px-6 py-2 rounded-md transition`}
+                } text-white px-4 sm:px-6 py-2 rounded-md transition text-sm sm:text-base`}
               >
                 {isLoading ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowChangePassword(true)}
-                className="border border-gray-300 px-6 py-2 rounded-md hover:bg-gray-100 transition"
+                className="border border-gray-300 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-100 transition text-sm sm:text-base"
               >
                 Change Password
               </button>
             </div>
           </form>
         ) : (
-          <form onSubmit={handlePasswordSubmit} className="space-y-6">
+          <form
+            onSubmit={handlePasswordSubmit}
+            className="space-y-4 sm:space-y-6"
+          >
             <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold border-b pb-1 sm:pb-2 mb-2 sm:mb-4">
                 Change Password
               </h2>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-medium">
+              <div className="mb-2 sm:mb-4">
+                <label className="block text-gray-700 font-medium text-sm sm:text-base">
                   Current Password
                 </label>
                 <input
                   type="password"
                   name="current-password"
-                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                 <div>
-                  <label className="block text-gray-700 font-medium">
+                  <label className="block text-gray-700 font-medium text-sm sm:text-base">
                     New Password
                   </label>
                   <input
                     type="password"
                     name="new-password"
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-700 font-medium">
+                  <label className="block text-gray-700 font-medium text-sm sm:text-base">
                     Confirm New Password
                   </label>
                   <input
                     type="password"
                     name="confirm-password"
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
                   />
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-2 sm:gap-4 mt-4 sm:mt-6">
               <button
                 type="submit"
                 disabled={isLoading}
                 className={`${
                   isLoading ? "bg-blue-500" : "bg-blue-600 hover:bg-blue-700"
-                } text-white px-6 py-2 rounded-md transition`}
+                } text-white px-4 sm:px-6 py-2 rounded-md transition text-sm sm:text-base`}
               >
                 {isLoading ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowChangePassword(false)}
-                className="border border-gray-300 px-6 py-2 rounded-md hover:bg-gray-100 transition"
+                className="border border-gray-300 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-100 transition text-sm sm:text-base"
               >
                 Cancel
               </button>

@@ -41,51 +41,55 @@ const StudentMarks = () => {
   }, [studentId]);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-2 sm:p-4">
       {loading && (
-        <div className="flex justify-center items-center my-6">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-blue-500"></div>
+        <div className="flex justify-center items-center my-4 sm:my-6">
+          <div className="animate-spin rounded-full h-6 sm:h-8 w-6 sm:w-8 border-t-4 border-blue-500"></div>
         </div>
       )}
 
-      {error && <p className="text-center text-red-500 mb-4">{error}</p>}
+      {error && (
+        <p className="text-center text-red-500 mb-2 sm:mb-4 text-sm sm:text-base">
+          {error}
+        </p>
+      )}
 
       {!loading && !error && marksData.length > 0 ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4 sm:gap-6">
           {marksData.map((examEntry, index) => (
             <div
               key={index}
-              className="bg-white p-6 rounded-xl shadow-md border border-gray-200"
+              className="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200"
             >
               {/* Exam Header */}
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-blue-600">
+              <div className="mb-2 sm:mb-4">
+                <h3 className="text-lg sm:text-xl font-semibold text-blue-600">
                   {examEntry.examType} - {examEntry.year}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Student: {examEntry.studentId?.name || "Unknown"} (
                   {examEntry.studentId?.email || "N/A"})
                 </p>
               </div>
 
               {/* Subjects List */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                 {examEntry.exams.map((subject, idx) => (
                   <div
                     key={idx}
-                    className="bg-gray-50 p-4 rounded-lg border border-gray-100"
+                    className="bg-gray-50 p-2 sm:p-4 rounded-lg border border-gray-100"
                   >
-                    <p className="text-sm font-medium">
+                    <p className="text-xs sm:text-sm font-medium">
                       Subject:{" "}
                       <span className="font-normal">{subject.subjectName}</span>
                     </p>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs sm:text-sm font-medium">
                       Marks Obtained:{" "}
                       <span className="font-normal">
                         {subject.marksObtained?.total} / {subject.totalMarks}
                       </span>
                     </p>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs sm:text-sm font-medium">
                       Status:{" "}
                       <span
                         className={`font-bold ${
@@ -99,7 +103,7 @@ const StudentMarks = () => {
                         {subject.status}
                       </span>
                     </p>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs sm:text-sm font-medium">
                       Teacher:{" "}
                       <span className="font-normal">
                         {subject.teacherId?.name || "N/A"}
@@ -114,7 +118,7 @@ const StudentMarks = () => {
       ) : (
         !loading &&
         !error && (
-          <p className="text-center text-gray-600 mt-6">
+          <p className="text-center text-gray-600 mt-4 sm:mt-6 text-sm sm:text-base">
             No marks data available.
           </p>
         )
