@@ -19,7 +19,7 @@ const NotificationCenter = () => {
         let year, division;
         if (userRole === "student") {
           const studentRes = await axios.get(
-            `${API_BASE_URL}/api/students/${studentId}`
+            `${API_BASE_URL}/api/studentnotification/${studentId}`
           );
           year = studentRes.data.year;
           division = studentRes.data.division;
