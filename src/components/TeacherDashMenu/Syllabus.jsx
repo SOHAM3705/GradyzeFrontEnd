@@ -31,8 +31,8 @@ const TeacherSyllabusView = () => {
   useEffect(() => {
     const fetchSyllabi = async () => {
       try {
-        const adminId = sessionStorage.getItem("adminId"); // ✅ Use sessionStorage
-        const teacherId = sessionStorage.getItem("teacherId"); // ✅ Use sessionStorage
+        const adminId = sessionStorage.getItem("adminId");
+        const teacherId = sessionStorage.getItem("teacherId");
 
         if (!adminId || !teacherId) {
           console.error("Admin ID or Teacher ID not found in sessionStorage");
@@ -41,7 +41,7 @@ const TeacherSyllabusView = () => {
 
         const response = await axios.get(
           `https://gradyzebackend.onrender.com/api/teachersyllabi/teacher/${adminId}`,
-          { withCredentials: true } // ✅ Ensures token is sent with the request
+          { withCredentials: true }
         );
 
         console.log("Received syllabus data from API:", response.data);
@@ -71,17 +71,16 @@ const TeacherSyllabusView = () => {
     try {
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachersyllabi/files/${fileId}`,
-        { responseType: "blob" } // ✅ Ensures binary file download
+        { responseType: "blob" }
       );
 
-      // ✅ Create a downloadable blob
       const blob = new Blob([response.data], { type: "application/pdf" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "syllabus.pdf"; // ✅ Set default filename
+      link.download = "syllabus.pdf";
       document.body.appendChild(link);
-      link.click(); // ✅ Trigger file download
-      document.body.removeChild(link); // ✅ Clean up
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error("Error downloading file:", error);
       alert("Failed to download the syllabus. Please try again.");
@@ -124,12 +123,12 @@ const TeacherSyllabusView = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="header flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold text-gray-800">
+        <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
           Syllabus Management
         </h1>
       </div>
 
-      <div className="filters grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="filters grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <select
           id="pattern"
           className="filter-select p-2 border rounded w-full"
@@ -169,7 +168,7 @@ const TeacherSyllabusView = () => {
         </select>
       </div>
 
-      <div className="syllabus-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="syllabus-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filterSyllabi().map((entry, index) => (
           <div
             key={index}
@@ -183,8 +182,7 @@ const TeacherSyllabusView = () => {
                 {entry.pattern} Pattern • {formatYear(entry.year)}
               </div>
             </div>
-            <div className="syllabus-info flex justify-between items-center mt-4 pt-4 border-t">
-              {/* If the syllabus contains a file, show the download button */}
+            <div className="syllabus-info flex flex-col sm:flex-row justify-between items-center mt-4 pt-4 border-t">
               {entry.fileId && (
                 <div className="mt-3">
                   <p className="font-semibold text-gray-600">Attached File:</p>

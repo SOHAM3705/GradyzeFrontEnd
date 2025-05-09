@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import axios from "axios"; // You will use axios to make the API request
 
 // Define helper functions first
 const createDivisionData = () => ({
@@ -25,7 +26,7 @@ const createDepartmentData = () => ({
 });
 
 const StudentManagement = () => {
-  const [structuredData] = useState({
+  const [structuredData, setStructuredData] = useState({
     departments: {
       "Computer Science": createDepartmentData(),
       "Information Technology": createDepartmentData(),
@@ -36,6 +37,49 @@ const StudentManagement = () => {
   });
 
   const [expandedSections, setExpandedSections] = useState({});
+  const [studentsData, setStudentsData] = useState({}); // To store the students data fetched from the API
+
+  // Retrieve adminId from sessionStorage
+  const adminId = sessionStorage.getItem("adminId");
+
+  // Fetch student data from backend
+  useEffect(() => {
+    if (adminId) {
+      // Loop over departments, years, and divisions to fetch student data
+      for (const department in structuredData.departments) {
+        for (const year in structuredData.departments[department].years) {
+          for (const division in structuredData.departments[department].years[
+            year
+          ].divisions) {
+            const classId =
+              structuredData.departments[department].years[year].divisions[
+                division
+              ].id;
+
+            axios
+              .get(`/api/admin/fetchstudents`, {
+                params: {
+                  adminId,
+                  department,
+                  year,
+                  division,
+                },
+              })
+              .then((response) => {
+                const students = response.data.students || [];
+                setStudentsData((prevData) => ({
+                  ...prevData,
+                  [classId]: students,
+                }));
+              })
+              .catch((error) => {
+                console.error("Error fetching student data:", error);
+              });
+          }
+        }
+      }
+    }
+  }, [adminId, structuredData]);
 
   const toggleContainer = (id) => {
     setExpandedSections((prevState) => ({
@@ -45,54 +89,44 @@ const StudentManagement = () => {
   };
 
   const generatePDF = (classId) => {
-    for (const department in structuredData.departments) {
-      for (const year in structuredData.departments[department].years) {
-        for (const division in structuredData.departments[department].years[
-          year
-        ].divisions) {
-          const divisionData =
-            structuredData.departments[department].years[year].divisions[
-              division
-            ];
-
-          if (divisionData.id === classId) {
-            const doc = new jsPDF();
-
-            // Add Header
-            doc.setFontSize(18);
-            doc.text(`${department} - ${year}`, 20, 20);
-            doc.text(`Division: ${division}`, 20, 30);
-            doc.text(
-              `Class Teacher: ${divisionData.classTeacher || "N/A"}`,
-              20,
-              40
-            );
-
-            // Student List Table
-            if (divisionData.students.length > 0) {
-              const headers = ["Roll No", "Name", "Email"];
-              const data = divisionData.students.map((student) => [
-                student.rollNo,
-                student.name,
-                student.email,
-              ]);
-
-              doc.autoTable({
-                startY: 50,
-                head: [headers],
-                body: data,
-              });
-            } else {
-              doc.text("No students available.", 20, 50);
-            }
-
-            // Save the PDF
-            doc.save(`${department}_${year}_Division${division}.pdf`);
-            return;
-          }
-        }
-      }
+    if (!studentsData[classId]) {
+      console.error("No student data available for this class.");
+      return;
     }
+
+    const department = "Some Department"; // Use the actual department name
+    const year = "First Year"; // Use the actual year
+    const division = "A"; // Use the actual division
+
+    const doc = new jsPDF();
+
+    // Add Header
+    doc.setFontSize(18);
+    doc.text(`${department} - ${year}`, 20, 20);
+    doc.text(`Division: ${division}`, 20, 30);
+    doc.text(`Class Teacher: N/A`, 20, 40); // Adjust with actual teacher data if needed
+
+    // Student List Table
+    const students = studentsData[classId] || [];
+    if (students.length > 0) {
+      const headers = ["Roll No", "Name", "Email"];
+      const data = students.map((student) => [
+        student.rollNo,
+        student.name,
+        student.email,
+      ]);
+
+      doc.autoTable({
+        startY: 50,
+        head: [headers],
+        body: data,
+      });
+    } else {
+      doc.text("No students available.", 20, 50);
+    }
+
+    // Save the PDF
+    doc.save(`${department}_${year}_Division${division}.pdf`);
   };
 
   return (

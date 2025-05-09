@@ -80,9 +80,12 @@ const NotificationCenter = () => {
   };
 
   const getNotificationSource = (notification) => {
-    if (notification.adminId) return "Admin";
-    if (notification.teacherId)
-      return `Teacher: ${notification.teacherData?.name || "Unknown"}`;
+    if (notification.sourceType === "admin") return "Admin";
+    if (notification.sourceType === "teacher") {
+      return notification.teacherName
+        ? `Teacher: ${notification.teacherName}`
+        : "Teacher";
+    }
     return "System";
   };
 
@@ -118,9 +121,16 @@ const NotificationCenter = () => {
               >
                 <div className="flex justify-between items-start mb-1 sm:mb-2">
                   <h4 className="font-semibold text-gray-800 text-sm sm:text-base">
-                    {notification.message.substring(0, 50)}
+                    {notification.title ||
+                      notification.message.substring(0, 50)}
                   </h4>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  <span
+                    className={`text-xs px-2 py-1 rounded ${
+                      notification.sourceType === "admin"
+                        ? "bg-purple-100 text-purple-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
                     {getNotificationSource(notification)}
                   </span>
                 </div>
@@ -158,11 +168,20 @@ const NotificationCenter = () => {
               <h3 className="font-semibold text-gray-800 text-sm sm:text-base">
                 {getNotificationSource(modalNotification)}
               </h3>
+              {modalNotification.sourceType === "teacher" &&
+                modalNotification.teacherName && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {modalNotification.teacherName}
+                  </p>
+                )}
               <p className="text-xs sm:text-sm text-gray-600">
                 {new Date(modalNotification.createdAt).toLocaleString()} |{" "}
                 {modalNotification.audience}
               </p>
             </div>
+            <h4 className="font-semibold text-gray-800 text-sm sm:text-base mb-2">
+              {modalNotification.title}
+            </h4>
             <p className="text-gray-600 mb-2 sm:mb-4 whitespace-pre-wrap text-xs sm:text-sm">
               {modalNotification.message}
             </p>

@@ -264,16 +264,16 @@ const TeacherDashboard = () => {
       {/* Header */}
       <header className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-800">
+          <div className="flex flex-col md:flex-row justify-between items-center py-4">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
               Teacher Dashboard
             </h1>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
+              <div className="relative w-full md:w-auto">
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500 w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -328,8 +328,8 @@ const TeacherDashboard = () => {
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filter row */}
-        <div className="mb-6 flex justify-between items-center">
-          <div className="flex space-x-4">
+        <div className="mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+          <div className="flex flex-wrap space-x-2 md:space-x-4">
             <button
               className={`px-4 py-2 rounded-lg flex items-center ${
                 activeTab === "announcements"
@@ -375,7 +375,7 @@ const TeacherDashboard = () => {
               Calendar
             </button>
           </div>
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap space-x-2 md:space-x-4">
             <div className="relative">
               <button className="px-4 py-2 bg-white rounded-lg border flex items-center">
                 <Filter className="mr-2 h-4 w-4" />
@@ -447,8 +447,8 @@ const TeacherDashboard = () => {
                   key={announcement.id}
                   className="bg-white p-4 rounded-lg shadow-md"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
+                  <div className="flex flex-col md:flex-row justify-between items-start">
+                    <div className="w-full md:w-auto mb-4 md:mb-0">
                       <h3
                         className="text-lg font-medium cursor-pointer hover:text-green-600"
                         onClick={() =>
@@ -457,7 +457,7 @@ const TeacherDashboard = () => {
                       >
                         {announcement.title}
                       </h3>
-                      <div className="mt-1 flex items-center text-sm text-gray-500">
+                      <div className="mt-1 flex flex-wrap items-center text-sm text-gray-500">
                         <span className="mr-2">
                           {formatDate(announcement.date)}
                         </span>
@@ -512,15 +512,15 @@ const TeacherDashboard = () => {
                   key={assignment.id}
                   className="bg-white p-4 rounded-lg shadow-md"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
+                  <div className="flex flex-col md:flex-row justify-between items-start">
+                    <div className="w-full md:w-auto mb-4 md:mb-0">
                       <h3
                         className="text-lg font-medium cursor-pointer hover:text-green-600"
                         onClick={() => openModal("viewAssignment", assignment)}
                       >
                         {assignment.title}
                       </h3>
-                      <div className="mt-1 flex items-center text-sm text-gray-500">
+                      <div className="mt-1 flex flex-wrap items-center text-sm text-gray-500">
                         <span className="mr-2">
                           Due: {formatDate(assignment.dueDate)}
                         </span>
@@ -586,7 +586,7 @@ const TeacherDashboard = () => {
 
         {/* Students Tab */}
         {activeTab === "students" && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-white rounded-lg shadow-md overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -691,8 +691,8 @@ const TeacherDashboard = () => {
         {/* Calendar Tab */}
         {activeTab === "calendar" && (
           <div className="bg-white p-4 rounded-lg shadow-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-medium">April 2025</h2>
+            <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+              <h2 className="text-lg font-medium mb-4 md:mb-0">April 2025</h2>
               <div className="flex space-x-2">
                 <button className="p-1 rounded hover:bg-gray-100">
                   <ChevronDown className="h-5 w-5 rotate-90" />
@@ -815,7 +815,7 @@ const TeacherDashboard = () => {
         {/* Modals */}
         {modalType && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
               {/* View Announcement Modal */}
               {modalType === "viewAnnouncement" && (
                 <div className="p-6">
@@ -1358,11 +1358,11 @@ const TeacherDashboard = () => {
                       <X className="h-5 w-5" />
                     </button>
                   </div>
-                  <div className="flex items-start mb-6">
-                    <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden">
+                  <div className="flex flex-col md:flex-row items-start mb-6">
+                    <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden mb-4 md:mb-0">
                       <img src={`/api/placeholder/64/64`} alt="" />
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-0 md:ml-4">
                       <div className="text-sm text-gray-500">
                         {modalData.email}
                       </div>

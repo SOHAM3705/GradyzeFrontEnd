@@ -216,11 +216,11 @@ const TeacherAttendanceDashboard = () => {
       </div>
 
       <div className="flex flex-wrap gap-4 mb-8 p-5 bg-white rounded-lg shadow-sm">
-        <div className="flex flex-col">
+        <div className="flex flex-col w-full sm:w-auto">
           <div className="text-gray-500 text-sm mb-2">Division</div>
           <select
             name="division"
-            className="p-2 border rounded"
+            className="p-2 border rounded w-full"
             onChange={handleFilterChange}
           >
             <option value="csa">CSE-A</option>
@@ -229,11 +229,11 @@ const TeacherAttendanceDashboard = () => {
             <option value="csd">CSE-D</option>
           </select>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col w-full sm:w-auto">
           <div className="text-gray-500 text-sm mb-2">Subject</div>
           <select
             name="subject"
-            className="p-2 border rounded"
+            className="p-2 border rounded w-full"
             onChange={handleFilterChange}
           >
             <option value="db">Database Management</option>
@@ -242,12 +242,12 @@ const TeacherAttendanceDashboard = () => {
             <option value="net">Computer Networks</option>
           </select>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col w-full sm:w-auto">
           <div className="text-gray-500 text-sm mb-2">Date</div>
           <input
             type="date"
             name="date"
-            className="p-2 border rounded"
+            className="p-2 border rounded w-full"
             value={filters.date}
             onChange={handleFilterChange}
           />
@@ -260,12 +260,12 @@ const TeacherAttendanceDashboard = () => {
             className="p-2 border rounded w-full"
           />
         </div>
-        <button className="bg-blue-600 text-white p-2 rounded font-bold self-end">
+        <button className="bg-blue-600 text-white p-2 rounded font-bold self-end w-full sm:w-auto">
           Apply Filters
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-5 rounded-lg shadow-sm text-center">
           <div className="text-gray-500 text-sm mb-4">Today's Attendance</div>
           <div className="text-4xl font-bold text-blue-600 mb-4">87%</div>
@@ -314,13 +314,13 @@ const TeacherAttendanceDashboard = () => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-4">
-        <div className="text-xl font-bold">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        <div className="text-xl font-bold mb-4 md:mb-0">
           Mark Attendance - CSE-A, Database Management (March 21, 2025)
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2">
           <button
-            className="bg-blue-600 text-white p-2 rounded font-bold"
+            className="bg-blue-600 text-white p-2 rounded font-bold w-full md:w-auto"
             onClick={() =>
               setAttendanceData((prevData) =>
                 prevData.map((student) => ({ ...student, status: "present" }))
@@ -330,7 +330,7 @@ const TeacherAttendanceDashboard = () => {
             All Present
           </button>
           <button
-            className="flex items-center bg-purple-600 text-white p-2 rounded font-bold"
+            className="flex items-center bg-purple-600 text-white p-2 rounded font-bold w-full md:w-auto"
             onClick={exportAttendanceData}
           >
             <span>↓</span> Export
@@ -338,9 +338,9 @@ const TeacherAttendanceDashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white p-5 rounded-lg shadow-sm mb-8">
-        <div className="flex justify-between mb-4">
-          <div className="flex items-center">
+      <div className="bg-white p-5 rounded-lg shadow-sm mb-8 overflow-x-auto">
+        <div className="flex flex-col md:flex-row justify-between mb-4">
+          <div className="flex items-center mb-4 md:mb-0">
             <input
               type="checkbox"
               id="selectAll"
@@ -397,7 +397,7 @@ const TeacherAttendanceDashboard = () => {
                 </td>
                 <td>
                   <select
-                    className="p-2 border rounded"
+                    className="p-2 border rounded w-full"
                     value={student.status}
                     onChange={(e) =>
                       handleStatusChange(student.id, e.target.value)
@@ -411,7 +411,7 @@ const TeacherAttendanceDashboard = () => {
                 <td>
                   <span
                     className={`p-2 rounded-full font-bold ${
-                      student.attendance >= 75
+                      parseInt(student.attendance) >= 75
                         ? "bg-green-100 text-green-500"
                         : "bg-red-100 text-red-500"
                     }`}
@@ -435,12 +435,12 @@ const TeacherAttendanceDashboard = () => {
           </tbody>
         </table>
 
-        <div className="flex gap-2 mt-4">
-          <button className="bg-green-500 text-white p-2 rounded font-bold">
+        <div className="flex flex-col md:flex-row gap-2 mt-4">
+          <button className="bg-green-500 text-white p-2 rounded font-bold w-full md:w-auto">
             Save Attendance
           </button>
           <button
-            className="bg-gray-200 text-gray-700 p-2 rounded font-bold"
+            className="bg-gray-200 text-gray-700 p-2 rounded font-bold w-full md:w-auto"
             onClick={() => window.location.reload()}
           >
             Cancel
@@ -450,7 +450,7 @@ const TeacherAttendanceDashboard = () => {
 
       {modalVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-lg p-5">
+          <div className="bg-white rounded-lg w-full max-w-lg p-5 mx-4">
             <div className="flex justify-between items-center mb-4">
               <div className="text-xl font-bold">
                 Student Details: {selectedStudent?.name}
@@ -463,10 +463,10 @@ const TeacherAttendanceDashboard = () => {
               </button>
             </div>
             <div>
-              <div className="flex gap-2 mb-4">
+              <div className="flex flex-wrap gap-2 mb-4">
                 <button
                   className={`p-2 rounded-full font-bold ${
-                    selectedStudent?.attendance >= 75
+                    parseInt(selectedStudent?.attendance) >= 75
                       ? "bg-green-100 text-green-500"
                       : "bg-red-100 text-red-500"
                   }`}

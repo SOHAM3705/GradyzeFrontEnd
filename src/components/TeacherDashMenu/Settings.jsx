@@ -257,7 +257,7 @@ const ProfileSettings = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-4 sm:p-6">
       {notification && (
         <div className="fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg animate-slide-in">
           {notification}
@@ -268,8 +268,8 @@ const ProfileSettings = () => {
           {error}
         </div>
       )}
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-6 flex gap-6">
-        <div className="w-32 h-32 rounded-lg overflow-hidden shadow-md">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 flex flex-col sm:flex-row gap-6">
+        <div className="w-24 sm:w-32 h-24 sm:h-32 rounded-lg overflow-hidden shadow-md">
           <img
             src={profileData.profileImage}
             alt="Profile"
@@ -277,18 +277,18 @@ const ProfileSettings = () => {
           />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
             Profile Settings
           </h1>
           <p className="text-gray-500">Manage your account information</p>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-lg">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
         {!showChangePassword ? (
           <form onSubmit={handleProfileSubmit} className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold border-b pb-2 mb-4">
                 Personal Information
               </h2>
               <div className="mb-4">
@@ -304,7 +304,7 @@ const ProfileSettings = () => {
                   className="w-full p-2 border rounded-md focus:ring focus:ring-teal-300"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
                     Email Address
@@ -335,7 +335,7 @@ const ProfileSettings = () => {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
                     Profile Picture
@@ -349,7 +349,7 @@ const ProfileSettings = () => {
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
               <button
                 type="submit"
                 disabled={isLoading}
@@ -371,7 +371,7 @@ const ProfileSettings = () => {
         ) : (
           <form onSubmit={handlePasswordSubmit} className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold border-b pb-2 mb-4">
                 Change Password
               </h2>
               <div className="mb-4">
@@ -386,7 +386,7 @@ const ProfileSettings = () => {
                   className="w-full p-2 border rounded-md focus:ring focus:ring-teal-300"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
                     New Password
@@ -413,7 +413,7 @@ const ProfileSettings = () => {
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
               <button
                 type="submit"
                 disabled={isLoading}

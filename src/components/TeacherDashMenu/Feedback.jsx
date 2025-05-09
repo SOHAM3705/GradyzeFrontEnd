@@ -70,7 +70,7 @@ const TeacherFeedbackForm = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen p-5 bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md text-center">
         <h1 className="text-2xl font-bold text-[#059669] mb-4">
           Gradyze Feedback
         </h1>
@@ -111,6 +111,25 @@ const TeacherFeedbackForm = () => {
               name="email"
               placeholder="Enter your email"
               value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#059669]"
+            />
+          </div>
+
+          <div className="mb-4 text-left">
+            <label
+              className="block text-gray-700 font-bold mb-2"
+              htmlFor="department"
+            >
+              Department
+            </label>
+            <input
+              type="text"
+              id="department"
+              name="department"
+              placeholder="Enter your department"
+              value={formData.department}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#059669]"

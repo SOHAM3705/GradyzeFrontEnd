@@ -26,29 +26,31 @@ const TeacherOverview = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-8 bg-gray-100">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-teal-700 relative">
+    <div className="max-w-7xl mx-auto p-4 sm:p-8 bg-gray-100">
+      <div className="flex justify-between items-center mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-teal-700 relative">
           Overview
           <span className="absolute bottom-[-8px] left-0 w-[70%] h-1 bg-gradient-to-r from-teal-700 to-teal-700 rounded-sm"></span>
         </h1>
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-          <div className="flex justify-between items-start mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+          <div className="flex justify-between items-start mb-4 sm:mb-6">
             <div>
               <h3 className="text-gray-500 text-sm font-medium">
                 Total Students
               </h3>
-              <p className="text-3xl font-bold text-gray-800 mt-1">1234</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800 mt-1">
+                1234
+              </p>
               <div className="flex items-center gap-2 mt-2 text-sm">
                 <FontAwesomeIcon icon={faArrowUp} className="text-green-500" />
                 <span className="text-green-500">3.6% from last month</span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
+            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
               <FontAwesomeIcon icon={faUserGraduate} />
             </div>
           </div>
@@ -60,19 +62,21 @@ const TeacherOverview = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-          <div className="flex justify-between items-start mb-6">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+          <div className="flex justify-between items-start mb-4 sm:mb-6">
             <div>
               <h3 className="text-gray-500 text-sm font-medium">
                 Assignments Graded
               </h3>
-              <p className="text-3xl font-bold text-gray-800 mt-1">45</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800 mt-1">
+                45
+              </p>
               <div className="flex items-center gap-2 mt-2 text-sm">
                 <FontAwesomeIcon icon={faArrowDown} className="text-red-500" />
                 <span className="text-red-500">1.8% from last month</span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
+            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
               <FontAwesomeIcon icon={faChartBar} />
             </div>
           </div>
@@ -84,19 +88,21 @@ const TeacherOverview = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-          <div className="flex justify-between items-start mb-6">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+          <div className="flex justify-between items-start mb-4 sm:mb-6">
             <div>
               <h3 className="text-gray-500 text-sm font-medium">
                 Average Class Score
               </h3>
-              <p className="text-3xl font-bold text-gray-800 mt-1">82.7%</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800 mt-1">
+                82.7%
+              </p>
               <div className="flex items-center gap-2 mt-2 text-sm">
                 <FontAwesomeIcon icon={faArrowUp} className="text-green-500" />
                 <span className="text-green-500">2.4% from last month</span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
+            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
               <FontAwesomeIcon icon={faPercentage} />
             </div>
           </div>
@@ -109,16 +115,16 @@ const TeacherOverview = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Class Performance */}
-        <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800">
               Class Performance
             </h2>
             <div className="flex items-center bg-gray-100 rounded-lg p-1 overflow-hidden">
               <div
-                className={`px-4 py-2 rounded-md cursor-pointer ${
+                className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
                   activePeriod === "Week"
                     ? "bg-teal-700 text-white font-medium"
                     : "text-gray-600"
@@ -128,7 +134,7 @@ const TeacherOverview = () => {
                 Week
               </div>
               <div
-                className={`px-4 py-2 rounded-md cursor-pointer ${
+                className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
                   activePeriod === "Month"
                     ? "bg-teal-700 text-white font-medium"
                     : "text-gray-600"
@@ -138,7 +144,7 @@ const TeacherOverview = () => {
                 Month
               </div>
               <div
-                className={`px-4 py-2 rounded-md cursor-pointer ${
+                className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
                   activePeriod === "Year"
                     ? "bg-teal-700 text-white font-medium"
                     : "text-gray-600"
@@ -153,7 +159,10 @@ const TeacherOverview = () => {
             <div className="flex justify-between items-end h-48">
               {["Math", "Science", "History", "English", "Art"].map(
                 (subject, index) => (
-                  <div key={index} className="flex flex-col items-center w-16">
+                  <div
+                    key={index}
+                    className="flex flex-col items-center w-12 sm:w-16"
+                  >
                     <div
                       className="w-5 bg-gradient-to-t from-teal-700 to-teal-700 rounded-md transition-all duration-500 relative"
                       style={{ height: `${[78, 82, 75, 79, 85][index]}%` }}
@@ -162,7 +171,7 @@ const TeacherOverview = () => {
                         {[78, 82, 75, 79, 85][index]}%
                       </span>
                     </div>
-                    <p className="mt-4 text-gray-600 font-medium text-sm">
+                    <p className="mt-4 text-gray-600 font-medium text-xs sm:text-sm">
                       {subject}
                     </p>
                   </div>
@@ -178,33 +187,35 @@ const TeacherOverview = () => {
         </div>
 
         {/* Quick Actions Panel */}
-        <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Quick Actions</h2>
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+              Quick Actions
+            </h2>
           </div>
           <div className="flex flex-col gap-3">
-            <button className="flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
+              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
                 <FontAwesomeIcon icon={faFileExport} />
               </div>
               <span className="text-gray-600 font-medium">Export Grades</span>
             </button>
-            <button className="flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
+              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
                 <FontAwesomeIcon icon={faUsers} />
               </div>
               <span className="text-gray-600 font-medium">
                 Export Student List
               </span>
             </button>
-            <button className="flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
+              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
                 <FontAwesomeIcon icon={faFileAlt} />
               </div>
               <span className="text-gray-600 font-medium">Export Reports</span>
             </button>
-            <button className="flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
+              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
                 <FontAwesomeIcon icon={faBell} />
               </div>
               <span className="text-gray-600 font-medium">
@@ -216,14 +227,14 @@ const TeacherOverview = () => {
       </div>
 
       {/* Recent Assignments */}
-      <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 mb-6 sm:mb-8">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800">
             Recent Assignments
           </h2>
           <div className="flex items-center bg-gray-100 rounded-lg p-1 overflow-hidden">
             <div
-              className={`px-4 py-2 rounded-md cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
                 activePeriod === "Week"
                   ? "bg-teal-700 text-white font-medium"
                   : "text-gray-600"
@@ -233,7 +244,7 @@ const TeacherOverview = () => {
               Week
             </div>
             <div
-              className={`px-4 py-2 rounded-md cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
                 activePeriod === "Month"
                   ? "bg-teal-700 text-white font-medium"
                   : "text-gray-600"
@@ -243,7 +254,7 @@ const TeacherOverview = () => {
               Month
             </div>
             <div
-              className={`px-4 py-2 rounded-md cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
                 activePeriod === "Year"
                   ? "bg-teal-700 text-white font-medium"
                   : "text-gray-600"
@@ -254,9 +265,9 @@ const TeacherOverview = () => {
             </div>
           </div>
         </div>
-        <div className="flex mb-6 overflow-x-auto">
+        <div className="flex mb-4 sm:mb-6 overflow-x-auto">
           <div
-            className={`px-6 py-3 cursor-pointer ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 cursor-pointer ${
               activeTab === "All Classes"
                 ? "border-b-2 border-teal-700 text-teal-700 font-medium"
                 : "text-gray-600"
@@ -266,7 +277,7 @@ const TeacherOverview = () => {
             All Classes
           </div>
           <div
-            className={`px-6 py-3 cursor-pointer ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 cursor-pointer ${
               activeTab === "Pending"
                 ? "border-b-2 border-teal-700 text-teal-700 font-medium"
                 : "text-gray-600"
@@ -276,7 +287,7 @@ const TeacherOverview = () => {
             Pending
           </div>
           <div
-            className={`px-6 py-3 cursor-pointer ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 cursor-pointer ${
               activeTab === "Graded"
                 ? "border-b-2 border-teal-700 text-teal-700 font-medium"
                 : "text-gray-600"
@@ -286,7 +297,7 @@ const TeacherOverview = () => {
             Graded
           </div>
           <div
-            className={`px-6 py-3 cursor-pointer ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 cursor-pointer ${
               activeTab === "Overdue"
                 ? "border-b-2 border-teal-700 text-teal-700 font-medium"
                 : "text-gray-600"
@@ -299,25 +310,25 @@ const TeacherOverview = () => {
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="text-left p-4 text-gray-600 font-medium text-sm">
+              <th className="text-left p-3 sm:p-4 text-gray-600 font-medium text-xs sm:text-sm">
                 Assignment
               </th>
-              <th className="text-left p-4 text-gray-600 font-medium text-sm">
+              <th className="text-left p-3 sm:p-4 text-gray-600 font-medium text-xs sm:text-sm">
                 Class
               </th>
-              <th className="text-left p-4 text-gray-600 font-medium text-sm">
+              <th className="text-left p-3 sm:p-4 text-gray-600 font-medium text-xs sm:text-sm">
                 Due Date
               </th>
-              <th className="text-left p-4 text-gray-600 font-medium text-sm">
+              <th className="text-left p-3 sm:p-4 text-gray-600 font-medium text-xs sm:text-sm">
                 Students
               </th>
-              <th className="text-left p-4 text-gray-600 font-medium text-sm">
+              <th className="text-left p-3 sm:p-4 text-gray-600 font-medium text-xs sm:text-sm">
                 Status
               </th>
-              <th className="text-left p-4 text-gray-600 font-medium text-sm">
+              <th className="text-left p-3 sm:p-4 text-gray-600 font-medium text-xs sm:text-sm">
                 Average
               </th>
-              <th className="text-left p-4 text-gray-600 font-medium text-sm">
+              <th className="text-left p-3 sm:p-4 text-gray-600 font-medium text-xs sm:text-sm">
                 Actions
               </th>
             </tr>
@@ -369,12 +380,14 @@ const TeacherOverview = () => {
                 key={index}
                 className="hover:bg-gray-100 transition-all duration-300 cursor-pointer"
               >
-                <td className="p-4 text-gray-800 font-medium">
+                <td className="p-3 sm:p-4 text-gray-800 font-medium">
                   {assignment.name}
                 </td>
-                <td className="p-4 text-gray-600">{assignment.class}</td>
-                <td className="p-4 text-gray-600">{assignment.dueDate}</td>
-                <td className="p-4 text-gray-600">
+                <td className="p-3 sm:p-4 text-gray-600">{assignment.class}</td>
+                <td className="p-3 sm:p-4 text-gray-600">
+                  {assignment.dueDate}
+                </td>
+                <td className="p-3 sm:p-4 text-gray-600">
                   <div className="flex items-center gap-2">
                     <span>{assignment.students}</span>
                     <div className="flex-grow h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -391,9 +404,9 @@ const TeacherOverview = () => {
                     </div>
                   </div>
                 </td>
-                <td className="p-4">
+                <td className="p-3 sm:p-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
                       assignment.status === "Graded"
                         ? "bg-green-100 text-green-500"
                         : assignment.status === "Pending"
@@ -406,10 +419,12 @@ const TeacherOverview = () => {
                     {assignment.status}
                   </span>
                 </td>
-                <td className="p-4 text-gray-600">{assignment.average}</td>
-                <td className="p-4">
+                <td className="p-3 sm:p-4 text-gray-600">
+                  {assignment.average}
+                </td>
+                <td className="p-3 sm:p-4">
                   <div className="relative">
-                    <button className="w-7 h-7 bg-transparent border-none cursor-pointer flex items-center justify-center hover:bg-gray-100 rounded-full transition-all duration-300">
+                    <button className="w-6 sm:w-7 h-6 sm:h-7 bg-transparent border-none cursor-pointer flex items-center justify-center hover:bg-gray-100 rounded-full transition-all duration-300">
                       <FontAwesomeIcon icon={faEllipsisV} />
                     </button>
                   </div>
