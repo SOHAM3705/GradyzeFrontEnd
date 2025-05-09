@@ -145,17 +145,7 @@ function App() {
           path="attendance-reports"
           element={<StudentAttendanceDashboard />}
         />
-        <Route
-          path="notifications"
-          element={
-            <StudentNotifications
-              userRole={currentUser.role}
-              adminId={currentUser.adminId?.toString()}
-              year={currentUser.year}
-              division={currentUser.division}
-            />
-          }
-        />
+        <Route path="notifications" element={<StudentNotifications />} />
         <Route path="syllabus" element={<StudentSyllabus />} />
         <Route path="feedback" element={<StudentFeedback />} />
         <Route path="settings" element={<StudentSettings />} />

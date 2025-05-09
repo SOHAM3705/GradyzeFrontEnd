@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const NotificationCenter = ({ userRole, adminId, year, division }) => {
+const NotificationCenter = () => {
   const [notifications, setNotifications] = useState([]);
   const [modalNotification, setModalNotification] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -11,21 +12,31 @@ const NotificationCenter = ({ userRole, adminId, year, division }) => {
     const fetchNotifications = async () => {
       setLoading(true);
       try {
+        const userRole = sessionStorage.getItem("role");
+        const adminId = sessionStorage.getItem("adminId");
+        const studentId = sessionStorage.getItem("studentId");
+
+        let year, division;
+        if (userRole === "student") {
+          const studentRes = await axios.get(
+            `${API_BASE_URL}/api/students/${studentId}`
+          );
+          year = studentRes.data.year;
+          division = studentRes.data.division;
+        }
+
         const response = await axios.get(
           `${API_BASE_URL}/api/studentnotification/notifications`,
           {
-            params: { userRole, adminId, year, division },
+            params: {
+              userRole,
+              adminId,
+              ...(userRole === "student" && { year, division }),
+            },
           }
         );
 
-        console.log("📩 Fetched Notifications:", response.data);
-
-        if (Array.isArray(response.data)) {
-          setNotifications(response.data);
-        } else {
-          console.error("🚨 API returned invalid data format:", response.data);
-          setNotifications([]);
-        }
+        setNotifications(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("❌ Error fetching notifications:", error);
         setNotifications([]);
@@ -35,7 +46,7 @@ const NotificationCenter = ({ userRole, adminId, year, division }) => {
     };
 
     fetchNotifications();
-  }, [userRole, adminId, year, division]);
+  }, []);
 
   const getFileUrl = (fileId) => {
     return `${API_BASE_URL}/api/studentnotification/files/${fileId}`;
@@ -51,38 +62,27 @@ const NotificationCenter = ({ userRole, adminId, year, division }) => {
     }
   };
 
-  const openModal = (notification) => {
-    setModalNotification(notification);
-  };
-
-  const closeModal = () => {
-    setModalNotification(null);
-  };
+  const openModal = (notification) => setModalNotification(notification);
+  const closeModal = () => setModalNotification(null);
 
   const markAsRead = (id) => {
-    const updatedNotifications = notifications.map((notification) =>
-      notification._id === id
-        ? { ...notification, unread: false }
-        : notification
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === id ? { ...n, unread: false } : n))
     );
-    setNotifications(updatedNotifications);
     closeModal();
   };
 
   const markAsUnread = (id) => {
-    const updatedNotifications = notifications.map((notification) =>
-      notification._id === id ? { ...notification, unread: true } : notification
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === id ? { ...n, unread: true } : n))
     );
-    setNotifications(updatedNotifications);
     closeModal();
   };
 
   const getNotificationSource = (notification) => {
-    if (notification.adminId) {
-      return "Admin";
-    } else if (notification.teacherId) {
+    if (notification.adminId) return "Admin";
+    if (notification.teacherId)
       return `Teacher: ${notification.teacherData?.name || "Unknown"}`;
-    }
     return "System";
   };
 
@@ -95,24 +95,22 @@ const NotificationCenter = ({ userRole, adminId, year, division }) => {
       </div>
 
       <div className="container mx-auto p-5">
-        {loading && (
+        {loading ? (
           <div className="text-center p-10 text-gray-500">
             <h3>Loading notifications...</h3>
           </div>
-        )}
-
-        {!loading && notifications.length === 0 ? (
+        ) : notifications.length === 0 ? (
           <div className="text-center p-10 text-gray-500">
             <h3>No notifications found</h3>
             <p>Check back later for updates</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-5">
-            {notifications.map((notification, index) => (
+            {notifications.map((notification) => (
               <div
-                key={notification._id || index}
+                key={notification._id}
                 onClick={() => openModal(notification)}
-                className={`bg-white p-5 rounded-lg shadow-md cursor-pointer transition transform hover:-translate-y-1 border-l-4 ${
+                className={`relative bg-white p-5 rounded-lg shadow-md cursor-pointer transition transform hover:-translate-y-1 border-l-4 ${
                   notification.unread ? "border-blue-600" : "border-gray-200"
                 }`}
               >
@@ -199,10 +197,8 @@ const NotificationCenter = ({ userRole, adminId, year, division }) => {
               <button
                 onClick={() =>
                   modalNotification.unread
-                    ? markAsRead(modalNotification._id || modalNotification.id)
-                    : markAsUnread(
-                        modalNotification._id || modalNotification.id
-                      )
+                    ? markAsRead(modalNotification._id)
+                    : markAsUnread(modalNotification._id)
                 }
                 className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
               >

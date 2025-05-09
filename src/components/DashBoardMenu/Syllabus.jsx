@@ -207,19 +207,19 @@ const SyllabusManagement = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="header flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold text-gray-800">
+      <div className="header flex flex-col sm:flex-row justify-between items-center mb-4">
+        <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-0">
           Syllabus Management
         </h1>
         <button
-          className="bg-purple-700 text-white px-6 py-3 rounded hover:bg-purple-800 text-lg"
+          className="bg-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded hover:bg-purple-800 text-base sm:text-lg"
           onClick={() => setIsOpen(true)}
         >
           Add New Syllabus
         </button>
       </div>
 
-      <div className="filters grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="filters grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <select
           id="pattern"
           className="filter-select p-2 border rounded w-full"
@@ -259,7 +259,7 @@ const SyllabusManagement = () => {
         </select>
       </div>
 
-      <div className="syllabus-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="syllabus-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filterSyllabi().map((entry, index) => (
           <div
             key={index}
@@ -273,7 +273,7 @@ const SyllabusManagement = () => {
                 {entry.pattern} Pattern • {formatYear(entry.year)}
               </div>
             </div>
-            <div className="syllabus-info flex justify-between items-center mt-4 pt-4 border-t">
+            <div className="syllabus-info flex flex-col sm:flex-row justify-between items-center mt-4 pt-4 border-t">
               {entry.fileId && (
                 <div className="mt-3">
                   <p className="font-semibold text-gray-600">Attached File:</p>
@@ -287,7 +287,7 @@ const SyllabusManagement = () => {
               )}
               <button
                 onClick={() => handleDelete(entry._id)}
-                className="text-red-500 hover:underline"
+                className="text-red-500 hover:underline mt-3 sm:mt-0"
               >
                 Delete
               </button>
@@ -298,9 +298,11 @@ const SyllabusManagement = () => {
 
       {isOpen && (
         <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="modal-content bg-white p-6 rounded shadow-lg w-full max-w-md">
+          <div className="modal-content bg-white p-4 sm:p-6 rounded shadow-lg w-full max-w-md">
             <div className="modal-header flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Add New Syllabus</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">
+                Add New Syllabus
+              </h2>
               <button
                 className="close-btn text-gray-600 text-xl"
                 onClick={() => setIsOpen(false)}
@@ -385,14 +387,14 @@ const SyllabusManagement = () => {
               <div className="form-buttons flex justify-end gap-4">
                 <button
                   type="button"
-                  className="cancel-btn px-6 py-3 border rounded text-lg"
+                  className="cancel-btn px-4 sm:px-6 py-2 border rounded text-base sm:text-lg"
                   onClick={() => setIsOpen(false)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="submit-btn bg-purple-700 text-white px-6 py-3 rounded hover:bg-purple-800 text-lg"
+                  className="submit-btn bg-purple-700 text-white px-4 sm:px-6 py-2 rounded hover:bg-purple-800 text-base sm:text-lg"
                 >
                   Add Syllabus
                 </button>
