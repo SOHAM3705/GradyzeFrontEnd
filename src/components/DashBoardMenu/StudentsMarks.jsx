@@ -124,7 +124,9 @@ const AdminStudentMarks = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="header mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Student Marks</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+          Student Marks
+        </h1>
         <p className="text-gray-600">
           Organize by Department, Year, and Division
         </p>
@@ -140,13 +142,13 @@ const AdminStudentMarks = () => {
             return (
               <div
                 key={deptId}
-                className="department-container bg-white p-6 rounded-lg shadow-md mb-4 border-l-4 border-blue-500"
+                className="department-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-blue-500"
               >
                 <div
                   className="container-header flex justify-between items-center cursor-pointer"
                   onClick={() => toggleContainer(`${deptId}-body`)}
                 >
-                  <h3 className="text-lg font-semibold">
+                  <h3 className="text-base sm:text-lg font-semibold">
                     {department} Department
                   </h3>
                   <i
@@ -168,13 +170,15 @@ const AdminStudentMarks = () => {
                       return (
                         <div
                           key={yearId}
-                          className="year-container bg-white p-6 rounded-lg shadow-md mb-4 border-l-4 border-green-500"
+                          className="year-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-green-500"
                         >
                           <div
                             className="container-header flex justify-between items-center cursor-pointer"
                             onClick={() => toggleContainer(`${yearId}-body`)}
                           >
-                            <h3 className="text-lg font-semibold">{year}</h3>
+                            <h3 className="text-base sm:text-lg font-semibold">
+                              {year}
+                            </h3>
                             <i
                               className={`fas fa-chevron-${
                                 expandedSections[`${yearId}-body`]
@@ -202,15 +206,15 @@ const AdminStudentMarks = () => {
                                 return (
                                   <div
                                     key={divisionData.id}
-                                    className="division-container bg-white p-6 rounded-lg shadow-md mb-4 border-l-4 border-yellow-500"
+                                    className="division-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-yellow-500"
                                   >
-                                    <div className="container-header flex justify-between items-center">
-                                      <h3 className="text-lg font-semibold">
+                                    <div className="container-header flex flex-col sm:flex-row justify-between items-center">
+                                      <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-0">
                                         Division {division}
                                       </h3>
                                       <div className="marks-section relative">
                                         <button
-                                          className="btn bg-yellow-500 text-white px-4 py-2 rounded"
+                                          className="btn bg-yellow-500 text-white px-3 sm:px-4 py-2 rounded"
                                           onClick={() =>
                                             toggleMarksOptions(divisionData.id)
                                           }
@@ -220,7 +224,7 @@ const AdminStudentMarks = () => {
 
                                         {openMarksOptions ===
                                           divisionData.id && (
-                                          <div className="marks-options absolute bg-white border border-gray-300 shadow-md rounded-md p-2 z-10">
+                                          <div className="marks-options absolute right-0 bg-white border border-gray-300 shadow-md rounded-md p-2 z-10">
                                             <button
                                               className="block w-full px-3 py-2 text-left"
                                               onClick={() =>
