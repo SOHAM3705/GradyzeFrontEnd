@@ -447,7 +447,7 @@ const FacultyManagementSystem = () => {
   const renderFaculties = () => {
     if (faculties.length === 0) {
       return (
-        <div className="text-center p-8 text-gray-500">
+        <div className="text-center p-4 sm:p-8 text-gray-500">
           <div>No faculty data available</div>
           <p>Click on "Add Faculty" to get started</p>
         </div>
@@ -455,16 +455,19 @@ const FacultyManagementSystem = () => {
     }
 
     return filteredFaculty.map((faculty) => (
-      <div key={faculty._id} className="border rounded-lg shadow-md mb-4 p-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-semibold">{faculty.name}</h3>
-          <div className="flex gap-2">
+      <div
+        key={faculty._id}
+        className="border rounded-lg shadow-md mb-4 p-2 sm:p-4"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-2">
+          <h3 className="text-base sm:text-lg font-semibold">{faculty.name}</h3>
+          <div className="flex gap-1 sm:gap-2 mt-2 sm:mt-0">
             <button
               onClick={() => {
                 setSelectedFacultyId(faculty._id);
                 setIsModifyModalOpen(true);
               }}
-              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-700"
+              className="bg-yellow-500 text-white px-2 sm:px-4 py-1 sm:py-2 rounded hover:bg-yellow-700 text-xs sm:text-base"
             >
               <i className="fas fa-edit"></i>
             </button>
@@ -473,18 +476,20 @@ const FacultyManagementSystem = () => {
                 setTeacherToDelete(faculty._id);
                 setIsDeleteModalOpen(true);
               }}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
+              className="bg-red-500 text-white px-2 sm:px-4 py-1 sm:py-2 rounded hover:bg-red-700 text-xs sm:text-base"
             >
               <i className="fas fa-trash-alt"></i> Delete
             </button>
           </div>
         </div>
         {faculty.isSubjectTeacher && faculty.subjects?.length > 0 && (
-          <div className="mt-4">
-            <h4 className="text-md font-semibold mb-2">Assigned Subjects:</h4>
-            <ul className="list-disc pl-5">
+          <div className="mt-2 sm:mt-4">
+            <h4 className="text-sm sm:text-md font-semibold mb-1 sm:mb-2">
+              Assigned Subjects:
+            </h4>
+            <ul className="list-disc pl-3 sm:pl-5">
               {faculty.subjects.map((subject, index) => (
-                <li key={index} className="mb-1">
+                <li key={index} className="mb-1 text-xs sm:text-base">
                   {subject.name} (Year: {subject.year}, Semester:{" "}
                   {subject.semester}, Division: {subject.division})
                 </li>
@@ -493,9 +498,11 @@ const FacultyManagementSystem = () => {
           </div>
         )}
         {faculty.isClassTeacher && faculty.assignedClass && (
-          <div className="mt-4">
-            <h4 className="text-md font-semibold mb-2">Assigned Class:</h4>
-            <p className="text-gray-700">
+          <div className="mt-2 sm:mt-4">
+            <h4 className="text-sm sm:text-md font-semibold mb-1 sm:mb-2">
+              Assigned Class:
+            </h4>
+            <p className="text-gray-700 text-xs sm:text-base">
               Year: {faculty.assignedClass.year}, Division:{" "}
               {faculty.assignedClass.division}
             </p>
@@ -519,29 +526,29 @@ const FacultyManagementSystem = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <header className="bg-purple-500 text-black p-4 rounded-lg shadow-md mb-8 text-center">
-        <h1 className="text-2xl">Faculty Management System</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg">Total Faculty</h3>
-            <div className="flex items-center mt-2">
+    <div className="container mx-auto p-2 sm:p-4">
+      <header className="bg-purple-500 text-black p-2 sm:p-4 rounded-lg shadow-md mb-4 sm:mb-8 text-center">
+        <h1 className="text-xl sm:text-2xl">Faculty Management System</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 mt-2 sm:mt-4">
+          <div className="bg-white p-2 sm:p-4 rounded-lg shadow-md">
+            <h3 className="text-base sm:text-lg">Total Faculty</h3>
+            <div className="flex items-center mt-1 sm:mt-2">
               <i className="fas fa-chalkboard-teacher text-gray-600"></i>
               <span className="ml-2">{faculties.length}</span>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg">Departments</h3>
-            <div className="flex items-center mt-2">
+          <div className="bg-white p-2 sm:p-4 rounded-lg shadow-md">
+            <h3 className="text-base sm:text-lg">Departments</h3>
+            <div className="flex items-center mt-1 sm:mt-2">
               <i className="fas fa-building text-gray-600"></i>
               <span className="ml-2">
                 {new Set(faculties.map((f) => f.department)).size}
               </span>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg">Total Subjects</h3>
-            <div className="flex items-center mt-2">
+          <div className="bg-white p-2 sm:p-4 rounded-lg shadow-md">
+            <h3 className="text-base sm:text-lg">Total Subjects</h3>
+            <div className="flex items-center mt-1 sm:mt-2">
               <i className="fas fa-book text-gray-600"></i>
               <span className="ml-2">
                 {faculties.reduce((total, f) => total + f.subjects.length, 0)}
@@ -551,12 +558,12 @@ const FacultyManagementSystem = () => {
         </div>
       </header>
 
-      <div className="bg-white p-4 rounded-lg shadow-md mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl">Faculty Directory</h2>
+      <div className="bg-white p-2 sm:p-4 rounded-lg shadow-md mb-4 sm:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-2 sm:mb-4">
+          <h2 className="text-lg sm:text-xl">Faculty Directory</h2>
           <div>
             <button
-              className="bg-purple-600 text-white px-4 py-2 rounded"
+              className="bg-purple-600 text-white px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base"
               onClick={() => setIsFacultyModalOpen(true)}
             >
               Add Faculty
@@ -568,16 +575,16 @@ const FacultyManagementSystem = () => {
           placeholder="Search for a teacher..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border rounded mb-4"
+          className="w-full p-1 sm:p-2 border rounded mb-2 sm:mb-4 text-xs sm:text-base"
         />
         <div id="facultyContainer">{renderFaculties()}</div>
       </div>
 
       {isFacultyModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg">Add New Faculty</h3>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-md">
+            <div className="flex justify-between items-center mb-2 sm:mb-4">
+              <h3 className="text-base sm:text-lg">Add New Faculty</h3>
               <button
                 className="text-gray-600"
                 onClick={() => setIsFacultyModalOpen(false)}
@@ -585,31 +592,37 @@ const FacultyManagementSystem = () => {
                 &times;
               </button>
             </div>
-            <form onSubmit={createFaculty} className="space-y-4">
+            <form onSubmit={createFaculty} className="space-y-2 sm:space-y-4">
               <div className="form-group">
-                <label className="block text-gray-700">Name</label>
+                <label className="block text-gray-700 text-xs sm:text-base">
+                  Name
+                </label>
                 <input
                   type="text"
                   name="name"
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                 />
               </div>
               <div className="form-group">
-                <label className="block text-gray-700">Email</label>
+                <label className="block text-gray-700 text-xs sm:text-base">
+                  Email
+                </label>
                 <input
                   type="email"
                   name="email"
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                 />
               </div>
               <div className="form-group">
-                <label className="block text-gray-700">Department</label>
+                <label className="block text-gray-700 text-xs sm:text-base">
+                  Department
+                </label>
                 <select
                   name="department"
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                 >
                   <option value="">Select Department</option>
                   <option value="Computer Science">Computer Science</option>
@@ -625,7 +638,7 @@ const FacultyManagementSystem = () => {
                   <option value="Civil Engineering">Civil Engineering</option>
                 </select>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
@@ -633,7 +646,7 @@ const FacultyManagementSystem = () => {
                     className="mr-2"
                     onChange={toggleFields}
                   />
-                  Class Teacher
+                  <span className="text-xs sm:text-base">Class Teacher</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -642,35 +655,17 @@ const FacultyManagementSystem = () => {
                     className="mr-2"
                     onChange={toggleFields}
                   />
-                  Subject Teacher
+                  <span className="text-xs sm:text-base">Subject Teacher</span>
                 </label>
               </div>
               <div id="classTeacherFields" style={{ display: "none" }}>
                 <div className="form-group">
-                  <label className="block text-gray-700">Year</label>
-                  <select name="year" className="w-full p-2 border rounded">
-                    <option value="">Select Year</option>
-                    <option value="First Year">First Year</option>
-                    <option value="Second Year">Second Year</option>
-                    <option value="Third Year">Third Year</option>
-                    <option value="Fourth Year">Fourth Year</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="block text-gray-700">Division</label>
-                  <input
-                    type="text"
-                    name="division"
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-              </div>
-              <div id="subjectTeacherFields" style={{ display: "none" }}>
-                <div className="form-group">
-                  <label className="block text-gray-700">Year</label>
+                  <label className="block text-gray-700 text-xs sm:text-base">
+                    Year
+                  </label>
                   <select
-                    name="subjectYear"
-                    className="w-full p-2 border rounded"
+                    name="year"
+                    className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                   >
                     <option value="">Select Year</option>
                     <option value="First Year">First Year</option>
@@ -680,16 +675,50 @@ const FacultyManagementSystem = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="block text-gray-700">Subject</label>
+                  <label className="block text-gray-700 text-xs sm:text-base">
+                    Division
+                  </label>
+                  <input
+                    type="text"
+                    name="division"
+                    className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
+                  />
+                </div>
+              </div>
+              <div id="subjectTeacherFields" style={{ display: "none" }}>
+                <div className="form-group">
+                  <label className="block text-gray-700 text-xs sm:text-base">
+                    Year
+                  </label>
+                  <select
+                    name="subjectYear"
+                    className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
+                  >
+                    <option value="">Select Year</option>
+                    <option value="First Year">First Year</option>
+                    <option value="Second Year">Second Year</option>
+                    <option value="Third Year">Third Year</option>
+                    <option value="Fourth Year">Fourth Year</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="block text-gray-700 text-xs sm:text-base">
+                    Subject
+                  </label>
                   <input
                     type="text"
                     name="subject"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="block text-gray-700">Semester</label>
-                  <select name="semester" className="w-full p-2 border rounded">
+                  <label className="block text-gray-700 text-xs sm:text-base">
+                    Semester
+                  </label>
+                  <select
+                    name="semester"
+                    className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
+                  >
                     <option value="">Select Semester</option>
                     <option value="1">Semester 1</option>
                     <option value="2">Semester 2</option>
@@ -702,25 +731,27 @@ const FacultyManagementSystem = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="block text-gray-700">Division</label>
+                  <label className="block text-gray-700 text-xs sm:text-base">
+                    Division
+                  </label>
                   <input
                     type="text"
                     name="subjectDivision"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end gap-2 sm:gap-4">
                 <button
                   type="submit"
-                  className="bg-purple-600 text-white px-4 py-2 rounded"
+                  className="bg-purple-600 text-white px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base"
                 >
                   Add Faculty
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsFacultyModalOpen(false)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                  className="bg-gray-300 text-gray-700 px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base"
                 >
                   Cancel
                 </button>
@@ -732,9 +763,9 @@ const FacultyManagementSystem = () => {
 
       {isSubjectModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-md">
+            <div className="flex justify-between items-center mb-2 sm:mb-4">
+              <h3 className="text-base sm:text-lg">
                 Add Subject to:{" "}
                 {faculties.find((f) => f._id === selectedFacultyId)?.name ||
                   "Faculty"}
@@ -746,23 +777,27 @@ const FacultyManagementSystem = () => {
                 &times;
               </button>
             </div>
-            <form onSubmit={addSubject} className="space-y-4">
+            <form onSubmit={addSubject} className="space-y-2 sm:space-y-4">
               <input type="hidden" name="facultyId" value={selectedFacultyId} />
               <div className="form-group">
-                <label className="block text-gray-700">Subject Name</label>
+                <label className="block text-gray-700 text-xs sm:text-base">
+                  Subject Name
+                </label>
                 <input
                   type="text"
                   name="subjectName"
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                 />
               </div>
               <div className="form-group">
-                <label className="block text-gray-700">Year</label>
+                <label className="block text-gray-700 text-xs sm:text-base">
+                  Year
+                </label>
                 <select
                   name="year"
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                 >
                   <option value="">Select Year</option>
                   <option value="First Year">First Year</option>
@@ -772,11 +807,13 @@ const FacultyManagementSystem = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label className="block text-gray-700">Semester</label>
+                <label className="block text-gray-700 text-xs sm:text-base">
+                  Semester
+                </label>
                 <select
                   name="semester"
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                 >
                   <option value="">Select Semester</option>
                   <option value="1">Semester 1</option>
@@ -790,25 +827,27 @@ const FacultyManagementSystem = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label className="block text-gray-700">Division</label>
+                <label className="block text-gray-700 text-xs sm:text-base">
+                  Division
+                </label>
                 <input
                   type="text"
                   name="division"
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-1 sm:p-2 border rounded text-xs sm:text-base"
                 />
               </div>
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end gap-2 sm:gap-4">
                 <button
                   type="submit"
-                  className="bg-purple-600 text-white px-4 py-2 rounded"
+                  className="bg-purple-600 text-white px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base"
                 >
                   Add Subject
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsSubjectModalOpen(false)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                  className="bg-gray-300 text-gray-700 px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base"
                 >
                   Cancel
                 </button>
@@ -820,22 +859,24 @@ const FacultyManagementSystem = () => {
 
       {isDeleteModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
-            <p className="text-gray-700">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-md">
+            <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">
+              Confirm Deletion
+            </h3>
+            <p className="text-gray-700 text-xs sm:text-base">
               Are you sure you want to delete this teacher? This action cannot
               be undone.
             </p>
-            <div className="flex justify-end gap-4 mt-6">
+            <div className="flex justify-end gap-2 sm:gap-4 mt-4 sm:mt-6">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                className="bg-gray-300 text-gray-700 px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteTeacher}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-800"
+                className="bg-red-600 text-white px-2 sm:px-4 py-1 sm:py-2 rounded hover:bg-red-800 text-xs sm:text-base"
               >
                 Delete
               </button>
@@ -846,21 +887,23 @@ const FacultyManagementSystem = () => {
 
       {isModifyModalOpen && selectedFacultyId && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <h3 className="text-lg font-semibold">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-md">
+            <h3 className="text-base sm:text-lg font-semibold">
               Modify Subjects and Class for{" "}
               {faculties.find((f) => f._id === selectedFacultyId)?.name ||
                 "Unknown Faculty"}
             </h3>
             <div>
-              <h4>Current Subjects:</h4>
+              <h4 className="text-xs sm:text-base">Current Subjects:</h4>
               <ul>
                 {faculties
                   .find((f) => f._id === selectedFacultyId)
                   ?.subjects.map((subject, index) => (
                     <li key={index} className="flex items-center mb-1">
-                      {subject.name} (Year: {subject.year}, Semester:{" "}
-                      {subject.semester}, Division: {subject.division})
+                      <span className="text-xs sm:text-base">
+                        {subject.name} (Year: {subject.year}, Semester:{" "}
+                        {subject.semester}, Division: {subject.division})
+                      </span>
                       <button
                         onClick={() =>
                           removeSubject(
@@ -870,7 +913,7 @@ const FacultyManagementSystem = () => {
                             subject.division
                           )
                         }
-                        className="text-red-500 hover:text-red-700 ml-2"
+                        className="text-red-500 hover:text-red-700 ml-2 text-xs sm:text-base"
                       >
                         <i className="fas fa-trash-alt"></i> Delete
                       </button>
@@ -880,9 +923,9 @@ const FacultyManagementSystem = () => {
             </div>
             {faculties.find((f) => f._id === selectedFacultyId)
               ?.isClassTeacher && (
-              <div className="mt-4">
-                <h4>Assigned Class:</h4>
-                <p>
+              <div className="mt-2 sm:mt-4">
+                <h4 className="text-xs sm:text-base">Assigned Class:</h4>
+                <p className="text-xs sm:text-base">
                   Year:{" "}
                   {
                     faculties.find((f) => f._id === selectedFacultyId)
@@ -896,25 +939,25 @@ const FacultyManagementSystem = () => {
                 </p>
                 <button
                   onClick={() => removeClass()}
-                  className="text-red-500 hover:text-red-700 mt-2"
+                  className="text-red-500 hover:text-red-700 mt-1 sm:mt-2 text-xs sm:text-base"
                 >
                   <i className="fas fa-trash-alt"></i> Delete Class
                 </button>
               </div>
             )}
-            <div className="mt-4 flex justify-end gap-4">
+            <div className="mt-2 sm:mt-4 flex justify-end gap-2 sm:gap-4">
               <button
                 onClick={() => {
                   setIsModifyModalOpen(false);
                   setIsSubjectModalOpen(true);
                 }}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
+                className="bg-green-500 text-white px-2 sm:px-4 py-1 sm:py-2 rounded hover:bg-green-700 text-xs sm:text-base"
               >
                 Add Subject
               </button>
               <button
                 onClick={() => setIsModifyModalOpen(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                className="bg-gray-300 text-gray-700 px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base"
               >
                 Close
               </button>
@@ -923,7 +966,9 @@ const FacultyManagementSystem = () => {
         </div>
       )}
 
-      {message && <p className="text-gray-700 mt-3">{message}</p>}
+      {message && (
+        <p className="text-gray-700 mt-3 text-xs sm:text-base">{message}</p>
+      )}
     </div>
   );
 };

@@ -76,9 +76,9 @@ const AdminStudentMarks = () => {
               <table class="min-w-full bg-white border border-gray-300">
                 <thead>
                   <tr>
-                    <th class="py-2 px-4 border-b">Roll No</th>
-                    <th class="py-2 px-4 border-b">Name</th>
-                    <th class="py-2 px-4 border-b">${
+                    <th class="py-2 px-2 sm:px-4 border-b">Roll No</th>
+                    <th class="py-2 px-2 sm:px-4 border-b">Name</th>
+                    <th class="py-2 px-2 sm:px-4 border-b">${
                       examType === "unitTest"
                         ? "Unit Test Marks"
                         : "Prelims Marks"
@@ -91,9 +91,9 @@ const AdminStudentMarks = () => {
             divisionData.students.forEach((student) => {
               html += `
                 <tr>
-                  <td class="py-2 px-4 border-b">${student.rollNo}</td>
-                  <td class="py-2 px-4 border-b">${student.name}</td>
-                  <td class="py-2 px-4 border-b">${
+                  <td class="py-2 px-2 sm:px-4 border-b">${student.rollNo}</td>
+                  <td class="py-2 px-2 sm:px-4 border-b">${student.name}</td>
+                  <td class="py-2 px-2 sm:px-4 border-b">${
                     student[examType] || "-"
                   }</td>
                 </tr>
@@ -122,12 +122,12 @@ const AdminStudentMarks = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="header mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+    <div className="container mx-auto p-2 sm:p-4">
+      <div className="header mb-4 sm:mb-6">
+        <h1 className="text-lg sm:text-xl font-bold text-gray-800">
           Student Marks
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 text-sm sm:text-base">
           Organize by Department, Year, and Division
         </p>
       </div>
@@ -142,13 +142,13 @@ const AdminStudentMarks = () => {
             return (
               <div
                 key={deptId}
-                className="department-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-blue-500"
+                className="department-container bg-white p-3 sm:p-4 rounded-lg shadow-md mb-4 border-l-4 border-blue-500"
               >
                 <div
                   className="container-header flex justify-between items-center cursor-pointer"
                   onClick={() => toggleContainer(`${deptId}-body`)}
                 >
-                  <h3 className="text-base sm:text-lg font-semibold">
+                  <h3 className="text-sm sm:text-base font-semibold">
                     {department} Department
                   </h3>
                   <i
@@ -159,7 +159,10 @@ const AdminStudentMarks = () => {
                 </div>
 
                 {expandedSections[`${deptId}-body`] && (
-                  <div id={`${deptId}-body`} className="container-body mt-4">
+                  <div
+                    id={`${deptId}-body`}
+                    className="container-body mt-2 sm:mt-4"
+                  >
                     {Object.keys(
                       structuredData.departments[department]?.years
                     ).map((year) => {
@@ -170,13 +173,13 @@ const AdminStudentMarks = () => {
                       return (
                         <div
                           key={yearId}
-                          className="year-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-green-500"
+                          className="year-container bg-white p-3 sm:p-4 rounded-lg shadow-md mb-4 border-l-4 border-green-500"
                         >
                           <div
                             className="container-header flex justify-between items-center cursor-pointer"
                             onClick={() => toggleContainer(`${yearId}-body`)}
                           >
-                            <h3 className="text-base sm:text-lg font-semibold">
+                            <h3 className="text-sm sm:text-base font-semibold">
                               {year}
                             </h3>
                             <i
@@ -191,7 +194,7 @@ const AdminStudentMarks = () => {
                           {expandedSections[`${yearId}-body`] && (
                             <div
                               id={`${yearId}-body`}
-                              className="container-body mt-4"
+                              className="container-body mt-2 sm:mt-4"
                             >
                               {Object.keys(
                                 structuredData.departments[department]?.years[
@@ -206,15 +209,15 @@ const AdminStudentMarks = () => {
                                 return (
                                   <div
                                     key={divisionData.id}
-                                    className="division-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-yellow-500"
+                                    className="division-container bg-white p-3 sm:p-4 rounded-lg shadow-md mb-4 border-l-4 border-yellow-500"
                                   >
                                     <div className="container-header flex flex-col sm:flex-row justify-between items-center">
-                                      <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-0">
+                                      <h3 className="text-sm sm:text-base font-semibold mb-2 sm:mb-0">
                                         Division {division}
                                       </h3>
                                       <div className="marks-section relative">
                                         <button
-                                          className="btn bg-yellow-500 text-white px-3 sm:px-4 py-2 rounded"
+                                          className="btn bg-yellow-500 text-white px-2 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm"
                                           onClick={() =>
                                             toggleMarksOptions(divisionData.id)
                                           }
@@ -224,9 +227,9 @@ const AdminStudentMarks = () => {
 
                                         {openMarksOptions ===
                                           divisionData.id && (
-                                          <div className="marks-options absolute right-0 bg-white border border-gray-300 shadow-md rounded-md p-2 z-10">
+                                          <div className="marks-options absolute right-0 bg-white border border-gray-300 shadow-md rounded-md p-1 sm:p-2 z-10">
                                             <button
-                                              className="block w-full px-3 py-2 text-left"
+                                              className="block w-full px-2 sm:px-3 py-1 sm:py-2 text-left text-xs sm:text-sm"
                                               onClick={() =>
                                                 showMarks(
                                                   divisionData.id,
@@ -238,7 +241,7 @@ const AdminStudentMarks = () => {
                                             </button>
 
                                             <button
-                                              className="block w-full px-3 py-2 text-left"
+                                              className="block w-full px-2 sm:px-3 py-1 sm:py-2 text-left text-xs sm:text-sm"
                                               onClick={() =>
                                                 showMarks(
                                                   divisionData.id,
@@ -250,7 +253,7 @@ const AdminStudentMarks = () => {
                                             </button>
 
                                             <button
-                                              className="block w-full px-3 py-2 text-left"
+                                              className="block w-full px-2 sm:px-3 py-1 sm:py-2 text-left text-xs sm:text-sm"
                                               onClick={() =>
                                                 showMarks(
                                                   divisionData.id,
@@ -262,7 +265,7 @@ const AdminStudentMarks = () => {
                                             </button>
 
                                             <button
-                                              className="block w-full px-3 py-2 text-left"
+                                              className="block w-full px-2 sm:px-3 py-1 sm:py-2 text-left text-xs sm:text-sm"
                                               onClick={() =>
                                                 showMarks(
                                                   divisionData.id,
@@ -278,7 +281,7 @@ const AdminStudentMarks = () => {
                                     </div>
                                     <div
                                       id={`marks-${divisionData.id}`}
-                                      className="marks-container mt-4"
+                                      className="marks-container mt-2 sm:mt-4"
                                       style={{ display: "none" }}
                                     ></div>
                                   </div>

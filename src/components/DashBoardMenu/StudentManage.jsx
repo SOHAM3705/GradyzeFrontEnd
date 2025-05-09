@@ -96,10 +96,12 @@ const StudentManagement = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="header mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Student Management</h1>
-        <p className="text-gray-600">
+    <div className="container mx-auto p-2 sm:p-4">
+      <div className="header mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+          Student Management
+        </h1>
+        <p className="text-gray-600 text-sm sm:text-base">
           Organize by Department, Year, and Division
         </p>
       </div>
@@ -112,13 +114,13 @@ const StudentManagement = () => {
           return (
             <div
               key={deptId}
-              className="department-container bg-white p-6 rounded-lg shadow-md mb-4 border-l-4 border-blue-500"
+              className="department-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-blue-500"
             >
               <div
                 className="container-header flex justify-between items-center cursor-pointer"
                 onClick={() => toggleContainer(`${deptId}-body`)}
               >
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   <i className="fas fa-building"></i> {department} Department
                 </h3>
                 <i
@@ -128,7 +130,10 @@ const StudentManagement = () => {
                 ></i>
               </div>
               {expandedSections[`${deptId}-body`] && (
-                <div id={`${deptId}-body`} className="container-body mt-4">
+                <div
+                  id={`${deptId}-body`}
+                  className="container-body mt-2 sm:mt-4"
+                >
                   {Object.keys(
                     structuredData.departments[department].years
                   ).map((year) => {
@@ -138,13 +143,13 @@ const StudentManagement = () => {
                     return (
                       <div
                         key={yearId}
-                        className="year-container bg-white p-6 rounded-lg shadow-md mb-4 border-l-4 border-green-500"
+                        className="year-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-green-500"
                       >
                         <div
                           className="container-header flex justify-between items-center cursor-pointer"
                           onClick={() => toggleContainer(`${yearId}-body`)}
                         >
-                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                             <i className="fas fa-calendar-alt"></i> {year}
                           </h3>
                           <i
@@ -156,7 +161,7 @@ const StudentManagement = () => {
                         {expandedSections[`${yearId}-body`] && (
                           <div
                             id={`${yearId}-body`}
-                            className="container-body mt-4"
+                            className="container-body mt-2 sm:mt-4"
                           >
                             {Object.keys(
                               structuredData.departments[department].years[year]
@@ -169,15 +174,15 @@ const StudentManagement = () => {
                               return (
                                 <div
                                   key={divisionData.id}
-                                  className="division-container bg-white p-6 rounded-lg shadow-md mb-4 border-l-4 border-yellow-500"
+                                  className="division-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-yellow-500"
                                 >
                                   <div className="container-header flex justify-between items-center">
-                                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                                       <i className="fas fa-users"></i> Division{" "}
                                       {division}
                                     </h3>
                                     <button
-                                      className="btn bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                                      className="btn bg-yellow-500 text-white px-2 sm:px-4 py-1 sm:py-2 rounded hover:bg-yellow-600 text-xs sm:text-base"
                                       onClick={() =>
                                         generatePDF(divisionData.id)
                                       }

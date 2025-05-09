@@ -177,61 +177,61 @@ const Notification = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-5">
+    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-2 sm:p-5">
       <button
         onClick={() => setIsOpen(true)}
-        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 mt-6"
+        className="bg-blue-500 text-white px-4 sm:px-6 py-2 rounded hover:bg-blue-600 mt-4 sm:mt-6 text-sm sm:text-base"
       >
         Create Notification
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold text-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md">
+            <h2 className="text-lg sm:text-xl font-semibold text-center">
               Create Notification
             </h2>
 
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
+            <div className="mb-4 sm:mb-6">
+              <label className="block text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">
                 Select Audience
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1 sm:gap-2">
                 {audienceOptions.map(({ value, label, icon }) => (
                   <button
                     key={value}
                     onClick={() => setAudience(value)}
-                    className={`p-3 rounded border flex flex-col items-center gap-1
+                    className={`p-2 sm:p-3 rounded border flex flex-col items-center gap-1
                       ${
                         audience === value
                           ? "bg-blue-500 text-white border-blue-500"
                           : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
                       }`}
                   >
-                    <span className="text-xl">{icon}</span>
+                    <span className="text-lg sm:text-xl">{icon}</span>
                     <span className="text-xs">{label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
+            <div className="mb-4 sm:mb-6">
+              <label className="block text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">
                 Message
               </label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Write your message here..."
-                className="w-full p-3 border rounded-lg h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 sm:p-3 border rounded-lg h-24 sm:h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-base"
               />
             </div>
 
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
+            <div className="mb-4 sm:mb-6">
+              <label className="block text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">
                 Attachment (PDF only)
               </label>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <input
                   type="file"
                   accept=".pdf"
@@ -241,20 +241,20 @@ const Notification = () => {
                 />
                 <label
                   htmlFor="pdf-upload"
-                  className="cursor-pointer bg-gray-50 text-gray-700 px-4 py-2 rounded border hover:bg-gray-100"
+                  className="cursor-pointer bg-gray-50 text-gray-700 px-2 sm:px-4 py-1 sm:py-2 rounded border hover:bg-gray-100 text-xs sm:text-base"
                 >
                   Choose File
                 </label>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs sm:text-sm text-gray-500">
                   {file ? file.name : "No file selected"}
                 </span>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setIsOpen(false)}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                className="px-2 sm:px-4 py-1 sm:py-2 border rounded-lg hover:bg-gray-50 text-xs sm:text-base"
                 disabled={isSending}
               >
                 Cancel
@@ -262,7 +262,7 @@ const Notification = () => {
               <button
                 onClick={handleSubmit}
                 disabled={isSending}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 min-w-[100px]"
+                className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 min-w-[80px] sm:min-w-[100px] text-xs sm:text-base"
               >
                 {isSending ? "Sending..." : "Send"}
               </button>
@@ -271,34 +271,38 @@ const Notification = () => {
         </div>
       )}
 
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow p-6 mt-6">
-        <h2 className="text-2xl font-bold mb-6">Notification History</h2>
-        <div className="space-y-6">
+      <div className="w-full max-w-4xl bg-white rounded-lg shadow p-4 sm:p-6 mt-4 sm:mt-6">
+        <h2 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6">
+          Notification History
+        </h2>
+        <div className="space-y-4 sm:space-y-6">
           {notifications.length > 0 ? (
             notifications.map((notification) => (
               <div
                 key={notification._id}
-                className="border rounded-lg p-6 hover:bg-gray-50 transition-colors duration-300"
+                className="border rounded-lg p-4 sm:p-6 hover:bg-gray-50 transition-colors duration-300"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm text-gray-500">
+                <div className="flex justify-between items-start mb-2 sm:mb-4">
+                  <span className="text-xs sm:text-sm text-gray-500">
                     {new Date(notification.createdAt).toLocaleString()}
                   </span>
 
-                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 sm:px-3 py-1 rounded-full">
                     {getAudienceLabel(notification.audience)}
                   </span>
                 </div>
-                <p className="text-gray-800 mb-4">{notification.message}</p>
+                <p className="text-gray-800 mb-2 sm:mb-4 text-sm sm:text-base">
+                  {notification.message}
+                </p>
 
                 {notification.fileId && (
-                  <div className="mt-4">
-                    <p className="font-semibold text-gray-600">
+                  <div className="mt-2 sm:mt-4">
+                    <p className="font-semibold text-gray-600 text-xs sm:text-base">
                       Attached File:
                     </p>
                     <button
                       onClick={() => handleDownload(notification.fileId)}
-                      className="text-blue-500 hover:underline font-medium"
+                      className="text-blue-500 hover:underline font-medium text-xs sm:text-base"
                     >
                       Download File
                     </button>
@@ -308,14 +312,14 @@ const Notification = () => {
                 {/* Delete Button for All Notifications */}
                 <button
                   onClick={() => handleDelete(notification._id)}
-                  className="text-red-500 hover:underline font-medium mt-4"
+                  className="text-red-500 hover:underline font-medium mt-2 sm:mt-4 text-xs sm:text-base"
                 >
                   Delete
                 </button>
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-center">
+            <p className="text-gray-500 text-center text-sm sm:text-base">
               No notifications to show.
             </p>
           )}
