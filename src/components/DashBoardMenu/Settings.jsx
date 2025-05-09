@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const ProfileSettings = () => {
@@ -277,7 +278,7 @@ const ProfileSettings = () => {
       )}
 
       {/* Profile Header */}
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-6 flex gap-6">
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-6 flex flex-col md:flex-row gap-6">
         <div className="w-32 h-32 rounded-lg overflow-hidden shadow-md">
           <img
             src={profileData.profileImage}
@@ -318,7 +319,7 @@ const ProfileSettings = () => {
               </div>
 
               {/* Email and Gender Inputs */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
                     Email Address
@@ -351,7 +352,7 @@ const ProfileSettings = () => {
               </div>
 
               {/* Profile Picture Upload */}
-              <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
                     Profile Picture
@@ -369,7 +370,7 @@ const ProfileSettings = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 mt-6">
+            <div className="flex flex-col md:flex-row gap-4 mt-6">
               <button
                 type="submit"
                 disabled={isLoading}
@@ -396,7 +397,7 @@ const ProfileSettings = () => {
               <h2 className="text-xl font-semibold border-b pb-2 mb-4">
                 Change Password
               </h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 font-medium">
                     Current Password
@@ -437,7 +438,7 @@ const ProfileSettings = () => {
             </div>
 
             {/* Password Action Buttons */}
-            <div className="flex gap-4 mt-6">
+            <div className="flex flex-col md:flex-row gap-4 mt-6">
               <button
                 type="submit"
                 disabled={isLoading}
