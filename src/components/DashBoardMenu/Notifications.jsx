@@ -1,328 +1,219 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "../../config"; // Adjust the import path as necessary
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const Notification = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [audience, setAudience] = useState("all");
-  const [message, setMessage] = useState("");
-  const [file, setFile] = useState(null);
-  const [isSending, setIsSending] = useState(false);
+const NotificationCenter = ({ userRole, adminId, year, division }) => {
   const [notifications, setNotifications] = useState([]);
-
-  const audienceOptions = [
-    { value: "all", label: "All Users", icon: "👥" },
-    { value: "teachers", label: "Teachers", icon: "📖" },
-    { value: "students", label: "Students", icon: "🎓" },
-  ];
+  const [modalNotification, setModalNotification] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNotifications = async () => {
+      setLoading(true);
       try {
-        const adminId = sessionStorage.getItem("adminId");
-
-        if (!adminId) {
-          console.error("Admin ID not found in sessionStorage");
-          return;
-        }
-
         const response = await axios.get(
-          `${API_BASE_URL}/api/notifications/getnotificationlist/${adminId}`
+          `${API_BASE_URL}/api/studentnotification/notifications`,
+          {
+            params: { userRole, adminId, year, division },
+          }
         );
 
-        console.log("Fetched Notifications:", response.data);
+        console.log("📩 Fetched Notifications:", response.data);
 
-        const sortedNotifications = response.data.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-
-        setNotifications(sortedNotifications);
+        if (Array.isArray(response.data)) {
+          setNotifications(response.data);
+        } else {
+          console.error("🚨 API returned invalid data format:", response.data);
+          setNotifications([]);
+        }
       } catch (error) {
-        console.error("Error fetching notifications:", error);
+        console.error("❌ Error fetching notifications:", error);
+        setNotifications([]);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchNotifications();
-  }, []);
-
-  const getAudienceLabel = (value) => {
-    return (
-      audienceOptions.find((option) => option.value === value)?.label || value
-    );
-  };
-
-  const handleSubmit = async () => {
-    if (!message.trim()) {
-      alert("Please enter a message");
-      return;
-    }
-
-    try {
-      setIsSending(true);
-
-      let fileId = null;
-      if (file) {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const fileResponse = await axios.post(
-          `${API_BASE_URL}/api/notifications/upload`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        console.log(fileResponse.data);
-        fileId = fileResponse.data.fileID;
-      }
-
-      const adminId = sessionStorage.getItem("adminId");
-
-      if (!adminId) {
-        alert("Admin ID not found. Please log in again.");
-        return;
-      }
-
-      const payload = {
-        message: message.trim(),
-        audience,
-        fileId,
-        adminId,
-        teacherId: null,
-      };
-
-      const response = await axios.post(
-        `${API_BASE_URL}/api/notifications/createnotification`,
-        payload
-      );
-
-      const newNotification = response.data;
-      setNotifications((prev) => [newNotification, ...prev]);
-
-      setMessage("");
-      setAudience("all");
-      setFile(null);
-      setIsOpen(false);
-      alert("Notification sent successfully!");
-    } catch (error) {
-      console.error("Error sending notification:", error);
-      alert("Failed to send notification");
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-    }
-  };
+  }, [userRole, adminId, year, division]);
 
   const getFileUrl = (fileId) => {
-    return `${API_BASE_URL}/api/notifications/files/${fileId}`;
+    return `${API_BASE_URL}/api/studentnotification/files/${fileId}`;
   };
 
-  const handleDownload = async (fileId) => {
-    if (!fileId) {
-      alert("No file available for download.");
-      return;
-    }
-
+  const openFileInNewTab = (fileId) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/notifications/files/${fileId}`,
-        { responseType: "blob" }
-      );
-
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const fileUrl = getFileUrl(fileId);
+      window.open(fileUrl, "_blank");
     } catch (error) {
-      console.error("Error downloading file:", error);
-      alert("Failed to download the syllabus. Please try again.");
+      console.error("Error opening file:", error);
+      alert("Failed to open file");
     }
   };
 
-  const handleDelete = async (notificationId) => {
-    try {
-      const adminId = sessionStorage.getItem("adminId");
+  const openModal = (notification) => {
+    setModalNotification(notification);
+  };
 
-      if (!adminId) {
-        alert("Admin ID not found. Please log in again.");
-        return;
-      }
+  const closeModal = () => {
+    setModalNotification(null);
+  };
 
-      await axios.delete(
-        `${API_BASE_URL}/api/notifications/delete/${notificationId}`,
-        {
-          data: { adminId },
-        }
-      );
+  const markAsRead = (id) => {
+    const updatedNotifications = notifications.map((notification) =>
+      notification._id === id
+        ? { ...notification, unread: false }
+        : notification
+    );
+    setNotifications(updatedNotifications);
+    closeModal();
+  };
 
-      setNotifications((prev) =>
-        prev.filter((notification) => notification._id !== notificationId)
-      );
-      alert("Notification deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting notification:", error);
-      alert("Failed to delete notification");
+  const markAsUnread = (id) => {
+    const updatedNotifications = notifications.map((notification) =>
+      notification._id === id ? { ...notification, unread: true } : notification
+    );
+    setNotifications(updatedNotifications);
+    closeModal();
+  };
+
+  const getNotificationSource = (notification) => {
+    if (notification.adminId) {
+      return "Admin";
+    } else if (notification.teacherId) {
+      return `Teacher: ${notification.teacherData?.name || "Unknown"}`;
     }
+    return "System";
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-5">
-      <button
-        onClick={() => setIsOpen(true)}
-        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 mt-6"
-      >
-        Create Notification
-      </button>
+    <div className="min-h-screen bg-gray-50 text-gray-800">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 shadow-md sticky top-0 z-10">
+        <div className="container mx-auto flex justify-between items-center">
+          <h2 className="font-semibold text-xl">Notification Center</h2>
+        </div>
+      </div>
 
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold text-center">
-              Create Notification
-            </h2>
+      <div className="container mx-auto p-5">
+        {loading && (
+          <div className="text-center p-10 text-gray-500">
+            <h3>Loading notifications...</h3>
+          </div>
+        )}
 
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
-                Select Audience
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {audienceOptions.map(({ value, label, icon }) => (
-                  <button
-                    key={value}
-                    onClick={() => setAudience(value)}
-                    className={`p-3 rounded border flex flex-col items-center gap-1
-                      ${
-                        audience === value
-                          ? "bg-blue-500 text-white border-blue-500"
-                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                      }`}
-                  >
-                    <span className="text-xl">{icon}</span>
-                    <span className="text-xs">{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
-                Message
-              </label>
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Write your message here..."
-                className="w-full p-3 border rounded-lg h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
-                Attachment (PDF only)
-              </label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="pdf-upload"
-                />
-                <label
-                  htmlFor="pdf-upload"
-                  className="cursor-pointer bg-gray-50 text-gray-700 px-4 py-2 rounded border hover:bg-gray-100"
-                >
-                  Choose File
-                </label>
-                <span className="text-sm text-gray-500">
-                  {file ? file.name : "No file selected"}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setIsOpen(false)}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-                disabled={isSending}
+        {!loading && notifications.length === 0 ? (
+          <div className="text-center p-10 text-gray-500">
+            <h3>No notifications found</h3>
+            <p>Check back later for updates</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-5">
+            {notifications.map((notification, index) => (
+              <div
+                key={notification._id || index}
+                onClick={() => openModal(notification)}
+                className={`bg-white p-5 rounded-lg shadow-md cursor-pointer transition transform hover:-translate-y-1 border-l-4 ${
+                  notification.unread ? "border-blue-600" : "border-gray-200"
+                }`}
               >
-                Cancel
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-semibold text-gray-800">
+                    {notification.message.substring(0, 50)}
+                  </h4>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    {getNotificationSource(notification)}
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  {notification.message.substring(0, 80)}
+                  {notification.message.length > 80 ? "..." : ""}
+                </p>
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-xs text-gray-500">
+                    {new Date(notification.createdAt).toLocaleString()}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {notification.audience}
+                  </span>
+                </div>
+                {notification.unread && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {modalNotification && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              &times;
+            </button>
+            <div className="mb-4 border-b pb-2">
+              <h3 className="font-semibold text-gray-800">
+                {getNotificationSource(modalNotification)}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {new Date(modalNotification.createdAt).toLocaleString()} |{" "}
+                {modalNotification.audience}
+              </p>
+            </div>
+            <p className="text-gray-600 mb-4 whitespace-pre-wrap">
+              {modalNotification.message}
+            </p>
+
+            {modalNotification.fileId && (
+              <div className="mb-4 border-t pt-4">
+                <p className="text-sm font-semibold mb-2">Attachment:</p>
+                <div className="flex gap-2">
+                  <a
+                    href={getFileUrl(modalNotification.fileId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 rounded-md border border-blue-300 text-blue-600 hover:bg-blue-50 transition"
+                  >
+                    View File
+                  </a>
+                  <button
+                    onClick={() => openFileInNewTab(modalNotification.fileId)}
+                    className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+                  >
+                    Open in New Tab
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 transition"
+              >
+                Dismiss
               </button>
               <button
-                onClick={handleSubmit}
-                disabled={isSending}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 min-w-[100px]"
+                onClick={() =>
+                  modalNotification.unread
+                    ? markAsRead(modalNotification._id || modalNotification.id)
+                    : markAsUnread(
+                        modalNotification._id || modalNotification.id
+                      )
+                }
+                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
               >
-                {isSending ? "Sending..." : "Send"}
+                {modalNotification.unread ? "Mark as Read" : "Mark as Unread"}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow p-6 mt-6">
-        <h2 className="text-2xl font-bold mb-6">Notification History</h2>
-        <div className="space-y-6">
-          {notifications.length > 0 ? (
-            notifications.map((notification) => (
-              <div
-                key={notification._id}
-                className="border rounded-lg p-6 hover:bg-gray-50 transition-colors duration-300"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm text-gray-500">
-                    {new Date(notification.createdAt).toLocaleString()}
-                  </span>
-
-                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
-                    {getAudienceLabel(notification.audience)}
-                  </span>
-                </div>
-                <p className="text-gray-800 mb-4">{notification.message}</p>
-
-                {notification.fileId && (
-                  <div className="mt-4">
-                    <p className="font-semibold text-gray-600">
-                      Attached File:
-                    </p>
-                    <button
-                      onClick={() => handleDownload(notification.fileId)}
-                      className="text-blue-500 hover:underline font-medium"
-                    >
-                      Download File
-                    </button>
-                  </div>
-                )}
-
-                {/* Delete Button for All Notifications */}
-                <button
-                  onClick={() => handleDelete(notification._id)}
-                  className="text-red-500 hover:underline font-medium mt-4"
-                >
-                  Delete
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500 text-center">
-              No notifications to show.
-            </p>
-          )}
-        </div>
-      </div>
     </div>
   );
 };
 
-export default Notification;
+export default NotificationCenter;

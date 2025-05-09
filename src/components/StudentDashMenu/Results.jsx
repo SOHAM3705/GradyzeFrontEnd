@@ -82,7 +82,7 @@ const StudentMarks = () => {
                     <p className="text-sm font-medium">
                       Marks Obtained:{" "}
                       <span className="font-normal">
-                        {subject.marksObtained} / {subject.totalMarks}
+                        {subject.marksObtained?.total} / {subject.totalMarks}
                       </span>
                     </p>
                     <p className="text-sm font-medium">
