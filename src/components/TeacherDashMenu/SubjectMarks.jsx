@@ -369,38 +369,6 @@ const TeacherDashboard = () => {
       );
     });
   };
-  // Add this debugging function
-  const debugRetestFiltering = (students, examType) => {
-    console.log("Debugging retest filtering for:", examType);
-    const previousExamType =
-      examType === "re-unit-test" ? "unit-test" : "prelim";
-
-    students.forEach((student) => {
-      console.log(`Student: ${student.name} (${student.rollNo})`);
-      let needsRetest = false;
-
-      for (const subjectName in student.marks) {
-        const subjectMarks = student.marks[subjectName];
-        const previousMarks = subjectMarks[previousExamType];
-
-        if (previousMarks) {
-          console.log(`  Subject: ${subjectName}`, {
-            status: previousMarks.status,
-            marks: previousMarks.marksObtained?.total,
-          });
-
-          if (
-            previousMarks.status === "Fail" ||
-            previousMarks.status === "Absent"
-          ) {
-            needsRetest = true;
-          }
-        }
-      }
-
-      console.log(`  Needs retest: ${needsRetest}`);
-    });
-  };
 
   const renderSubjects = () => {
     if (!subjectsList || subjectsList.length === 0) {
@@ -534,13 +502,18 @@ const TeacherDashboard = () => {
       const existingMarks = response.data || {};
       const allStudents = studentsData[subjectId]?.students || [];
 
+      console.log("All students for subject:", allStudents);
+      console.log("Existing marks:", existingMarks);
+
       let studentsToShow = allStudents;
       if (examType === "re-unit-test" || examType === "reprelim") {
         studentsToShow = getStudentsForRetest(
           allStudents,
           examType,
-          subject.name
+          subject.name // Pass subject name for filtering
         );
+
+        console.log("Filtered retest students:", studentsToShow);
 
         if (studentsToShow.length === 0) {
           toast.info(`No students need retest for ${subject.name} ${examType}`);
@@ -562,7 +535,7 @@ const TeacherDashboard = () => {
       });
     } catch (error) {
       setIsLoading(false);
-      console.error("Error:", error);
+      console.error("Error loading marks:", error);
       toast.error("Failed to load marks. Please try again.");
       setModalContent(null);
     }
@@ -922,7 +895,6 @@ const TeacherDashboard = () => {
     }
   };
 
-  // Unified filtering approach
   const getStudentsForRetest = (students, examType, subjectName = null) => {
     const previousExamType =
       examType === "re-unit-test" ? "unit-test" : "prelim";
@@ -932,6 +904,13 @@ const TeacherDashboard = () => {
       if (subjectName) {
         const subjectMarks = student.marks?.[subjectName] || {};
         const previousMarks = subjectMarks[previousExamType];
+
+        console.log(`Checking ${student.name} for ${subjectName}:`, {
+          hasMarks: !!previousMarks,
+          status: previousMarks?.status,
+          marks: previousMarks?.marksObtained?.total,
+        });
+
         return (
           previousMarks &&
           (previousMarks.status === "Fail" || previousMarks.status === "Absent")
