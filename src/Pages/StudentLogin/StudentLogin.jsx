@@ -58,7 +58,7 @@ const StudentLogin = () => {
           role: "student",
         });
 
-        const { token, studentId, name, adminId } = res.data;
+        const { token, studentId, name, adminId, teacherId } = res.data;
 
         sessionStorage.setItem("token", token);
         sessionStorage.setItem("role", "student");

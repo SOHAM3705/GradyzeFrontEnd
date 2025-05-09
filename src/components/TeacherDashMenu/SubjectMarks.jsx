@@ -491,36 +491,63 @@ const TeacherDashboard = () => {
       if (!subject) throw new Error("Subject not found");
 
       const token = sessionStorage.getItem("token");
+
+      // For retest exams, we need to check the previous exam marks
+      const previousExamType =
+        examType === "re-unit-test"
+          ? "unit-test"
+          : examType === "reprelim"
+          ? "prelim"
+          : examType;
+
+      // Get marks for the previous exam type to determine who needs retest
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/marks-by-subject`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          params: { subjectName: subject.name, examType },
+          params: {
+            subjectName: subject.name,
+            examType: previousExamType, // Query previous exam marks
+          },
         }
       );
 
       const existingMarks = response.data || {};
       const allStudents = studentsData[subjectId]?.students || [];
 
-      console.log("All students for subject:", allStudents);
-      console.log("Existing marks:", existingMarks);
+      console.log("Previous exam marks data:", existingMarks);
 
       let studentsToShow = allStudents;
       if (examType === "re-unit-test" || examType === "reprelim") {
-        studentsToShow = getStudentsForRetest(
-          allStudents,
-          examType,
-          subject.name // Pass subject name for filtering
-        );
+        studentsToShow = allStudents.filter((student) => {
+          const studentMarks = existingMarks[student._id]?.[previousExamType];
+          return (
+            studentMarks &&
+            (studentMarks.status === "Fail" || studentMarks.status === "Absent")
+          );
+        });
 
-        console.log("Filtered retest students:", studentsToShow);
+        console.log("Students needing retest:", studentsToShow);
 
         if (studentsToShow.length === 0) {
           toast.info(`No students need retest for ${subject.name} ${examType}`);
           setIsLoading(false);
+          setModalContent(null); // Close modal when no students need retest
           return;
         }
       }
+
+      // Now get current exam marks if they exist
+      const currentResponse = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/marks-by-subject`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            subjectName: subject.name,
+            examType: examType,
+          },
+        }
+      );
 
       setIsLoading(false);
       setModalContent({
@@ -528,9 +555,10 @@ const TeacherDashboard = () => {
         subjectId,
         subjectName: subject.name,
         examType,
-        isUpdateMode: Object.keys(existingMarks).length > 0,
-        existingMarks,
-        lastUpdated: response.data.lastUpdated,
+        isUpdateMode: Object.keys(currentResponse.data).length > 0,
+        existingMarks: currentResponse.data,
+        previousExamMarks: existingMarks, // Store previous exam marks for reference
+        lastUpdated: currentResponse.data.lastUpdated,
         studentsToShow,
       });
     } catch (error) {
