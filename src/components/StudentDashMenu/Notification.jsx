@@ -2,49 +2,45 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const NotificationCenter = () => {
+const NotificationCenter = ({ userRole, adminId, year, division }) => {
   const [notifications, setNotifications] = useState([]);
   const [modalNotification, setModalNotification] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch student-specific notifications from backend
   useEffect(() => {
     const fetchNotifications = async () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/api/studentnotification/notifications`
+          `${API_BASE_URL}/api/studentnotification/notifications`,
+          {
+            params: { userRole, adminId, year, division },
+          }
         );
 
         console.log("📩 Fetched Notifications:", response.data);
 
-        // ✅ Check if response is an array before sorting
         if (Array.isArray(response.data)) {
-          const sortedNotifications = response.data.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-          setNotifications(sortedNotifications);
+          setNotifications(response.data);
         } else {
           console.error("🚨 API returned invalid data format:", response.data);
-          setNotifications([]); // ✅ Ensure state is always an array
+          setNotifications([]);
         }
       } catch (error) {
         console.error("❌ Error fetching notifications:", error);
-        setNotifications([]); // Ensure empty state in case of failure
+        setNotifications([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchNotifications();
-  }, []);
+  }, [userRole, adminId, year, division]);
 
-  // Construct file URL
   const getFileUrl = (fileId) => {
     return `${API_BASE_URL}/api/studentnotification/files/${fileId}`;
   };
 
-  // Open file in new tab instead of downloading
   const openFileInNewTab = (fileId) => {
     try {
       const fileUrl = getFileUrl(fileId);
@@ -81,23 +77,20 @@ const NotificationCenter = () => {
     closeModal();
   };
 
-  // Get notification type badge class
-  const getTypeColor = (type) => {
-    switch (type) {
-      case "exam":
-        return "bg-red-500";
-      case "assignment":
-        return "bg-yellow-500";
-      default:
-        return "bg-blue-500";
+  const getNotificationSource = (notification) => {
+    if (notification.adminId) {
+      return "Admin";
+    } else if (notification.teacherId) {
+      return `Teacher: ${notification.teacherData?.name || "Unknown"}`;
     }
+    return "System";
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800">
-      <div className="bg-blue-600 text-white p-5 shadow-md sticky top-0 z-10">
+    <div className="min-h-screen bg-gray-50 text-gray-800">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 shadow-md sticky top-0 z-10">
         <div className="container mx-auto flex justify-between items-center">
-          <h2 className="font-semibold text-xl">Notification</h2>
+          <h2 className="font-semibold text-xl">Notification Center</h2>
         </div>
       </div>
 
@@ -114,34 +107,35 @@ const NotificationCenter = () => {
             <p>Check back later for updates</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-5">
             {notifications.map((notification, index) => (
               <div
-                key={notification._id || notification.id}
+                key={notification._id || index}
                 onClick={() => openModal(notification)}
-                className={`bg-white p-5 rounded-lg shadow-md cursor-pointer transition transform hover:-translate-y-1 border-l-4 relative ${
+                className={`bg-white p-5 rounded-lg shadow-md cursor-pointer transition transform hover:-translate-y-1 border-l-4 ${
                   notification.unread ? "border-blue-600" : "border-gray-200"
                 }`}
-                style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <div
-                  className={`text-xs font-semibold text-white px-2 py-1 rounded-full mb-2 ${getTypeColor(
-                    notification.type
-                  )}`}
-                >
-                  {notification.type || "General"}
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-semibold text-gray-800">
+                    {notification.message.substring(0, 50)}
+                  </h4>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    {getNotificationSource(notification)}
+                  </span>
                 </div>
-                <h4 className="font-semibold text-gray-800 mb-2">
-                  {notification.title || notification.message.substring(0, 50)}
-                </h4>
                 <p className="text-gray-600 text-sm">
                   {notification.message.substring(0, 80)}
                   {notification.message.length > 80 ? "..." : ""}
                 </p>
-                <span className="text-xs text-gray-500 mt-2 block">
-                  {notification.time ||
-                    new Date(notification.createdAt).toLocaleString()}
-                </span>
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-xs text-gray-500">
+                    {new Date(notification.createdAt).toLocaleString()}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {notification.audience}
+                  </span>
+                </div>
                 {notification.unread && (
                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
                 )}
@@ -152,7 +146,7 @@ const NotificationCenter = () => {
       </div>
 
       {modalNotification && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 p-4">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
             <button
               onClick={closeModal}
@@ -161,19 +155,17 @@ const NotificationCenter = () => {
               &times;
             </button>
             <div className="mb-4 border-b pb-2">
-              <div
-                className={`text-xs font-semibold text-white px-2 py-1 rounded-full mb-2 ${getTypeColor(
-                  modalNotification.type
-                )}`}
-              >
-                {modalNotification.type || "General"}
-              </div>
               <h3 className="font-semibold text-gray-800">
-                {modalNotification.title ||
-                  modalNotification.message.substring(0, 50)}
+                {getNotificationSource(modalNotification)}
               </h3>
+              <p className="text-sm text-gray-600">
+                {new Date(modalNotification.createdAt).toLocaleString()} |{" "}
+                {modalNotification.audience}
+              </p>
             </div>
-            <p className="text-gray-600 mb-4">{modalNotification.message}</p>
+            <p className="text-gray-600 mb-4 whitespace-pre-wrap">
+              {modalNotification.message}
+            </p>
 
             {modalNotification.fileId && (
               <div className="mb-4 border-t pt-4">
