@@ -32,8 +32,8 @@ const TeacherSyllabusView = () => {
   useEffect(() => {
     const fetchSyllabi = async () => {
       try {
-        const adminId = sessionStorage.getItem("AdminId"); // ✅ Use sessionStorage
-        const teacherId = sessionStorage.getItem("TeacherId"); // ✅ Use sessionStorage
+        const adminId = sessionStorage.getItem("adminId"); // ✅ Use sessionStorage
+        const teacherId = sessionStorage.getItem("teacherId"); // ✅ Use sessionStorage
 
         if (!adminId || !teacherId) {
           console.error("Admin ID or Teacher ID not found in sessionStorage");
