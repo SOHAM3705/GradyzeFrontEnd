@@ -130,9 +130,7 @@ const NotificationCenter = () => {
                         ? "bg-purple-100 text-purple-800"
                         : "bg-blue-100 text-blue-800"
                     }`}
-                  >
-                    {getNotificationSource(notification)}
-                  </span>
+                  ></span>
                 </div>
                 <p className="text-gray-600 text-xs sm:text-sm">
                   {notification.message.substring(0, 80)}
@@ -141,9 +139,6 @@ const NotificationCenter = () => {
                 <div className="flex justify-between items-center mt-2 sm:mt-3">
                   <span className="text-xs text-gray-500">
                     {new Date(notification.createdAt).toLocaleString()}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {notification.audience}
                   </span>
                 </div>
                 {notification.unread && (
