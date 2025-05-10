@@ -5,10 +5,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
-
-  // State management
-  const [profileImage, setProfileImage] = useState("/profile.png");
   const [profileData, setProfileData] = useState({
+    profileImage: "/profile.png",
     name: "",
     email: "",
     oldEmail: "",
@@ -107,6 +105,10 @@ const ProfileSettings = () => {
       // Step 2: Update Profile Photo in User Collection
 
       console.log("✅ Profile Photo Updated in User Collection");
+      setProfileData((prev) => ({
+        ...prev,
+        profileImage: newProfilePhotoUrl,
+      }));
       return true;
     } catch (error) {
       setError("Failed to upload photo. Please try again.");
@@ -241,6 +243,15 @@ const ProfileSettings = () => {
     }
   };
 
+  // Common input change handler
+  const handleInputChange = (e, setState) => {
+    const { name, value } = e.target;
+    setState((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       {notification && (
@@ -256,7 +267,7 @@ const ProfileSettings = () => {
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6 flex flex-col sm:flex-row gap-4 sm:gap-6">
         <div className="w-24 sm:w-32 h-24 sm:h-32 rounded-lg overflow-hidden shadow-md">
           <img
-            src={profileImage}
+            src={profileData.profileImage}
             alt="Profile"
             className="w-full h-full object-cover"
           />
@@ -365,61 +376,68 @@ const ProfileSettings = () => {
             </div>
           </form>
         ) : (
-          <form
-            onSubmit={handlePasswordSubmit}
-            className="space-y-4 sm:space-y-6"
-          >
+          <form onSubmit={handlePasswordSubmit} className="space-y-6">
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold border-b pb-1 sm:pb-2 mb-2 sm:mb-4">
+              <h2 className="text-xl font-semibold border-b pb-2 mb-4">
                 Change Password
               </h2>
-              <div className="mb-2 sm:mb-4">
-                <label className="block text-gray-700 font-medium text-sm sm:text-base">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  name="current-password"
-                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-700 font-medium text-sm sm:text-base">
+                  <label className="block text-gray-700 font-medium">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => handleInputChange(e, setPasswordData)}
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium">
                     New Password
                   </label>
                   <input
                     type="password"
-                    name="new-password"
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={(e) => handleInputChange(e, setPasswordData)}
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-700 font-medium text-sm sm:text-base">
+                  <label className="block text-gray-700 font-medium">
                     Confirm New Password
                   </label>
                   <input
                     type="password"
-                    name="confirm-password"
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300 text-sm sm:text-base"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => handleInputChange(e, setPasswordData)}
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
                   />
                 </div>
               </div>
             </div>
-            <div className="flex gap-2 sm:gap-4 mt-4 sm:mt-6">
+
+            {/* Password Action Buttons */}
+            <div className="flex flex-col md:flex-row gap-4 mt-6">
               <button
                 type="submit"
                 disabled={isLoading}
                 className={`${
-                  isLoading ? "bg-blue-500" : "bg-blue-600 hover:bg-blue-700"
-                } text-white px-4 sm:px-6 py-2 rounded-md transition text-sm sm:text-base`}
+                  isLoading
+                    ? "bg-purple-500"
+                    : "bg-purple-700 hover:bg-purple-800"
+                } text-white px-6 py-2 rounded-md transition`}
               >
                 {isLoading ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowChangePassword(false)}
-                className="border border-gray-300 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-100 transition text-sm sm:text-base"
+                className="border border-gray-300 px-6 py-2 rounded-md hover:bg-gray-100 transition"
               >
                 Cancel
               </button>

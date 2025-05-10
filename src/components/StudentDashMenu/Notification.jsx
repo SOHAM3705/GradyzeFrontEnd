@@ -124,13 +124,6 @@ const NotificationCenter = () => {
                     {notification.title ||
                       notification.message.substring(0, 50)}
                   </h4>
-                  <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      notification.sourceType === "admin"
-                        ? "bg-purple-100 text-purple-800"
-                        : "bg-blue-100 text-blue-800"
-                    }`}
-                  ></span>
                 </div>
                 <p className="text-gray-600 text-xs sm:text-sm">
                   {notification.message.substring(0, 80)}

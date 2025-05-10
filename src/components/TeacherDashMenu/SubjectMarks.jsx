@@ -12,19 +12,76 @@ const TeacherDashboard = () => {
   const [subjects, setSubjects] = useState([]);
   const [subjectsList, setSubjectsList] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedExamType, setSelectedExamType] = useState("unit-test");
   const [division, setDivision] = useState("");
   const [year, setYear] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [modalContent, setModalContent] = useState(null);
-  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
+  const [marksData, setMarksData] = useState({});
+  const [marksEnteredState, setMarksEnteredState] = useState({});
+  const [existingMarks, setExistingMarks] = useState({});
+  const [isMarksExist, setIsMarksExist] = useState(false);
   const [deleteSubjectId, setDeleteSubjectId] = useState(null);
   const [selectedDeleteExamType, setSelectedDeleteExamType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [modalContent, setModalContent] = useState(null);
+  const [summaryData, setSummaryData] = useState({
+    totalStudents: 0,
+  });
+  const [subjectSummaryData, setSubjectSummaryData] = useState({
+    totalStudents: 0,
+  });
+  const [studentsData, setStudentsData] = useState({});
+  const [filteredSubjects, setFilteredSubjects] = useState([]);
 
   const teacherId = sessionStorage.getItem("teacherId");
+
+  const fetchSubjectStudentsData = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!teacherId) {
+        console.error("No teacherId found in sessionStorage");
+        return;
+      }
+
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const studentsBySubject = response.data.studentData || {};
+      const subjects = response.data.subjects || [];
+
+      const classToSubjectMap = subjects.reduce((acc, subject) => {
+        const className = `${subject.year}-${subject.division}`;
+        acc[className] = subject._id;
+        return acc;
+      }, {});
+
+      const processedData = subjects.reduce((acc, subject) => {
+        const className = `${subject.year}-${subject.division}`;
+        const subjectId = subject._id;
+
+        acc[subjectId] = {
+          students: studentsBySubject[className] || [],
+          examData: {},
+        };
+        return acc;
+      }, {});
+
+      setStudentsData(processedData);
+    } catch (error) {
+      console.error(
+        "Error fetching subject students data:",
+        error.response?.data || error
+      );
+    }
+  };
 
   useEffect(() => {
     fetchTeacherData();
@@ -39,6 +96,84 @@ const TeacherDashboard = () => {
       fetchSubjectsList();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "class-teacher") {
+      updateSummary();
+      filterStudents();
+    }
+  }, [students, division, selectedExamType, searchQuery]);
+
+  const getRetestStatus = (student, examType) => {
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+    const failedSubjects = [];
+
+    for (const subjectName in student.marks) {
+      const subjectMarks = student.marks[subjectName];
+      if (
+        subjectMarks[previousExamType] &&
+        (subjectMarks[previousExamType].status === "Fail" ||
+          subjectMarks[previousExamType].status === "Absent")
+      ) {
+        failedSubjects.push(subjectName);
+      }
+    }
+
+    return failedSubjects.length > 0
+      ? `Retest for: ${failedSubjects.join(", ")}`
+      : "No retest needed";
+  };
+
+  const handleExamTypeChange = (e) => {
+    const newExamType = e.target.value;
+
+    // If there are unsaved changes, show confirmation
+    if (selectedExamType && modalContent?.isUpdateMode) {
+      setConfirmAction({
+        title: "Unsaved Changes",
+        message: "Changing exam type will lose your unsaved changes. Continue?",
+        onConfirm: () => {
+          handleExamTypeSelection(newExamType);
+        },
+      });
+      return;
+    }
+
+    // Special handling for retest exams
+    if (
+      (newExamType === "re-unit-test" || newExamType === "reprelim") &&
+      selectedExamType !== "re-unit-test" &&
+      selectedExamType !== "reprelim"
+    ) {
+      setConfirmAction({
+        title: "View Retest Students",
+        message: `This will only show students who failed or were absent in the ${
+          newExamType === "re-unit-test" ? "Unit Test" : "Prelim"
+        }. Continue?`,
+        onConfirm: () => {
+          handleExamTypeSelection(newExamType);
+        },
+      });
+      return;
+    }
+
+    // Regular exam type change
+    handleExamTypeSelection(newExamType);
+  };
+
+  // Helper function to handle the actual exam type selection
+  const handleExamTypeSelection = (examType) => {
+    setSelectedExamType(examType);
+
+    // Only open modal if we have a subject selected
+    if (selectedSubjectId) {
+      openStudentsModal(selectedSubjectId, examType);
+    }
+
+    // Clear any existing confirmations
+    setConfirmAction(null);
+  };
 
   const fetchTeacherData = async () => {
     try {
@@ -58,89 +193,11 @@ const TeacherDashboard = () => {
     }
   };
 
-  const fetchStudents = async () => {
-    try {
-      setIsLoading(true);
-      const token = sessionStorage.getItem("token");
-
-      const [studentsResponse, divisionResponse] = await Promise.all([
-        axios.get(
-          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        ),
-        axios.get(
-          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/divisions`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        ),
-      ]);
-
-      const assignedYear = divisionResponse.data.year;
-      const assignedDivision = divisionResponse.data.division;
-
-      const marksResponse = await axios.get(
-        `https://gradyzebackend.onrender.com/api/teachermarks/class-marks`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: {
-            teacherId: sessionStorage.getItem("teacherId"),
-            year: assignedYear,
-            division: assignedDivision,
-          },
-        }
-      );
-
-      const processedMarks = {};
-      const subjectsMap = {};
-
-      marksResponse.data.forEach((mark) => {
-        mark.exams.forEach((exam) => {
-          if (!subjectsMap[exam.subjectName]) {
-            subjectsMap[exam.subjectName] = {
-              name: exam.subjectName,
-              _id: exam.subjectName,
-            };
-          }
-        });
-      });
-
-      marksResponse.data.forEach((mark) => {
-        if (!processedMarks[mark.studentId._id]) {
-          processedMarks[mark.studentId._id] = {};
-        }
-
-        mark.exams.forEach((exam) => {
-          if (!processedMarks[mark.studentId._id][exam.subjectName]) {
-            processedMarks[mark.studentId._id][exam.subjectName] = {};
-          }
-
-          processedMarks[mark.studentId._id][exam.subjectName][mark.examType] =
-            {
-              marksObtained: exam.marksObtained,
-              status: exam.status,
-            };
-        });
-      });
-
-      const relevantSubjects = Object.values(subjectsMap);
-
-      const studentsWithMarks = studentsResponse.data.students.map(
-        (student) => ({
-          ...student,
-          marks: processedMarks[student._id] || {},
-        })
-      );
-
-      setStudents(studentsWithMarks);
-      setSubjects(relevantSubjects);
-      setYear(assignedYear);
-      setDivision(assignedDivision);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to fetch student data");
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (activeTab === "subject-teacher" && subjectsList.length > 0) {
+      fetchSubjectStudentsData();
     }
-  };
+  }, [activeTab, subjectsList]);
 
   const fetchAssignedDivision = async () => {
     try {
@@ -189,9 +246,11 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleExamTypeChange = (e) => {
-    const newExamType = e.target.value;
-    setSelectedExamType(newExamType);
+  const updateSummary = () => {
+    const totalStudents = students.length;
+    setSummaryData({
+      totalStudents,
+    });
   };
 
   const handleClassExport = async (exportType) => {
@@ -256,6 +315,7 @@ const TeacherDashboard = () => {
       let totalMarks = 0;
       let hasMarks = false;
 
+      // First create subject cells
       const subjectCells = subjects.map((subject) => {
         const subjectMarks = student.marks?.[subject.name] || {};
         const marksToShow = selectedExamType
@@ -285,6 +345,18 @@ const TeacherDashboard = () => {
         );
       });
 
+      // Then add retest status column if needed
+      if (
+        selectedExamType === "re-unit-test" ||
+        selectedExamType === "reprelim"
+      ) {
+        subjectCells.push(
+          <td key="retest-status" className="p-2 text-left border text-xs">
+            {getRetestStatus(student, selectedExamType)}
+          </td>
+        );
+      }
+
       return (
         <tr key={student._id} className="border-b hover:bg-gray-100">
           <td className="p-2 border">{student.rollNo}</td>
@@ -304,11 +376,38 @@ const TeacherDashboard = () => {
     }
 
     return subjectsList.map((subject) => {
+      const hasAnyMarksEntered = Object.values(subject.marksEntered || {}).some(
+        (value) => value
+      );
+
       const subjectId = subject._id || subject.id;
       const subjectName = subject.name;
       const subjectYear = subject.year;
       const subjectSemester = subject.semester;
       const subjectDivisions = subject.divisions || [subject.division];
+
+      let buttonsHtml = (
+        <>
+          <button
+            onClick={() => openExamModal(subjectId)}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Add Marks
+          </button>
+          <button
+            onClick={() => openExportModal(subjectId)}
+            className="bg-green-500 text-white px-4 py-2 rounded ml-2"
+          >
+            Export
+          </button>
+          <button
+            onClick={() => setDeleteSubjectId(subject._id)}
+            className="bg-red-500 text-white px-4 py-2 rounded ml-2"
+          >
+            Delete Marks
+          </button>
+        </>
+      );
 
       return (
         <div key={subjectId} className="bg-white p-4 rounded shadow mb-4">
@@ -316,28 +415,51 @@ const TeacherDashboard = () => {
           <p>Year: {subjectYear}</p>
           <p>Semester: {subjectSemester}</p>
           <p>Divisions: {subjectDivisions.join(", ")}</p>
-          <div className="flex mt-4">
-            <button
-              onClick={() => openExamModal(subjectId)}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Add Marks
-            </button>
-            <button
-              onClick={() => openExportModal(subjectId)}
-              className="bg-green-500 text-white px-4 py-2 rounded ml-2"
-            >
-              Export
-            </button>
-            <button
-              onClick={() => setDeleteSubjectId(subject._id)}
-              className="bg-red-500 text-white px-4 py-2 rounded ml-2"
-            >
-              Delete Marks
-            </button>
+          <p>Total Students: {studentsData[subjectId]?.students.length || 0}</p>
+          <div
+            className={`status-badge ${getOverallStatus(
+              subject
+            ).toLowerCase()} text-sm font-semibold px-3 py-1 rounded mt-2`}
+          >
+            {getOverallStatus(subject)}
           </div>
+          <div className="flex mt-4">{buttonsHtml}</div>
         </div>
       );
+    });
+  };
+
+  const getOverallStatus = (subject) => {
+    const marksEntered = subject.marksEntered || {};
+
+    const hasAnyMarksEntered = Object.values(marksEntered).some(
+      (value) => value
+    );
+    const allMarksEntered = Object.values(marksEntered).every((value) => value);
+
+    if (allMarksEntered) return "Complete";
+    if (hasAnyMarksEntered) return "In Progress";
+    return "Pending";
+  };
+
+  useEffect(() => {
+    if (activeTab === "subject-teacher") {
+      updateSubjectSummary();
+    }
+  }, [activeTab, studentsData]);
+
+  const updateSubjectSummary = () => {
+    let totalStudents = 0;
+
+    subjectsList.forEach((subject) => {
+      const subjectData = studentsData[subject._id];
+      if (!subjectData) return;
+
+      totalStudents += subjectData.students.length;
+    });
+
+    setSubjectSummaryData({
+      totalStudents,
     });
   };
 
@@ -353,7 +475,7 @@ const TeacherDashboard = () => {
     setModalContent({
       type: "exam-selection",
       subjectId,
-      subjectName: subject.name,
+      subjectName: subject.name, // Pass subjectName to modal
     });
   };
 
@@ -370,13 +492,22 @@ const TeacherDashboard = () => {
 
       const token = sessionStorage.getItem("token");
 
+      // For retest exams, we need to check the previous exam marks
+      const previousExamType =
+        examType === "re-unit-test"
+          ? "unit-test"
+          : examType === "reprelim"
+          ? "prelim"
+          : examType;
+
+      // Get marks for the previous exam type to determine who needs retest
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/marks-by-subject`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: {
             subjectName: subject.name,
-            examType,
+            examType: previousExamType, // Query previous exam marks
           },
         }
       );
@@ -384,15 +515,51 @@ const TeacherDashboard = () => {
       const existingMarks = response.data || {};
       const allStudents = studentsData[subjectId]?.students || [];
 
+      console.log("Previous exam marks data:", existingMarks);
+
+      let studentsToShow = allStudents;
+      if (examType === "re-unit-test" || examType === "reprelim") {
+        studentsToShow = allStudents.filter((student) => {
+          const studentMarks = existingMarks[student._id]?.[previousExamType];
+          return (
+            studentMarks &&
+            (studentMarks.status === "Fail" || studentMarks.status === "Absent")
+          );
+        });
+
+        console.log("Students needing retest:", studentsToShow);
+
+        if (studentsToShow.length === 0) {
+          toast.info(`No students need retest for ${subject.name} ${examType}`);
+          setIsLoading(false);
+          setModalContent(null); // Close modal when no students need retest
+          return;
+        }
+      }
+
+      // Now get current exam marks if they exist
+      const currentResponse = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/marks-by-subject`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            subjectName: subject.name,
+            examType: examType,
+          },
+        }
+      );
+
       setIsLoading(false);
       setModalContent({
         type: "students-list",
         subjectId,
         subjectName: subject.name,
         examType,
-        isUpdateMode: Object.keys(existingMarks).length > 0,
-        existingMarks,
-        studentsToShow: allStudents,
+        isUpdateMode: Object.keys(currentResponse.data).length > 0,
+        existingMarks: currentResponse.data,
+        previousExamMarks: existingMarks, // Store previous exam marks for reference
+        lastUpdated: currentResponse.data.lastUpdated,
+        studentsToShow,
       });
     } catch (error) {
       setIsLoading(false);
@@ -415,12 +582,13 @@ const TeacherDashboard = () => {
           params: {
             subjectName: subject.name,
             examType,
-            exportType,
+            exportType, // 'pdf' or 'excel'
           },
-          responseType: "blob",
+          responseType: "blob", // Important for file downloads
         }
       );
 
+      // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -462,7 +630,37 @@ const TeacherDashboard = () => {
     openStudentsModal(selectedSubjectId, selectedExamType);
   };
 
+  const validateMarks = () => {
+    const rows = document.querySelectorAll(".student-row");
+    let isValid = true;
+
+    rows.forEach((row) => {
+      const isAbsent = row.querySelector(".absent-checkbox").checked;
+
+      // Skip validation for absent students
+      if (isAbsent) return;
+
+      const inputs = row.querySelectorAll('input[type="number"]');
+      inputs.forEach((input) => {
+        if (!input.value && input.value !== "0") {
+          input.style.borderColor = "red";
+          isValid = false;
+        } else {
+          input.style.borderColor = "";
+        }
+      });
+    });
+
+    if (!isValid) {
+      toast.warning("Please fill all mark fields or mark as absent");
+      return false;
+    }
+    return true;
+  };
+
   const handleSaveMarks = async () => {
+    if (!validateMarks()) return;
+
     const subject = subjectsList.find((sub) => sub._id === selectedSubjectId);
     if (!subject) {
       toast.error("Subject not found");
@@ -513,6 +711,21 @@ const TeacherDashboard = () => {
 
         let status = total >= passingMarks ? "Pass" : "Fail";
 
+        // Special handling for retests
+        if (
+          selectedExamType === "re-unit-test" ||
+          selectedExamType === "reprelim"
+        ) {
+          const previousExamType =
+            selectedExamType === "re-unit-test" ? "unit-test" : "prelim";
+          const previousMarks =
+            modalContent.existingMarks[studentId]?.[previousExamType];
+
+          if (previousMarks?.status === "Fail" && status === "Pass") {
+            status = "Improved";
+          }
+        }
+
         marksToSave.push({
           studentId,
           examType: selectedExamType,
@@ -550,6 +763,39 @@ const TeacherDashboard = () => {
     }
   };
 
+  const needsRetest = (studentId, subjectName, examType) => {
+    if (examType !== "re-unit-test" && examType !== "reprelim") return false;
+
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+    const studentMarks =
+      modalContent?.existingMarks[studentId]?.[previousExamType];
+
+    return (
+      studentMarks &&
+      studentMarks.subjectName === subjectName &&
+      (studentMarks.status === "Fail" || studentMarks.status === "Absent")
+    );
+  };
+
+  const getRetestInfo = (studentId, subjectName, examType) => {
+    if (examType !== "re-unit-test" && examType !== "reprelim") return null;
+
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+    const previousMarks =
+      modalContent?.existingMarks[studentId]?.[previousExamType];
+
+    if (!previousMarks) return null;
+
+    return (
+      <div className="text-xs text-gray-600 mt-1">
+        Previous {previousExamType}: {previousMarks.marksObtained?.total || 0}/
+        {previousMarks.totalMarks} ({previousMarks.status})
+      </div>
+    );
+  };
+
   const handleDeleteMarks = async () => {
     if (!deleteSubjectId || !selectedDeleteExamType) return;
 
@@ -572,17 +818,197 @@ const TeacherDashboard = () => {
         }
       );
 
-      toast.success("Marks deleted successfully!");
+      alert("Marks deleted successfully!");
       setDeleteSubjectId(null);
       setSelectedDeleteExamType("");
       fetchSubjectStudentsData();
     } catch (error) {
       console.error("Error deleting marks:", error);
-      toast.error(
+      alert(
         "Error deleting marks: " +
           (error.response?.data?.message || error.message)
       );
     }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      setIsLoading(true);
+      const token = sessionStorage.getItem("token");
+
+      // 1. Get class students and teacher's assigned division
+      const [studentsResponse, divisionResponse] = await Promise.all([
+        axios.get(
+          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        ),
+        axios.get(
+          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/divisions`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        ),
+      ]);
+
+      const assignedYear = divisionResponse.data.year;
+      const assignedDivision = divisionResponse.data.division;
+
+      // 2. Get all marks for this class (from any teacher)
+      const marksResponse = await axios.get(
+        `https://gradyzebackend.onrender.com/api/teachermarks/class-marks`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            teacherId: sessionStorage.getItem("teacherId"),
+            year: assignedYear,
+            division: assignedDivision,
+          },
+        }
+      );
+
+      // 3. Process marks data to match student/subject structure
+      const processedMarks = {};
+
+      // First, create a map of all unique subjects
+      const subjectsMap = {};
+
+      marksResponse.data.forEach((mark) => {
+        mark.exams.forEach((exam) => {
+          if (!subjectsMap[exam.subjectName]) {
+            subjectsMap[exam.subjectName] = {
+              name: exam.subjectName,
+              _id: exam.subjectName, // Using name as ID if real ID not available
+            };
+          }
+        });
+      });
+
+      // Then process student marks
+      marksResponse.data.forEach((mark) => {
+        if (!processedMarks[mark.studentId._id]) {
+          processedMarks[mark.studentId._id] = {};
+        }
+
+        mark.exams.forEach((exam) => {
+          if (!processedMarks[mark.studentId._id][exam.subjectName]) {
+            processedMarks[mark.studentId._id][exam.subjectName] = {};
+          }
+
+          processedMarks[mark.studentId._id][exam.subjectName][mark.examType] =
+            {
+              marksObtained: exam.marksObtained,
+              status: exam.status,
+            };
+        });
+      });
+
+      // 4. Get unique subjects as an array
+      const relevantSubjects = Object.values(subjectsMap);
+
+      // 5. Combine student data with marks
+      const studentsWithMarks = studentsResponse.data.students.map(
+        (student) => ({
+          ...student,
+          marks: processedMarks[student._id] || {},
+        })
+      );
+
+      setStudents(studentsWithMarks);
+      setSubjects(relevantSubjects);
+      setYear(assignedYear);
+      setDivision(assignedDivision);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to fetch student data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getStudentsForRetest = (students, examType, subjectName = null) => {
+    const previousExamType =
+      examType === "re-unit-test" ? "unit-test" : "prelim";
+
+    return students.filter((student) => {
+      // For subject teacher view (filter by specific subject)
+      if (subjectName) {
+        const subjectMarks = student.marks?.[subjectName] || {};
+        const previousMarks = subjectMarks[previousExamType];
+
+        console.log(`Checking ${student.name} for ${subjectName}:`, {
+          hasMarks: !!previousMarks,
+          status: previousMarks?.status,
+          marks: previousMarks?.marksObtained?.total,
+        });
+
+        return (
+          previousMarks &&
+          (previousMarks.status === "Fail" || previousMarks.status === "Absent")
+        );
+      }
+
+      // For class teacher view (check all subjects)
+      for (const subName in student.marks) {
+        const subjectMarks = student.marks[subName];
+        const previousMarks = subjectMarks[previousExamType];
+        if (
+          previousMarks &&
+          (previousMarks.status === "Fail" || previousMarks.status === "Absent")
+        ) {
+          return true;
+        }
+      }
+      return false;
+    });
+  };
+
+  // Updated filterStudents function
+  const filterStudents = () => {
+    let filtered = students;
+
+    if (
+      selectedExamType === "re-unit-test" ||
+      selectedExamType === "reprelim"
+    ) {
+      // For subject teacher view
+      if (activeTab === "subject-teacher" && selectedSubjectId) {
+        const subject = subjectsList.find((s) => s._id === selectedSubjectId);
+        if (subject) {
+          filtered = getStudentsForRetest(
+            students,
+            selectedExamType,
+            subject.name
+          );
+        }
+      }
+      // For class teacher view
+      else {
+        filtered = getStudentsForRetest(students, selectedExamType);
+      }
+
+      console.log(`Filtered students for ${selectedExamType}:`, filtered);
+    }
+
+    filtered = filtered
+      .filter((student) => {
+        const matchesSearch =
+          student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          student.rollNo?.toString().includes(searchQuery);
+        return matchesSearch;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    setFilteredStudents(filtered);
+    setCurrentPage(1);
+  };
+
+  const examTypeToText = (type) => {
+    const types = {
+      "unit-test": "Unit Test",
+      "re-unit-test": "Re-Unit Test",
+      prelim: "Prelim",
+      reprelim: "Re-Prelim",
+    };
+
+    return types[type] || type;
   };
 
   const renderConfirmationDialog = () => {
@@ -659,6 +1085,27 @@ const TeacherDashboard = () => {
                   <option value="prelim">Prelim</option>
                   <option value="reprelim">Re-Prelim</option>
                 </select>
+                {selectedExamType === "re-unit-test" ||
+                selectedExamType === "reprelim" ? (
+                  <div className="mt-2 p-2 bg-blue-50 text-blue-800 text-sm rounded">
+                    <p>
+                      Only students who failed or were absent in the previous{" "}
+                      {selectedExamType === "re-unit-test"
+                        ? "Unit Test"
+                        : "Prelim"}{" "}
+                      will be shown.
+                    </p>
+                    {selectedSubjectId && (
+                      <p className="mt-1 font-medium">
+                        Subject:{" "}
+                        {
+                          subjectsList.find((s) => s._id === selectedSubjectId)
+                            ?.name
+                        }
+                      </p>
+                    )}
+                  </div>
+                ) : null}
               </div>
               <div className="flex justify-end gap-2">
                 <button
@@ -697,7 +1144,7 @@ const TeacherDashboard = () => {
                   <option value="unit-test">Unit Test</option>
                   <option value="re-unit-test">Re-Unit Test</option>
                   <option value="prelim">Prelim</option>
-                  <option value="reprelim">Re-Prelim</option>
+                  <option value="re-prelim">Re-Prelim</option>
                 </select>
               </div>
 
@@ -763,7 +1210,7 @@ const TeacherDashboard = () => {
               </button>
               <div className="mb-4 border-b pb-2">
                 <h3 className="font-semibold text-gray-800">
-                  {examType} - Enter Student Marks
+                  {examTypeToText(examType)} - Enter Student Marks
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
                   {isUnitTest ? "Pass mark: 12" : "Pass mark: 28"}
@@ -806,6 +1253,7 @@ const TeacherDashboard = () => {
                           className="student-row border-b hover:bg-gray-50"
                           data-id={student._id}
                         >
+                          {/* Absent Checkbox */}
                           <td className="p-2 text-center">
                             <input
                               type="checkbox"
@@ -820,15 +1268,41 @@ const TeacherDashboard = () => {
                                   input.disabled = e.target.checked;
                                   if (e.target.checked) {
                                     input.value = "";
+                                  } else {
+                                    // Reset to default values when unchecked
+                                    const marksData =
+                                      existingMarks[student._id]?.[examType]
+                                        ?.marksObtained;
+                                    if (marksData) {
+                                      row.querySelector(".q1q2-input").value =
+                                        marksData.q1q2 || 0;
+                                      row.querySelector(".q3q4-input").value =
+                                        marksData.q3q4 || 0;
+                                      if (!isUnitTest) {
+                                        row.querySelector(".q5q6-input").value =
+                                          marksData.q5q6 || 0;
+                                        row.querySelector(".q7q8-input").value =
+                                          marksData.q7q8 || 0;
+                                      }
+                                    }
                                   }
                                 });
+                                updateStudentRow(student._id);
                               }}
                             />
                           </td>
 
                           <td className="p-2">{student.rollNo}</td>
-                          <td className="p-2">{student.name}</td>
+                          <td className="p-2">
+                            {student.name}
+                            {getRetestInfo(
+                              student._id,
+                              modalContent.subjectName,
+                              examType
+                            )}
+                          </td>
 
+                          {/* Q1/Q2 Input */}
                           <td className="p-2 text-center">
                             <input
                               type="number"
@@ -839,9 +1313,29 @@ const TeacherDashboard = () => {
                                 isAbsent ? "" : marksData?.q1q2 || 0
                               }
                               disabled={isAbsent}
+                              onChange={(e) => {
+                                // Enforce max value
+                                if (
+                                  parseInt(e.target.value) >
+                                  (isUnitTest ? 15 : 17)
+                                ) {
+                                  e.target.value = isUnitTest ? 15 : 17;
+                                }
+                                updateStudentRow(student._id);
+                              }}
+                              onBlur={(e) => {
+                                if (
+                                  e.target.value === "" ||
+                                  parseInt(e.target.value) < 0
+                                ) {
+                                  e.target.value = "0";
+                                }
+                                updateStudentRow(student._id);
+                              }}
                             />
                           </td>
 
+                          {/* Q3/Q4 Input */}
                           <td className="p-2 text-center">
                             <input
                               type="number"
@@ -852,9 +1346,28 @@ const TeacherDashboard = () => {
                                 isAbsent ? "" : marksData?.q3q4 || 0
                               }
                               disabled={isAbsent}
+                              onChange={(e) => {
+                                if (
+                                  parseInt(e.target.value) >
+                                  (isUnitTest ? 15 : 18)
+                                ) {
+                                  e.target.value = isUnitTest ? 15 : 18;
+                                }
+                                updateStudentRow(student._id);
+                              }}
+                              onBlur={(e) => {
+                                if (
+                                  e.target.value === "" ||
+                                  parseInt(e.target.value) < 0
+                                ) {
+                                  e.target.value = "0";
+                                }
+                                updateStudentRow(student._id);
+                              }}
                             />
                           </td>
 
+                          {/* Conditionally render Q5/Q6 and Q7/Q8 for non-unit tests */}
                           {!isUnitTest && (
                             <>
                               <td className="p-2 text-center">
@@ -867,6 +1380,21 @@ const TeacherDashboard = () => {
                                     isAbsent ? "" : marksData?.q5q6 || 0
                                   }
                                   disabled={isAbsent}
+                                  onChange={(e) => {
+                                    if (parseInt(e.target.value) > 17) {
+                                      e.target.value = 17;
+                                    }
+                                    updateStudentRow(student._id);
+                                  }}
+                                  onBlur={(e) => {
+                                    if (
+                                      e.target.value === "" ||
+                                      parseInt(e.target.value) < 0
+                                    ) {
+                                      e.target.value = "0";
+                                    }
+                                    updateStudentRow(student._id);
+                                  }}
                                 />
                               </td>
                               <td className="p-2 text-center">
@@ -879,6 +1407,21 @@ const TeacherDashboard = () => {
                                     isAbsent ? "" : marksData?.q7q8 || 0
                                   }
                                   disabled={isAbsent}
+                                  onChange={(e) => {
+                                    if (parseInt(e.target.value) > 18) {
+                                      e.target.value = 18;
+                                    }
+                                    updateStudentRow(student._id);
+                                  }}
+                                  onBlur={(e) => {
+                                    if (
+                                      e.target.value === "" ||
+                                      parseInt(e.target.value) < 0
+                                    ) {
+                                      e.target.value = "0";
+                                    }
+                                    updateStudentRow(student._id);
+                                  }}
                                 />
                               </td>
                             </>
@@ -978,9 +1521,49 @@ const TeacherDashboard = () => {
             </div>
           </div>
         );
-
       default:
         return null;
+    }
+  };
+
+  const updateStudentRow = (studentId) => {
+    const row = document.querySelector(`.student-row[data-id="${studentId}"]`);
+    if (!row) return;
+
+    const isUnitTest = selectedExamType.includes("unit");
+    const passingMark = isUnitTest ? 12 : 28;
+    const isAbsent = row.querySelector(".absent-checkbox").checked;
+
+    if (isAbsent) {
+      row.querySelector(".total-cell").textContent = "Absent";
+      row.querySelector(".status-cell").textContent = "Absent";
+      row.querySelector(".status-cell").className =
+        "p-2 status-cell text-center text-gray-600";
+      return;
+    }
+
+    const q1q2 = parseInt(row.querySelector(".q1q2-input").value) || 0;
+    const q3q4 = parseInt(row.querySelector(".q3q4-input").value) || 0;
+    const q5q6 = isUnitTest
+      ? 0
+      : parseInt(row.querySelector(".q5q6-input")?.value) || 0;
+    const q7q8 = isUnitTest
+      ? 0
+      : parseInt(row.querySelector(".q7q8-input")?.value) || 0;
+    const total = q1q2 + q3q4 + q5q6 + q7q8;
+
+    row.querySelector(".total-cell").textContent = total;
+
+    const statusCell = row.querySelector(".status-cell");
+    if (total > 0) {
+      const status = total >= passingMark ? "Pass" : "Fail";
+      statusCell.textContent = status;
+      statusCell.className = `p-2 status-cell text-center ${
+        status === "Pass" ? "text-green-600" : "text-red-600"
+      }`;
+    } else {
+      statusCell.textContent = "-";
+      statusCell.className = "p-2 status-cell text-center";
     }
   };
 
@@ -1040,7 +1623,7 @@ const TeacherDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
             <div className="bg-white p-4 rounded shadow">
               <h3 className="text-lg font-semibold mb-2">Total Students</h3>
-              <p className="text-2xl font-bold">{students.length}</p>
+              <p className="text-2xl font-bold">{summaryData.totalStudents}</p>
             </div>
           </div>
 
@@ -1072,17 +1655,7 @@ const TeacherDashboard = () => {
                   className="p-2 border rounded"
                 />
                 <button
-                  onClick={() =>
-                    setFilteredStudents(
-                      students.filter(
-                        (student) =>
-                          student.name
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase()) ||
-                          student.rollNo.toString().includes(searchQuery)
-                      )
-                    )
-                  }
+                  onClick={filterStudents}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
                   Search
@@ -1100,7 +1673,7 @@ const TeacherDashboard = () => {
                         {subject.name}
                         {selectedExamType && (
                           <div className="text-xs font-normal">
-                            {selectedExamType}
+                            ({examTypeToText(selectedExamType)})
                           </div>
                         )}
                       </th>
@@ -1128,10 +1701,7 @@ const TeacherDashboard = () => {
             <div className="bg-white p-4 rounded shadow">
               <h3 className="text-lg font-semibold mb-2">Total Students</h3>
               <p className="text-2xl font-bold">
-                {subjectsList.reduce(
-                  (acc, subject) => acc + (subject.students?.length || 0),
-                  0
-                )}
+                {subjectSummaryData.totalStudents}
               </p>
             </div>
           </div>
