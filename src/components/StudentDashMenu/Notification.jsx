@@ -165,12 +165,6 @@ const NotificationCenter = () => {
               &times;
             </button>
             <div className="mb-2 sm:mb-4 border-b pb-1 sm:pb-2">
-              {modalNotification.sourceType === "teacher" &&
-                modalNotification.teacherName && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {modalNotification.teacherName}
-                  </p>
-                )}
               <p className="text-xs sm:text-sm text-gray-600">
                 {new Date(modalNotification.createdAt).toLocaleString()} |{" "}
               </p>
