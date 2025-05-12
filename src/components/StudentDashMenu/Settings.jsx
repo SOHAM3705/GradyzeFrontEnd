@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const ProfileSettings = () => {
@@ -193,9 +194,9 @@ const ProfileSettings = () => {
   // Password change handler
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    const newPassword = e.target["new-password"].value;
-    const confirmPassword = e.target["confirm-password"].value;
-    const currentPassword = e.target["current-password"].value;
+    const newPassword = passwordData.newPassword;
+    const confirmPassword = passwordData.confirmPassword;
+    const currentPassword = passwordData.currentPassword;
 
     if (!currentPassword || !newPassword) {
       setError("Both current and new passwords are required");
@@ -219,7 +220,7 @@ const ProfileSettings = () => {
         return;
       }
 
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE_URL}/api/studentsetting/change-password`,
         {
           currentPassword,
@@ -230,11 +231,15 @@ const ProfileSettings = () => {
         }
       );
 
-      setNotification("Password changed successfully! Please log in again.");
-      setTimeout(() => {
-        sessionStorage.removeItem("token");
-        navigate("/studentlogin");
-      }, 1500);
+      if (response.data.error) {
+        setError(response.data.error);
+      } else {
+        setNotification("Password changed successfully! Please log in again.");
+        setTimeout(() => {
+          sessionStorage.removeItem("token");
+          navigate("/studentlogin");
+        }, 1500);
+      }
     } catch (error) {
       setError(error.response?.data?.error || "Failed to change password");
       console.error("❌ Password change error:", error);
@@ -391,7 +396,7 @@ const ProfileSettings = () => {
                     name="currentPassword"
                     value={passwordData.currentPassword}
                     onChange={(e) => handleInputChange(e, setPasswordData)}
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
                   />
                 </div>
                 <div>
@@ -403,7 +408,7 @@ const ProfileSettings = () => {
                     name="newPassword"
                     value={passwordData.newPassword}
                     onChange={(e) => handleInputChange(e, setPasswordData)}
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
                   />
                 </div>
                 <div>
@@ -415,7 +420,7 @@ const ProfileSettings = () => {
                     name="confirmPassword"
                     value={passwordData.confirmPassword}
                     onChange={(e) => handleInputChange(e, setPasswordData)}
-                    className="w-full p-2 border rounded-md focus:ring focus:ring-purple-300"
+                    className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
                   />
                 </div>
               </div>
