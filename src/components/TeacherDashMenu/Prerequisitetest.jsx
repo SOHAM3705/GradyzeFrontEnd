@@ -149,20 +149,19 @@ function TecaherPrerequisiteTest() {
 
   return (
     <div>
-      <header className="bg-black text-white p-4 shadow-md">
+      <header className="bg-white text-white p-4 shadow-md">
         <div className="flex items-center">
           <div className="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
             T
           </div>
-          <div className="font-bold text-xl">Test Creator Dashboard</div>
+          <div className="font-bold text-xl">Test Creator</div>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto my-8 px-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Teacher Dashboard</h1>
           <p className="text-gray-600 mb-4">
-            Create and manage your prerequisite tests
+            Create and manage your tests and Surveys
           </p>
           <button
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mt-4"
