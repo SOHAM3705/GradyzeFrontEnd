@@ -432,10 +432,8 @@ const ProfileSettings = () => {
                 type="submit"
                 disabled={isLoading}
                 className={`${
-                  isLoading
-                    ? "bg-purple-500"
-                    : "bg-purple-700 hover:bg-purple-800"
-                } text-white px-6 py-2 rounded-md transition`}
+                  isLoading ? "bg-blue-500" : "bg-blue-600 hover:bg-blue-700"
+                } text-white px-4 sm:px-6 py-2 rounded-md transition text-sm sm:text-base`}
               >
                 {isLoading ? "Saving..." : "Save Changes"}
               </button>

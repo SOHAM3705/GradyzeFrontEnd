@@ -1,133 +1,146 @@
 import React, { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import axios from "axios"; // You will use axios to make the API request
+import axios from "axios";
 
-// Define helper functions first
-const createDivisionData = () => ({
-  id: Math.floor(Math.random() * 10000),
-  students: [], // Add student data if needed
-});
-
-const createYearData = () => ({
-  divisions: {
-    A: createDivisionData(),
-    B: createDivisionData(),
-  },
-});
-
-const createDepartmentData = () => ({
-  years: {
-    "First Year": createYearData(),
-    "Second Year": createYearData(),
-    "Third Year": createYearData(),
-    "Fourth Year": createYearData(),
-  },
-});
-
+// Main component
 const StudentManagement = () => {
-  const [structuredData, setStructuredData] = useState({
-    departments: {
-      "Computer Science": createDepartmentData(),
-      "Information Technology": createDepartmentData(),
-      "Mechanical Engineering": createDepartmentData(),
-      "Electronic & Telecommunication": createDepartmentData(),
-      "Civil Engineering": createDepartmentData(),
-    },
-  });
-
+  const [structuredData, setStructuredData] = useState(null);
+  const [studentsData, setStudentsData] = useState({});
+  const [classMetaMap, setClassMetaMap] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
-  const [studentsData, setStudentsData] = useState({}); // To store the students data fetched from the API
 
-  // Retrieve adminId from sessionStorage
   const adminId = sessionStorage.getItem("adminId");
 
-  // Fetch student data from backend
+  // Build department/year/division structure + classId metadata
   useEffect(() => {
-    if (adminId) {
-      // Loop over departments, years, and divisions to fetch student data
+    const departments = [
+      "Computer Science",
+      "Information Technology",
+      "Mechanical Engineering",
+      "Electronic & Telecommunication",
+      "Civil Engineering",
+    ];
+
+    const years = ["First Year", "Second Year", "Third Year", "Fourth Year"];
+    const divisions = ["A", "B"];
+
+    const newStructure = { departments: {} };
+    const newMetaMap = {};
+
+    departments.forEach((dept) => {
+      newStructure.departments[dept] = { years: {} };
+
+      years.forEach((year) => {
+        newStructure.departments[dept].years[year] = { divisions: {} };
+
+        divisions.forEach((division) => {
+          const classId = Math.floor(Math.random() * 100000);
+          newStructure.departments[dept].years[year].divisions[division] = {
+            id: classId,
+          };
+
+          newMetaMap[classId] = {
+            department: dept,
+            year,
+            division,
+          };
+        });
+      });
+    });
+
+    setStructuredData(newStructure);
+    setClassMetaMap(newMetaMap);
+  }, []);
+
+  // Fetch student data from backend after structure is built
+  useEffect(() => {
+    if (!adminId || !structuredData) return;
+
+    const fetchStudents = async () => {
       for (const department in structuredData.departments) {
         for (const year in structuredData.departments[department].years) {
           for (const division in structuredData.departments[department].years[
             year
           ].divisions) {
-            const classId =
+            const classObj =
               structuredData.departments[department].years[year].divisions[
                 division
-              ].id;
+              ];
+            const classId = classObj.id;
 
-            axios
-              .get(`/api/admin/fetchstudents`, {
+            try {
+              const response = await axios.get("/api/admin/fetchstudents", {
                 params: {
                   adminId,
                   department,
                   year,
                   division,
                 },
-              })
-              .then((response) => {
-                const students = response.data.students || [];
-                setStudentsData((prevData) => ({
-                  ...prevData,
-                  [classId]: students,
-                }));
-              })
-              .catch((error) => {
-                console.error("Error fetching student data:", error);
               });
+
+              const students = response.data.students || [];
+              setStudentsData((prev) => ({
+                ...prev,
+                [classId]: students,
+              }));
+            } catch (error) {
+              console.warn(
+                `No students for ${department} - ${year} - ${division}`
+              );
+            }
           }
         }
       }
-    }
+    };
+
+    fetchStudents();
   }, [adminId, structuredData]);
 
+  // Toggle expand/collapse
   const toggleContainer = (id) => {
-    setExpandedSections((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id],
+    setExpandedSections((prev) => ({
+      ...prev,
+      [id]: !prev[id],
     }));
   };
 
+  // Generate PDF using metadata
   const generatePDF = (classId) => {
-    if (!studentsData[classId]) {
-      console.error("No student data available for this class.");
+    const students = studentsData[classId];
+    const meta = classMetaMap[classId];
+
+    if (!students || !meta) {
+      alert("No data available to generate PDF.");
       return;
     }
 
-    const department = "Some Department"; // Use the actual department name
-    const year = "First Year"; // Use the actual year
-    const division = "A"; // Use the actual division
+    const { department, year, division } = meta;
 
     const doc = new jsPDF();
 
-    // Add Header
     doc.setFontSize(18);
     doc.text(`${department} - ${year}`, 20, 20);
     doc.text(`Division: ${division}`, 20, 30);
-    doc.text(`Class Teacher: N/A`, 20, 40); // Adjust with actual teacher data if needed
+    doc.text(`Class Teacher: N/A`, 20, 40); // Optional: replace with real teacher data
 
-    // Student List Table
-    const students = studentsData[classId] || [];
     if (students.length > 0) {
       const headers = ["Roll No", "Name", "Email"];
-      const data = students.map((student) => [
-        student.rollNo,
-        student.name,
-        student.email,
-      ]);
+      const body = students.map((s) => [s.rollNo, s.name, s.email]);
 
       doc.autoTable({
         startY: 50,
         head: [headers],
-        body: data,
+        body: body,
       });
     } else {
-      doc.text("No students available.", 20, 50);
+      doc.text("No students found.", 20, 50);
     }
 
-    // Save the PDF
     doc.save(`${department}_${year}_Division${division}.pdf`);
   };
+
+  if (!structuredData) return <div>Loading structure...</div>;
 
   return (
     <div className="container mx-auto p-2 sm:p-4">
