@@ -304,10 +304,10 @@ const Notification = () => {
                     {getAudienceLabel(notification.audience)}
                   </span>
                 </div>
-                <p className="text-gray-800 mb-2 sm:mb-4 text-sm sm:text-base">
-                  {notification.message}
+                <p className="text-gray-600 text-xs sm:text-sm">
+                  {notification.message.substring(0, 80)}
+                  {notification.message.length > 80 ? "..." : ""}
                 </p>
-
                 {notification.fileId && (
                   <div className="mt-2 sm:mt-4">
                     <p className="font-semibold text-gray-600 text-xs sm:text-base">

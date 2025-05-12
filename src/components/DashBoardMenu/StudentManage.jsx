@@ -70,14 +70,17 @@ const StudentManagement = () => {
             const classId = classObj.id;
 
             try {
-              const response = await axios.get("/api/admin/fetchstudents", {
-                params: {
-                  adminId,
-                  department,
-                  year,
-                  division,
-                },
-              });
+              const response = await axios.get(
+                "https://gradyzebackend.onrender.com/api/admin/fetchstudents",
+                {
+                  params: {
+                    adminId,
+                    department,
+                    year,
+                    division,
+                  },
+                }
+              );
 
               const students = response.data.students || [];
               setStudentsData((prev) => ({

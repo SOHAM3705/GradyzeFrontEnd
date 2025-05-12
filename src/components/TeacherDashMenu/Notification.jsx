@@ -302,10 +302,10 @@ const TeacherNotification = () => {
                       {getAudienceLabel(notification.audience)}
                     </span>
                   </div>
-                  <p className="text-gray-800 mb-3 sm:mb-4">
-                    {notification.message}
+                  <p className="text-gray-600 text-xs sm:text-sm">
+                    {notification.message.substring(0, 80)}
+                    {notification.message.length > 80 ? "..." : ""}
                   </p>
-
                   {notification.fileId && (
                     <div className="mt-3 sm:mt-4">
                       <p className="font-semibold text-gray-600">
@@ -355,8 +355,9 @@ const TeacherNotification = () => {
                     {getAudienceLabel(notification.audience)}
                   </span>
                 </div>
-                <p className="text-gray-800 mb-3 sm:mb-4">
-                  {notification.message}
+                <p className="text-gray-600 text-xs sm:text-sm">
+                  {notification.message.substring(0, 80)}
+                  {notification.message.length > 80 ? "..." : ""}
                 </p>
 
                 {notification.fileId && (
