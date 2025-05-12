@@ -92,7 +92,7 @@ const StudentLogin = () => {
 
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/api/student/login`,
+        `${API_BASE_URL}/api/student/studentlogin`,
         formData
       );
 
