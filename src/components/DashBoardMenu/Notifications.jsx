@@ -9,6 +9,8 @@ const Notification = () => {
   const [file, setFile] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const audienceOptions = [
     { value: "all", label: "All Users", icon: "👥" },
@@ -176,6 +178,16 @@ const Notification = () => {
     }
   };
 
+  const openModal = (notification) => {
+    setSelectedNotification(notification);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedNotification(null);
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-100 p-2 sm:p-5">
       <button
@@ -280,7 +292,8 @@ const Notification = () => {
             notifications.map((notification) => (
               <div
                 key={notification._id}
-                className="border rounded-lg p-4 sm:p-6 hover:bg-gray-50 transition-colors duration-300"
+                className="border rounded-lg p-4 sm:p-6 hover:bg-gray-50 transition-colors duration-300 cursor-pointer"
+                onClick={() => openModal(notification)}
               >
                 <div className="flex justify-between items-start mb-2 sm:mb-4">
                   <span className="text-xs sm:text-sm text-gray-500">
@@ -301,7 +314,10 @@ const Notification = () => {
                       Attached File:
                     </p>
                     <button
-                      onClick={() => handleDownload(notification.fileId)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(notification.fileId);
+                      }}
                       className="text-blue-500 hover:underline font-medium text-xs sm:text-base"
                     >
                       Download File
@@ -309,9 +325,11 @@ const Notification = () => {
                   </div>
                 )}
 
-                {/* Delete Button for All Notifications */}
                 <button
-                  onClick={() => handleDelete(notification._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(notification._id);
+                  }}
                   className="text-red-500 hover:underline font-medium mt-2 sm:mt-4 text-xs sm:text-base"
                 >
                   Delete
@@ -325,6 +343,60 @@ const Notification = () => {
           )}
         </div>
       </div>
+
+      {isModalOpen && selectedNotification && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md">
+            <h2 className="text-lg sm:text-xl font-semibold text-center mb-4">
+              Notification Details
+            </h2>
+
+            <div className="mb-4">
+              <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">
+                Audience:{" "}
+                <span className="font-normal">
+                  {getAudienceLabel(selectedNotification.audience)}
+                </span>
+              </p>
+              <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">
+                Date:{" "}
+                <span className="font-normal">
+                  {new Date(selectedNotification.createdAt).toLocaleString()}
+                </span>
+              </p>
+              <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">
+                Message:{" "}
+                <span className="font-normal">
+                  {selectedNotification.message}
+                </span>
+              </p>
+            </div>
+
+            {selectedNotification.fileId && (
+              <div className="mt-4">
+                <p className="font-semibold text-gray-600 text-xs sm:text-base">
+                  Attached File:
+                </p>
+                <button
+                  onClick={() => handleDownload(selectedNotification.fileId)}
+                  className="text-blue-500 hover:underline font-medium text-xs sm:text-base"
+                >
+                  Download File
+                </button>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 sm:gap-3 mt-4">
+              <button
+                onClick={closeModal}
+                className="px-2 sm:px-4 py-1 sm:py-2 border rounded-lg hover:bg-gray-50 text-xs sm:text-base"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

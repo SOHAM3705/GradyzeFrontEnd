@@ -36,7 +36,14 @@ const NotificationCenter = () => {
           }
         );
 
-        setNotifications(Array.isArray(response.data) ? response.data : []);
+        // Sort notifications by createdAt in descending order
+        const sortedNotifications = response.data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        setNotifications(
+          Array.isArray(sortedNotifications) ? sortedNotifications : []
+        );
       } catch (error) {
         console.error("❌ Error fetching notifications:", error);
         setNotifications([]);
