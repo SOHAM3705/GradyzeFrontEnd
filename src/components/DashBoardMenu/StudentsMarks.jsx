@@ -1,10 +1,29 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const AdminStudentMarks = () => {
+  // State for structured data (department, year, division)
+  const [structuredData] = useState({
+    departments: {
+      "Computer Science": createDepartmentData(),
+      "Information Technology": createDepartmentData(),
+      "Mechanical Engineering": createDepartmentData(),
+      "Electronic & Telecommunication": createDepartmentData(),
+      "Civil Engineering": createDepartmentData(),
+    },
+  });
+
+  // State for tracking expanded sections
+  const [expandedSections, setExpandedSections] = useState({});
+  // State for managing open marks options
+  const [openMarksOptions, setOpenMarksOptions] = useState(null);
+  // State for storing fetched marks
+  const [marksData, setMarksData] = useState({});
+
   // Function to create division data
   const createDivisionData = () => ({
     id: Math.floor(Math.random() * 10000),
-    students: [], // Student data can be added later
+    students: [], // Student data will be filled later
   });
 
   // Function to create year data
@@ -25,22 +44,6 @@ const AdminStudentMarks = () => {
     },
   });
 
-  // State for structured data
-  const [structuredData] = useState({
-    departments: {
-      "Computer Science": createDepartmentData(),
-      "Information Technology": createDepartmentData(),
-      "Mechanical Engineering": createDepartmentData(),
-      "Electronic & Telecommunication": createDepartmentData(),
-      "Civil Engineering": createDepartmentData(),
-    },
-  });
-
-  // State for tracking expanded sections
-  const [expandedSections, setExpandedSections] = useState({});
-  // State for managing open marks options
-  const [openMarksOptions, setOpenMarksOptions] = useState(null);
-
   // Function to toggle section expansion
   const toggleContainer = (id) => {
     setExpandedSections((prevState) => ({
@@ -54,10 +57,11 @@ const AdminStudentMarks = () => {
     setOpenMarksOptions((prev) => (prev === classId ? null : classId));
   };
 
-  // Function to display marks for a given class and exam type
-  const showMarks = (classId, examType) => {
+  // Function to fetch and display marks for a given class and exam type
+  const showMarks = async (classId, examType) => {
     setOpenMarksOptions(null);
 
+    // Loop through the structured data to find the correct class and fetch marks
     for (const department in structuredData.departments) {
       for (const year in structuredData.departments[department]?.years) {
         for (const division in structuredData.departments[department]?.years[
@@ -69,40 +73,72 @@ const AdminStudentMarks = () => {
             ];
 
           if (divisionData?.id === classId) {
-            const marksContainer = document.getElementById(`marks-${classId}`);
-            if (!marksContainer) return;
+            // Fetch marks data from the backend
+            try {
+              const { data } = await axios.get(
+                "https://gradyzebackend.onrender.com/api/admin/fetchmarks",
+                {
+                  params: {
+                    adminId: "someAdminId", // Replace with actual adminId or state
+                    department: department,
+                    year: year,
+                    division: division,
+                    examType: examType, // "unitTest" or "prelims"
+                  },
+                }
+              );
 
-            let html = `
-              <table class="min-w-full bg-white border border-gray-300">
-                <thead>
-                  <tr>
-                    <th class="py-2 px-2 sm:px-4 border-b">Roll No</th>
-                    <th class="py-2 px-2 sm:px-4 border-b">Name</th>
-                    <th class="py-2 px-2 sm:px-4 border-b">${
-                      examType === "unitTest"
-                        ? "Unit Test Marks"
-                        : "Prelims Marks"
-                    }</th>
-                  </tr>
-                </thead>
-                <tbody>
-            `;
+              // Store fetched marks data in state
+              setMarksData((prevData) => ({
+                ...prevData,
+                [classId]: data.marksData,
+              }));
 
-            divisionData.students.forEach((student) => {
-              html += `
-                <tr>
-                  <td class="py-2 px-2 sm:px-4 border-b">${student.rollNo}</td>
-                  <td class="py-2 px-2 sm:px-4 border-b">${student.name}</td>
-                  <td class="py-2 px-2 sm:px-4 border-b">${
-                    student[examType] || "-"
-                  }</td>
-                </tr>
-              `;
-            });
+              // Update HTML table with marks data
+              const marksContainer = document.getElementById(
+                `marks-${classId}`
+              );
+              if (marksContainer) {
+                let html = `
+                  <table class="min-w-full bg-white border border-gray-300">
+                    <thead>
+                      <tr>
+                        <th class="py-2 px-2 sm:px-4 border-b">Roll No</th>
+                        <th class="py-2 px-2 sm:px-4 border-b">Name</th>
+                        <th class="py-2 px-2 sm:px-4 border-b">${
+                          examType === "unitTest"
+                            ? "Unit Test Marks"
+                            : "Prelims Marks"
+                        }</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                `;
 
-            html += `</tbody></table>`;
-            marksContainer.innerHTML = html;
-            marksContainer.style.display = "block";
+                // Add student marks to table
+                data.marksData.forEach((student) => {
+                  html += `
+                    <tr>
+                      <td class="py-2 px-2 sm:px-4 border-b">${
+                        student.rollNo
+                      }</td>
+                      <td class="py-2 px-2 sm:px-4 border-b">${
+                        student.name
+                      }</td>
+                      <td class="py-2 px-2 sm:px-4 border-b">${
+                        student.marks || "-"
+                      }</td>
+                    </tr>
+                  `;
+                });
+
+                html += `</tbody></table>`;
+                marksContainer.innerHTML = html;
+                marksContainer.style.display = "block";
+              }
+            } catch (error) {
+              console.error("Error fetching marks:", error);
+            }
           }
         }
       }

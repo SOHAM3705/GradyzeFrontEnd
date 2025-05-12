@@ -52,6 +52,7 @@ import StudentOverview from "./components/StudentDashMenu/Overview";
 import StudentResults from "./components/StudentDashMenu/Results";
 import StudentAssignment from "./components/StudentDashMenu/Assignment";
 import studentPrerequisiteTest from "./components/StudentDashMenu/Prerequisitetest";
+// import studentTestView from "./components/StudentDashMenu/StudentTestView";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
@@ -87,6 +88,7 @@ function App() {
         path="/student-change-password"
         element={<StudentChangePassword />}
       />
+      <Route path="/test/:id" element={<studentTestView />} />
       {/* 🔹 Admin Routes */}
       <Route path="/adminlogin" element={<AdminLogin />} />
       <Route
@@ -129,7 +131,7 @@ function App() {
         <Route path="syllabus" element={<TeacherSyllabusView />} />
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
-        <Route path="prerequisite-test" element={<TeacherPrerequisiteTest />} />
+        <Route path="test" element={<TeacherPrerequisiteTest />} />
         <Route path="assignment-manage" element={<AssignmentManage />} />
       </Route>
       <Route
@@ -151,7 +153,7 @@ function App() {
         <Route path="settings" element={<StudentSettings />} />
         <Route path="results" element={<StudentResults />} />
         <Route path="assignment" element={<StudentAssignment />} />
-        <Route path="prerequisite-test" element={<studentPrerequisiteTest />} />
+        <Route path="test" element={<studentPrerequisiteTest />} />
       </Route>
     </Routes>
   );
