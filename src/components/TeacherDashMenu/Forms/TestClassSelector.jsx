@@ -38,11 +38,11 @@ const TestClassSelector = () => {
   const handleContinue = () => {
     if (selectedType === "class" && selectedClass) {
       navigate(
-        `/create-test-form?type=class&year=${selectedClass.year}&division=${selectedClass.division}`
+        `/teacherdash/create-test-form?type=class&year=${selectedClass.year}&division=${selectedClass.division}`
       );
     } else if (selectedType === "subject" && selectedSubject) {
       navigate(
-        `/create-test-form?type=subject` +
+        `/teacherdash/create-test-form?type=subject` +
           `&subjectName=${encodeURIComponent(selectedSubject.name)}` +
           `&year=${selectedSubject.year}` +
           `&semester=${selectedSubject.semester}` +
