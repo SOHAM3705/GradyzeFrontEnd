@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+// Function to create division data
+const createDivisionData = () => ({
+  id: Math.floor(Math.random() * 10000),
+  students: [], // Student data will be filled later
+});
+
+// Function to create year data
+const createYearData = () => ({
+  divisions: {
+    A: createDivisionData(),
+    B: createDivisionData(),
+  },
+});
+
+// Function to create department data
+const createDepartmentData = () => ({
+  years: {
+    "First Year": createYearData(),
+    "Second Year": createYearData(),
+    "Third Year": createYearData(),
+    "Fourth Year": createYearData(),
+  },
+});
+
 const AdminStudentMarks = () => {
   // State for structured data (department, year, division)
   const [structuredData] = useState({
@@ -19,30 +43,6 @@ const AdminStudentMarks = () => {
   const [openMarksOptions, setOpenMarksOptions] = useState(null);
   // State for storing fetched marks
   const [marksData, setMarksData] = useState({});
-
-  // Function to create division data
-  const createDivisionData = () => ({
-    id: Math.floor(Math.random() * 10000),
-    students: [], // Student data will be filled later
-  });
-
-  // Function to create year data
-  const createYearData = () => ({
-    divisions: {
-      A: createDivisionData(),
-      B: createDivisionData(),
-    },
-  });
-
-  // Function to create department data
-  const createDepartmentData = () => ({
-    years: {
-      "First Year": createYearData(),
-      "Second Year": createYearData(),
-      "Third Year": createYearData(),
-      "Fourth Year": createYearData(),
-    },
-  });
 
   // Function to toggle section expansion
   const toggleContainer = (id) => {

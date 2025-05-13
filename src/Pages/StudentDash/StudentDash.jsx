@@ -50,7 +50,7 @@ function StudentDash() {
     {
       icon: "📝",
       label: "Prerequisite Test",
-      path: "/studentdash/prerequisite-test",
+      path: "/studentdash/Forms",
     },
     { icon: "📄", label: "Assignment", path: "/studentdash/assignment" },
     {

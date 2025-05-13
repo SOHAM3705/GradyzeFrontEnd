@@ -39,7 +39,9 @@ import TeacherSyllabusView from "./components/TeacherDashMenu/Syllabus";
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
 import TeacherSettings from "./components/TeacherDashMenu/Settings";
 import TeacherOverview from "./components/TeacherDashMenu/teacherOverview";
-import TeacherPrerequisiteTest from "./components/TeacherDashMenu/Prerequisitetest";
+import TeacherPrerequisiteTest from "./components/TeacherDashMenu/Forms/Prerequisitetest";
+import TestClassSelector from "./components/TeacherDashMenu/Forms/TestClassSelector";
+
 import AssignmentManage from "./components/TeacherDashMenu/AssignmentManage";
 
 import StudentDash from "./Pages/StudentDash/StudentDash";
@@ -88,7 +90,6 @@ function App() {
         path="/student-change-password"
         element={<StudentChangePassword />}
       />
-      <Route path="/test/:id" element={<studentTestView />} />
       {/* 🔹 Admin Routes */}
       <Route path="/adminlogin" element={<AdminLogin />} />
       <Route
@@ -131,8 +132,9 @@ function App() {
         <Route path="syllabus" element={<TeacherSyllabusView />} />
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
-        <Route path="test" element={<TeacherPrerequisiteTest />} />
         <Route path="assignment-manage" element={<AssignmentManage />} />
+        <Route path="/create-test" element={<TestClassSelector />} />
+        <Route path="/create-test-form" element={<TeacherPrerequisiteTest />} />
       </Route>
       <Route
         path="/studentdash"

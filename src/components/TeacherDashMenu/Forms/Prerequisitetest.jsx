@@ -1,63 +1,92 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import StudentTestResults from "./StudentTestResults"; // Import the StudentTestResults component
+import axios from "axios";
+import StudentTestResults from "./StudentTestResults";
+import { API_BASE_URL } from "../../../config";
+import { useLocation } from "react-router-dom";
 
 function TeacherPrerequisiteTest() {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const testType = queryParams.get("type");
+  const year = queryParams.get("year");
+  const division = queryParams.get("division");
+  const subjectId = queryParams.get("subjectId");
+  const subjectName = queryParams.get("subjectName");
+  const semester = queryParams.get("semester");
+
   const [showModal, setShowModal] = useState(false);
   const [testName, setTestName] = useState("");
   const [testDescription, setTestDescription] = useState("");
   const [questions, setQuestions] = useState([]);
   const [savedTests, setSavedTests] = useState([]);
   const [responseCount, setResponseCount] = useState({});
-  const [showResultsModal, setShowResultsModal] = useState(false); // State to control the visibility of the StudentTestResults modal
+  const [showResultsModal, setShowResultsModal] = useState(false);
+  const [selectedTestId, setSelectedTestId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Fetch tests from backend
   useEffect(() => {
-    const storedTests =
-      JSON.parse(localStorage.getItem("prerequisiteTests")) || [];
-    setSavedTests(storedTests);
+    const fetchTests = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `${API_BASE_URL}/api/teacher/my-tests`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+            },
+          }
+        );
+        setSavedTests(response.data);
 
-    const studentResponses =
-      JSON.parse(localStorage.getItem("studentTestResponses")) || {};
-    const counts = {};
+        // Fetch response counts for each test
+        const counts = {};
+        for (const test of response.data) {
+          try {
+            const res = await axios.get(
+              `${API_BASE_URL}/api/teacher/test-responses/${test._id}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem(
+                    "teacherToken"
+                  )}`,
+                },
+              }
+            );
+            counts[test._id] = res.data.count;
+          } catch (err) {
+            counts[test._id] = 0;
+          }
+        }
+        setResponseCount(counts);
+      } catch (err) {
+        setError("Failed to fetch tests");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    Object.values(studentResponses).forEach((response) => {
-      counts[response.testId] = (counts[response.testId] || 0) + 1;
-    });
-
-    setResponseCount(counts);
+    fetchTests();
   }, []);
 
   const addQuestion = () => {
     setQuestions([
       ...questions,
       {
-        text: "",
+        questionText: "",
         type: "single",
-        options: ["", "", "", ""],
-        correctOption: null,
+        options: ["", ""], // Start with 2 empty options
+        correctAnswer: null,
         points: 1,
       },
     ]);
   };
 
-  const updateQuestion = (index, value) => {
+  const updateQuestion = (index, field, value) => {
     const updated = [...questions];
-    updated[index].text = value;
-    setQuestions(updated);
-  };
-
-  const updateQuestionType = (index, type) => {
-    const updated = [...questions];
-    updated[index].type = type;
-
-    if (type === "multiple") {
-      updated[index].correctOption = [];
-    } else if (type === "single") {
-      updated[index].correctOption = null;
-    } else {
-      updated[index].correctOption = null;
-    }
-
+    updated[index][field] = value;
     setQuestions(updated);
   };
 
@@ -67,31 +96,21 @@ function TeacherPrerequisiteTest() {
     setQuestions(updated);
   };
 
-  const updateCorrectOption = (qIndex, oIndex) => {
+  const updateCorrectAnswer = (qIndex, answer) => {
     const updated = [...questions];
-    const question = updated[qIndex];
-
-    if (question.type === "single") {
-      question.correctOption = oIndex;
-    } else if (question.type === "multiple") {
-      if (!Array.isArray(question.correctOption)) {
-        question.correctOption = [];
-      }
-
-      const optionIndex = question.correctOption.indexOf(oIndex);
-      if (optionIndex === -1) {
-        question.correctOption.push(oIndex);
-      } else {
-        question.correctOption.splice(optionIndex, 1);
-      }
-    }
-
+    updated[qIndex].correctAnswer = answer;
     setQuestions(updated);
   };
 
-  const updatePoints = (qIndex, value) => {
+  const addOption = (qIndex) => {
     const updated = [...questions];
-    updated[qIndex].points = Number(value);
+    updated[qIndex].options.push("");
+    setQuestions(updated);
+  };
+
+  const removeOption = (qIndex, oIndex) => {
+    const updated = [...questions];
+    updated[qIndex].options.splice(oIndex, 1);
     setQuestions(updated);
   };
 
@@ -100,74 +119,153 @@ function TeacherPrerequisiteTest() {
     setQuestions(updated);
   };
 
-  const saveTest = () => {
+  const saveTest = async () => {
     if (!testName.trim()) {
-      alert("Please enter a test name");
+      setError("Please enter a test name");
       return;
     }
 
     if (questions.length === 0) {
-      alert("Please add at least one question");
+      setError("Please add at least one question");
       return;
     }
 
-    const newTest = {
-      id: Date.now(),
-      title: testName,
-      description: testDescription,
-      questions,
-      dateCreated: new Date().toLocaleDateString(),
-      teacherId: "default-teacher",
-    };
-    const updatedTests = [...savedTests, newTest];
-    setSavedTests(updatedTests);
-    localStorage.setItem("prerequisiteTests", JSON.stringify(updatedTests));
-
-    setTestName("");
-    setTestDescription("");
-    setQuestions([]);
-    setShowModal(false);
-  };
-
-  const deleteTest = (id) => {
-    const updatedTests = savedTests.filter((test) => test.id !== id);
-    setSavedTests(updatedTests);
-    localStorage.setItem("prerequisiteTests", JSON.stringify(updatedTests));
-
-    const studentResponses =
-      JSON.parse(localStorage.getItem("studentTestResponses")) || {};
-    delete studentResponses[id];
-    localStorage.setItem(
-      "studentTestResponses",
-      JSON.stringify(studentResponses)
+    // Validate all questions have correct answers
+    const invalidQuestions = questions.filter(
+      (q) => q.type !== "short" && q.correctAnswer === null
     );
+
+    if (invalidQuestions.length > 0) {
+      setError("Please select correct answers for all questions");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const testData = {
+        title: testName,
+        description: testDescription,
+        questions: questions.map((q) => ({
+          questionText: q.questionText,
+          options: q.type !== "short" ? q.options : undefined,
+          correctAnswer: q.correctAnswer,
+          points: q.points,
+          type: q.type,
+        })),
+        status: "draft",
+        teacherId: "req.user.id", // Replace with actual user ID from your auth context or state
+        testType, // 'class' or 'subject'
+        ...(testType === "class" && {
+          year,
+          division,
+        }),
+        ...(testType === "subject" && {
+          subjectName,
+          year,
+          semester,
+          division,
+        }),
+      };
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/teacher/create-test`,
+        testData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+          },
+        }
+      );
+
+      setSavedTests([...savedTests, response.data]);
+      setTestName("");
+      setTestDescription("");
+      setQuestions([]);
+      setShowModal(false);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to save test");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const copyTestLink = (id) => {
-    const link = `${window.location.origin}/#/test/${id}`;
+  const publishTest = async (testId) => {
+    try {
+      setLoading(true);
+      await axios.patch(
+        `${API_BASE_URL}/api/teacher/publish-test/${testId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+          },
+        }
+      );
+
+      // Update local state
+      setSavedTests(
+        savedTests.map((test) =>
+          test._id === testId ? { ...test, status: "published" } : test
+        )
+      );
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to publish test");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteTest = async (testId) => {
+    if (!window.confirm("Are you sure you want to delete this test?")) return;
+
+    try {
+      setLoading(true);
+      await axios.delete(`${API_BASE_URL}/api/teacher/delete-test/${testId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+        },
+      });
+
+      setSavedTests(savedTests.filter((test) => test._id !== testId));
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to delete test");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyTestLink = (testId) => {
+    const link = `${window.location.origin}/test/${testId}`;
     navigator.clipboard.writeText(link);
     alert("Link copied to clipboard!");
   };
 
+  const viewResults = (testId) => {
+    setSelectedTestId(testId);
+    setShowResultsModal(true);
+  };
+
   return (
-    <div>
-      <header className="bg-white text-white p-4 shadow-md">
-        <div className="flex items-center">
-          <div className="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
-            T
-          </div>
-          <div className="font-bold text-xl">Test Creator</div>
-        </div>
-      </header>
+    <div className="teacher-test-container">
+      {/* Header remains the same */}
 
       <div className="max-w-4xl mx-auto my-8 px-4">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
+        {loading && <div className="text-center py-4">Loading...</div>}
+
         <div className="text-center mb-8">
-          <p className="text-gray-600 mb-4">
-            Create and manage your tests and Surveys
-          </p>
           <button
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mt-4"
             onClick={() => setShowModal(true)}
+            disabled={loading}
           >
             Create New Test
           </button>
@@ -176,62 +274,82 @@ function TeacherPrerequisiteTest() {
         <div className="flex flex-wrap gap-4 justify-center">
           {savedTests.map((test) => (
             <div
-              key={test.id}
+              key={test._id}
               className="bg-white rounded-xl shadow-lg p-4 w-72 transition-transform hover:transform hover:-translate-y-1"
             >
               <h3 className="text-xl font-bold mb-1">{test.title}</h3>
               <p className="text-gray-600 mb-2">
                 {test.description || "No description provided"}
               </p>
+
+              {test.testType === "subject" && (
+                <div className="text-sm text-gray-600">
+                  Subject: {test.subjectName} (Sem {test.semester})
+                </div>
+              )}
+              {test.testType === "class" && (
+                <div className="text-sm text-gray-600">
+                  Class: {test.year} - {test.division}
+                </div>
+              )}
+
               <div className="flex justify-between text-sm text-gray-500 mt-2">
                 <span>{test.questions.length} questions</span>
-                <span>{test.dateCreated}</span>
-                <span>{responseCount[test.id] || 0} responses</span>
+                <span>{new Date(test.createdAt).toLocaleDateString()}</span>
+                <span>{responseCount[test._id] || 0} responses</span>
+                <span className={`status ${test.status}`}>{test.status}</span>
               </div>
+
               <div className="mt-4 flex flex-col gap-2">
                 <button
                   className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded"
-                  onClick={() => copyTestLink(test.id)}
+                  onClick={() => copyTestLink(test._id)}
                 >
                   Copy Link
                 </button>
-                {responseCount[test.id] ? (
+
+                {responseCount[test._id] > 0 && (
                   <button
                     className="bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded text-center"
-                    onClick={() => setShowResultsModal(true)} // Open the StudentTestResults modal
+                    onClick={() => viewResults(test._id)}
                   >
                     View Responses
                   </button>
-                ) : null}
+                )}
+
+                {test.status === "draft" && (
+                  <button
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-2 rounded"
+                    onClick={() => publishTest(test._id)}
+                  >
+                    Publish
+                  </button>
+                )}
+
                 <button
                   className="bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded"
-                  onClick={() => deleteTest(test.id)}
+                  onClick={() => deleteTest(test._id)}
                 >
                   Delete
                 </button>
               </div>
+
               <div className="mt-2 text-sm break-all">
                 <a
-                  href={`/#/test/${test.id}`}
+                  href={`/test/${test._id}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-blue-500 hover:underline"
                 >
-                  {`${window.location.origin}/#/test/${test.id}`}
+                  {`${window.location.origin}/test/${test._id}`}
                 </a>
               </div>
             </div>
           ))}
-          {savedTests.length === 0 && (
-            <div className="text-center text-gray-500">
-              <p>
-                No tests created yet. Click "Create New Test" to get started.
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
+      {/* Test Creation Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-11/12 max-w-2xl max-h-screen overflow-y-auto relative">
@@ -292,8 +410,10 @@ function TeacherPrerequisiteTest() {
                   <div className="mb-2">
                     <input
                       type="text"
-                      value={q.text}
-                      onChange={(e) => updateQuestion(qIndex, e.target.value)}
+                      value={q.questionText}
+                      onChange={(e) =>
+                        updateQuestion(qIndex, "questionText", e.target.value)
+                      }
                       placeholder="Enter your question"
                       className="w-full p-2 border rounded"
                     />
@@ -307,7 +427,7 @@ function TeacherPrerequisiteTest() {
                       className="w-full p-2 border rounded"
                       value={q.type}
                       onChange={(e) =>
-                        updateQuestionType(qIndex, e.target.value)
+                        updateQuestion(qIndex, "type", e.target.value)
                       }
                     >
                       <option value="single">Single Choice</option>
@@ -336,9 +456,9 @@ function TeacherPrerequisiteTest() {
                             <input
                               type="radio"
                               name={`correct-${qIndex}`}
-                              checked={q.correctOption === oIndex}
+                              checked={q.correctAnswer === oIndex}
                               onChange={() =>
-                                updateCorrectOption(qIndex, oIndex)
+                                updateCorrectAnswer(qIndex, oIndex)
                               }
                               className="ml-2"
                             />
@@ -347,11 +467,11 @@ function TeacherPrerequisiteTest() {
                             <input
                               type="checkbox"
                               checked={
-                                Array.isArray(q.correctOption) &&
-                                q.correctOption.includes(oIndex)
+                                Array.isArray(q.correctAnswer) &&
+                                q.correctAnswer.includes(oIndex)
                               }
                               onChange={() =>
-                                updateCorrectOption(qIndex, oIndex)
+                                updateCorrectAnswer(qIndex, oIndex)
                               }
                               className="ml-2"
                             />
@@ -361,8 +481,20 @@ function TeacherPrerequisiteTest() {
                               ? "Correct Answer"
                               : "Correct Option"}
                           </label>
+                          <button
+                            className="ml-2 text-red-500"
+                            onClick={() => removeOption(qIndex, oIndex)}
+                          >
+                            ×
+                          </button>
                         </div>
                       ))}
+                      <button
+                        className="bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded mt-2"
+                        onClick={() => addOption(qIndex)}
+                      >
+                        Add Option
+                      </button>
                     </div>
                   )}
 
@@ -372,7 +504,13 @@ function TeacherPrerequisiteTest() {
                       type="number"
                       min="1"
                       value={q.points}
-                      onChange={(e) => updatePoints(qIndex, e.target.value)}
+                      onChange={(e) =>
+                        updateQuestion(
+                          qIndex,
+                          "points",
+                          parseInt(e.target.value)
+                        )
+                      }
                       className="w-full p-2 border rounded"
                     />
                   </div>
@@ -390,6 +528,7 @@ function TeacherPrerequisiteTest() {
         </div>
       )}
 
+      {/* Results Modal */}
       {showResultsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
@@ -402,8 +541,7 @@ function TeacherPrerequisiteTest() {
                 ×
               </button>
             </div>
-            <StudentTestResults />{" "}
-            {/* Render the StudentTestResults component */}
+            <StudentTestResults testId={selectedTestId} />
           </div>
         </div>
       )}

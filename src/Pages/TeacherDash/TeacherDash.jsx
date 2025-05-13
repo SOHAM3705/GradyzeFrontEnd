@@ -54,8 +54,8 @@ function TeacherDash() {
     { icon: "📝", label: "Subject Marks", path: "/teacherdash/subject-marks" },
     {
       icon: "📝",
-      label: "Tests",
-      path: "/teacherdash/test",
+      label: "Forms",
+      path: "/teacherdash/create-test",
     },
     { icon: "📄", label: "Assignment", path: "/teacherdash/assignment-manage" },
     {
