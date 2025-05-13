@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import StudentTestResults from "./StudentTestResults"; // Import the StudentTestResults component
 
-function TecaherPrerequisiteTest() {
+function TeacherPrerequisiteTest() {
   const [showModal, setShowModal] = useState(false);
   const [testName, setTestName] = useState("");
   const [testDescription, setTestDescription] = useState("");
   const [questions, setQuestions] = useState([]);
   const [savedTests, setSavedTests] = useState([]);
   const [responseCount, setResponseCount] = useState({});
+  const [showResultsModal, setShowResultsModal] = useState(false); // State to control the visibility of the StudentTestResults modal
 
   useEffect(() => {
     const storedTests =
@@ -194,12 +196,12 @@ function TecaherPrerequisiteTest() {
                   Copy Link
                 </button>
                 {responseCount[test.id] ? (
-                  <Link
-                    to={`/teacher/test-responses/${test.id}`}
+                  <button
                     className="bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded text-center"
+                    onClick={() => setShowResultsModal(true)} // Open the StudentTestResults modal
                   >
                     View Responses
-                  </Link>
+                  </button>
                 ) : null}
                 <button
                   className="bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded"
@@ -387,8 +389,26 @@ function TecaherPrerequisiteTest() {
           </div>
         </div>
       )}
+
+      {showResultsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Student Test Results</h2>
+              <button
+                className="text-2xl"
+                onClick={() => setShowResultsModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <StudentTestResults />{" "}
+            {/* Render the StudentTestResults component */}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default TecaherPrerequisiteTest;
+export default TeacherPrerequisiteTest;
