@@ -133,8 +133,13 @@ function App() {
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
         <Route path="assignment-manage" element={<AssignmentManage />} />
-        <Route path="create-test" element={<TestClassSelector />} />
-        <Route path="create-test-form" element={<TeacherPrerequisiteTest />} />
+        <Route path="create-test">
+          <Route index element={<TestClassSelector />} />
+          <Route
+            path="create-test-form"
+            element={<TeacherPrerequisiteTest />}
+          />
+        </Route>
       </Route>
       <Route
         path="/studentdash"

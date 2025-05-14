@@ -39,15 +39,17 @@ const TestClassSelector = () => {
   const handleContinue = () => {
     if (selectedType === "class" && selectedClass) {
       navigate(
-        `create-test-form?type=class&year=${selectedClass.year}&division=${selectedClass.division}`
+        `create-test-form?type=class&year=${encodeURIComponent(
+          selectedClass.year
+        )}&division=${encodeURIComponent(selectedClass.division)}`
       );
     } else if (selectedType === "subject" && selectedSubject) {
       navigate(
         `create-test-form?type=subject` +
           `&subjectName=${encodeURIComponent(selectedSubject.name)}` +
-          `&year=${selectedSubject.year}` +
+          `&year=${encodeURIComponent(selectedSubject.year)}` +
           `&semester=${selectedSubject.semester}` +
-          `&division=${selectedSubject.division}`
+          `&division=${encodeURIComponent(selectedSubject.division)}`
       );
     }
   };

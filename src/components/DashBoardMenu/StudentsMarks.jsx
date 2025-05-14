@@ -79,7 +79,7 @@ const AdminStudentMarks = () => {
                 "https://gradyzebackend.onrender.com/api/admin/fetchmarks",
                 {
                   params: {
-                    adminId: "someAdminId", // Replace with actual adminId or state
+                    adminId: sessionStorage.getItem("adminId"), // Replace with actual adminId or state
                     department: department,
                     year: year,
                     division: division,
