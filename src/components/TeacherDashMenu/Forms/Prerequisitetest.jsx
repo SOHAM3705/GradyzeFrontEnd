@@ -317,7 +317,7 @@ function TeacherPrerequisiteTest() {
               )}
 
               <div className="flex justify-between text-sm text-gray-500 mt-2">
-                <span>{test.questions.length} questions</span>
+                <span>{(test.questions || []).length} questions</span>
                 <span>{new Date(test.createdAt).toLocaleDateString()}</span>
                 <span>{responseCount[test._id] || 0} responses</span>
                 <span className={`status ${test.status}`}>{test.status}</span>
