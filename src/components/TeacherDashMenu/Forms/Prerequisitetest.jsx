@@ -154,7 +154,7 @@ function TeacherPrerequisiteTest() {
         })),
         status: "draft",
         teacherId: sessionStorage.getItem("teacherId"),
-        testType: testType, // Ensure this is correctly set before this line
+        testType: testType, // Make sure this is included
         ...(testType === "class" && {
           year,
           division,
