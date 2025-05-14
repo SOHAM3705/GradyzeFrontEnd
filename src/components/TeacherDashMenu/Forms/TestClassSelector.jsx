@@ -14,13 +14,14 @@ const TestClassSelector = () => {
 
   useEffect(() => {
     const fetchTeacherData = async () => {
+      const token = sessionStorage.getItem("token");
       try {
         setLoading(true);
         const response = await axios.get(
           `${API_BASE_URL}/api/teacher/teacher/me`,
           {
             headers: {
-              Authorization: `Bearer ${sessionStorage.getItem("teacherToken")}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
