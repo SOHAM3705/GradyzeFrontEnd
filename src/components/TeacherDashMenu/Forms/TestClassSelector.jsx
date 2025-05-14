@@ -118,9 +118,12 @@ const TestClassSelector = () => {
           <div className="space-y-2">
             {teacherData.subjects.map((subject) => (
               <div
-                key={`${subject.name}-${subject.year}-${subject.division}`}
+                key={`${subject.name}-${subject.year}-${subject.semester}-${subject.division}`}
                 className={`p-3 border rounded-lg cursor-pointer ${
-                  selectedSubject?.name === subject.name
+                  selectedSubject?.name === subject.name &&
+                  selectedSubject?.year === subject.year &&
+                  selectedSubject?.semester === subject.semester &&
+                  selectedSubject?.division === subject.division
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200"
                 }`}
