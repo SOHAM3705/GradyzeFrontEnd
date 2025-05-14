@@ -20,7 +20,7 @@ const TestClassSelector = () => {
           `${API_BASE_URL}/api/teacher/teacher/me`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+              Authorization: `Bearer ${sessionStorage.getItem("teacherToken")}`,
             },
           }
         );
