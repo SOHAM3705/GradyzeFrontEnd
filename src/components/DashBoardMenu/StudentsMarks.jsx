@@ -46,18 +46,16 @@ const AdminStudentMarks = () => {
 
   // Function to toggle section expansion
   const toggleContainer = (id) => {
-    setExpandedSections((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id],
+    setExpandedSections((prev) => ({
+      ...prev,
+      [id]: !prev[id],
     }));
   };
 
-  // Function to toggle marks options dropdown
   const toggleMarksOptions = (classId) => {
     setOpenMarksOptions((prev) => (prev === classId ? null : classId));
   };
 
-  // Function to fetch and display marks for a given class and exam type
   const showMarks = async (classId, examType) => {
     setOpenMarksOptions(null);
 

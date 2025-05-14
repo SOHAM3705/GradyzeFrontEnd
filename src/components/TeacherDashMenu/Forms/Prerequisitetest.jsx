@@ -34,7 +34,7 @@ function TeacherPrerequisiteTest() {
           `${API_BASE_URL}/api/teacher/my-tests`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+              Authorization: `Bearer ${sessionStorage.getItem("token")}`,
             },
           }
         );
@@ -48,9 +48,7 @@ function TeacherPrerequisiteTest() {
               `${API_BASE_URL}/api/teacher/test-responses/${test._id}`,
               {
                 headers: {
-                  Authorization: `Bearer ${localStorage.getItem(
-                    "teacherToken"
-                  )}`,
+                  Authorization: `Bearer ${sessionStorage.getItem("token")}`,
                 },
               }
             );
@@ -174,7 +172,7 @@ function TeacherPrerequisiteTest() {
         testData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           },
         }
       );
@@ -200,12 +198,12 @@ function TeacherPrerequisiteTest() {
         {},
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           },
         }
       );
 
-      // Update local state
+      // Update session state
       setSavedTests(
         savedTests.map((test) =>
           test._id === testId ? { ...test, status: "published" } : test
@@ -225,7 +223,7 @@ function TeacherPrerequisiteTest() {
       setLoading(true);
       await axios.delete(`${API_BASE_URL}/api/teacher/delete-test/${testId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
       });
 

@@ -19,7 +19,7 @@ const StudentTestResults = ({ testId }) => {
           `${API_BASE_URL}/api/teacher/my-tests`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+              Authorization: `Bearer ${sessionStorage.getItem("token")}`,
             },
           }
         );
@@ -32,7 +32,7 @@ const StudentTestResults = ({ testId }) => {
 
         const resultsResponse = await axios.get(`${API_BASE_URL}${endpoint}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           },
         });
 
@@ -60,7 +60,7 @@ const StudentTestResults = ({ testId }) => {
 
       const response = await axios.get(`${API_BASE_URL}${endpoint}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("teacherToken")}`,
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
       });
 
