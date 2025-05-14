@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 // Function to create division data
 const createDivisionData = () => ({
@@ -43,6 +45,8 @@ const AdminStudentMarks = () => {
   const [openMarksOptions, setOpenMarksOptions] = useState(null);
   // State for storing fetched marks
   const [marksData, setMarksData] = useState({});
+  // State for storing meta data for PDF generation
+  const [classMetaMap, setClassMetaMap] = useState({});
 
   // Function to toggle section expansion
   const toggleContainer = (id) => {
@@ -92,12 +96,21 @@ const AdminStudentMarks = () => {
                 [classId]: data.marksData,
               }));
 
+              // Store meta data for PDF generation
+              setClassMetaMap((prevMeta) => ({
+                ...prevMeta,
+                [classId]: { department, year, division },
+              }));
+
               // Update HTML table with marks data
               const marksContainer = document.getElementById(
                 `marks-${classId}`
               );
               if (marksContainer) {
                 let html = `
+                  <div class="search-container mb-4">
+                    <input type="text" id="search-${classId}" class="w-full p-2 border rounded" placeholder="Search students..." onkeyup="filterStudents('${classId}')">
+                  </div>
                   <table class="min-w-full bg-white border border-gray-300">
                     <thead>
                       <tr>
@@ -110,7 +123,7 @@ const AdminStudentMarks = () => {
                         }</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="student-list-${classId}">
                 `;
 
                 // Add student marks to table
@@ -131,6 +144,7 @@ const AdminStudentMarks = () => {
                 });
 
                 html += `</tbody></table>`;
+                html += `<button class="btn bg-green-500 text-white px-2 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm mt-4" onclick="generatePDF('${classId}')">Generate PDF</button>`;
                 marksContainer.innerHTML = html;
                 marksContainer.style.display = "block";
               }
@@ -154,6 +168,72 @@ const AdminStudentMarks = () => {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+
+  // Add this script to make the filterStudents function available globally
+  window.filterStudents = (classId) => {
+    const input = document.getElementById(`search-${classId}`);
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById(`student-list-${classId}`);
+    const tr = table.getElementsByTagName("tr");
+
+    for (let i = 0; i < tr.length; i++) {
+      const tdName = tr[i].getElementsByTagName("td")[1];
+      if (tdName) {
+        const txtValue = tdName.textContent || tdName.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  };
+
+  // Add this script to make the generatePDF function available globally
+  window.generatePDF = (classId) => {
+    const students = marksData[classId]; // use marksData for marks
+    const meta = classMetaMap[classId]; // use classMetaMap for meta
+
+    if (!students || !meta) {
+      alert("No data available to generate PDF.");
+      return;
+    }
+
+    const { department, year, division } = meta;
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text(`${department} - ${year}`, 20, 20);
+    doc.text(`Division: ${division}`, 20, 30);
+    doc.text(`Class Teacher: N/A`, 20, 40); // Optional: Replace with real teacher name if available
+
+    if (students.length > 0) {
+      const headers = ["Roll No", "Name", "Total Marks"];
+      const body = students.map((s) => [
+        s.rollNo,
+        s.name,
+        s.marks !== null && s.marks !== undefined ? s.marks : "-",
+      ]);
+
+      doc.autoTable({
+        startY: 50,
+        head: [headers],
+        body: body,
+        styles: { fontSize: 11, halign: "center" },
+        headStyles: { fillColor: [100, 100, 255] },
+      });
+    } else {
+      doc.text("No student marks available.", 20, 50);
+    }
+
+    const fileName =
+      `${department}_${year}_Division${division}_Marks.pdf`.replace(
+        /\s+/g,
+        "_"
+      );
+    doc.save(fileName);
+  };
 
   return (
     <div className="container mx-auto p-2 sm:p-4">
