@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import StudentTestResults from "./StudentTestResults";
 import { API_BASE_URL } from "../../../config";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function TeacherPrerequisiteTest() {
   const location = useLocation();
@@ -24,6 +24,8 @@ function TeacherPrerequisiteTest() {
   const [selectedTestId, setSelectedTestId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
 
   // Fetch tests from backend
   useEffect(() => {
@@ -75,7 +77,7 @@ function TeacherPrerequisiteTest() {
       {
         questionText: "",
         type: "single",
-        options: ["", ""], // Start with 2 empty options
+        options: ["", ""],
         correctAnswer: null,
         points: 1,
       },
@@ -96,7 +98,21 @@ function TeacherPrerequisiteTest() {
 
   const updateCorrectAnswer = (qIndex, answer) => {
     const updated = [...questions];
-    updated[qIndex].correctAnswer = answer;
+    const question = updated[qIndex];
+
+    if (question.type === "single") {
+      question.correctAnswer = answer;
+    } else if (question.type === "multiple") {
+      if (!Array.isArray(question.correctAnswer)) {
+        question.correctAnswer = [];
+      }
+      const index = question.correctAnswer.indexOf(answer);
+      if (index === -1) {
+        question.correctAnswer.push(answer);
+      } else {
+        question.correctAnswer.splice(index, 1);
+      }
+    }
     setQuestions(updated);
   };
 
@@ -154,7 +170,7 @@ function TeacherPrerequisiteTest() {
         })),
         status: "draft",
         teacherId: sessionStorage.getItem("teacherId"),
-        testType: testType, // Make sure this is included
+        testType: testType,
         ...(testType === "class" && {
           year,
           division,
@@ -246,10 +262,12 @@ function TeacherPrerequisiteTest() {
     setShowResultsModal(true);
   };
 
+  const goBackToTestClassSelector = () => {
+    navigate("/test-class-selector");
+  };
+
   return (
     <div className="teacher-test-container">
-      {/* Header remains the same */}
-
       <div className="max-w-4xl mx-auto my-8 px-4">
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -260,6 +278,13 @@ function TeacherPrerequisiteTest() {
         {loading && <div className="text-center py-4">Loading...</div>}
 
         <div className="text-center mb-8">
+          <button
+            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mt-4 mr-4"
+            onClick={goBackToTestClassSelector}
+            disabled={loading}
+          >
+            Back to Test Class Selector
+          </button>
           <button
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mt-4"
             onClick={() => setShowModal(true)}
