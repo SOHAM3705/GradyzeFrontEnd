@@ -153,8 +153,8 @@ function TeacherPrerequisiteTest() {
           type: q.type,
         })),
         status: "draft",
-        teacherId: "req.user.id", // Replace with actual user ID from your auth context or state
-        testType, // 'class' or 'subject'
+        teacherId: sessionStorage.getItem("teacherId"),
+        testType: testType, // Ensure this is correctly set before this line
         ...(testType === "class" && {
           year,
           division,
