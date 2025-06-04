@@ -298,7 +298,7 @@ function TeacherPrerequisiteTest() {
           {savedTests.map((test) => (
             <div
               key={test._id}
-              className="bg-white rounded-xl shadow-lg p-4 w-72 transition-transform hover:transform hover:-translate-y-1"
+              className="bg-white rounded-xl shadow-lg p-4 w-80 transition-transform hover:transform hover:-translate-y-1"
             >
               <h3 className="text-xl font-bold mb-1">{test.title}</h3>
               <p className="text-gray-600 mb-2">
