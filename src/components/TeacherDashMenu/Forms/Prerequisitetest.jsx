@@ -84,6 +84,41 @@ function TeacherPrerequisiteTest() {
     ]);
   };
 
+  const updateTest = async (testId) => {
+  try {
+    setLoading(true);
+    const testToUpdate = savedTests.find((test) => test._id === testId);
+    if (!testToUpdate) {
+      throw new Error("Test not found");
+    }
+
+    const response = await axios.put(
+      `${API_BASE_URL}/api/teacher/update-test/${testId}`,
+      {
+        title: testToUpdate.title,
+        description: testToUpdate.description,
+        questions: testToUpdate.questions,
+        status: testToUpdate.status,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    setSavedTests(
+      savedTests.map((test) =>
+        test._id === testId ? response.data.test : test
+      )
+    );
+  } catch (err) {
+    setError(err.response?.data?.error || "Failed to update test");
+  } finally {
+    setLoading(false);
+  }
+};
+
   const updateQuestion = (index, field, value) => {
     const updated = [...questions];
     updated[index][field] = value;
@@ -298,7 +333,7 @@ function TeacherPrerequisiteTest() {
           {savedTests.map((test) => (
             <div
               key={test._id}
-              className="bg-white rounded-xl shadow-lg p-4 w-80 transition-transform hover:transform hover:-translate-y-1"
+              className="bg-white rounded-xl shadow-lg p-4 w-86 transition-transform hover:transform hover:-translate-y-1"
             >
               <h3 className="text-xl font-bold mb-1">{test.title}</h3>
               <p className="text-gray-600 mb-2">
@@ -323,39 +358,53 @@ function TeacherPrerequisiteTest() {
                 <span className={`status ${test.status}`}>{test.status}</span>
               </div>
 
-              <div className="mt-4 flex flex-col gap-2">
-                <button
-                  className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded"
-                  onClick={() => copyTestLink(test._id)}
-                >
-                  Copy Link
-                </button>
+              <div className="mt-4 relative">
+              <button
+                onClick={() => toggleDropdown(test._id)}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+              >
+                Actions
+              </button>
 
-                {responseCount[test._id] > 0 && (
+              {dropdownOpen[test._id] && (
+                <div className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-lg transition-all duration-300 ease-in-out transform origin-top">
                   <button
-                    className="bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded text-center"
-                    onClick={() => viewResults(test._id)}
+                    onClick={() => copyTestLink(test._id)}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
                   >
-                    View Responses
+                    Copy Link
                   </button>
-                )}
-
-                {test.status === "draft" && (
+                  {responseCount[test._id] > 0 && (
+                    <button
+                      onClick={() => viewResults(test._id)}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                    >
+                      View Responses
+                    </button>
+                  )}
+                  {test.status === "draft" && (
+                    <button
+                      onClick={() => publishTest(test._id)}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                    >
+                      Publish
+                    </button>
+                  )}
                   <button
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-2 rounded"
-                    onClick={() => publishTest(test._id)}
+                    onClick={() => updateTest(test._id)}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
                   >
-                    Publish
+                    Update
                   </button>
-                )}
-
-                <button
-                  className="bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded"
-                  onClick={() => deleteTest(test._id)}
-                >
-                  Delete
-                </button>
-              </div>
+                  <button
+                    onClick={() => deleteTest(test._id)}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
 
               <div className="mt-2 text-sm break-all">
                 <a
