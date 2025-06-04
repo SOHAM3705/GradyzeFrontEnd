@@ -10,9 +10,9 @@ function TeacherPrerequisiteTest() {
   const testType = queryParams.get("type");
   const year = queryParams.get("year");
   const division = queryParams.get("division");
-  const subjectId = queryParams.get("subjectId");
   const subjectName = queryParams.get("subjectName");
   const semester = queryParams.get("semester");
+
   const [dropdownOpen, setDropdownOpen] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [testName, setTestName] = useState("");
@@ -26,20 +26,26 @@ function TeacherPrerequisiteTest() {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
+
   const toggleDropdown = (testId) => {
     setDropdownOpen({
       ...dropdownOpen,
-      [testId]: !dropdownOpen[testId]
+      [testId]: !dropdownOpen[testId],
     });
   };
 
-  // Fetch tests from backend
   useEffect(() => {
     const fetchTests = async () => {
       try {
         setLoading(true);
+        const params = new URLSearchParams({
+          testType,
+          ...(testType === "class" && { year, division }),
+          ...(testType === "subject" && { subjectName, semester }),
+        });
+
         const response = await axios.get(
-          `${API_BASE_URL}/api/teacher/my-tests`,
+          `${API_BASE_URL}/api/teacher/my-tests?${params.toString()}`,
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -48,7 +54,6 @@ function TeacherPrerequisiteTest() {
         );
         setSavedTests(response.data);
 
-        // Fetch response counts for each test
         const counts = {};
         for (const test of response.data) {
           try {
@@ -75,7 +80,7 @@ function TeacherPrerequisiteTest() {
     };
 
     fetchTests();
-  }, []);
+  }, [testType, year, division, subjectName, semester]);
 
   const addQuestion = () => {
     setQuestions([
@@ -91,39 +96,48 @@ function TeacherPrerequisiteTest() {
   };
 
   const updateTest = async (testId) => {
-  try {
-    setLoading(true);
-    const testToUpdate = savedTests.find((test) => test._id === testId);
-    if (!testToUpdate) {
-      throw new Error("Test not found");
-    }
-
-    const response = await axios.put(
-      `${API_BASE_URL}/api/teacher/update-test/${testId}`,
-      {
-        title: testToUpdate.title,
-        description: testToUpdate.description,
-        questions: testToUpdate.questions,
-        status: testToUpdate.status,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-        },
+    try {
+      setLoading(true);
+      const testToUpdate = savedTests.find((test) => test._id === testId);
+      if (!testToUpdate) {
+        throw new Error("Test not found");
       }
-    );
 
-    setSavedTests(
-      savedTests.map((test) =>
-        test._id === testId ? response.data.test : test
-      )
-    );
-  } catch (err) {
-    setError(err.response?.data?.error || "Failed to update test");
-  } finally {
-    setLoading(false);
-  }
-};
+      const response = await axios.put(
+        `${API_BASE_URL}/api/teacher/update-test/${testId}`,
+        {
+          title: testToUpdate.title,
+          description: testToUpdate.description,
+          questions: testToUpdate.questions,
+          status: testToUpdate.status,
+          testType: testToUpdate.testType,
+          ...(testToUpdate.testType === "class" && {
+            year: testToUpdate.year,
+            division: testToUpdate.division,
+          }),
+          ...(testToUpdate.testType === "subject" && {
+            subjectName: testToUpdate.subjectName,
+            semester: testToUpdate.semester,
+          }),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      setSavedTests(
+        savedTests.map((test) =>
+          test._id === testId ? response.data.test : test
+        )
+      );
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to update test");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const updateQuestion = (index, field, value) => {
     const updated = [...questions];
@@ -185,7 +199,6 @@ function TeacherPrerequisiteTest() {
       return;
     }
 
-    // Validate all questions have correct answers
     const invalidQuestions = questions.filter(
       (q) => q.type !== "short" && q.correctAnswer === null
     );
@@ -211,17 +224,9 @@ function TeacherPrerequisiteTest() {
         })),
         status: "draft",
         teacherId: sessionStorage.getItem("teacherId"),
-        testType: testType,
-        ...(testType === "class" && {
-          year,
-          division,
-        }),
-        ...(testType === "subject" && {
-          subjectName,
-          year,
-          semester,
-          division,
-        }),
+        testType,
+        ...(testType === "class" && { year, division }),
+        ...(testType === "subject" && { subjectName, semester }),
       };
 
       const response = await axios.post(
@@ -234,7 +239,7 @@ function TeacherPrerequisiteTest() {
         }
       );
 
-      setSavedTests([...savedTests, response.data]);
+      setSavedTests([...savedTests, response.data.test]);
       setTestName("");
       setTestDescription("");
       setQuestions([]);
@@ -260,7 +265,6 @@ function TeacherPrerequisiteTest() {
         }
       );
 
-      // Update session state
       setSavedTests(
         savedTests.map((test) =>
           test._id === testId ? { ...test, status: "published" } : test
@@ -335,99 +339,127 @@ function TeacherPrerequisiteTest() {
           </button>
         </div>
 
+        <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+          <h3 className="font-bold text-lg mb-2">Current Filters:</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <span className="font-semibold">Test Type:</span> {testType}
+            </div>
+            {testType === "class" && (
+              <>
+                <div>
+                  <span className="font-semibold">Year:</span> {year}
+                </div>
+                <div>
+                  <span className="font-semibold">Division:</span> {division}
+                </div>
+              </>
+            )}
+            {testType === "subject" && (
+              <>
+                <div>
+                  <span className="font-semibold">Subject:</span> {subjectName}
+                </div>
+                <div>
+                  <span className="font-semibold">Semester:</span> {semester}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-4 justify-center">
           {savedTests.map((test) => (
             <div
               key={test._id}
               className="bg-white rounded-xl shadow-lg p-4 w-86 transition-transform hover:transform hover:-translate-y-1"
             >
-              <h3 className="text-xl font-bold mb-1">{test.title}</h3>
-              <p className="text-gray-600 mb-2">
-                {test.description || "No description provided"}
-              </p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold mb-1">{test.title}</h3>
+                  <p className="text-gray-600 mb-2">
+                    {test.description || "No description provided"}
+                  </p>
+                </div>
+                <span
+                  className={`status ${test.status} px-2 py-1 rounded text-xs`}
+                >
+                  {test.status}
+                </span>
+              </div>
 
-              {test.testType === "subject" && (
-                <div className="text-sm text-gray-600">
-                  Subject: {test.subjectName} (Sem {test.semester})
-                </div>
-              )}
-              {test.testType === "class" && (
-                <div className="text-sm text-gray-600">
-                  Class: {test.year} - {test.division}
-                </div>
-              )}
+              <div className="text-sm text-gray-600 mb-2">
+                {test.testType === "subject" ? (
+                  <>
+                    <span className="font-semibold">Subject:</span>{" "}
+                    {test.subjectName} (Sem {test.semester})
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold">Class:</span> {test.year} -{" "}
+                    {test.division}
+                  </>
+                )}
+              </div>
 
               <div className="flex justify-between text-sm text-gray-500 mt-2">
                 <span>{(test.questions || []).length} questions</span>
                 <span>{new Date(test.createdAt).toLocaleDateString()}</span>
                 <span>{responseCount[test._id] || 0} responses</span>
-                <span className={`status ${test.status}`}>{test.status}</span>
               </div>
 
               <div className="mt-4 relative">
-              <button
-                onClick={() => toggleDropdown(test._id)}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
-              >
-                Actions
-              </button>
-
-              {dropdownOpen[test._id] && (
-                <div className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-lg transition-all duration-300 ease-in-out transform origin-top">
-                  <button
-                    onClick={() => copyTestLink(test._id)}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
-                  >
-                    Copy Link
-                  </button>
-                  {responseCount[test._id] > 0 && (
-                    <button
-                      onClick={() => viewResults(test._id)}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
-                    >
-                      View Responses
-                    </button>
-                  )}
-                  {test.status === "draft" && (
-                    <button
-                      onClick={() => publishTest(test._id)}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
-                    >
-                      Publish
-                    </button>
-                  )}
-                  <button
-                    onClick={() => updateTest(test._id)}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
-                  >
-                    Update
-                  </button>
-                  <button
-                    onClick={() => deleteTest(test._id)}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-
-              <div className="mt-2 text-sm break-all">
-                <a
-                  href={`/test/${test._id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-500 hover:underline"
+                <button
+                  onClick={() => toggleDropdown(test._id)}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
                 >
-                  {`${window.location.origin}/test/${test._id}`}
-                </a>
+                  Actions
+                </button>
+
+                {dropdownOpen[test._id] && (
+                  <div className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-lg transition-all duration-300 ease-in-out transform origin-top">
+                    <button
+                      onClick={() => copyTestLink(test._id)}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                    >
+                      Copy Link
+                    </button>
+                    {responseCount[test._id] > 0 && (
+                      <button
+                        onClick={() => viewResults(test._id)}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                      >
+                        View Responses
+                      </button>
+                    )}
+                    {test.status === "draft" && (
+                      <button
+                        onClick={() => publishTest(test._id)}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                      >
+                        Publish
+                      </button>
+                    )}
+                    <button
+                      onClick={() => updateTest(test._id)}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                    >
+                      Update
+                    </button>
+                    <button
+                      onClick={() => deleteTest(test._id)}
+                      className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100 transition duration-200"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Test Creation Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-11/12 max-w-2xl max-h-screen overflow-y-auto relative">
@@ -606,7 +638,6 @@ function TeacherPrerequisiteTest() {
         </div>
       )}
 
-      {/* Results Modal */}
       {showResultsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
