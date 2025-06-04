@@ -13,7 +13,7 @@ function TeacherPrerequisiteTest() {
   const subjectId = queryParams.get("subjectId");
   const subjectName = queryParams.get("subjectName");
   const semester = queryParams.get("semester");
-
+  const [dropdownOpen, setDropdownOpen] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [testName, setTestName] = useState("");
   const [testDescription, setTestDescription] = useState("");
@@ -26,6 +26,12 @@ function TeacherPrerequisiteTest() {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
+  const toggleDropdown = (testId) => {
+    setDropdownOpen({
+      ...dropdownOpen,
+      [testId]: !dropdownOpen[testId]
+    });
+  };
 
   // Fetch tests from backend
   useEffect(() => {
