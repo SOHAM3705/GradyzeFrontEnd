@@ -263,7 +263,7 @@ function TeacherPrerequisiteTest() {
   };
 
   const goBackToTestClassSelector = () => {
-    navigate("/test-class-selector");
+    navigate("/teacherdash/create-test");
   };
 
   return (
