@@ -252,10 +252,10 @@ function TeacherPrerequisiteTest() {
     }
   };
 
-  const publishTest = async (testId) => {
+  const togglePublishStatus = async (testId) => {
     try {
       setLoading(true);
-      await axios.patch(
+      const response = await axios.patch(
         `${API_BASE_URL}/api/teacher/publish-test/${testId}`,
         {},
         {
@@ -267,11 +267,11 @@ function TeacherPrerequisiteTest() {
 
       setSavedTests(
         savedTests.map((test) =>
-          test._id === testId ? { ...test, status: "published" } : test
+          test._id === testId ? { ...test, status: response.data.status } : test
         )
       );
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to publish test");
+      setError(err.response?.data?.error || "Failed to update test status");
     } finally {
       setLoading(false);
     }
@@ -372,7 +372,7 @@ function TeacherPrerequisiteTest() {
           {savedTests.map((test) => (
             <div
               key={test._id}
-              className="bg-white rounded-xl shadow-lg p-4 w-86 transition-transform hover:transform hover:-translate-y-1"
+              className="bg-white rounded-xl shadow-lg p-4 w-92 transition-transform hover:transform hover:-translate-y-1"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -432,12 +432,19 @@ function TeacherPrerequisiteTest() {
                         View Responses
                       </button>
                     )}
-                    {test.status === "draft" && (
+                    {test.status === "draft" ? (
                       <button
-                        onClick={() => publishTest(test._id)}
+                        onClick={() => togglePublishStatus(test._id)}
                         className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
                       >
                         Publish
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => togglePublishStatus(test._id)}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                      >
+                        Unpublish
                       </button>
                     )}
                     <button
