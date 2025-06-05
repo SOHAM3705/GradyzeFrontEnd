@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../../config";
 
-const StudentTestViewer = () => {
+const TestPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [test, setTest] = useState(null);
@@ -353,4 +353,4 @@ const StudentTestViewer = () => {
   );
 };
 
-export default StudentTestViewer;
+export default TestPage;

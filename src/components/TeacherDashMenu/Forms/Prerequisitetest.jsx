@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import StudentTestResults from "./StudentTestResults";
+import StudentTestViewer from "./StudentTestViewer"; // Import your preview component
 import { API_BASE_URL } from "../../../config";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -24,6 +25,8 @@ function TeacherPrerequisiteTest() {
   const [selectedTestId, setSelectedTestId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [editingTest, setEditingTest] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -98,42 +101,29 @@ function TeacherPrerequisiteTest() {
   const updateTest = async (testId) => {
     try {
       setLoading(true);
-      const testToUpdate = savedTests.find((test) => test._id === testId);
-      if (!testToUpdate) {
+      const testToEdit = savedTests.find((test) => test._id === testId);
+      if (!testToEdit) {
         throw new Error("Test not found");
       }
 
-      const response = await axios.put(
-        `${API_BASE_URL}/api/teacher/update-test/${testId}`,
-        {
-          title: testToUpdate.title,
-          description: testToUpdate.description,
-          questions: testToUpdate.questions,
-          status: testToUpdate.status,
-          testType: testToUpdate.testType,
-          ...(testToUpdate.testType === "class" && {
-            year: testToUpdate.year,
-            division: testToUpdate.division,
-          }),
-          ...(testToUpdate.testType === "subject" && {
-            subjectName: testToUpdate.subjectName,
-            semester: testToUpdate.semester,
-          }),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-          },
-        }
+      setEditingTest(testToEdit);
+      setTestName(testToEdit.title);
+      setTestDescription(testToEdit.description || "");
+      setQuestions(
+        testToEdit.questions.map((q) => ({
+          ...q,
+          correctAnswer:
+            q.type === "multiple"
+              ? Array.isArray(q.correctAnswer)
+                ? q.correctAnswer
+                : []
+              : q.correctAnswer,
+        }))
       );
 
-      setSavedTests(
-        savedTests.map((test) =>
-          test._id === testId ? response.data.test : test
-        )
-      );
+      setShowModal(true);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to update test");
+      setError(err.response?.data?.error || "Failed to load test for editing");
     } finally {
       setLoading(false);
     }
@@ -252,6 +242,94 @@ function TeacherPrerequisiteTest() {
     }
   };
 
+  const saveUpdatedTest = async () => {
+    if (!editingTest) return;
+
+    if (!testName.trim()) {
+      setError("Please enter a test name");
+      return;
+    }
+
+    if (questions.length === 0) {
+      setError("Please add at least one question");
+      return;
+    }
+
+    const invalidQuestions = questions.filter(
+      (q) =>
+        q.type !== "short" &&
+        (q.correctAnswer === null ||
+          (q.type === "multiple" && q.correctAnswer.length === 0))
+    );
+
+    if (invalidQuestions.length > 0) {
+      setError("Please select correct answers for all questions");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const updatedTest = {
+        title: testName,
+        description: testDescription,
+        questions: questions.map((q) => ({
+          questionText: q.questionText,
+          options: q.type !== "short" ? q.options : undefined,
+          correctAnswer: q.correctAnswer,
+          points: q.points,
+          type: q.type,
+        })),
+        status: editingTest.status,
+        testType: editingTest.testType,
+        ...(editingTest.testType === "class" && {
+          year: editingTest.year,
+          division: editingTest.division,
+        }),
+        ...(editingTest.testType === "subject" && {
+          subjectName: editingTest.subjectName,
+          semester: editingTest.semester,
+        }),
+      };
+
+      const response = await axios.put(
+        `${API_BASE_URL}/api/teacher/update-test/${editingTest._id}`,
+        updatedTest,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      setSavedTests(
+        savedTests.map((test) =>
+          test._id === editingTest._id ? response.data.test : test
+        )
+      );
+
+      setEditingTest(null);
+      setTestName("");
+      setTestDescription("");
+      setQuestions([]);
+      setShowModal(false);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to update test");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const previewTest = (testId) => {
+    const testToPreview = savedTests.find((test) => test._id === testId);
+    if (testToPreview) {
+      setEditingTest(testToPreview);
+      setShowPreviewModal(true);
+    }
+  };
+
   const togglePublishStatus = async (testId) => {
     try {
       setLoading(true);
@@ -332,7 +410,13 @@ function TeacherPrerequisiteTest() {
           </button>
           <button
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mt-4"
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setEditingTest(null);
+              setTestName("");
+              setTestDescription("");
+              setQuestions([]);
+              setShowModal(true);
+            }}
             disabled={loading}
           >
             Create New Test
@@ -424,6 +508,12 @@ function TeacherPrerequisiteTest() {
                     >
                       Copy Link
                     </button>
+                    <button
+                      onClick={() => previewTest(test._id)}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-200"
+                    >
+                      Preview Test
+                    </button>
                     {responseCount[test._id] > 0 && (
                       <button
                         onClick={() => viewResults(test._id)}
@@ -471,8 +561,19 @@ function TeacherPrerequisiteTest() {
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-11/12 max-w-2xl max-h-screen overflow-y-auto relative">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Create New Test</h2>
-              <button className="text-2xl" onClick={() => setShowModal(false)}>
+              <h2 className="text-2xl font-bold">
+                {editingTest ? "Update Test" : "Create New Test"}
+              </h2>
+              <button
+                className="text-2xl"
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingTest(null);
+                  setTestName("");
+                  setTestDescription("");
+                  setQuestions([]);
+                }}
+              >
                 ×
               </button>
             </div>
@@ -636,11 +737,34 @@ function TeacherPrerequisiteTest() {
             </div>
 
             <button
-              onClick={saveTest}
+              onClick={editingTest ? saveUpdatedTest : saveTest}
               className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg w-full"
             >
-              Save Test
+              {editingTest ? "Update Test" : "Save Test"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {showPreviewModal && editingTest && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Test Preview</h2>
+              <button
+                className="text-2xl"
+                onClick={() => setShowPreviewModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <StudentTestViewer
+                test={editingTest}
+                previewMode={true}
+                onClose={() => setShowPreviewModal(false)}
+              />
+            </div>
           </div>
         </div>
       )}

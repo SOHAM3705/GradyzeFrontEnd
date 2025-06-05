@@ -54,7 +54,9 @@ import StudentOverview from "./components/StudentDashMenu/Overview";
 import StudentResults from "./components/StudentDashMenu/Results";
 import StudentAssignment from "./components/StudentDashMenu/Assignment";
 import studentPrerequisiteTest from "./components/StudentDashMenu/Prerequisitetest";
-// import studentTestView from "./components/StudentDashMenu/StudentTestView";
+
+import TestPage from "./utils/tests";
+import TestRedirector from "./components/TeacherDashMenu/Forms/TestRedirector";
 
 // Import the PrivateRoute component
 import PrivateRoute from "./components/PrivateRoute";
@@ -90,6 +92,20 @@ function App() {
         path="/student-change-password"
         element={<StudentChangePassword />}
       />
+
+      {/* Public route for redirect */}
+      <Route path="/test/:testId" element={<TestRedirector />} />
+
+      {/* Student test route (protected) */}
+      <Route
+        path="/:studentId/test/:testId"
+        element={
+          <PrivateRoute allowedRoles={["student"]}>
+            <TestPage />
+          </PrivateRoute>
+        }
+      />
+
       {/* 🔹 Admin Routes */}
       <Route path="/adminlogin" element={<AdminLogin />} />
       <Route
