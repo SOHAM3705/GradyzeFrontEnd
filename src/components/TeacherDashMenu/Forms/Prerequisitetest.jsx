@@ -139,13 +139,16 @@ function TeacherPrerequisiteTest() {
       setTestDescription(fetchedTest.description || "");
       setQuestions(
         fetchedTest.questions.map((q) => ({
-          ...q,
+          questionsText: q.questionText,
+          type: q.type,
+          options: q.options || [""],
           correctAnswer:
             q.type === "multiple"
               ? Array.isArray(q.correctAnswer)
                 ? q.correctAnswer
                 : []
               : q.correctAnswer,
+          points: q.points || 1,
         }))
       );
       setShowModal(true);
@@ -280,6 +283,30 @@ function TeacherPrerequisiteTest() {
       setLoading(true);
       setError(null);
 
+      // Validate inputs
+      if (!testName.trim()) {
+        setError("Please enter a test name");
+        return;
+      }
+
+      if (questions.length === 0) {
+        setError("Please add at least one question");
+        return;
+      }
+
+      const invalidQuestions = questions.filter(
+        (q) =>
+          q.type !== "short" &&
+          (q.correctAnswer === null ||
+            (q.type === "multiple" && q.correctAnswer.length === 0))
+      );
+
+      if (invalidQuestions.length > 0) {
+        setError("Please select correct answers for all questions");
+        return;
+      }
+
+      // Prepare update data
       const updatedData = {
         title: testName,
         description: testDescription,
@@ -302,6 +329,7 @@ function TeacherPrerequisiteTest() {
         }),
       };
 
+      // Send update request
       const response = await axios.put(
         `${API_BASE_URL}/api/teacher/update-test/${editingTest._id}`,
         updatedData,
@@ -319,7 +347,7 @@ function TeacherPrerequisiteTest() {
         )
       );
 
-      // Reset and close
+      // Close modal and reset
       setShowModal(false);
       setEditingTest(null);
       setTestName("");
@@ -575,6 +603,7 @@ function TeacherPrerequisiteTest() {
                   setTestName("");
                   setTestDescription("");
                   setQuestions([]);
+                  setError(null); // Reset error state when closing the modal
                 }}
               >
                 ×
@@ -739,6 +768,12 @@ function TeacherPrerequisiteTest() {
               ))}
             </div>
 
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                {error}
+              </div>
+            )}
+
             <button
               onClick={editingTest ? saveUpdatedTest : saveTest}
               className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg w-full"
@@ -784,30 +819,7 @@ function TeacherPrerequisiteTest() {
         </div>
       )}
 
-      {editingTest && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Test Preview</h2>
-              <button
-                className="text-2xl"
-                onClick={() => setShowPreviewModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <StudentTestViewer
-                test={editingTest}
-                previewMode={true}
-                onClose={() => setShowPreviewModal(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showResultsModal && (
+      {showResultsModal && editingTest && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
             <div className="flex justify-between items-center mb-4">
