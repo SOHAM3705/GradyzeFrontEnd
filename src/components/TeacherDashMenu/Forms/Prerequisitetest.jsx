@@ -139,7 +139,7 @@ function TeacherPrerequisiteTest() {
       setTestDescription(fetchedTest.description || "");
       setQuestions(
         fetchedTest.questions.map((q) => ({
-          questionsText: q.questionText,
+          questionText: q.questionText,
           type: q.type,
           options: q.options || [""],
           correctAnswer:
@@ -535,7 +535,7 @@ function TeacherPrerequisiteTest() {
               </div>
 
               <div className="flex justify-between text-sm text-gray-500 mt-2 gap-2">
-                <span>{(test.questions || []).length} questions</span>
+                <span>{(test.question || []).length} questions</span>
                 <span>{new Date(test.createdAt).toLocaleDateString()}</span>
                 <span>{responseCount[test._id] || 0} responses</span>
               </div>
@@ -841,7 +841,7 @@ function TeacherPrerequisiteTest() {
         </div>
       )}
 
-      {showResultsModal && editingTest && (
+      {showResultsModal && selectedTestId && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
             <div className="flex justify-between items-center mb-4">

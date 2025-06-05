@@ -176,7 +176,7 @@ function App() {
         <Route path="settings" element={<StudentSettings />} />
         <Route path="results" element={<StudentResults />} />
         <Route path="assignment" element={<StudentAssignment />} />
-        <Route path="test" element={<studentPrerequisiteTest />} />
+        <Route path="Forms" element={<studentPrerequisiteTest />} />
       </Route>
     </Routes>
   );

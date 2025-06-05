@@ -1,6 +1,6 @@
 import React from "react";
 
-const StudentPrerequisiteTest = () => {
+const Studentforms = () => {
   return (
     <div
       style={{
@@ -25,4 +25,4 @@ const StudentPrerequisiteTest = () => {
   );
 };
 
-export default StudentPrerequisiteTest;
+export default Studentforms;
