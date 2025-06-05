@@ -25,9 +25,6 @@ const StudentTestViewer = ({ test, previewMode, onClose }) => {
       {previewMode && (
         <div className="mb-6 text-center">
           <h2 className="text-xl font-bold text-blue-700">TEST PREVIEW MODE</h2>
-          <p className="text-gray-500">
-            This is how students will see the test
-          </p>
         </div>
       )}
 

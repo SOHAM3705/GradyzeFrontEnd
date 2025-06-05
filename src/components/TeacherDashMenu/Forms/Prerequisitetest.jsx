@@ -122,16 +122,45 @@ function TeacherPrerequisiteTest() {
   const updateTest = async (testId) => {
     try {
       setLoading(true);
-      const testToEdit = savedTests.find((test) => test._id === testId);
-      if (!testToEdit) {
-        throw new Error("Test not found");
+      setError(null);
+
+      // Option 1: Use local state if test exists
+      const localTest = savedTests.find((test) => test._id === testId);
+      if (localTest) {
+        setEditingTest(localTest);
+        setTestName(localTest.title);
+        setTestDescription(localTest.description || "");
+        setQuestions(
+          localTest.questions.map((q) => ({
+            ...q,
+            correctAnswer:
+              q.type === "multiple"
+                ? Array.isArray(q.correctAnswer)
+                  ? q.correctAnswer
+                  : []
+                : q.correctAnswer,
+          }))
+        );
+        setShowModal(true);
+        return;
       }
 
-      setEditingTest(testToEdit);
-      setTestName(testToEdit.title);
-      setTestDescription(testToEdit.description || "");
+      // Option 2: Fetch from backend if not in local state
+      const response = await axios.get(
+        `${API_BASE_URL}/api/teacher/test/${testId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      const fetchedTest = response.data;
+      setEditingTest(fetchedTest);
+      setTestName(fetchedTest.title);
+      setTestDescription(fetchedTest.description || "");
       setQuestions(
-        testToEdit.questions.map((q) => ({
+        fetchedTest.questions.map((q) => ({
           ...q,
           correctAnswer:
             q.type === "multiple"
@@ -141,10 +170,13 @@ function TeacherPrerequisiteTest() {
               : q.correctAnswer,
         }))
       );
-
       setShowModal(true);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to load test for editing");
+      console.error("Update test error:", err);
+      setError(
+        err.response?.data?.error ||
+          "Failed to load test for editing. Please refresh and try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -266,41 +298,19 @@ function TeacherPrerequisiteTest() {
   const saveUpdatedTest = async () => {
     if (!editingTest) return;
 
-    if (!testName.trim()) {
-      setError("Please enter a test name");
-      return;
-    }
-
-    if (questions.length === 0) {
-      setError("Please add at least one question");
-      return;
-    }
-
-    const invalidQuestions = questions.filter(
-      (q) =>
-        q.type !== "short" &&
-        (q.correctAnswer === null ||
-          (q.type === "multiple" && q.correctAnswer.length === 0))
-    );
-
-    if (invalidQuestions.length > 0) {
-      setError("Please select correct answers for all questions");
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
 
-      const updatedTest = {
+      const updatedData = {
         title: testName,
         description: testDescription,
         questions: questions.map((q) => ({
           questionText: q.questionText,
+          type: q.type,
           options: q.type !== "short" ? q.options : undefined,
           correctAnswer: q.correctAnswer,
-          points: q.points,
-          type: q.type,
+          points: q.points || 1,
         })),
         status: editingTest.status,
         testType: editingTest.testType,
@@ -316,7 +326,7 @@ function TeacherPrerequisiteTest() {
 
       const response = await axios.put(
         `${API_BASE_URL}/api/teacher/update-test/${editingTest._id}`,
-        updatedTest,
+        updatedData,
         {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -324,20 +334,22 @@ function TeacherPrerequisiteTest() {
         }
       );
 
+      // Update local state
       setSavedTests(
         savedTests.map((test) =>
           test._id === editingTest._id ? response.data.test : test
         )
       );
 
+      // Reset and close
+      setShowModal(false);
       setEditingTest(null);
       setTestName("");
       setTestDescription("");
       setQuestions([]);
-      setShowModal(false);
     } catch (err) {
+      console.error("Save error:", err);
       setError(err.response?.data?.error || "Failed to update test");
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -499,7 +511,7 @@ function TeacherPrerequisiteTest() {
                 )}
               </div>
 
-              <div className="flex justify-between text-sm text-gray-500 mt-2 gap-1">
+              <div className="flex justify-between text-sm text-gray-500 mt-2 gap-2">
                 <span>{(test.questions || []).length} questions</span>
                 <span>{new Date(test.createdAt).toLocaleDateString()}</span>
                 <span>{responseCount[test._id] || 0} responses</span>
