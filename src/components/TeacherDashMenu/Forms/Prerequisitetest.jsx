@@ -27,8 +27,29 @@ function TeacherPrerequisiteTest() {
   const [error, setError] = useState(null);
   const [editingTest, setEditingTest] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-
+  const [previewTestData, setPreviewTestData] = useState(null);
   const navigate = useNavigate();
+
+  const previewTest = async (testId) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${API_BASE_URL}/api/teacher/test/${testId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        }
+      );
+      setPreviewTestData(response.data);
+      setShowPreviewModal(true);
+    } catch (err) {
+      setError("Failed to load test for preview");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleDropdown = (testId) => {
     setDropdownOpen({
@@ -322,14 +343,6 @@ function TeacherPrerequisiteTest() {
     }
   };
 
-  const previewTest = (testId) => {
-    const testToPreview = savedTests.find((test) => test._id === testId);
-    if (testToPreview) {
-      setEditingTest(testToPreview);
-      setShowPreviewModal(true);
-    }
-  };
-
   const togglePublishStatus = async (testId) => {
     try {
       setLoading(true);
@@ -456,7 +469,7 @@ function TeacherPrerequisiteTest() {
           {savedTests.map((test) => (
             <div
               key={test._id}
-              className="bg-white rounded-xl shadow-lg p-4 w-92 transition-transform hover:transform hover:-translate-y-1"
+              className="bg-white rounded-xl shadow-lg p-4 w-100 transition-transform hover:transform hover:-translate-y-1"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -486,7 +499,7 @@ function TeacherPrerequisiteTest() {
                 )}
               </div>
 
-              <div className="flex justify-between text-sm text-gray-500 mt-2">
+              <div className="flex justify-between text-sm text-gray-500 mt-2 gap-1">
                 <span>{(test.questions || []).length} questions</span>
                 <span>{new Date(test.createdAt).toLocaleDateString()}</span>
                 <span>{responseCount[test._id] || 0} responses</span>
@@ -746,7 +759,42 @@ function TeacherPrerequisiteTest() {
         </div>
       )}
 
-      {showPreviewModal && editingTest && (
+      {showPreviewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Test Preview</h2>
+              <button
+                className="text-2xl"
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  setPreviewTestData(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            {previewTestData ? (
+              <div className="p-4 border rounded-lg">
+                <StudentTestViewer
+                  test={previewTestData}
+                  previewMode={true}
+                  onClose={() => {
+                    setShowPreviewModal(false);
+                    setPreviewTestData(null);
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p>Loading test preview...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {editingTest && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-11/12 max-w-4xl max-h-screen overflow-y-auto relative">
             <div className="flex justify-between items-center mb-4">
