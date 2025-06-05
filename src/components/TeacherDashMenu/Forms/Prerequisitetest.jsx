@@ -520,20 +520,6 @@ function TeacherPrerequisiteTest() {
                 </span>
               </div>
 
-              <div className="text-sm text-gray-600 mb-2">
-                {test.testType === "subject" ? (
-                  <>
-                    <span className="font-semibold">Subject:</span>{" "}
-                    {test.subjectName} (Sem {test.semester})
-                  </>
-                ) : (
-                  <>
-                    <span className="font-semibold">Class:</span> {test.year} -{" "}
-                    {test.division}
-                  </>
-                )}
-              </div>
-
               <div className="flex justify-between text-sm text-gray-500 mt-2 gap-2">
                 <span>{(test.questions || []).length} questions</span>
                 <span>{new Date(test.createdAt).toLocaleDateString()}</span>

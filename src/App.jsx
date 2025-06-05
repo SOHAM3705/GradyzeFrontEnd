@@ -53,7 +53,7 @@ import StudentSettings from "./components/StudentDashMenu/Settings";
 import StudentOverview from "./components/StudentDashMenu/Overview";
 import StudentResults from "./components/StudentDashMenu/Results";
 import StudentAssignment from "./components/StudentDashMenu/Assignment";
-import studentPrerequisiteTest from "./components/StudentDashMenu/Prerequisitetest";
+import PrerequisiteTest from "./components/StudentDashMenu/Prerequisitetest";
 
 import TestPage from "./utils/tests";
 import TestRedirector from "./components/TeacherDashMenu/Forms/TestRedirector";
@@ -176,7 +176,7 @@ function App() {
         <Route path="settings" element={<StudentSettings />} />
         <Route path="results" element={<StudentResults />} />
         <Route path="assignment" element={<StudentAssignment />} />
-        <Route path="Forms" element={<studentPrerequisiteTest />} />
+        <Route path="Forms" element={<PrerequisiteTest />} />
       </Route>
     </Routes>
   );
