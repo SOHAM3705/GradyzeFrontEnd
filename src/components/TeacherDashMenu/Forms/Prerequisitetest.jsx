@@ -124,28 +124,6 @@ function TeacherPrerequisiteTest() {
       setLoading(true);
       setError(null);
 
-      // Option 1: Use local state if test exists
-      const localTest = savedTests.find((test) => test._id === testId);
-      if (localTest) {
-        setEditingTest(localTest);
-        setTestName(localTest.title);
-        setTestDescription(localTest.description || "");
-        setQuestions(
-          localTest.questions.map((q) => ({
-            ...q,
-            correctAnswer:
-              q.type === "multiple"
-                ? Array.isArray(q.correctAnswer)
-                  ? q.correctAnswer
-                  : []
-                : q.correctAnswer,
-          }))
-        );
-        setShowModal(true);
-        return;
-      }
-
-      // Option 2: Fetch from backend if not in local state
       const response = await axios.get(
         `${API_BASE_URL}/api/teacher/test/${testId}`,
         {
