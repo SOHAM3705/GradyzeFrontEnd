@@ -11,6 +11,12 @@ const Prerequisitetest = () => {
   const [student, setStudent] = useState(null);
   const navigate = useNavigate();
 
+  const token = sessionStorage.getItem("token");
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
   // Modal state
   const [previewModal, setPreviewModal] = useState({
     show: false,
@@ -29,13 +35,11 @@ const Prerequisitetest = () => {
           throw new Error("Student not logged in");
         }
 
-        // Fetch student details
         const studentResponse = await axios.get(
-          `${API_BASE_URL}/api/student/students/${studentId}`
+          `${API_BASE_URL}/api/student/students/${studentId}`,
+          config
         );
-        setStudent(studentResponse.data);
 
-        // Fetch tests for the student's year and division
         const testsResponse = await axios.get(
           `${API_BASE_URL}/api/student/tests/student`,
           {
@@ -43,14 +47,15 @@ const Prerequisitetest = () => {
               year: studentResponse.data.year,
               division: studentResponse.data.division,
             },
+            ...config,
           }
         );
 
-        // Fetch student's submissions
         const submissionsResponse = await axios.get(
           `${API_BASE_URL}/api/student/submissions`,
           {
             params: { studentId },
+            ...config,
           }
         );
 
