@@ -4,28 +4,38 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 
 const TestPage = () => {
-  const { id } = useParams();
+  const { studentId, testId } = useParams();
   const navigate = useNavigate();
   const [test, setTest] = useState(null);
+  const [student, setStudent] = useState(null);
   const [responses, setResponses] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [studentName, setStudentName] = useState("");
-  const [studentEmail, setStudentEmail] = useState("");
+  const [error, setError] = useState("");
   const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
-    const fetchTest = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Check if student already submitted this test
+        // Verify session studentId matches URL studentId
+        const sessionStudentId = sessionStorage.getItem("studentId");
+        if (sessionStudentId !== studentId) {
+          throw new Error("Student ID mismatch");
+        }
+
+        // Fetch student details
+        const studentResponse = await axios.get(
+          `${API_BASE_URL}/students/${studentId}`
+        );
+        setStudent(studentResponse.data);
+
+        // Check if already submitted
         const submissionCheck = await axios.get(
-          `${API_BASE_URL}/test-submission-check/${id}`,
-          {
-            params: { studentEmail },
-          }
+          `${API_BASE_URL}/test-submission-check/${testId}`,
+          { params: { studentId } }
         );
 
         if (submissionCheck.data.submitted) {
@@ -33,31 +43,28 @@ const TestPage = () => {
           return;
         }
 
-        // Fetch the test
-        const response = await axios.get(`${API_BASE_URL}/test/${id}`);
-        const testData = response.data;
+        // Fetch test details
+        const testResponse = await axios.get(`${API_BASE_URL}/tests/${testId}`);
+        setTest(testResponse.data);
 
-        // Initialize responses object
+        // Initialize responses
         const initialResponses = {};
-        testData.questions.forEach((question, index) => {
-          if (question.type === "multiple") {
-            initialResponses[index] = [];
-          } else {
-            initialResponses[index] = "";
-          }
+        testResponse.data.questions.forEach((question, index) => {
+          initialResponses[index] = question.type === "multiple" ? [] : "";
         });
-
-        setTest(testData);
         setResponses(initialResponses);
       } catch (err) {
         console.error("Error loading test:", err);
+        setError(
+          err.response?.data?.message || err.message || "Failed to load test"
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTest();
-  }, [id, studentEmail]);
+    fetchData();
+  }, [testId, studentId]);
 
   const handleSingleChoice = (questionIndex, optionIndex) => {
     setResponses((prev) => ({
@@ -91,22 +98,6 @@ const TestPage = () => {
   };
 
   const validateForm = () => {
-    if (!studentName.trim()) {
-      setValidationError("Please enter your name");
-      return false;
-    }
-
-    if (!studentEmail.trim()) {
-      setValidationError("Please enter your email");
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(studentEmail)) {
-      setValidationError("Please enter a valid email address");
-      return false;
-    }
-
     if (!test) return false;
 
     for (let i = 0; i < test.questions.length; i++) {
@@ -132,9 +123,8 @@ const TestPage = () => {
 
       // Prepare submission data
       const submission = {
-        testId: id,
-        studentName,
-        studentEmail,
+        testId,
+        studentId,
         answers: responses,
         questions: test.questions.map((q, index) => ({
           questionId: q._id || index,
@@ -159,33 +149,22 @@ const TestPage = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    navigate("/");
+    navigate("/studentdashboard");
   };
 
   if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto p-5">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-blue-700">Loading test...</h2>
-        </div>
-      </div>
-    );
+    return <div className="text-center p-8">Loading test...</div>;
   }
 
-  if (!test) {
+  if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-5">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600">Test Not Found</h2>
-        </div>
-        <p className="text-center mt-4">
-          Sorry, we couldn't find the test you're looking for.
-        </p>
+      <div className="text-center p-8">
+        <div className="text-red-500 mb-4">{error}</div>
         <button
-          className="block mx-auto mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/studentdashboard")}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
         >
-          Return to Home
+          Return to Dashboard
         </button>
       </div>
     );
@@ -193,20 +172,15 @@ const TestPage = () => {
 
   if (submitted) {
     return (
-      <div className="max-w-4xl mx-auto p-5">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-green-600">
-            Test Already Submitted
-          </h2>
-        </div>
-        <p className="text-center mt-4">
+      <div className="text-center p-8">
+        <div className="text-green-600 mb-4">
           You have already submitted this test.
-        </p>
+        </div>
         <button
-          className="block mx-auto mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/studentdashboard")}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
         >
-          Return to Home
+          Return to Dashboard
         </button>
       </div>
     );
@@ -214,35 +188,25 @@ const TestPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-5">
+      {student && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+          <h3 className="text-lg font-semibold mb-2">Student Information</h3>
+          <p className="text-gray-700">Name: {student.name}</p>
+          <p className="text-gray-700">Email: {student.email}</p>
+          {student.year && (
+            <p className="text-gray-700">Year: {student.year}</p>
+          )}
+          {student.division && (
+            <p className="text-gray-700">Division: {student.division}</p>
+          )}
+        </div>
+      )}
+
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-blue-700">{test.title}</h2>
-      </div>
-      <p className="text-gray-600 mb-6">{test.description}</p>
-
-      <div className="bg-gray-50 p-4 rounded-lg mb-6">
-        <h3 className="text-lg font-semibold mb-4">Student Information</h3>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Full Name:</label>
-          <input
-            type="text"
-            value={studentName}
-            onChange={(e) => setStudentName(e.target.value)}
-            placeholder="Enter your full name"
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Email:</label>
-          <input
-            type="email"
-            value={studentEmail}
-            onChange={(e) => setStudentEmail(e.target.value)}
-            placeholder="Enter your email"
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
+        {test.description && (
+          <p className="text-gray-600 mt-2">{test.description}</p>
+        )}
       </div>
 
       {validationError && (
@@ -337,14 +301,14 @@ const TestPage = () => {
               Test Submitted
             </h3>
             <p className="text-gray-700 mb-4">
-              Thank you, {studentName}! Your responses have been saved
+              Thank you, {student.name}! Your responses have been saved
               successfully!
             </p>
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={handleCloseModal}
             >
-              Return to Home
+              Return to Dashboard
             </button>
           </div>
         </div>

@@ -2,14 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../../config";
-import { useAuth } from "../context/AuthContext";
 
-const StudentDashboard = () => {
+const Prerequisitetest = () => {
   const [tests, setTests] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { user } = useAuth();
+  const [student, setStudent] = useState(null);
   const navigate = useNavigate();
 
   // Modal state
@@ -24,34 +23,54 @@ const StudentDashboard = () => {
       try {
         setLoading(true);
 
+        // Get student data from sessionStorage
+        const studentId = sessionStorage.getItem("studentId");
+        if (!studentId) {
+          throw new Error("Student not logged in");
+        }
+
+        // Fetch student details
+        const studentResponse = await axios.get(
+          `${API_BASE_URL}/api/student/students/${studentId}`
+        );
+        setStudent(studentResponse.data);
+
+        // Fetch tests for the student's year and division
         const testsResponse = await axios.get(
           `${API_BASE_URL}/api/student/tests/student`,
           {
             params: {
-              year: user.year,
-              division: user.division,
+              year: studentResponse.data.year,
+              division: studentResponse.data.division,
             },
           }
         );
 
+        // Fetch student's submissions
         const submissionsResponse = await axios.get(
           `${API_BASE_URL}/api/student/submissions`,
           {
-            params: { studentId: user._id },
+            params: { studentId },
           }
         );
 
         setTests(testsResponse.data);
         setSubmissions(submissionsResponse.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load data");
+        setError(
+          err.response?.data?.message || err.message || "Failed to load data"
+        );
+        // Redirect to login if not authenticated
+        if (err.message === "Student not logged in") {
+          navigate("/studentlogin");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [user]);
+  }, [navigate]);
 
   const getSubmissionStatus = (testId) => {
     const submission = submissions.find((sub) => sub.testId === testId);
@@ -71,6 +90,7 @@ const StudentDashboard = () => {
   const handlePreviewTest = async (testId) => {
     try {
       setLoading(true);
+      const studentId = sessionStorage.getItem("studentId");
 
       const testResponse = await axios.get(
         `${API_BASE_URL}/api/student/tests/${testId}`
@@ -78,7 +98,7 @@ const StudentDashboard = () => {
       const submissionResponse = await axios.get(
         `${API_BASE_URL}/api/student/submissions/test/${testId}`,
         {
-          params: { studentId: user._id },
+          params: { studentId },
         }
       );
 
@@ -103,7 +123,7 @@ const StudentDashboard = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading dashboard...</div>;
+    return <div className="text-center py-8">Loading Test And Surveys...</div>;
   }
 
   if (error) {
@@ -112,7 +132,15 @@ const StudentDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Student Dashboard</h1>
+      {/* Student info header */}
+      {student && (
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <h2 className="text-xl font-semibold">Welcome, {student.name}</h2>
+          <p className="text-gray-600">
+            {student.year} {student.division} • {student.email}
+          </p>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Available Tests</h2>
@@ -338,4 +366,4 @@ const StudentDashboard = () => {
   );
 };
 
-export default StudentDashboard;
+export default Prerequisitetest;
