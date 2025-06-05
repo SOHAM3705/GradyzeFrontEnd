@@ -10,7 +10,7 @@ function TestRedirector() {
       navigate(`/${studentId}/test/${testId}`, { replace: true });
     } else {
       // Optional: If not logged in, show error or redirect
-      navigate("/login");
+      navigate("/studentlogin");
     }
   }, [testId, navigate]);
 

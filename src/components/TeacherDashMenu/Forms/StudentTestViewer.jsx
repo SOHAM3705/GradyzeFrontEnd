@@ -1,6 +1,25 @@
 import React from "react";
 
 const StudentTestViewer = ({ test, previewMode, onClose }) => {
+  if (!test || !test.questions) {
+    return (
+      <div className="max-w-4xl mx-auto p-5">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600">Test Not Found</h2>
+          <p className="mt-4">The test data is not available.</p>
+          {previewMode && onClose && (
+            <button
+              className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              onClick={onClose}
+            >
+              Close Preview
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-5">
       {previewMode && (
