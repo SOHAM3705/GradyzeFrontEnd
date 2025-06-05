@@ -283,40 +283,55 @@ function TeacherPrerequisiteTest() {
       setLoading(true);
       setError(null);
 
-      // Validate inputs
-      if (!testName.trim()) {
-        setError("Please enter a test name");
-        return;
-      }
-
-      if (questions.length === 0) {
-        setError("Please add at least one question");
-        return;
-      }
-
+      // Validate all questions have text
       const invalidQuestions = questions.filter(
-        (q) =>
-          q.type !== "short" &&
-          (q.correctAnswer === null ||
-            (q.type === "multiple" && q.correctAnswer.length === 0))
+        (q) => !q.questionText || q.questionText.trim() === ""
       );
 
       if (invalidQuestions.length > 0) {
-        setError("Please select correct answers for all questions");
+        setError("Please provide text for all questions");
         return;
       }
 
-      // Prepare update data
-      const updatedData = {
-        title: testName,
-        description: testDescription,
-        questions: questions.map((q) => ({
-          questionText: q.questionText,
+      // Prepare properly formatted questions
+      const formattedQuestions = questions.map((q) => {
+        const baseQuestion = {
+          questionText: q.questionText.trim(),
           type: q.type,
-          options: q.type !== "short" ? q.options : undefined,
-          correctAnswer: q.correctAnswer,
           points: q.points || 1,
-        })),
+        };
+
+        if (q.type !== "short") {
+          return {
+            ...baseQuestion,
+            options: q.options
+              .map((opt) => opt.trim())
+              .filter((opt) => opt !== ""),
+            correctAnswer: q.correctAnswer,
+          };
+        }
+        return baseQuestion;
+      });
+
+      // Filter out any questions that ended up invalid after formatting
+      const validQuestions = formattedQuestions.filter(
+        (q) =>
+          q.questionText &&
+          (q.type === "short" ||
+            (q.options &&
+              q.options.length > 0 &&
+              q.correctAnswer !== undefined))
+      );
+
+      if (validQuestions.length === 0) {
+        setError("Test must have at least one valid question");
+        return;
+      }
+
+      const updatedData = {
+        title: testName.trim(),
+        description: testDescription.trim(),
+        questions: validQuestions,
         status: editingTest.status,
         testType: editingTest.testType,
         ...(editingTest.testType === "class" && {
@@ -329,7 +344,6 @@ function TeacherPrerequisiteTest() {
         }),
       };
 
-      // Send update request
       const response = await axios.put(
         `${API_BASE_URL}/api/teacher/update-test/${editingTest._id}`,
         updatedData,
@@ -340,25 +354,28 @@ function TeacherPrerequisiteTest() {
         }
       );
 
-      // Update local state
+      // Update local state and close modal
       setSavedTests(
         savedTests.map((test) =>
           test._id === editingTest._id ? response.data.test : test
         )
       );
-
-      // Close modal and reset
       setShowModal(false);
-      setEditingTest(null);
-      setTestName("");
-      setTestDescription("");
-      setQuestions([]);
+      resetForm();
     } catch (err) {
-      console.error("Save error:", err);
+      console.error("Update error:", err);
       setError(err.response?.data?.error || "Failed to update test");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to reset form
+  const resetForm = () => {
+    setEditingTest(null);
+    setTestName("");
+    setTestDescription("");
+    setQuestions([]);
   };
 
   const togglePublishStatus = async (testId) => {
@@ -641,7 +658,6 @@ function TeacherPrerequisiteTest() {
                   Add Question
                 </button>
               </div>
-
               {questions.map((q, qIndex) => (
                 <div
                   key={qIndex}
@@ -666,7 +682,13 @@ function TeacherPrerequisiteTest() {
                       }
                       placeholder="Enter your question"
                       className="w-full p-2 border rounded"
+                      required
                     />
+                    {!q.questionText && (
+                      <p className="text-red-500 text-sm mt-1">
+                        Question text is required
+                      </p>
+                    )}
                   </div>
 
                   <div className="mb-2">
