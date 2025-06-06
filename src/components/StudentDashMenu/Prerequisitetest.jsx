@@ -40,12 +40,14 @@ const Prerequisitetest = () => {
           config
         );
 
+        // When fetching tests
         const testsResponse = await axios.get(
           `${API_BASE_URL}/api/student/tests/student`,
           {
             params: {
-              year: studentResponse.data.year,
-              division: studentResponse.data.division,
+              year: student.year,
+              division: student.division,
+              semester: student.semester, // Add this if needed
             },
             ...config,
           }
