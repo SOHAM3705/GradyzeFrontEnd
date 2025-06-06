@@ -3,6 +3,19 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
+// Create authenticated axios instance
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 const TestPage = () => {
   const { studentId, testId } = useParams();
   const navigate = useNavigate();
@@ -20,21 +33,20 @@ const TestPage = () => {
       try {
         setLoading(true);
 
-        // Verify session studentId matches URL studentId
         const sessionStudentId = sessionStorage.getItem("studentId");
         if (sessionStudentId !== studentId) {
           throw new Error("Student ID mismatch");
         }
 
-        // Fetch student details
-        const studentResponse = await axios.get(
-          `${API_BASE_URL}/api/student/students/${studentId}`
+        // Fetch student details using the authenticated instance
+        const studentResponse = await api.get(
+          `/api/student/students/${studentId}`
         );
         setStudent(studentResponse.data);
 
         // Check if already submitted
-        const submissionCheck = await axios.get(
-          `${API_BASE_URL}/api/student/test-submission-check/${testId}`,
+        const submissionCheck = await api.get(
+          `/api/student/test-submission-check/${testId}`,
           { params: { studentId } }
         );
 
@@ -43,10 +55,8 @@ const TestPage = () => {
           return;
         }
 
-        // Fetch test details
-        const testResponse = await axios.get(
-          `${API_BASE_URL}/api/student/tests/${testId}`
-        );
+        // Fetch test details using the authenticated instance
+        const testResponse = await api.get(`/api/student/tests/${testId}`);
         setTest(testResponse.data);
 
         // Initialize responses
@@ -136,8 +146,8 @@ const TestPage = () => {
         })),
       };
 
-      // Submit to backend
-      await axios.post(`${API_BASE_URL}/api/student/submit-test`, submission);
+      // Submit to backend using the authenticated instance
+      await api.post(`/api/student/submit-test`, submission);
 
       setShowModal(true);
       setSubmitted(true);

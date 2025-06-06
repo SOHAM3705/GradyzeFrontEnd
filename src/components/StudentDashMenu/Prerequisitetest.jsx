@@ -143,16 +143,6 @@ const Prerequisitetest = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Student info header */}
-      {student && (
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-          <h2 className="text-xl font-semibold">Welcome, {student.name}</h2>
-          <p className="text-gray-600">
-            {student.year} {student.division} • {student.email}
-          </p>
-        </div>
-      )}
-
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Available Tests</h2>
 
