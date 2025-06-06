@@ -28,13 +28,13 @@ const TestPage = () => {
 
         // Fetch student details
         const studentResponse = await axios.get(
-          `${API_BASE_URL}/students/${studentId}`
+          `${API_BASE_URL}/api/student/students/${studentId}`
         );
         setStudent(studentResponse.data);
 
         // Check if already submitted
         const submissionCheck = await axios.get(
-          `${API_BASE_URL}/test-submission-check/${testId}`,
+          `${API_BASE_URL}/api/student/test-submission-check/${testId}`,
           { params: { studentId } }
         );
 
@@ -44,7 +44,9 @@ const TestPage = () => {
         }
 
         // Fetch test details
-        const testResponse = await axios.get(`${API_BASE_URL}/tests/${testId}`);
+        const testResponse = await axios.get(
+          `${API_BASE_URL}/api/student/tests/${testId}`
+        );
         setTest(testResponse.data);
 
         // Initialize responses
@@ -135,7 +137,7 @@ const TestPage = () => {
       };
 
       // Submit to backend
-      await axios.post(`${API_BASE_URL}/submit-test`, submission);
+      await axios.post(`${API_BASE_URL}/api/student/submit-test`, submission);
 
       setShowModal(true);
       setSubmitted(true);
@@ -149,7 +151,7 @@ const TestPage = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    navigate("/studentdashboard");
+    navigate("/studentdash/Forms");
   };
 
   if (loading) {
@@ -161,7 +163,7 @@ const TestPage = () => {
       <div className="text-center p-8">
         <div className="text-red-500 mb-4">{error}</div>
         <button
-          onClick={() => navigate("/studentdashboard")}
+          onClick={() => navigate("/studentdash/Forms")}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Return to Dashboard
@@ -177,7 +179,7 @@ const TestPage = () => {
           You have already submitted this test.
         </div>
         <button
-          onClick={() => navigate("/studentdashboard")}
+          onClick={() => navigate("/studentdash/Forms")}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Return to Dashboard
