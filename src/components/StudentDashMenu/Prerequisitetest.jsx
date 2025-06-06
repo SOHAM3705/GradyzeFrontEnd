@@ -49,9 +49,8 @@ const Prerequisitetest = () => {
           `${API_BASE_URL}/api/student/tests/student`,
           {
             params: {
-              year: studentResponse.data.year, // Use response data, not state
+              year: studentResponse.data.year,
               division: studentResponse.data.division,
-              semester: studentResponse.data.semester, // If needed
             },
             ...config,
           }
