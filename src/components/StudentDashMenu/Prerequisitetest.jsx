@@ -29,30 +29,35 @@ const Prerequisitetest = () => {
       try {
         setLoading(true);
 
-        // Get student data from sessionStorage
+        // 1. Get student ID first
         const studentId = sessionStorage.getItem("studentId");
         if (!studentId) {
           throw new Error("Student not logged in");
         }
 
+        // 2. Fetch student data
         const studentResponse = await axios.get(
           `${API_BASE_URL}/api/student/students/${studentId}`,
           config
         );
 
-        // When fetching tests
+        // ✅ Update student state immediately
+        setStudent(studentResponse.data);
+
+        // 3. Now fetch tests using the FRESHLY FETCHED student data (not from state)
         const testsResponse = await axios.get(
           `${API_BASE_URL}/api/student/tests/student`,
           {
             params: {
-              year: student.year,
-              division: student.division,
-              semester: student.semester, // Add this if needed
+              year: studentResponse.data.year, // Use response data, not state
+              division: studentResponse.data.division,
+              semester: studentResponse.data.semester, // If needed
             },
             ...config,
           }
         );
 
+        // 4. Fetch submissions
         const submissionsResponse = await axios.get(
           `${API_BASE_URL}/api/student/submissions`,
           {
@@ -61,13 +66,13 @@ const Prerequisitetest = () => {
           }
         );
 
+        // Update states
         setTests(testsResponse.data);
         setSubmissions(submissionsResponse.data);
       } catch (err) {
         setError(
           err.response?.data?.message || err.message || "Failed to load data"
         );
-        // Redirect to login if not authenticated
         if (err.message === "Student not logged in") {
           navigate("/studentlogin");
         }
