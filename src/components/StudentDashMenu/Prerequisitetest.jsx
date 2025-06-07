@@ -9,6 +9,8 @@ const Prerequisitetest = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [student, setStudent] = useState(null);
+  const [availableTests, setAvailableTests] = useState([]);
+  const [submittedTests, setSubmittedTests] = useState([]);
   const navigate = useNavigate();
 
   const token = sessionStorage.getItem("token");
@@ -17,6 +19,7 @@ const Prerequisitetest = () => {
       Authorization: `Bearer ${token}`,
     },
   };
+
   // Modal state
   const [previewModal, setPreviewModal] = useState({
     show: false,
@@ -29,45 +32,51 @@ const Prerequisitetest = () => {
       try {
         setLoading(true);
 
-        // 1. Get student ID first
         const studentId = sessionStorage.getItem("studentId");
         if (!studentId) {
           throw new Error("Student not logged in");
         }
 
-        // 2. Fetch student data
-        const studentResponse = await axios.get(
-          `${API_BASE_URL}/api/student/students/${studentId}`,
-          config
-        );
-
-        // ✅ Update student state immediately
-        setStudent(studentResponse.data);
-
-        // 3. Now fetch tests using the FRESHLY FETCHED student data (not from state)
-        const testsResponse = await axios.get(
-          `${API_BASE_URL}/api/student/tests/student`,
-          {
+        // Fetch all data
+        const [studentRes, testsRes, submissionsRes] = await Promise.all([
+          axios.get(
+            `${API_BASE_URL}/api/student/students/${studentId}`,
+            config
+          ),
+          axios.get(`${API_BASE_URL}/api/student/tests/student`, {
             params: {
-              year: studentResponse.data.year,
-              division: studentResponse.data.division,
+              year: studentRes.data.year,
+              division: studentRes.data.division,
             },
             ...config,
-          }
-        );
-
-        // 4. Fetch submissions
-        const submissionsResponse = await axios.get(
-          `${API_BASE_URL}/api/student/submissions`,
-          {
+          }),
+          axios.get(`${API_BASE_URL}/api/student/submissions`, {
             params: { studentId },
             ...config,
-          }
-        );
+          }),
+        ]);
 
-        // Update states
-        setTests(testsResponse.data);
-        setSubmissions(submissionsResponse.data);
+        setStudent(studentRes.data);
+        setTests(testsRes.data);
+        setSubmissions(submissionsRes.data);
+
+        // Categorize tests
+        const available = [];
+        const submitted = [];
+
+        testsRes.data.forEach((test) => {
+          const submission = submissionsRes.data.find(
+            (sub) => sub.testId === test._id
+          );
+          if (submission) {
+            submitted.push({ ...test, submission });
+          } else {
+            available.push(test);
+          }
+        });
+
+        setAvailableTests(available);
+        setSubmittedTests(submitted);
       } catch (err) {
         setError(
           err.response?.data?.message || err.message || "Failed to load data"
@@ -82,17 +91,6 @@ const Prerequisitetest = () => {
 
     fetchData();
   }, [navigate]);
-
-  const getSubmissionStatus = (testId) => {
-    const submission = submissions.find((sub) => sub.testId === testId);
-    if (!submission) return { status: "not-started", score: null };
-
-    return {
-      status: submission.status,
-      score: submission.totalScore,
-      submission,
-    };
-  };
 
   const handleStartTest = (testId) => {
     navigate(`/test/${testId}`);
@@ -134,7 +132,7 @@ const Prerequisitetest = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading Test And Surveys...</div>;
+    return <div className="text-center py-8">Loading Tests And Surveys...</div>;
   }
 
   if (error) {
@@ -143,78 +141,84 @@ const Prerequisitetest = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Submitted Tests Section */}
+      {submittedTests.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Submitted Tests</h2>
+          <div className="space-y-4">
+            {submittedTests.map((test) => (
+              <div
+                key={test._id}
+                className="border rounded-lg p-4 hover:bg-gray-50"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium text-lg">{test.title}</h3>
+                    <p className="text-gray-600">{test.description}</p>
+                    <div className="mt-2 text-sm text-gray-500">
+                      <span>Subject: {test.subjectName || "N/A"}</span>
+                      <span className="mx-2">|</span>
+                      <span>
+                        Score: {test.submission.totalScore} /{" "}
+                        {test.totalMarks ||
+                          test.questions.reduce(
+                            (sum, q) => sum + (q.points || 1),
+                            0
+                          )}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handlePreviewTest(test._id)}
+                    className="text-blue-500 hover:underline"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Available Tests Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Available Tests</h2>
-
-        {tests.length === 0 ? (
+        {availableTests.length === 0 ? (
           <p className="text-gray-500">No tests available at the moment.</p>
         ) : (
           <div className="space-y-4">
-            {tests.map((test) => {
-              const { status, score, submission } = getSubmissionStatus(
-                test._id
-              );
-
-              return (
-                <div
-                  key={test._id}
-                  className="border rounded-lg p-4 hover:bg-gray-50"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-lg">{test.title}</h3>
-                      <p className="text-gray-600">{test.description}</p>
-                      <div className="mt-2 text-sm text-gray-500">
-                        <span>Subject: {test.subjectName || "N/A"}</span>
-                        <span className="mx-2">|</span>
-                        <span>
-                          Total Marks:{" "}
-                          {test.totalMarks ||
-                            test.questions.reduce(
-                              (sum, q) => sum + (q.points || 1),
-                              0
-                            )}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-right space-x-2">
-                      {status === "not-started" && (
-                        <button
-                          onClick={() => handleStartTest(test._id)}
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                        >
-                          Start Test
-                        </button>
-                      )}
-                      {status === "submitted" && (
-                        <div className="text-green-600 font-medium">
-                          Submitted (Pending Grading)
-                        </div>
-                      )}
-                      {status === "graded" && (
-                        <>
-                          <div className="text-blue-600 font-medium">
-                            Score: {score} /{" "}
-                            {test.totalMarks ||
-                              test.questions.reduce(
-                                (sum, q) => sum + (q.points || 1),
-                                0
-                              )}
-                          </div>
-                          <button
-                            onClick={() => handlePreviewTest(test._id)}
-                            className="text-blue-500 hover:underline mt-1"
-                          >
-                            Review Answers
-                          </button>
-                        </>
-                      )}
+            {availableTests.map((test) => (
+              <div
+                key={test._id}
+                className="border rounded-lg p-4 hover:bg-gray-50"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium text-lg">{test.title}</h3>
+                    <p className="text-gray-600">{test.description}</p>
+                    <div className="mt-2 text-sm text-gray-500">
+                      <span>Subject: {test.subjectName || "N/A"}</span>
+                      <span className="mx-2">|</span>
+                      <span>
+                        Total Marks:{" "}
+                        {test.totalMarks ||
+                          test.questions.reduce(
+                            (sum, q) => sum + (q.points || 1),
+                            0
+                          )}
+                      </span>
                     </div>
                   </div>
+                  <button
+                    onClick={() => handleStartTest(test._id)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Start Test
+                  </button>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </div>

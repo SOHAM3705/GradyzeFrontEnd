@@ -216,194 +216,196 @@ const TestPage = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <button
-        onClick={() => navigate("/studentdash/Forms")}
-        className="mb-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded inline-flex items-center"
-      >
-        Back
-      </button>
+    <div className="bg-[#f5f1e6] min-h-screen">
+      <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-8">
+        <button
+          onClick={() => navigate("/studentdash/Forms")}
+          className="mb-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded inline-flex items-center"
+        >
+          Back
+        </button>
 
-      {showStartModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-              Instructions
-            </h3>
-            <p className="text-gray-700 mb-4">
-              Please read the instructions carefully before starting the test.
-            </p>
-            <ul className="list-disc pl-5 mb-4 text-gray-700">
-              <li>Ensure you have a stable internet connection.</li>
-              <li>Do not refresh the page during the test.</li>
-              <li>Answer all questions to the best of your ability.</li>
-            </ul>
-            <button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
-              onClick={handleStartTest}
-            >
-              Start Test
-            </button>
-          </div>
-        </div>
-      )}
-
-      {student && (
-        <div className="mb-6 p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold mb-2 text-gray-800">
-            Student Information
-          </h3>
-          <p className="text-gray-700">Name: {student.name}</p>
-          <p className="text-gray-700">Email: {student.email}</p>
-          {student.year && (
-            <p className="text-gray-700">Year: {student.year}</p>
-          )}
-          {student.division && (
-            <p className="text-gray-700">Division: {student.division}</p>
-          )}
-        </div>
-      )}
-
-      <div className="text-left mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">{test.title}</h2>
-        {test.description && (
-          <p className="text-gray-600 mt-2">{test.description}</p>
-        )}
-      </div>
-
-      {validationError && (
-        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-          {validationError}
-        </div>
-      )}
-
-      <form className="space-y-6">
-        {test.questions.map((q, index) => (
-          <div key={index} className="space-y-2">
-            <p className="font-medium text-gray-900">
-              {index + 1}. {q.questionText}
-              {q.points && (
-                <span className="text-gray-500 ml-1">
-                  ({q.points} point{q.points > 1 ? "s" : ""})
-                </span>
-              )}
-            </p>
-
-            {q.type === "short" && (
-              <input
-                type="text"
-                placeholder="Your answer"
-                value={responses[index] || ""}
-                onChange={(e) => handleShortAnswer(index, e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            )}
-
-            {q.type === "single" && (
-              <div className="space-y-2">
-                {q.options.map((opt, i) => (
-                  <label
-                    key={i}
-                    className={`block p-3 border-2 rounded-md cursor-pointer ${
-                      responses[index] === i
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-300 hover:border-gray-400"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`q${index}`}
-                      checked={responses[index] === i}
-                      onChange={() => handleSingleChoice(index, i)}
-                      className="mr-2"
-                    />
-                    {opt}
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {q.type === "multiple" && (
-              <div className="space-y-2">
-                {q.options.map((opt, i) => (
-                  <label
-                    key={i}
-                    className={`block p-3 border-2 rounded-md cursor-pointer ${
-                      (responses[index] || []).includes(i)
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-300 hover:border-gray-400"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={(responses[index] || []).includes(i)}
-                      onChange={() => handleMultipleChoice(index, i)}
-                      className="mr-2"
-                    />
-                    {opt}
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </form>
-
-      <button
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md mt-6"
-        onClick={handleConfirmSubmit}
-        disabled={loading}
-      >
-        {loading ? "Submitting..." : "Submit Test"}
-      </button>
-
-      {showSubmitModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-              Confirm Submission
-            </h3>
-            <p className="text-gray-700 mb-4">
-              Are you sure you want to submit your test? You cannot make changes
-              after submission.
-            </p>
-            <div className="flex justify-center space-x-4">
+        {showStartModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg max-w-sm w-full">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">
+                Instructions
+              </h3>
+              <p className="text-gray-700 mb-4">
+                Please read the instructions carefully before starting the test.
+              </p>
+              <ul className="list-disc pl-5 mb-4 text-gray-700">
+                <li>Ensure you have a stable internet connection.</li>
+                <li>Do not refresh the page during the test.</li>
+                <li>Answer all questions to the best of your ability.</li>
+              </ul>
               <button
-                className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded"
-                onClick={() => setShowSubmitModal(false)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                onClick={handleStartTest}
               >
-                Cancel
-              </button>
-              <button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
-                onClick={handleSubmit}
-              >
-                Submit
+                Start Test
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
-            <h3 className="text-xl font-bold text-green-600 mb-2">
-              Test Submitted
+        {student && (
+          <div className="mb-6 p-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800">
+              Student Information
             </h3>
-            <p className="text-gray-700 mb-4">
-              Thank you, {student.name}! Your responses have been saved
-              successfully!
-            </p>
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
-              onClick={handleCloseModal}
-            >
-              Return to Dashboard
-            </button>
+            <p className="text-gray-700">Name: {student.name}</p>
+            <p className="text-gray-700">Email: {student.email}</p>
+            {student.year && (
+              <p className="text-gray-700">Year: {student.year}</p>
+            )}
+            {student.division && (
+              <p className="text-gray-700">Division: {student.division}</p>
+            )}
           </div>
+        )}
+
+        <div className="text-left mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">{test.title}</h2>
+          {test.description && (
+            <p className="text-gray-600 mt-2">{test.description}</p>
+          )}
         </div>
-      )}
+
+        {validationError && (
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+            {validationError}
+          </div>
+        )}
+
+        <form className="space-y-6">
+          {test.questions.map((q, index) => (
+            <div key={index} className="space-y-2">
+              <p className="font-medium text-gray-900">
+                {index + 1}. {q.questionText}
+                {q.points && (
+                  <span className="text-gray-500 ml-1">
+                    ({q.points} point{q.points > 1 ? "s" : ""})
+                  </span>
+                )}
+              </p>
+
+              {q.type === "short" && (
+                <input
+                  type="text"
+                  placeholder="Your answer"
+                  value={responses[index] || ""}
+                  onChange={(e) => handleShortAnswer(index, e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              )}
+
+              {q.type === "single" && (
+                <div className="space-y-2">
+                  {q.options.map((opt, i) => (
+                    <label
+                      key={i}
+                      className={`block p-3 border-2 rounded-md cursor-pointer ${
+                        responses[index] === i
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-300 hover:border-gray-400"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={`q${index}`}
+                        checked={responses[index] === i}
+                        onChange={() => handleSingleChoice(index, i)}
+                        className="mr-2"
+                      />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {q.type === "multiple" && (
+                <div className="space-y-2">
+                  {q.options.map((opt, i) => (
+                    <label
+                      key={i}
+                      className={`block p-3 border-2 rounded-md cursor-pointer ${
+                        (responses[index] || []).includes(i)
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-300 hover:border-gray-400"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={(responses[index] || []).includes(i)}
+                        onChange={() => handleMultipleChoice(index, i)}
+                        className="mr-2"
+                      />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </form>
+
+        <button
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md mt-6"
+          onClick={handleConfirmSubmit}
+          disabled={loading}
+        >
+          {loading ? "Submitting..." : "Submit Test"}
+        </button>
+
+        {showSubmitModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">
+                Confirm Submission
+              </h3>
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to submit your test? You cannot make
+                changes after submission.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded"
+                  onClick={() => setShowSubmitModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                  onClick={handleSubmit}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
+              <h3 className="text-xl font-bold text-green-600 mb-2">
+                Test Submitted
+              </h3>
+              <p className="text-gray-700 mb-4">
+                Thank you, {student.name}! Your responses have been saved
+                successfully!
+              </p>
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                onClick={handleCloseModal}
+              >
+                Return to Dashboard
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
