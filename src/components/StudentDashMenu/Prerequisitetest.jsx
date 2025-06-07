@@ -31,18 +31,17 @@ const Prerequisitetest = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
         const studentId = sessionStorage.getItem("studentId");
-        if (!studentId) {
-          throw new Error("Student not logged in");
-        }
 
-        // Fetch all data
-        const [studentRes, testsRes, submissionsRes] = await Promise.all([
-          axios.get(
-            `${API_BASE_URL}/api/student/students/${studentId}`,
-            config
-          ),
+        // First get student data separately
+        const studentRes = await axios.get(
+          `${API_BASE_URL}/api/student/students/${studentId}`,
+          config
+        );
+        setStudent(studentRes.data);
+
+        // Then fetch tests and submissions in parallel
+        const [testsRes, submissionsRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/student/tests/student`, {
             params: {
               year: studentRes.data.year,
@@ -56,7 +55,6 @@ const Prerequisitetest = () => {
           }),
         ]);
 
-        setStudent(studentRes.data);
         setTests(testsRes.data);
         setSubmissions(submissionsRes.data);
 
