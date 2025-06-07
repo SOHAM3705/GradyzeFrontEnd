@@ -216,7 +216,7 @@ const TestPage = () => {
   }
 
   return (
-    <div className="bg-[#f5f1e6] min-h-screen">
+    <div className="bg-[#f5f1e6] min-h-screen overflow-auto">
       <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-8">
         <button
           onClick={() => navigate("/studentdash/Forms")}

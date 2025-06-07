@@ -4,21 +4,12 @@ import axios from "axios";
 import { API_BASE_URL } from "../../config";
 
 const Prerequisitetest = () => {
-  const [tests, setTests] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
+  const [availableTests, setAvailableTests] = useState([]);
+  const [submittedTests, setSubmittedTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [student, setStudent] = useState(null);
-  const [availableTests, setAvailableTests] = useState([]);
-  const [submittedTests, setSubmittedTests] = useState([]);
   const navigate = useNavigate();
-
-  const token = sessionStorage.getItem("token");
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
 
   // Modal state
   const [previewModal, setPreviewModal] = useState({
@@ -27,20 +18,26 @@ const Prerequisitetest = () => {
     submission: null,
   });
 
+  const token = sessionStorage.getItem("token");
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const studentId = sessionStorage.getItem("studentId");
+        if (!studentId) throw new Error("Student not logged in");
 
-        // First get student data separately
         const studentRes = await axios.get(
           `${API_BASE_URL}/api/student/students/${studentId}`,
           config
         );
         setStudent(studentRes.data);
 
-        // Then fetch tests and submissions in parallel
         const [testsRes, submissionsRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/student/tests/student`, {
             params: {
@@ -55,23 +52,20 @@ const Prerequisitetest = () => {
           }),
         ]);
 
-        setTests(testsRes.data);
-        setSubmissions(submissionsRes.data);
+        const submittedTestIds = submissionsRes.data.map((sub) => sub.testId);
 
-        // Categorize tests
-        const available = [];
-        const submitted = [];
+        const available = testsRes.data.filter(
+          (test) => !submittedTestIds.includes(test._id)
+        );
 
-        testsRes.data.forEach((test) => {
-          const submission = submissionsRes.data.find(
-            (sub) => sub.testId === test._id
-          );
-          if (submission) {
-            submitted.push({ ...test, submission });
-          } else {
-            available.push(test);
-          }
-        });
+        const submitted = testsRes.data
+          .filter((test) => submittedTestIds.includes(test._id))
+          .map((test) => {
+            const submission = submissionsRes.data.find(
+              (sub) => sub.testId === test._id
+            );
+            return { ...test, submission };
+          });
 
         setAvailableTests(available);
         setSubmittedTests(submitted);
@@ -129,17 +123,12 @@ const Prerequisitetest = () => {
     });
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading Tests And Surveys...</div>;
-  }
-
-  if (error) {
+  if (loading) return <div className="text-center py-8">Loading...</div>;
+  if (error)
     return <div className="text-center text-red-500 py-8">{error}</div>;
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Submitted Tests Section */}
       {submittedTests.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Submitted Tests</h2>
@@ -154,15 +143,12 @@ const Prerequisitetest = () => {
                     <h3 className="font-medium text-lg">{test.title}</h3>
                     <p className="text-gray-600">{test.description}</p>
                     <div className="mt-2 text-sm text-gray-500">
-                      <span>Subject: {test.subjectName || "N/A"}</span>
-                      <span className="mx-2">|</span>
                       <span>
-                        Score: {test.submission.totalScore} /{" "}
-                        {test.totalMarks ||
-                          test.questions.reduce(
-                            (sum, q) => sum + (q.points || 1),
-                            0
-                          )}
+                        Score: {test.submission.totalScore} /
+                        {test.questions.reduce(
+                          (sum, q) => sum + (q.points || 1),
+                          0
+                        )}
                       </span>
                     </div>
                   </div>
@@ -170,7 +156,7 @@ const Prerequisitetest = () => {
                     onClick={() => handlePreviewTest(test._id)}
                     className="text-blue-500 hover:underline"
                   >
-                    View Details
+                    View Score
                   </button>
                 </div>
               </div>
@@ -179,7 +165,6 @@ const Prerequisitetest = () => {
         </div>
       )}
 
-      {/* Available Tests Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Available Tests</h2>
         {availableTests.length === 0 ? (
@@ -195,18 +180,6 @@ const Prerequisitetest = () => {
                   <div>
                     <h3 className="font-medium text-lg">{test.title}</h3>
                     <p className="text-gray-600">{test.description}</p>
-                    <div className="mt-2 text-sm text-gray-500">
-                      <span>Subject: {test.subjectName || "N/A"}</span>
-                      <span className="mx-2">|</span>
-                      <span>
-                        Total Marks:{" "}
-                        {test.totalMarks ||
-                          test.questions.reduce(
-                            (sum, q) => sum + (q.points || 1),
-                            0
-                          )}
-                      </span>
-                    </div>
                   </div>
                   <button
                     onClick={() => handleStartTest(test._id)}
@@ -221,7 +194,6 @@ const Prerequisitetest = () => {
         )}
       </div>
 
-      {/* Preview Modal */}
       {previewModal.show && previewModal.test && previewModal.submission && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -254,11 +226,10 @@ const Prerequisitetest = () => {
                 <div className="text-lg">
                   <span className="font-medium">Your Score:</span>{" "}
                   {previewModal.submission.totalScore} /
-                  {previewModal.test.totalMarks ||
-                    previewModal.test.questions.reduce(
-                      (sum, q) => sum + (q.points || 1),
-                      0
-                    )}
+                  {previewModal.test.questions.reduce(
+                    (sum, q) => sum + (q.points || 1),
+                    0
+                  )}
                 </div>
                 <div className="text-sm text-gray-500">
                   Submitted on:{" "}
