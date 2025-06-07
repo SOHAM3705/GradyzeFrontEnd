@@ -24,6 +24,8 @@ const TestPage = () => {
   const [responses, setResponses] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showStartModal, setShowStartModal] = useState(true);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [validationError, setValidationError] = useState("");
@@ -171,6 +173,14 @@ const TestPage = () => {
     navigate("/studentdash/Forms");
   };
 
+  const handleStartTest = () => {
+    setShowStartModal(false);
+  };
+
+  const handleConfirmSubmit = () => {
+    setShowSubmitModal(true);
+  };
+
   if (loading) {
     return <div className="text-center p-8">Loading test...</div>;
   }
@@ -207,6 +217,37 @@ const TestPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <button
+        onClick={() => navigate("/studentdash/Forms")}
+        className="mb-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded inline-flex items-center"
+      >
+        Back
+      </button>
+
+      {showStartModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg max-w-sm w-full">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Instructions
+            </h3>
+            <p className="text-gray-700 mb-4">
+              Please read the instructions carefully before starting the test.
+            </p>
+            <ul className="list-disc pl-5 mb-4 text-gray-700">
+              <li>Ensure you have a stable internet connection.</li>
+              <li>Do not refresh the page during the test.</li>
+              <li>Answer all questions to the best of your ability.</li>
+            </ul>
+            <button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+              onClick={handleStartTest}
+            >
+              Start Test
+            </button>
+          </div>
+        </div>
+      )}
+
       {student && (
         <div className="mb-6 p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold mb-2 text-gray-800">
@@ -223,7 +264,7 @@ const TestPage = () => {
         </div>
       )}
 
-      <div className="text-center mb-6">
+      <div className="text-left mb-6">
         <h2 className="text-2xl font-bold text-gray-800">{test.title}</h2>
         {test.description && (
           <p className="text-gray-600 mt-2">{test.description}</p>
@@ -310,11 +351,39 @@ const TestPage = () => {
 
       <button
         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md mt-6"
-        onClick={handleSubmit}
+        onClick={handleConfirmSubmit}
         disabled={loading}
       >
         {loading ? "Submitting..." : "Submit Test"}
       </button>
+
+      {showSubmitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Confirm Submission
+            </h3>
+            <p className="text-gray-700 mb-4">
+              Are you sure you want to submit your test? You cannot make changes
+              after submission.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded"
+                onClick={() => setShowSubmitModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                onClick={handleSubmit}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -327,7 +396,7 @@ const TestPage = () => {
               successfully!
             </p>
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
               onClick={handleCloseModal}
             >
               Return to Dashboard
