@@ -38,13 +38,11 @@ const TestPage = () => {
           throw new Error("Student ID mismatch");
         }
 
-        // Fetch student details using the authenticated instance
         const studentResponse = await api.get(
           `/api/student/students/${studentId}`
         );
         setStudent(studentResponse.data);
 
-        // Check if already submitted
         const submissionCheck = await api.get(
           `/api/student/test-submission-check/${testId}`,
           { params: { studentId } }
@@ -55,11 +53,9 @@ const TestPage = () => {
           return;
         }
 
-        // Fetch test details using the authenticated instance
         const testResponse = await api.get(`/api/student/tests/${testId}`);
         setTest(testResponse.data);
 
-        // Initialize responses
         const initialResponses = {};
         testResponse.data.questions.forEach((question, index) => {
           initialResponses[index] = question.type === "multiple" ? [] : "";
@@ -128,32 +124,43 @@ const TestPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm() || !test) return;
+    if (!validateForm() || !test || !student) return;
 
     try {
       setLoading(true);
 
-      // Prepare submission data
-      const submission = {
+      const submissionData = {
         testId,
         studentId,
-        answers: responses,
-        questions: test.questions.map((q, index) => ({
-          questionId: q._id || index,
+        studentName: student.name,
+        studentEmail: student.email,
+        answers: test.questions.map((_, index) => responses[index]),
+        questions: test.questions.map((q) => ({
+          _id: q._id,
           type: q.type,
           correctAnswer: q.correctAnswer,
           points: q.points || 1,
         })),
       };
 
-      // Submit to backend using the authenticated instance
-      await api.post(`/api/student/submit-test`, submission);
+      const response = await api.post(
+        "/api/student/submit-test",
+        submissionData
+      );
 
       setShowModal(true);
       setSubmitted(true);
     } catch (err) {
-      setValidationError(err.response?.data?.error || "Failed to submit test");
-      console.error("Submission error:", err);
+      const errorMessage =
+        err.response?.data?.error?.message ||
+        err.response?.data?.error ||
+        "Submission failed. Please try again.";
+
+      setValidationError(errorMessage);
+      console.error("Submission error:", {
+        error: err,
+        response: err.response?.data,
+      });
     } finally {
       setLoading(false);
     }
@@ -174,7 +181,7 @@ const TestPage = () => {
         <div className="text-red-500 mb-4">{error}</div>
         <button
           onClick={() => navigate("/studentdash/Forms")}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Return to Dashboard
         </button>
@@ -190,7 +197,7 @@ const TestPage = () => {
         </div>
         <button
           onClick={() => navigate("/studentdash/Forms")}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Return to Dashboard
         </button>
@@ -199,10 +206,12 @@ const TestPage = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-5">
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
       {student && (
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <h3 className="text-lg font-semibold mb-2">Student Information</h3>
+        <div className="mb-6 p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold mb-2 text-gray-800">
+            Student Information
+          </h3>
           <p className="text-gray-700">Name: {student.name}</p>
           <p className="text-gray-700">Email: {student.email}</p>
           {student.year && (
@@ -215,91 +224,92 @@ const TestPage = () => {
       )}
 
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-blue-700">{test.title}</h2>
+        <h2 className="text-2xl font-bold text-gray-800">{test.title}</h2>
         {test.description && (
           <p className="text-gray-600 mt-2">{test.description}</p>
         )}
       </div>
 
       {validationError && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4">
           {validationError}
         </div>
       )}
 
-      {test.questions.map((q, index) => (
-        <div className="mb-6 pb-4 border-b border-gray-200" key={index}>
-          <p className="font-semibold mb-2">
-            Q{index + 1}: {q.questionText}
-            {q.points && (
-              <span className="text-gray-500 ml-2">
-                ({q.points} point{q.points > 1 ? "s" : ""})
-              </span>
+      <form className="space-y-6">
+        {test.questions.map((q, index) => (
+          <div key={index} className="space-y-2">
+            <p className="font-medium text-gray-900">
+              {index + 1}. {q.questionText}
+              {q.points && (
+                <span className="text-gray-500 ml-1">
+                  ({q.points} point{q.points > 1 ? "s" : ""})
+                </span>
+              )}
+            </p>
+
+            {q.type === "short" && (
+              <input
+                type="text"
+                placeholder="Your answer"
+                value={responses[index] || ""}
+                onChange={(e) => handleShortAnswer(index, e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             )}
-          </p>
 
-          {q.type === "short" && (
-            <input
-              type="text"
-              placeholder="Your answer..."
-              value={responses[index] || ""}
-              onChange={(e) => handleShortAnswer(index, e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
-          )}
+            {q.type === "single" && (
+              <div className="space-y-2">
+                {q.options.map((opt, i) => (
+                  <label
+                    key={i}
+                    className={`block p-3 border-2 rounded-md cursor-pointer ${
+                      responses[index] === i
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={`q${index}`}
+                      checked={responses[index] === i}
+                      onChange={() => handleSingleChoice(index, i)}
+                      className="mr-2"
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+            )}
 
-          {q.type === "single" && (
-            <div className="space-y-2">
-              {q.options.map((opt, i) => (
-                <label
-                  key={i}
-                  className={`block p-3 border rounded ${
-                    responses[index] === i
-                      ? "bg-blue-50 border-blue-500"
-                      : "border-gray-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`q${index}`}
-                    checked={responses[index] === i}
-                    onChange={() => handleSingleChoice(index, i)}
-                    className="mr-2"
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
-          )}
-
-          {q.type === "multiple" && (
-            <div className="space-y-2">
-              {q.options.map((opt, i) => (
-                <label
-                  key={i}
-                  className={`block p-3 border rounded ${
-                    (responses[index] || []).includes(i)
-                      ? "bg-blue-50 border-blue-500"
-                      : "border-gray-300"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={(responses[index] || []).includes(i)}
-                    onChange={() => handleMultipleChoice(index, i)}
-                    className="mr-2"
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+            {q.type === "multiple" && (
+              <div className="space-y-2">
+                {q.options.map((opt, i) => (
+                  <label
+                    key={i}
+                    className={`block p-3 border-2 rounded-md cursor-pointer ${
+                      (responses[index] || []).includes(i)
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={(responses[index] || []).includes(i)}
+                      onChange={() => handleMultipleChoice(index, i)}
+                      className="mr-2"
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </form>
 
       <button
-        className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md mt-6"
         onClick={handleSubmit}
         disabled={loading}
       >
@@ -317,7 +327,7 @@ const TestPage = () => {
               successfully!
             </p>
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md"
               onClick={handleCloseModal}
             >
               Return to Dashboard
