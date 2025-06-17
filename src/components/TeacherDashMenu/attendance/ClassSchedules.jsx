@@ -22,15 +22,13 @@ const ClassSchedules = () => {
 
       setLoading(true);
       try {
-        // Fetch assigned classes (you'll need to implement this endpoint)
         const classResponse = await axios.get(
           `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
         );
-        setClasses(classResponse.data);
+        setClasses(classResponse.data.subjects); // fixed here
 
-        // If classes are found, fetch schedules for the first class by default
-        if (classResponse.data.length > 0) {
-          const firstClassId = classResponse.data[0]._id;
+        if (classResponse.data.subjects.length > 0) {
+          const firstClassId = classResponse.data.subjects[0]._id;
           const scheduleResponse = await axios.get(
             `https://gradyzebackend.onrender.com/api/schedules/class/${firstClassId}`
           );
