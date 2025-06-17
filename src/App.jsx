@@ -41,6 +41,10 @@ import TeacherSettings from "./components/TeacherDashMenu/Settings";
 import TeacherOverview from "./components/TeacherDashMenu/teacherOverview";
 import TeacherPrerequisiteTest from "./components/TeacherDashMenu/Forms/Prerequisitetest";
 import TestClassSelector from "./components/TeacherDashMenu/Forms/TestClassSelector";
+import ScheduleClass from "./components/TeacherDashMenu/attendance/ScheduleClass";
+import Attendance from "./components/TeacherDashMenu/attendance/Attendance";
+import AttendanceRecords from "./components/TeacherDashMenu/attendance/AttendanceRecords";
+import ClassSchedules from "./components/TeacherDashMenu/attendance/ClassSchedules";
 
 import AssignmentManage from "./components/TeacherDashMenu/AssignmentManage";
 
@@ -140,10 +144,10 @@ function App() {
         <Route path="TeacherStudentManage" element={<StudentManage />} />
         <Route path="" element={<TeacherOverview />} />
         <Route path="subject-marks" element={<SubjectMarks />} />
-        <Route
-          path="attendance-report"
-          element={<TeacherAttendanceDashboard />}
-        />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="schedule-class" element={<ScheduleClass />} />
+        <Route path="attendance-records" element={<AttendanceRecords />} />
+        <Route path="class-schedules" element={<ClassSchedules />} />
         <Route path="notifications" element={<TeacherNotifications />} />
         <Route path="syllabus" element={<TeacherSyllabusView />} />
         <Route path="feedback" element={<TeacherFeedback />} />

@@ -53,25 +53,22 @@ function TeacherDash() {
       path: "/teacherdash/TeacherStudentManage",
     },
     { icon: "📝", label: "Subject Marks", path: "/teacherdash/subject-marks" },
-    {
-      icon: "📝",
-      label: "Forms",
-      path: "/teacherdash/create-test",
-    },
+    { icon: "📝", label: "Forms", path: "/teacherdash/create-test" },
     { icon: "📄", label: "Assignment", path: "/teacherdash/assignment-manage" },
-    { icon: "🔔", label: "Notifications", path: "/teacherdash/notifications" },
-    { icon: "📚", label: "Syllabus", path: "/teacherdash/syllabus" },
-    { icon: "📝", label: "Feedback", path: "/teacherdash/feedback" },
-    { icon: "⚙️", label: "Settings", path: "/teacherdash/settings" },
   ];
 
   const attendanceItems = [
     { label: "Take Attendance", path: "/teacherdash/attendance" },
     { label: "Schedule Class", path: "/teacherdash/schedule-class" },
-    { label: "Attendance Records", path: "/teacherdash/attendance-records" },
     { label: "Class Schedules", path: "/teacherdash/class-schedules" },
-    { label: "Manage Classes", path: "/teacherdash/manage-classes" },
-    { label: "Manage Students", path: "/teacherdash/manage-students" },
+    { label: "Attendance Records", path: "/teacherdash/attendance-records" },
+  ];
+
+  const bottomMenuItems = [
+    { icon: "🔔", label: "Notifications", path: "/teacherdash/notifications" },
+    { icon: "📚", label: "Syllabus", path: "/teacherdash/syllabus" },
+    { icon: "📝", label: "Feedback", path: "/teacherdash/feedback" },
+    { icon: "⚙️", label: "Settings", path: "/teacherdash/settings" },
   ];
 
   return (
@@ -127,6 +124,17 @@ function TeacherDash() {
               </div>
             )}
           </div>
+          {bottomMenuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
+            >
+              <span className="mr-3 text-xl">{item.icon}</span>
+              <span className="font-medium text-lg">{item.label}</span>
+            </Link>
+          ))}
         </nav>
         <div className="p-4 absolute bottom-0 w-64">
           <button
@@ -149,7 +157,6 @@ function TeacherDash() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
-          {/* Sidebar toggle button on small screens */}
           <button
             className="md:hidden text-gray-600 focus:outline-none"
             onClick={() => setSidebarOpen(true)}
@@ -161,7 +168,6 @@ function TeacherDash() {
             Welcome, {teacherName || "Loading..."}
           </div>
 
-          {/* Placeholder for alignment */}
           <div className="w-8 md:hidden" />
         </header>
 
