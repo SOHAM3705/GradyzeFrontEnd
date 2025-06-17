@@ -152,7 +152,7 @@ const Prerequisitetest = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg shadow-md p-6 margin-bottom-6">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4 text-blue-600">
           Available Tests ({availableTests.length})
         </h2>
@@ -189,7 +189,7 @@ const Prerequisitetest = () => {
       </div>
 
       {submittedTests.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4 text-green-600">
             Submitted Tests ({submittedTests.length})
           </h2>

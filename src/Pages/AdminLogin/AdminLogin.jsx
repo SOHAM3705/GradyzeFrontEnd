@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import styles from "./AdminLogin.module.css";
+import api from "../../utils/axiosConfig";
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -62,7 +63,7 @@ const AdminLogin = () => {
 
     const handleCredentialResponse = async (response) => {
       try {
-        const res = await axios.post(`${API_BASE_URL}/api/auth/google`, {
+        const res = await api.post(`${API_BASE_URL}/api/auth/google`, {
           token: response.credential,
           role: "admin",
         });
@@ -93,10 +94,10 @@ const AdminLogin = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/admin/adminlogin`,
-        { ...formData, role: "admin" }
-      );
+      const response = await api.post(`${API_BASE_URL}/api/admin/adminlogin`, {
+        ...formData,
+        role: "admin",
+      });
 
       if (response.data.token) {
         sessionStorage.setItem("token", response.data.token);

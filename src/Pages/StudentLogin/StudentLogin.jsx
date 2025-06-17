@@ -1,9 +1,9 @@
 // src/StudentLogin.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import styles from "./StudentLogin.module.css";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+import api from "../../utils/axiosConfig";
 
 const StudentLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -53,7 +53,7 @@ const StudentLogin = () => {
 
     const handleCredentialResponse = async (response) => {
       try {
-        const res = await axios.post(`${API_BASE_URL}/api/auth/google`, {
+        const res = await api.post(`${API_BASE_URL}/api/auth/google`, {
           token: response.credential,
           role: "student",
         });
@@ -91,7 +91,7 @@ const StudentLogin = () => {
     setError(null);
 
     try {
-      const response = await axios.post(
+      const response = await api.post(
         `${API_BASE_URL}/api/student/studentlogin`,
         formData
       );

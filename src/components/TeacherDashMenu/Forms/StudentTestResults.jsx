@@ -28,7 +28,7 @@ const StudentTestResults = ({ testId }) => {
         );
         setAllTests(testsResponse.data);
 
-        // Fetch results for the specific test or all tests
+        // Fetch results based on whether we have a specific testId
         const endpoint = testId
           ? `/api/teacher/test-results/${testId}`
           : "/api/teacher/test-results";
@@ -54,7 +54,7 @@ const StudentTestResults = ({ testId }) => {
     const selectedTestId = e.target.value;
     setSelectedTest(selectedTestId);
     setLoading(true);
-    setExpandedResult(null); // Close any expanded details
+    setExpandedResult(null);
 
     try {
       const endpoint =
@@ -79,11 +79,12 @@ const StudentTestResults = ({ testId }) => {
   const fetchDetailedResponse = async (submissionId, testId, studentId) => {
     try {
       setLoadingDetails(true);
+      setDetailedResponse(null);
 
-      // Try multiple possible endpoints for fetching detailed responses
+      // Try multiple endpoints to get detailed response
       let response;
       try {
-        // Option 1: Fetch by submission ID
+        // First try the submission ID endpoint
         response = await axios.get(
           `${API_BASE_URL}/api/teacher/submission/${submissionId}`,
           {
@@ -93,7 +94,7 @@ const StudentTestResults = ({ testId }) => {
           }
         );
       } catch (err) {
-        // Option 2: Fetch by test and student ID
+        // Fall back to test/student endpoint if first fails
         response = await axios.get(
           `${API_BASE_URL}/api/teacher/submission/test/${testId}/student/${studentId}`,
           {
@@ -133,7 +134,6 @@ const StudentTestResults = ({ testId }) => {
     }
 
     if (Array.isArray(answer.answer)) {
-      // Multiple choice answers
       return (
         <ul className="list-disc pl-5">
           {answer.answer.map((optionIndex, i) => (
@@ -144,10 +144,8 @@ const StudentTestResults = ({ testId }) => {
         </ul>
       );
     } else if (question.type === "single" && question.options) {
-      // Single choice answer
       return question.options[answer.answer] || `Option ${answer.answer + 1}`;
     } else {
-      // Text/short answer
       return answer.answer;
     }
   };
@@ -211,7 +209,6 @@ const StudentTestResults = ({ testId }) => {
                 key={index}
                 className="bg-white border border-gray-200 rounded-lg"
               >
-                {/* Summary Row */}
                 <div
                   className="p-4 hover:bg-gray-50 cursor-pointer"
                   onClick={() => toggleExpandResult(result, index)}
@@ -271,7 +268,6 @@ const StudentTestResults = ({ testId }) => {
                   </div>
                 </div>
 
-                {/* Detailed Response */}
                 {expandedResult === index && (
                   <div className="border-t bg-gray-50 p-4">
                     {loadingDetails ? (
@@ -326,7 +322,6 @@ const StudentTestResults = ({ testId }) => {
                                 </div>
 
                                 <div className="grid md:grid-cols-2 gap-4">
-                                  {/* Student's Answer */}
                                   <div>
                                     <p className="font-medium text-gray-700 mb-2">
                                       Student's Answer:
@@ -336,7 +331,6 @@ const StudentTestResults = ({ testId }) => {
                                     </div>
                                   </div>
 
-                                  {/* Correct Answer (for incorrect responses or always show) */}
                                   <div>
                                     <p className="font-medium text-gray-700 mb-2">
                                       Correct Answer:
@@ -356,7 +350,6 @@ const StudentTestResults = ({ testId }) => {
                           }
                         )}
 
-                        {/* Summary Stats */}
                         <div className="bg-white p-4 rounded border">
                           <h5 className="font-medium mb-2">Summary</h5>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">

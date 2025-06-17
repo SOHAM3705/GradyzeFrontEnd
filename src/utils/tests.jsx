@@ -199,22 +199,6 @@ const TestPage = () => {
     );
   }
 
-  if (submitted) {
-    return (
-      <div className="text-center p-8">
-        <div className="text-green-600 mb-4">
-          You have already submitted this test.
-        </div>
-        <button
-          onClick={() => navigate("/studentdash/Forms")}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Return to Dashboard
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-[#f5f1e6] min-h-screen overflow-auto">
       <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-8">
@@ -224,7 +208,6 @@ const TestPage = () => {
         >
           Back
         </button>
-
         {showStartModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-lg max-w-sm w-full">
@@ -248,7 +231,6 @@ const TestPage = () => {
             </div>
           </div>
         )}
-
         {student && (
           <div className="mb-6 p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold mb-2 text-gray-800">
@@ -264,20 +246,17 @@ const TestPage = () => {
             )}
           </div>
         )}
-
         <div className="text-left mb-6">
           <h2 className="text-2xl font-bold text-gray-800">{test.title}</h2>
           {test.description && (
             <p className="text-gray-600 mt-2">{test.description}</p>
           )}
         </div>
-
         {validationError && (
           <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4">
             {validationError}
           </div>
         )}
-
         <form className="space-y-6">
           {test.questions.map((q, index) => (
             <div key={index} className="space-y-2">
@@ -349,7 +328,6 @@ const TestPage = () => {
             </div>
           ))}
         </form>
-
         <button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md mt-6"
           onClick={handleConfirmSubmit}
@@ -357,7 +335,6 @@ const TestPage = () => {
         >
           {loading ? "Submitting..." : "Submit Test"}
         </button>
-
         {showSubmitModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
@@ -385,8 +362,8 @@ const TestPage = () => {
             </div>
           </div>
         )}
-
-        {showModal && (
+        if (submitted)
+        {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
               <h3 className="text-xl font-bold text-green-600 mb-2">
@@ -404,7 +381,7 @@ const TestPage = () => {
               </button>
             </div>
           </div>
-        )}
+        }
       </div>
     </div>
   );
