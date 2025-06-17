@@ -7,7 +7,7 @@ import AttendanceRecords from "./attendance/AttendanceRecords";
 import ClassSchedules from "./attendance/ClassSchedules";
 import ManageClasses from "./attendance/ManageClasses";
 import ManageStudents from "./attendance/ManageStudents";
-import "./attendance/Attendance.css";
+import "./attendance/attendance.css";
 
 const TABS = [
   { key: "takeAttendance", label: "Take Attendance" },
