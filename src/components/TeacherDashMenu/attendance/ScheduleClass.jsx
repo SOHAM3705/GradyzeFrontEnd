@@ -1,19 +1,20 @@
 // Fixed ScheduleClass.jsx with improved context usage
-import React, { useContext, useState, useEffect } from 'react';
-import { AttendanceContext } from '../context/AttendanceContext';
+import React, { useContext, useState, useEffect } from "react";
+import { AttendanceContext } from "../../../utils/AttendanceContext";
 
 const ScheduleClass = () => {
-  const { classes, scheduleClass, loading, fetchClasses } = useContext(AttendanceContext);
-  
+  const { classes, scheduleClass, loading, fetchClasses } =
+    useContext(AttendanceContext);
+
   const [scheduleData, setScheduleData] = useState({
-    classId: '',
-    date: new Date().toISOString().split('T')[0],
-    startTime: '09:00',
-    endTime: '10:00',
-    title: '',
-    description: ''
+    classId: "",
+    date: new Date().toISOString().split("T")[0],
+    startTime: "09:00",
+    endTime: "10:00",
+    title: "",
+    description: "",
   });
-  
+
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
@@ -23,11 +24,11 @@ const ScheduleClass = () => {
       try {
         await fetchClasses();
       } catch (err) {
-        console.error('Error loading classes in ScheduleClass component:', err);
-        setError('Failed to load classes. Please refresh the page.');
+        console.error("Error loading classes in ScheduleClass component:", err);
+        setError("Failed to load classes. Please refresh the page.");
       }
     };
-    
+
     loadClasses();
   }, [fetchClasses]);
 
@@ -35,9 +36,9 @@ const ScheduleClass = () => {
     const { name, value } = e.target;
     setScheduleData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear messages when user makes changes
     if (error) setError(null);
     if (successMessage) setSuccessMessage(null);
@@ -46,39 +47,56 @@ const ScheduleClass = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    
+
     // Validate end time is after start time
     if (scheduleData.startTime >= scheduleData.endTime) {
       setError("End time must be after start time");
       return;
     }
-    
+
     try {
       await scheduleClass(scheduleData);
       setSuccessMessage("Class scheduled successfully!");
-      
+
       // Reset form
       setScheduleData({
-        classId: '',
-        date: new Date().toISOString().split('T')[0],
-        startTime: '09:00',
-        endTime: '10:00',
-        title: '',
-        description: ''
+        classId: "",
+        date: new Date().toISOString().split("T")[0],
+        startTime: "09:00",
+        endTime: "10:00",
+        title: "",
+        description: "",
       });
     } catch (err) {
-      console.error('Error scheduling class:', err);
-      setError(err.response?.data?.error || 'Failed to schedule class. Please try again.');
+      console.error("Error scheduling class:", err);
+      setError(
+        err.response?.data?.error ||
+          "Failed to schedule class. Please try again."
+      );
     }
   };
 
   return (
     <div className="schedule-form">
       <h3>Schedule a Class</h3>
-      
-      {error && <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-      {successMessage && <div className="success-message" style={{ color: 'green', marginBottom: '10px' }}>{successMessage}</div>}
-      
+
+      {error && (
+        <div
+          className="error-message"
+          style={{ color: "red", marginBottom: "10px" }}
+        >
+          {error}
+        </div>
+      )}
+      {successMessage && (
+        <div
+          className="success-message"
+          style={{ color: "green", marginBottom: "10px" }}
+        >
+          {successMessage}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="classId">Select Class</label>
@@ -90,7 +108,7 @@ const ScheduleClass = () => {
             required
           >
             <option value="">-- Select Class --</option>
-            {classes.map(classItem => (
+            {classes.map((classItem) => (
               <option key={classItem._id} value={classItem._id}>
                 {classItem.className}
               </option>
@@ -160,7 +178,7 @@ const ScheduleClass = () => {
         </div>
 
         <button type="submit" className="btn-schedule" disabled={loading}>
-          {loading ? 'Scheduling...' : 'Schedule Class'}
+          {loading ? "Scheduling..." : "Schedule Class"}
         </button>
       </form>
     </div>

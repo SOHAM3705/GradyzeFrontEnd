@@ -1,6 +1,6 @@
 // Attendance.jsx (Updated)
-import React, { useContext, useState, useEffect } from 'react';
-import { AttendanceContext } from '../context/AttendanceContext';
+import React, { useContext, useState, useEffect } from "react";
+import { AttendanceContext } from "../../../utils/AttendanceContext";
 
 const Attendance = () => {
   const {
@@ -9,21 +9,23 @@ const Attendance = () => {
     loading,
     loadStudents,
     saveAttendance,
-    schedules
+    schedules,
   } = useContext(AttendanceContext);
 
   const [selectedClass, setSelectedClass] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
 
   useEffect(() => {
     // Initialize attendance data when students change
     if (students.length > 0) {
       const initialAttendance = {};
       students.forEach((student) => {
-        initialAttendance[student._id] = { 
-          status: 'Present', 
-          student 
+        initialAttendance[student._id] = {
+          status: "Present",
+          student,
         };
       });
       setAttendanceData(initialAttendance);
@@ -42,20 +44,20 @@ const Attendance = () => {
       ...prev,
       [studentId]: {
         ...prev[studentId],
-        status: prev[studentId]?.status === 'Present' ? 'Absent' : 'Present'
-      }
+        status: prev[studentId]?.status === "Present" ? "Absent" : "Present",
+      },
     }));
   };
 
   // Save attendance to the backend
   const saveAttendanceData = () => {
     if (!selectedClass) {
-      alert('Please select a class first');
+      alert("Please select a class first");
       return;
     }
 
     if (Object.keys(attendanceData).length === 0) {
-      alert('No students to mark attendance for');
+      alert("No students to mark attendance for");
       return;
     }
 
@@ -65,12 +67,12 @@ const Attendance = () => {
       records: Object.values(attendanceData).map((data) => ({
         studentId: data.student._id,
         studentName: data.student.name,
-        status: data.status
-      }))
+        status: data.status,
+      })),
     };
 
     saveAttendance(attendancePayload);
-    alert('Attendance Saved Successfully!');
+    alert("Attendance Saved Successfully!");
   };
 
   // Check if a class is selected
@@ -86,7 +88,11 @@ const Attendance = () => {
           classes.map((classItem) => (
             <div
               key={classItem._id}
-              className={`class-item ${selectedClass && selectedClass._id === classItem._id ? 'selected' : ''}`}
+              className={`class-item ${
+                selectedClass && selectedClass._id === classItem._id
+                  ? "selected"
+                  : ""
+              }`}
               onClick={() => handleClassSelect(classItem)}
             >
               {classItem.className}
@@ -100,7 +106,7 @@ const Attendance = () => {
       {showAttendanceForm ? (
         <div className="attendance-list">
           <h3>{selectedClass.className} - Attendance</h3>
-          
+
           <div className="form-group">
             <label htmlFor="attendanceDate">Select Date</label>
             <input
@@ -123,28 +129,34 @@ const Attendance = () => {
               {students.map((student) => (
                 <tr key={student._id}>
                   <td>{student.name}</td>
-                  <td className={attendanceData[student._id]?.status === 'Present' ? 'present-status' : 'absent-status'}>
-                    {attendanceData[student._id]?.status || 'Absent'}
+                  <td
+                    className={
+                      attendanceData[student._id]?.status === "Present"
+                        ? "present-status"
+                        : "absent-status"
+                    }
+                  >
+                    {attendanceData[student._id]?.status || "Absent"}
                   </td>
                   <td>
                     <button
                       onClick={() => toggleAttendance(student._id)}
                       className={
-                        attendanceData[student._id]?.status === 'Present'
-                          ? 'btn-absent'
-                          : 'btn-present'
+                        attendanceData[student._id]?.status === "Present"
+                          ? "btn-absent"
+                          : "btn-present"
                       }
                     >
-                      {attendanceData[student._id]?.status === 'Present'
-                        ? 'Mark Absent'
-                        : 'Mark Present'}
+                      {attendanceData[student._id]?.status === "Present"
+                        ? "Mark Absent"
+                        : "Mark Present"}
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          
+
           <button onClick={saveAttendanceData} className="btn-save">
             Save Attendance
           </button>

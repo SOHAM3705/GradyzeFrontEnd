@@ -1,11 +1,12 @@
 // ManageStudents.jsx
-import React, { useContext, useState, useEffect } from 'react';
-import { AttendanceContext } from '../context/AttendanceContext';
+import React, { useContext, useState, useEffect } from "react";
+import { AttendanceContext } from "../../../utils/AttendanceContext";
 
 const ManageStudents = () => {
-  const { classes, students, loading, loadStudents } = useContext(AttendanceContext);
-  
-  const [selectedClass, setSelectedClass] = useState('');
+  const { classes, students, loading, loadStudents } =
+    useContext(AttendanceContext);
+
+  const [selectedClass, setSelectedClass] = useState("");
 
   useEffect(() => {
     // Load students for the selected class
@@ -21,7 +22,7 @@ const ManageStudents = () => {
   return (
     <div className="student-list-container">
       <h3>Manage Students</h3>
-      
+
       <div className="filter-group">
         <label htmlFor="classId">Select Class</label>
         <select
@@ -31,7 +32,7 @@ const ManageStudents = () => {
           required
         >
           <option value="">-- Select Class --</option>
-          {classes.map(classItem => (
+          {classes.map((classItem) => (
             <option key={classItem._id} value={classItem._id}>
               {classItem.className}
             </option>
@@ -40,7 +41,7 @@ const ManageStudents = () => {
       </div>
 
       {selectedClass && (
-        <div className="class-list" style={{ marginTop: '30px' }}>
+        <div className="class-list" style={{ marginTop: "30px" }}>
           <h3>Students in Selected Class</h3>
           {loading ? (
             <p>Loading students...</p>
@@ -54,11 +55,11 @@ const ManageStudents = () => {
                 </tr>
               </thead>
               <tbody>
-                {students.map(student => (
+                {students.map((student) => (
                   <tr key={student._id}>
                     <td>{student.name}</td>
                     <td>{student.rollNumber}</td>
-                    <td>{student.email || 'N/A'}</td>
+                    <td>{student.email || "N/A"}</td>
                   </tr>
                 ))}
               </tbody>
