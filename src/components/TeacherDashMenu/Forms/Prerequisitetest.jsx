@@ -82,7 +82,7 @@ function TeacherPrerequisiteTest() {
         for (const test of response.data) {
           try {
             const res = await axios.get(
-              `${API_BASE_URL}/api/teacher/test-responses/${test._id}`,
+              `${API_BASE_URL}/api/teacher/test-results/${test._id}`,
               {
                 headers: {
                   Authorization: `Bearer ${sessionStorage.getItem("token")}`,
