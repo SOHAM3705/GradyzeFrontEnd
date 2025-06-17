@@ -68,6 +68,7 @@ function TeacherPrerequisiteTest() {
           ...(testType === "subject" && { subjectName, semester }),
         });
 
+        // Fetch tests
         const response = await axios.get(
           `${API_BASE_URL}/api/teacher/my-tests?${params.toString()}`,
           {
@@ -78,24 +79,23 @@ function TeacherPrerequisiteTest() {
         );
         setSavedTests(response.data);
 
-        const counts = {};
-        for (const test of response.data) {
-          try {
-            const res = await axios.get(
-              `${API_BASE_URL}/api/teacher/submission-stats`,
-              {
-                headers: {
-                  Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-                },
-              }
-            );
-            const testStats = res.data.tests.find((t) => t._id === test._id);
-            counts[test._id] = testStats ? testStats.submissionCount : 0;
-          } catch (err) {
-            console.error(`Error fetching results for test ${test._id}:`, err);
-            counts[test._id] = 0;
+        // Fetch all submissions for these tests at once (more efficient)
+        const testIds = response.data.map((test) => test._id);
+        const submissionsResponse = await axios.post(
+          `${API_BASE_URL}/api/teacher/submissions/counts`,
+          { testIds },
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+            },
           }
-        }
+        );
+
+        // Create counts object
+        const counts = {};
+        response.data.forEach((test) => {
+          counts[test._id] = submissionsResponse.data[test._id] || 0;
+        });
         setResponseCount(counts);
       } catch (err) {
         setError("Failed to fetch tests");
