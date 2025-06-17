@@ -1,27 +1,61 @@
-import React, { useContext, useState, useEffect, useCallback } from "react";
-import { AttendanceContext } from "../../../utils/AttendanceContext";
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 import { AttendanceStatusBadge } from "./shared/AttendanceStatusBadge";
 
 const Attendance = () => {
-  const {
-    classes,
-    students,
-    loading,
-    loadStudents,
-    saveAttendance,
-    error: contextError,
-    clearError,
-  } = useContext(AttendanceContext);
-
+  const [classes, setClasses] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [localError, setLocalError] = useState(null);
 
-  // Initialize attendance data
+  // Fetch teacher's classes
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const teacherId = sessionStorage.getItem("teacherId");
+      if (!teacherId) {
+        setError("Teacher ID not found in session");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-classes/${teacherId}`
+        );
+        setClasses(response.data);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load classes");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, []);
+
+  // Load students when class is selected
+  const loadStudents = useCallback(async (classId) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/class-students/${classId}`
+      );
+      setStudents(response.data);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load students");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initialize attendance data when students change
   useEffect(() => {
     if (students.length > 0) {
       const initialAttendance = students.reduce(
@@ -38,10 +72,10 @@ const Attendance = () => {
   const handleClassSelect = useCallback(
     (classItem) => {
       setSelectedClass(classItem);
-      clearError();
+      setError(null);
       loadStudents(classItem._id);
     },
-    [loadStudents, clearError]
+    [loadStudents]
   );
 
   const toggleAttendance = useCallback((studentId) => {
@@ -56,12 +90,12 @@ const Attendance = () => {
 
   const handleSaveAttendance = useCallback(async () => {
     if (!selectedClass) {
-      setLocalError("Please select a class first");
+      setError("Please select a class first");
       return;
     }
 
     if (Object.keys(attendanceData).length === 0) {
-      setLocalError("No students to mark attendance for");
+      setError("No students to mark attendance for");
       return;
     }
 
@@ -75,15 +109,21 @@ const Attendance = () => {
       })),
     };
 
+    setLoading(true);
     try {
-      await saveAttendance(payload);
-      setLocalError(null);
+      await axios.post(
+        "https://gradyzebackend.onrender.com/api/attendance",
+        payload
+      );
+      setError(null);
+      alert("Attendance saved successfully!");
     } catch (err) {
-      setLocalError(err.message || "Failed to save attendance");
+      setError(err.response?.data?.message || "Failed to save attendance");
+    } finally {
+      setLoading(false);
     }
-  }, [selectedClass, attendanceData, selectedDate, saveAttendance]);
+  }, [selectedClass, attendanceData, selectedDate]);
 
-  const error = localError || contextError;
   const showAttendanceForm = selectedClass && students.length > 0;
 
   return (
@@ -195,9 +235,10 @@ const Attendance = () => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={handleSaveAttendance}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  Save Attendance
+                  {loading ? "Saving..." : "Save Attendance"}
                 </button>
               </div>
             </div>

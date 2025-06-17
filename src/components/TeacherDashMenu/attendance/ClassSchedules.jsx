@@ -24,7 +24,7 @@ const ClassSchedules = () => {
       try {
         // Fetch assigned classes (you'll need to implement this endpoint)
         const classResponse = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-classes/${teacherId}`
+          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
         );
         setClasses(classResponse.data);
 
