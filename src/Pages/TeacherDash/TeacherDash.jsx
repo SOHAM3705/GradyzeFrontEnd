@@ -62,6 +62,8 @@ function TeacherDash() {
     { label: "Schedule Class", path: "/teacherdash/schedule-class" },
     { label: "Class Schedules", path: "/teacherdash/class-schedules" },
     { label: "Attendance Records", path: "/teacherdash/attendance-records" },
+    { label: "Manage Classes", path: "/teacherdash/manage-classes" },
+    { label: "Manage Students", path: "/teacherdash/manage-students" },
   ];
 
   const bottomMenuItems = [

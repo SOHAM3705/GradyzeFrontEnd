@@ -44,6 +44,8 @@ import ScheduleClass from "./components/TeacherDashMenu/attendance/ScheduleClass
 import Attendance from "./components/TeacherDashMenu/attendance/Attendance";
 import AttendanceRecords from "./components/TeacherDashMenu/attendance/AttendanceRecords";
 import ClassSchedules from "./components/TeacherDashMenu/attendance/ClassSchedules";
+import ManageClasses from "./components/TeacherDashMenu/attendance/ManageClasses";
+import ManageStudents from "./components/TeacherDashMenu/attendance/ManageStudents";
 
 import AssignmentManage from "./components/TeacherDashMenu/AssignmentManage";
 
@@ -147,6 +149,8 @@ function App() {
         <Route path="schedule-class" element={<ScheduleClass />} />
         <Route path="attendance-records" element={<AttendanceRecords />} />
         <Route path="class-schedules" element={<ClassSchedules />} />
+        <Route path="manage-classes" element={<ManageClasses />} />
+        <Route path="manage-students" element={<ManageStudents />} />
         <Route path="notifications" element={<TeacherNotifications />} />
         <Route path="syllabus" element={<TeacherSyllabusView />} />
         <Route path="feedback" element={<TeacherFeedback />} />
