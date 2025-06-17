@@ -111,18 +111,25 @@ const Prerequisitetest = () => {
         `${API_BASE_URL}/api/student/tests/${testId}`,
         config
       );
-      const submissionResponse = await axios.get(
-        `${API_BASE_URL}/api/student/submissions/test/${testId}`,
+
+      const submissionsResponse = await axios.get(
+        `${API_BASE_URL}/api/student/submissions`,
         {
           params: { studentId },
           ...config,
         }
       );
 
+      // Find submission for this testId
+      const submission = submissionsResponse.data.find((sub) => {
+        const subTestId = sub.testId?._id || sub.test || sub.formId || sub._id;
+        return String(subTestId) === String(testId);
+      });
+
       setPreviewModal({
         show: true,
         test: testResponse.data,
-        submission: submissionResponse.data,
+        submission: submission || null,
       });
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load test preview");
@@ -145,6 +152,42 @@ const Prerequisitetest = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold mb-4 text-blue-600">
+          Available Tests ({availableTests.length})
+        </h2>
+        {availableTests.length === 0 ? (
+          <p className="text-gray-500">No tests available at the moment.</p>
+        ) : (
+          <div className="space-y-4">
+            {availableTests.map((test) => (
+              <div
+                key={test._id}
+                className="border rounded-lg p-4 hover:bg-gray-50 border-blue-200"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium text-lg">{test.title}</h3>
+                    <p className="text-gray-600">{test.description}</p>
+                    <div className="mt-2 text-sm text-gray-500">
+                      <span className="bg-blue-100 px-2 py-1 rounded text-blue-800">
+                        Status: Available
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleStartTest(test._id)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Start Test
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {submittedTests.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4 text-green-600">
@@ -187,42 +230,6 @@ const Prerequisitetest = () => {
           </div>
         </div>
       )}
-
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4 text-blue-600">
-          Available Tests ({availableTests.length})
-        </h2>
-        {availableTests.length === 0 ? (
-          <p className="text-gray-500">No tests available at the moment.</p>
-        ) : (
-          <div className="space-y-4">
-            {availableTests.map((test) => (
-              <div
-                key={test._id}
-                className="border rounded-lg p-4 hover:bg-gray-50 border-blue-200"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium text-lg">{test.title}</h3>
-                    <p className="text-gray-600">{test.description}</p>
-                    <div className="mt-2 text-sm text-gray-500">
-                      <span className="bg-blue-100 px-2 py-1 rounded text-blue-800">
-                        Status: Available
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleStartTest(test._id)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    Start Test
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {previewModal.show && previewModal.test && previewModal.submission && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
