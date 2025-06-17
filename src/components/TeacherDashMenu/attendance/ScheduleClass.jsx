@@ -1,6 +1,6 @@
 import React, { useContext, useState, useCallback } from "react";
 import { AttendanceContext } from "../../../utils/AttendanceContext";
-import AttendanceDatePicker from "./shared/AttendanceDataPicker";
+import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 
 const ScheduleClass = () => {
   const {

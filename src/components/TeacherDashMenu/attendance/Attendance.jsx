@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect, useCallback } from "react";
 import { AttendanceContext } from "../../../utils/AttendanceContext";
-import AttendanceDatePicker from "./shared/AttendanceDataPicker";
-import AttendanceStatusBadge from "./shared/AttendanceStatusBadge";
+import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
+import { AttendanceStatusBadge } from "./shared/AttendanceStatusBadge";
 
 const Attendance = () => {
   const {
