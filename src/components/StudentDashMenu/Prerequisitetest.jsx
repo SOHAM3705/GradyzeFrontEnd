@@ -52,28 +52,55 @@ const Prerequisitetest = () => {
           }),
         ]);
 
-        const publishedTests = testsRes.data.filter(
-          (test) => test.status === "published"
-        );
+        // Debug logs to check data structure
+        console.log("Tests data:", testsRes.data);
+        console.log("Submissions data:", submissionsRes.data);
 
-        const submittedTestIds = submissionsRes.data.map((sub) => sub.testId);
+        // Convert both to strings to ensure proper comparison
+        const submittedTestIds = submissionsRes.data.map((sub) => {
+          // Handle different possible property names for test ID in submission
+          const testId = sub.testId || sub.test || sub.formId || sub._id;
+          return String(testId);
+        });
 
-        const available = publishedTests.filter(
-          (test) => !submittedTestIds.includes(test._id)
-        );
+        console.log("Submitted test IDs:", submittedTestIds);
 
+        // Filter available tests (not submitted)
+        const available = testsRes.data.filter((test) => {
+          const testIdStr = String(test._id);
+          const isSubmitted = submittedTestIds.includes(testIdStr);
+          console.log(
+            `Test ${test.title} (${testIdStr}): ${
+              isSubmitted ? "SUBMITTED" : "AVAILABLE"
+            }`
+          );
+          return !isSubmitted;
+        });
+
+        // Filter submitted tests and attach submission data
         const submitted = testsRes.data
-          .filter((test) => submittedTestIds.includes(test._id))
+          .filter((test) => {
+            const testIdStr = String(test._id);
+            return submittedTestIds.includes(testIdStr);
+          })
           .map((test) => {
-            const submission = submissionsRes.data.find(
-              (sub) => sub.testId === test._id
-            );
+            const submission = submissionsRes.data.find((sub) => {
+              const subTestId = String(
+                sub.testId || sub.test || sub.formId || sub._id
+              );
+              const testIdStr = String(test._id);
+              return subTestId === testIdStr;
+            });
             return { ...test, submission };
           });
+
+        console.log("Available tests:", available);
+        console.log("Submitted tests:", submitted);
 
         setAvailableTests(available);
         setSubmittedTests(submitted);
       } catch (err) {
+        console.error("Error fetching data:", err);
         setError(
           err.response?.data?.message || err.message || "Failed to load data"
         );
@@ -113,6 +140,7 @@ const Prerequisitetest = () => {
         submission: submissionResponse.data,
       });
     } catch (err) {
+      console.error("Error loading test preview:", err);
       setError(err.response?.data?.message || "Failed to load test preview");
     } finally {
       setLoading(false);
@@ -133,27 +161,41 @@ const Prerequisitetest = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Debug info - remove in production */}
+      <div className="bg-gray-100 p-4 rounded mb-4 text-sm">
+        <p>Debug Info:</p>
+        <p>Available Tests: {availableTests.length}</p>
+        <p>Submitted Tests: {submittedTests.length}</p>
+      </div>
+
       {submittedTests.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Submitted Tests</h2>
+          <h2 className="text-xl font-semibold mb-4 text-green-600">
+            Submitted Tests ({submittedTests.length})
+          </h2>
           <div className="space-y-4">
             {submittedTests.map((test) => (
               <div
                 key={test._id}
-                className="border rounded-lg p-4 hover:bg-gray-50"
+                className="border rounded-lg p-4 hover:bg-gray-50 border-green-200 bg-green-50"
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium text-lg">{test.title}</h3>
                     <p className="text-gray-600">{test.description}</p>
                     <div className="mt-2 text-sm text-gray-500">
-                      <span>
-                        Score: {test.submission.totalScore} /
-                        {test.questions.reduce(
-                          (sum, q) => sum + (q.points || 1),
-                          0
-                        )}
+                      <span className="bg-green-100 px-2 py-1 rounded text-green-800">
+                        Status: Submitted
                       </span>
+                      {test.submission && (
+                        <span className="ml-2">
+                          Score: {test.submission.totalScore} /
+                          {test.questions?.reduce(
+                            (sum, q) => sum + (q.points || 1),
+                            0
+                          ) || "N/A"}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button
@@ -170,7 +212,9 @@ const Prerequisitetest = () => {
       )}
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Available Tests</h2>
+        <h2 className="text-xl font-semibold mb-4 text-blue-600">
+          Available Tests ({availableTests.length})
+        </h2>
         {availableTests.length === 0 ? (
           <p className="text-gray-500">No tests available at the moment.</p>
         ) : (
@@ -178,12 +222,17 @@ const Prerequisitetest = () => {
             {availableTests.map((test) => (
               <div
                 key={test._id}
-                className="border rounded-lg p-4 hover:bg-gray-50"
+                className="border rounded-lg p-4 hover:bg-gray-50 border-blue-200"
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium text-lg">{test.title}</h3>
                     <p className="text-gray-600">{test.description}</p>
+                    <div className="mt-2 text-sm text-gray-500">
+                      <span className="bg-blue-100 px-2 py-1 rounded text-blue-800">
+                        Status: Available
+                      </span>
+                    </div>
                   </div>
                   <button
                     onClick={() => handleStartTest(test._id)}
