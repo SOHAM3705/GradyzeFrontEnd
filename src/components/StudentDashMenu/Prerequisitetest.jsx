@@ -56,10 +56,8 @@ const Prerequisitetest = () => {
         console.log("Tests data:", testsRes.data);
         console.log("Submissions data:", submissionsRes.data);
 
-        // Convert both to strings to ensure proper comparison
         const submittedTestIds = submissionsRes.data.map((sub) => {
-          // Handle different possible property names for test ID in submission
-          const testId = sub.testId || sub.test || sub.formId || sub._id;
+          const testId = sub.testId?._id || sub.test || sub.formId || sub._id;
           return String(testId);
         });
 
@@ -86,7 +84,7 @@ const Prerequisitetest = () => {
           .map((test) => {
             const submission = submissionsRes.data.find((sub) => {
               const subTestId = String(
-                sub.testId || sub.test || sub.formId || sub._id
+                sub.testId?._id || sub.test || sub.formId || sub._id
               );
               const testIdStr = String(test._id);
               return subTestId === testIdStr;

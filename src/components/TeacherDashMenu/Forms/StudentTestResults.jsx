@@ -8,6 +8,9 @@ const StudentTestResults = ({ testId }) => {
   const [error, setError] = useState(null);
   const [selectedTest, setSelectedTest] = useState(testId || "all");
   const [allTests, setAllTests] = useState([]);
+  const [expandedResult, setExpandedResult] = useState(null);
+  const [detailedResponse, setDetailedResponse] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,6 +54,7 @@ const StudentTestResults = ({ testId }) => {
     const selectedTestId = e.target.value;
     setSelectedTest(selectedTestId);
     setLoading(true);
+    setExpandedResult(null); // Close any expanded details
 
     try {
       const endpoint =
@@ -72,13 +76,110 @@ const StudentTestResults = ({ testId }) => {
     }
   };
 
+  const fetchDetailedResponse = async (submissionId, testId, studentId) => {
+    try {
+      setLoadingDetails(true);
+
+      // Try multiple possible endpoints for fetching detailed responses
+      let response;
+      try {
+        // Option 1: Fetch by submission ID
+        response = await axios.get(
+          `${API_BASE_URL}/api/teacher/submission/${submissionId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+            },
+          }
+        );
+      } catch (err) {
+        // Option 2: Fetch by test and student ID
+        response = await axios.get(
+          `${API_BASE_URL}/api/teacher/submission/test/${testId}/student/${studentId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+            },
+          }
+        );
+      }
+
+      setDetailedResponse(response.data);
+    } catch (err) {
+      console.error("Failed to fetch detailed response:", err);
+      setError("Failed to load detailed response");
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const toggleExpandResult = async (result, index) => {
+    if (expandedResult === index) {
+      setExpandedResult(null);
+      setDetailedResponse(null);
+    } else {
+      setExpandedResult(index);
+      await fetchDetailedResponse(
+        result.submissionId || result._id,
+        result.test._id || result.testId,
+        result.student._id || result.studentId
+      );
+    }
+  };
+
+  const renderAnswerValue = (answer, question) => {
+    if (!answer || answer.answer === undefined || answer.answer === null) {
+      return <span className="text-gray-400 italic">No answer provided</span>;
+    }
+
+    if (Array.isArray(answer.answer)) {
+      // Multiple choice answers
+      return (
+        <ul className="list-disc pl-5">
+          {answer.answer.map((optionIndex, i) => (
+            <li key={i}>
+              {question.options?.[optionIndex] || `Option ${optionIndex + 1}`}
+            </li>
+          ))}
+        </ul>
+      );
+    } else if (question.type === "single" && question.options) {
+      // Single choice answer
+      return question.options[answer.answer] || `Option ${answer.answer + 1}`;
+    } else {
+      // Text/short answer
+      return answer.answer;
+    }
+  };
+
+  const renderCorrectAnswer = (question) => {
+    if (Array.isArray(question.correctAnswer)) {
+      return (
+        <ul className="list-disc pl-5">
+          {question.correctAnswer.map((optionIndex, i) => (
+            <li key={i}>
+              {question.options?.[optionIndex] || `Option ${optionIndex + 1}`}
+            </li>
+          ))}
+        </ul>
+      );
+    } else if (question.type === "single" && question.options) {
+      return (
+        question.options[question.correctAnswer] ||
+        `Option ${question.correctAnswer + 1}`
+      );
+    } else {
+      return question.correctAnswer || "N/A";
+    }
+  };
+
   if (loading)
     return <div className="text-center py-8">Loading results...</div>;
   if (error)
     return <div className="text-red-500 text-center py-8">{error}</div>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h2 className="text-2xl font-bold">Student Test Results</h2>
 
@@ -104,53 +205,210 @@ const StudentTestResults = ({ testId }) => {
 
       <div className="mt-4 overflow-x-auto">
         {results.length > 0 ? (
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="py-3 px-4 border-b text-left">Student</th>
-                <th className="py-3 px-4 border-b text-left">Test</th>
-                <th className="py-3 px-4 border-b text-left">Score</th>
-                <th className="py-3 px-4 border-b text-left">Percentage</th>
-                <th className="py-3 px-4 border-b text-left">Submitted</th>
-                <th className="py-3 px-4 border-b text-left">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((result, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="py-3 px-4 border-b">
-                    <div className="font-medium">{result.student.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {result.student.email}
+          <div className="space-y-4">
+            {results.map((result, index) => (
+              <div
+                key={index}
+                className="bg-white border border-gray-200 rounded-lg"
+              >
+                {/* Summary Row */}
+                <div
+                  className="p-4 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => toggleExpandResult(result, index)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4">
+                      <div>
+                        <div className="font-medium">{result.student.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {result.student.email}
+                        </div>
+                      </div>
+                      <div>{result.test.title}</div>
+                      <div>
+                        {result.score} / {result.totalPossible}
+                      </div>
+                      <div>
+                        {((result.score / result.totalPossible) * 100).toFixed(
+                          2
+                        )}
+                        %
+                      </div>
+                      <div className="text-sm">
+                        {new Date(result.submittedAt).toLocaleString()}
+                      </div>
+                      <div>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            result.score / result.totalPossible >= 0.7
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {result.score / result.totalPossible >= 0.7
+                            ? "Passed"
+                            : "Failed"}
+                        </span>
+                      </div>
                     </div>
-                  </td>
-                  <td className="py-3 px-4 border-b">{result.test.title}</td>
-                  <td className="py-3 px-4 border-b">
-                    {result.score} / {result.totalPossible}
-                  </td>
-                  <td className="py-3 px-4 border-b">
-                    {((result.score / result.totalPossible) * 100).toFixed(2)}%
-                  </td>
-                  <td className="py-3 px-4 border-b">
-                    {new Date(result.submittedAt).toLocaleString()}
-                  </td>
-                  <td className="py-3 px-4 border-b">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        result.score / result.totalPossible >= 0.7
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {result.score / result.totalPossible >= 0.7
-                        ? "Passed"
-                        : "Failed"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div className="ml-4">
+                      <svg
+                        className={`w-5 h-5 transition-transform ${
+                          expandedResult === index ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Response */}
+                {expandedResult === index && (
+                  <div className="border-t bg-gray-50 p-4">
+                    {loadingDetails ? (
+                      <div className="text-center py-4">
+                        Loading detailed responses...
+                      </div>
+                    ) : detailedResponse ? (
+                      <div className="space-y-6">
+                        <h4 className="font-semibold text-lg">
+                          Detailed Response Analysis
+                        </h4>
+
+                        {detailedResponse.test?.questions?.map(
+                          (question, qIndex) => {
+                            const answer = detailedResponse.answers?.find(
+                              (a) =>
+                                a.questionId ===
+                                (question._id || qIndex.toString())
+                            );
+
+                            return (
+                              <div
+                                key={qIndex}
+                                className={`border rounded-lg p-4 ${
+                                  answer?.isCorrect
+                                    ? "bg-green-50 border-green-200"
+                                    : "bg-red-50 border-red-200"
+                                }`}
+                              >
+                                <div className="flex justify-between items-start mb-3">
+                                  <div className="flex-1">
+                                    <h5 className="font-medium">
+                                      Question {qIndex + 1}:{" "}
+                                      {question.questionText}
+                                    </h5>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                      Points: {question.points || 1} | Type:{" "}
+                                      {question.type}
+                                    </p>
+                                  </div>
+                                  <div
+                                    className={`px-3 py-1 rounded-full text-sm ${
+                                      answer?.isCorrect
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
+                                    }`}
+                                  >
+                                    {answer?.isCorrect
+                                      ? "Correct"
+                                      : "Incorrect"}
+                                  </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                  {/* Student's Answer */}
+                                  <div>
+                                    <p className="font-medium text-gray-700 mb-2">
+                                      Student's Answer:
+                                    </p>
+                                    <div className="bg-white p-3 rounded border">
+                                      {renderAnswerValue(answer, question)}
+                                    </div>
+                                  </div>
+
+                                  {/* Correct Answer (for incorrect responses or always show) */}
+                                  <div>
+                                    <p className="font-medium text-gray-700 mb-2">
+                                      Correct Answer:
+                                    </p>
+                                    <div className="bg-white p-3 rounded border">
+                                      {renderCorrectAnswer(question)}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="mt-3 text-sm text-gray-600">
+                                  Points Awarded: {answer?.pointsAwarded || 0} /{" "}
+                                  {question.points || 1}
+                                </div>
+                              </div>
+                            );
+                          }
+                        )}
+
+                        {/* Summary Stats */}
+                        <div className="bg-white p-4 rounded border">
+                          <h5 className="font-medium mb-2">Summary</h5>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">
+                                Total Questions:
+                              </span>
+                              <div className="font-medium">
+                                {detailedResponse.test?.questions?.length || 0}
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">
+                                Correct Answers:
+                              </span>
+                              <div className="font-medium text-green-600">
+                                {detailedResponse.answers?.filter(
+                                  (a) => a.isCorrect
+                                ).length || 0}
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">
+                                Incorrect Answers:
+                              </span>
+                              <div className="font-medium text-red-600">
+                                {detailedResponse.answers?.filter(
+                                  (a) => !a.isCorrect
+                                ).length || 0}
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Time Taken:</span>
+                              <div className="font-medium">
+                                {detailedResponse.timeTaken
+                                  ? `${detailedResponse.timeTaken} min`
+                                  : "N/A"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        No detailed response data available
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-8 border rounded bg-gray-50">
             <p className="text-gray-500 italic">No student results found</p>
