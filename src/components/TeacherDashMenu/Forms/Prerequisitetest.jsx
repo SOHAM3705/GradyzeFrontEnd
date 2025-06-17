@@ -82,15 +82,17 @@ function TeacherPrerequisiteTest() {
         for (const test of response.data) {
           try {
             const res = await axios.get(
-              `${API_BASE_URL}/api/teacher/test-results/${test._id}`,
+              `${API_BASE_URL}/api/teacher/submission-stats`,
               {
                 headers: {
                   Authorization: `Bearer ${sessionStorage.getItem("token")}`,
                 },
               }
             );
-            counts[test._id] = res.data.count;
+            const testStats = res.data.tests.find((t) => t._id === test._id);
+            counts[test._id] = testStats ? testStats.submissionCount : 0;
           } catch (err) {
+            console.error(`Error fetching results for test ${test._id}:`, err);
             counts[test._id] = 0;
           }
         }

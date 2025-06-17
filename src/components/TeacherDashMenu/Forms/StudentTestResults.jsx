@@ -17,7 +17,6 @@ const StudentTestResults = ({ testId }) => {
       try {
         setLoading(true);
 
-        // Fetch all tests for the filter dropdown
         const testsResponse = await axios.get(
           `${API_BASE_URL}/api/teacher/my-tests`,
           {
@@ -39,7 +38,17 @@ const StudentTestResults = ({ testId }) => {
           },
         });
 
-        setResults(resultsResponse.data);
+        // Transform data if needed to match frontend expectations
+        const formattedResults = resultsResponse.data.map((result) => ({
+          ...result,
+          student: {
+            _id: result.student?._id || result.studentId,
+            name: result.student?.name || result.studentName,
+            email: result.student?.email || result.studentEmail,
+          },
+        }));
+
+        setResults(formattedResults);
       } catch (err) {
         setError(err.response?.data?.error || "Failed to fetch results");
       } finally {
