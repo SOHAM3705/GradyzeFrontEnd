@@ -1,12 +1,17 @@
-// Fixed ScheduleClass.jsx with improved context usage
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useCallback } from "react";
 import { AttendanceContext } from "../../../utils/AttendanceContext";
+import { AttendanceDatePicker } from "../../components/shared";
 
 const ScheduleClass = () => {
-  const { classes, scheduleClass, loading, fetchClasses } =
-    useContext(AttendanceContext);
+  const {
+    classes,
+    scheduleClass,
+    loading,
+    error: contextError,
+    clearError,
+  } = useContext(AttendanceContext);
 
-  const [scheduleData, setScheduleData] = useState({
+  const [formData, setFormData] = useState({
     classId: "",
     date: new Date().toISOString().split("T")[0],
     startTime: "09:00",
@@ -14,173 +19,165 @@ const ScheduleClass = () => {
     title: "",
     description: "",
   });
-
-  const [error, setError] = useState(null);
+  const [localError, setLocalError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Fetch classes when component mounts
-  useEffect(() => {
-    const loadClasses = async () => {
-      try {
-        await fetchClasses();
-      } catch (err) {
-        console.error("Error loading classes in ScheduleClass component:", err);
-        setError("Failed to load classes. Please refresh the page.");
-      }
-    };
-
-    loadClasses();
-  }, [fetchClasses]);
-
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setScheduleData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setLocalError(null);
+    setSuccessMessage(null);
+  }, []);
 
-    // Clear messages when user makes changes
-    if (error) setError(null);
-    if (successMessage) setSuccessMessage(null);
-  };
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      clearError();
+      setLocalError(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
+      if (formData.startTime >= formData.endTime) {
+        setLocalError("End time must be after start time");
+        return;
+      }
 
-    // Validate end time is after start time
-    if (scheduleData.startTime >= scheduleData.endTime) {
-      setError("End time must be after start time");
-      return;
-    }
+      try {
+        await scheduleClass(formData);
+        setSuccessMessage("Class scheduled successfully!");
+        setFormData({
+          classId: "",
+          date: new Date().toISOString().split("T")[0],
+          startTime: "09:00",
+          endTime: "10:00",
+          title: "",
+          description: "",
+        });
+      } catch (err) {
+        setLocalError(err.message || "Failed to schedule class");
+      }
+    },
+    [formData, scheduleClass, clearError]
+  );
 
-    try {
-      await scheduleClass(scheduleData);
-      setSuccessMessage("Class scheduled successfully!");
-
-      // Reset form
-      setScheduleData({
-        classId: "",
-        date: new Date().toISOString().split("T")[0],
-        startTime: "09:00",
-        endTime: "10:00",
-        title: "",
-        description: "",
-      });
-    } catch (err) {
-      console.error("Error scheduling class:", err);
-      setError(
-        err.response?.data?.error ||
-          "Failed to schedule class. Please try again."
-      );
-    }
-  };
+  const error = localError || contextError;
 
   return (
-    <div className="schedule-form">
-      <h3>Schedule a Class</h3>
+    <div className="container mx-auto p-4 max-w-2xl">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">
+        Schedule a Class
+      </h1>
 
       {error && (
-        <div
-          className="error-message"
-          style={{ color: "red", marginBottom: "10px" }}
-        >
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
           {error}
         </div>
       )}
+
       {successMessage && (
-        <div
-          className="success-message"
-          style={{ color: "green", marginBottom: "10px" }}
-        >
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
           {successMessage}
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="classId">Select Class</label>
-          <select
-            id="classId"
-            name="classId"
-            value={scheduleData.classId}
-            onChange={handleChange}
-            required
-          >
-            <option value="">-- Select Class --</option>
-            {classes.map((classItem) => (
-              <option key={classItem._id} value={classItem._id}>
-                {classItem.className}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="bg-white rounded-lg shadow p-6">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Class
+              </label>
+              <select
+                name="classId"
+                value={formData.classId}
+                onChange={handleChange}
+                required
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">-- Select Class --</option>
+                {classes.map((classItem) => (
+                  <option key={classItem._id} value={classItem._id}>
+                    {classItem.className}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className="form-group">
-          <label htmlFor="title">Class Title</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={scheduleData.title}
-            onChange={handleChange}
-            required
-            placeholder="E.g. Mathematics Lecture"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                placeholder="E.g. Mathematics Lecture"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
-        <div className="form-group">
-          <label htmlFor="date">Date</label>
-          <input
-            type="date"
-            id="date"
-            name="date"
-            value={scheduleData.date}
-            onChange={handleChange}
-            required
-          />
-        </div>
+            <AttendanceDatePicker
+              label="Date"
+              name="date"
+              value={formData.date}
+              onChange={(e) => handleChange({ target: e.target })}
+            />
 
-        <div className="form-group">
-          <label htmlFor="startTime">Start Time</label>
-          <input
-            type="time"
-            id="startTime"
-            name="startTime"
-            value={scheduleData.startTime}
-            onChange={handleChange}
-            required
-          />
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Time
+                </label>
+                <input
+                  type="time"
+                  name="startTime"
+                  value={formData.startTime}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Time
+                </label>
+                <input
+                  type="time"
+                  name="endTime"
+                  value={formData.endTime}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
 
-        <div className="form-group">
-          <label htmlFor="endTime">End Time</label>
-          <input
-            type="time"
-            id="endTime"
-            name="endTime"
-            value={scheduleData.endTime}
-            onChange={handleChange}
-            required
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description (Optional)
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Additional information about the class"
+                rows={3}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
-        <div className="form-group">
-          <label htmlFor="description">Description (Optional)</label>
-          <input
-            type="text"
-            id="description"
-            name="description"
-            value={scheduleData.description}
-            onChange={handleChange}
-            placeholder="Additional information about the class"
-          />
-        </div>
-
-        <button type="submit" className="btn-schedule" disabled={loading}>
-          {loading ? "Scheduling..." : "Schedule Class"}
-        </button>
-      </form>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {loading ? "Scheduling..." : "Schedule Class"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

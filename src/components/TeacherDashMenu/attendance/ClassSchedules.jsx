@@ -1,273 +1,204 @@
-// Fixed ClassSchedules.jsx with improved class loading
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { AttendanceContext } from "../../../utils/AttendanceContext";
+import { AttendanceDatePicker } from "../../components/shared";
 
 const ClassSchedules = () => {
-  const { classes, schedules, fetchSchedules, fetchClasses, loading } =
-    useContext(AttendanceContext);
+  const {
+    classes,
+    schedules,
+    fetchSchedules,
+    fetchClasses,
+    loading,
+    error: contextError,
+    clearError,
+  } = useContext(AttendanceContext);
 
   const [filter, setFilter] = useState({
     classId: "",
     date: "",
   });
-
-  const [error, setError] = useState(null);
   const [localLoading, setLocalLoading] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Fetch data on component mount and when tab becomes active
-  useEffect(() => {
-    const loadData = async () => {
-      if (!dataLoaded) {
-        setLocalLoading(true);
-        setError(null);
+  const isLoading = loading || localLoading;
+  const errorMessage = error || contextError;
 
-        try {
-          console.log("ClassSchedules: Loading initial data...");
-          // First load classes, then schedules
-          const classesData = await fetchClasses();
-          console.log("ClassSchedules: Classes loaded:", classesData);
-
-          const schedulesData = await fetchSchedules();
-          console.log("ClassSchedules: Schedules loaded:", schedulesData);
-
-          setDataLoaded(true);
-        } catch (err) {
-          console.error("Error loading data in ClassSchedules:", err);
-          setError("Failed to load data. Please refresh the page.");
-        } finally {
-          setLocalLoading(false);
-        }
-      }
-    };
-
-    loadData();
-  }, [fetchClasses, fetchSchedules, dataLoaded]);
-
-  // Add a manual refresh function
-  const handleRefresh = async () => {
+  const loadData = useCallback(async () => {
     setLocalLoading(true);
     setError(null);
-
     try {
       await fetchClasses();
       await fetchSchedules();
     } catch (err) {
-      console.error("Error refreshing data:", err);
-      setError("Failed to refresh data. Please try again.");
+      setError("Failed to load data. Please try again.");
     } finally {
       setLocalLoading(false);
     }
-  };
+  }, [fetchClasses, fetchSchedules]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleRefresh = useCallback(() => {
+    loadData();
+  }, [loadData]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilter((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFilter((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Filter schedules based on selected filters
-  const filteredSchedules = schedules.filter((schedule) => {
-    let matchesClass = true;
-    let matchesDate = true;
-
-    if (filter.classId) {
-      matchesClass = schedule.classId === filter.classId;
-    }
-
-    if (filter.date) {
+  const filteredSchedules = useMemo(() => {
+    return schedules.filter((schedule) => {
+      const matchesClass =
+        !filter.classId || schedule.classId === filter.classId;
       const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
-      matchesDate = scheduleDate === filter.date;
-    }
+      const matchesDate = !filter.date || scheduleDate === filter.date;
+      return matchesClass && matchesDate;
+    });
+  }, [schedules, filter]);
 
-    return matchesClass && matchesDate;
-  });
+  const getClassName = useCallback(
+    (classId) => {
+      const foundClass = classes.find((c) => c._id === classId);
+      return foundClass ? foundClass.className : "Unknown Class";
+    },
+    [classes]
+  );
 
-  // Get class name by ID with improved error handling
-  const getClassName = (classId) => {
-    const foundClass = classes.find((c) => c._id === classId);
-    return foundClass ? foundClass.className : "Unknown Class";
-  };
-
-  // Format time for display (24h to 12h format)
-  const formatTime = (time24h) => {
+  const formatTime = useCallback((time24h) => {
     if (!time24h) return "N/A";
-
     const [hours, minutes] = time24h.split(":");
     const hour = parseInt(hours, 10);
     const period = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12; // Convert 0 to 12
+    const hour12 = hour % 12 || 12;
     return `${hour12}:${minutes} ${period}`;
-  };
+  }, []);
 
-  // Check if a schedule is for today
-  const isToday = (dateString) => {
+  const isToday = useCallback((dateString) => {
     const today = new Date().toISOString().split("T")[0];
     const scheduleDate = new Date(dateString).toISOString().split("T")[0];
     return today === scheduleDate;
-  };
-
-  // Combined loading state
-  const isLoading = loading || localLoading;
+  }, []);
 
   return (
-    <div className="records-container">
-      <h3>Class Schedules</h3>
+    <div className="container mx-auto p-4 max-w-6xl">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Class Schedules</h1>
 
-      {error && (
-        <div
-          className="error-message"
-          style={{
-            color: "red",
-            marginBottom: "10px",
-            padding: "8px",
-            backgroundColor: "#ffeeee",
-            borderRadius: "4px",
-          }}
-        >
-          {error}
+      {errorMessage && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
+          {errorMessage}
         </div>
       )}
 
-      <div style={{ marginBottom: "15px" }}>
-        <button
-          onClick={handleRefresh}
-          disabled={isLoading}
-          style={{
-            padding: "5px 10px",
-            backgroundColor: "#f0f0f0",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          {isLoading ? "Refreshing..." : "Refresh Data"}
-        </button>
-      </div>
-
-      <div className="filter-controls">
-        <div className="filter-group">
-          <label htmlFor="filterClassId">Filter by Class</label>
-          <select
-            id="filterClassId"
-            name="classId"
-            value={filter.classId}
-            onChange={handleFilterChange}
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={handleRefresh}
             disabled={isLoading}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50"
           >
-            <option value="">All Classes</option>
-            {classes.map((classItem) => (
-              <option key={classItem._id} value={classItem._id}>
-                {classItem.className}
-              </option>
-            ))}
-          </select>
-        </div>
+            {isLoading ? "Refreshing..." : "Refresh Data"}
+          </button>
 
-        <div className="filter-group">
-          <label htmlFor="filterDate">Filter by Date</label>
-          <input
-            type="date"
-            id="filterDate"
-            name="date"
-            value={filter.date}
-            onChange={handleFilterChange}
-            disabled={isLoading}
-          />
-        </div>
-      </div>
-
-      {isLoading ? (
-        <p>Loading schedules...</p>
-      ) : filteredSchedules.length > 0 ? (
-        <table
-          className="records-table"
-          style={{ width: "100%", borderCollapse: "collapse" }}
-        >
-          <thead>
-            <tr>
-              <th
-                style={{
-                  borderBottom: "1px solid #ddd",
-                  padding: "8px",
-                  textAlign: "left",
-                }}
-              >
-                Date
-              </th>
-              <th
-                style={{
-                  borderBottom: "1px solid #ddd",
-                  padding: "8px",
-                  textAlign: "left",
-                }}
-              >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Class
-              </th>
-              <th
-                style={{
-                  borderBottom: "1px solid #ddd",
-                  padding: "8px",
-                  textAlign: "left",
-                }}
+              </label>
+              <select
+                name="classId"
+                value={filter.classId}
+                onChange={handleFilterChange}
+                disabled={isLoading}
+                className="w-full p-2 border border-gray-300 rounded-md"
               >
-                Title
-              </th>
-              <th
-                style={{
-                  borderBottom: "1px solid #ddd",
-                  padding: "8px",
-                  textAlign: "left",
-                }}
-              >
-                Time
-              </th>
-              <th
-                style={{
-                  borderBottom: "1px solid #ddd",
-                  padding: "8px",
-                  textAlign: "left",
-                }}
-              >
-                Description
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSchedules.map((schedule) => (
-              <tr
-                key={schedule._id}
-                style={
-                  isToday(schedule.date) ? { backgroundColor: "#ffffcc" } : {}
-                }
-              >
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
-                  {new Date(schedule.date).toLocaleDateString()}
-                </td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
-                  {getClassName(schedule.classId)}
-                </td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
-                  {schedule.title || "N/A"}
-                </td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
-                  {formatTime(schedule.startTime)} -{" "}
-                  {formatTime(schedule.endTime)}
-                </td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
-                  {schedule.description || "N/A"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>
-          No schedules found. Please add class schedules or adjust your filters.
-        </p>
-      )}
+                <option value="">All Classes</option>
+                {classes.map((classItem) => (
+                  <option key={classItem._id} value={classItem._id}>
+                    {classItem.className}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <AttendanceDatePicker
+                label="Filter by Date"
+                name="date"
+                value={filter.date}
+                onChange={(e) => handleFilterChange({ target: e.target })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : filteredSchedules.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Class
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredSchedules.map((schedule) => (
+                  <tr
+                    key={schedule._id}
+                    className={isToday(schedule.date) ? "bg-yellow-50" : ""}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(schedule.date).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {getClassName(schedule.classId)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {schedule.title || "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatTime(schedule.startTime)} -{" "}
+                      {formatTime(schedule.endTime)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {schedule.description || "N/A"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-8 text-center text-gray-500">
+            No schedules found. Please add schedules or adjust your filters.
+          </div>
+        )}
+      </div>
     </div>
   );
 };
