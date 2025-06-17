@@ -52,26 +52,15 @@ const Prerequisitetest = () => {
           }),
         ]);
 
-        // Debug logs to check data structure
-        console.log("Tests data:", testsRes.data);
-        console.log("Submissions data:", submissionsRes.data);
-
         const submittedTestIds = submissionsRes.data.map((sub) => {
           const testId = sub.testId?._id || sub.test || sub.formId || sub._id;
           return String(testId);
         });
 
-        console.log("Submitted test IDs:", submittedTestIds);
-
         // Filter available tests (not submitted)
         const available = testsRes.data.filter((test) => {
           const testIdStr = String(test._id);
           const isSubmitted = submittedTestIds.includes(testIdStr);
-          console.log(
-            `Test ${test.title} (${testIdStr}): ${
-              isSubmitted ? "SUBMITTED" : "AVAILABLE"
-            }`
-          );
           return !isSubmitted;
         });
 
@@ -92,13 +81,9 @@ const Prerequisitetest = () => {
             return { ...test, submission };
           });
 
-        console.log("Available tests:", available);
-        console.log("Submitted tests:", submitted);
-
         setAvailableTests(available);
         setSubmittedTests(submitted);
       } catch (err) {
-        console.error("Error fetching data:", err);
         setError(
           err.response?.data?.message || err.message || "Failed to load data"
         );
@@ -123,12 +108,14 @@ const Prerequisitetest = () => {
       const studentId = sessionStorage.getItem("studentId");
 
       const testResponse = await axios.get(
-        `${API_BASE_URL}/api/student/tests/${testId}`
+        `${API_BASE_URL}/api/student/tests/${testId}`,
+        config
       );
       const submissionResponse = await axios.get(
         `${API_BASE_URL}/api/student/submissions/test/${testId}`,
         {
           params: { studentId },
+          ...config,
         }
       );
 
@@ -138,7 +125,6 @@ const Prerequisitetest = () => {
         submission: submissionResponse.data,
       });
     } catch (err) {
-      console.error("Error loading test preview:", err);
       setError(err.response?.data?.message || "Failed to load test preview");
     } finally {
       setLoading(false);
@@ -159,13 +145,6 @@ const Prerequisitetest = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Debug info - remove in production */}
-      <div className="bg-gray-100 p-4 rounded mb-4 text-sm">
-        <p>Debug Info:</p>
-        <p>Available Tests: {availableTests.length}</p>
-        <p>Submitted Tests: {submittedTests.length}</p>
-      </div>
-
       {submittedTests.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4 text-green-600">
