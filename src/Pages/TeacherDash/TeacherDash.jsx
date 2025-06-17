@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, Hand, Menu } from "lucide-react";
+import { LogOut, Hand, Menu, ChevronDown, ChevronUp } from "lucide-react";
 import axios from "axios";
 
 function TeacherDash() {
   const [teacherName, setTeacherName] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [attendanceDropdownOpen, setAttendanceDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,15 +59,19 @@ function TeacherDash() {
       path: "/teacherdash/create-test",
     },
     { icon: "📄", label: "Assignment", path: "/teacherdash/assignment-manage" },
-    {
-      icon: "📅",
-      label: "Attendance Report",
-      path: "/teacherdash/attendance-report",
-    },
     { icon: "🔔", label: "Notifications", path: "/teacherdash/notifications" },
     { icon: "📚", label: "Syllabus", path: "/teacherdash/syllabus" },
     { icon: "📝", label: "Feedback", path: "/teacherdash/feedback" },
     { icon: "⚙️", label: "Settings", path: "/teacherdash/settings" },
+  ];
+
+  const attendanceItems = [
+    { label: "Take Attendance", path: "/teacherdash/attendance" },
+    { label: "Schedule Class", path: "/teacherdash/schedule-class" },
+    { label: "Attendance Records", path: "/teacherdash/attendance-records" },
+    { label: "Class Schedules", path: "/teacherdash/class-schedules" },
+    { label: "Manage Classes", path: "/teacherdash/manage-classes" },
+    { label: "Manage Students", path: "/teacherdash/manage-students" },
   ];
 
   return (
@@ -93,6 +98,35 @@ function TeacherDash() {
               <span className="font-medium text-lg">{item.label}</span>
             </Link>
           ))}
+          <div>
+            <button
+              onClick={() => setAttendanceDropdownOpen(!attendanceDropdownOpen)}
+              className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
+            >
+              <div className="flex items-center">
+                <span className="mr-3 text-xl">📅</span>
+                <span className="font-medium text-lg">Attendance</span>
+              </div>
+              {attendanceDropdownOpen ? <ChevronUp /> : <ChevronDown />}
+            </button>
+            {attendanceDropdownOpen && (
+              <div className="ml-8">
+                {attendanceItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => {
+                      setSidebarOpen(false);
+                      setAttendanceDropdownOpen(false);
+                    }}
+                    className="block px-4 py-2 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
         <div className="p-4 absolute bottom-0 w-64">
           <button
