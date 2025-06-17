@@ -20,22 +20,31 @@ const ManageStudents = () => {
       try {
         // Fetch the classes/subjects assigned to this teacher
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
         );
 
-        // Transform the subject data into class format
-        const assignedClasses = response.data.subjects.map((subject) => ({
+        // Transform the response data into usable format
+        const { subjects, studentData } = response.data;
+
+        // Create classes array with subject info and students
+        const classOptions = subjects.map((subject) => ({
           _id: subject._id,
           className: `${subject.name} - ${subject.division}`,
           year: subject.year,
           division: subject.division,
+          key: `${subject.year}-${subject.division}`,
         }));
 
-        setClasses(assignedClasses);
+        setClasses(classOptions);
+
+        // If there's only one class, select it by default
+        if (classOptions.length === 1) {
+          setSelectedClass(classOptions[0].key);
+        }
       } catch (err) {
         console.error("Error fetching assigned classes:", err);
         setError(
-          err.response?.data?.error || "Failed to load assigned classes"
+          err.response?.data?.message || "Failed to load assigned classes"
         );
       } finally {
         setLoading(false);
@@ -57,32 +66,24 @@ const ManageStudents = () => {
 
       setLoading(true);
       try {
-        // Find the selected class details
-        const selectedClassObj = classes.find((c) => c._id === selectedClass);
-        if (!selectedClassObj) return;
-
-        // Fetch students for this class/division/year
+        // Fetch all subjects and students data
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-class`,
-          {
-            params: {
-              year: selectedClassObj.year,
-              division: selectedClassObj.division,
-            },
-          }
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
         );
 
-        setStudents(response.data.students || []);
+        // Find students for the selected class (year-division combination)
+        const classStudents = response.data.studentData[selectedClass] || [];
+        setStudents(classStudents);
       } catch (err) {
         console.error("Error fetching students:", err);
-        setError(err.response?.data?.error || "Failed to load students");
+        setError(err.response?.data?.message || "Failed to load students");
       } finally {
         setLoading(false);
       }
     };
 
     fetchStudentsForClass();
-  }, [selectedClass, classes]);
+  }, [selectedClass]);
 
   const handleClassChange = (e) => {
     setSelectedClass(e.target.value);
@@ -109,11 +110,11 @@ const ManageStudents = () => {
               value={selectedClass}
               onChange={handleClassChange}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              disabled={loading}
+              disabled={loading || classes.length === 0}
             >
               <option value="">-- Select Class --</option>
               {classes.map((classItem) => (
-                <option key={classItem._id} value={classItem._id}>
+                <option key={classItem.key} value={classItem.key}>
                   {classItem.className}
                 </option>
               ))}
