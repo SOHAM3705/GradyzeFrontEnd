@@ -1,64 +1,113 @@
-import React, { useContext, useState, useCallback } from "react";
-import { AttendanceContext } from "../../../utils/AttendanceContext";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 
 const ScheduleClass = () => {
-  const {
-    classes,
-    scheduleClass,
-    loading,
-    error: contextError,
-    clearError,
-  } = useContext(AttendanceContext);
-
   const [formData, setFormData] = useState({
     classId: "",
+    subjectId: "",
     date: new Date().toISOString().split("T")[0],
     startTime: "09:00",
     endTime: "10:00",
-    title: "",
     description: "",
   });
-  const [localError, setLocalError] = useState(null);
+  const [subjects, setSubjects] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setLocalError(null);
-    setSuccessMessage(null);
-  }, []);
-
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
-      clearError();
-      setLocalError(null);
-
-      if (formData.startTime >= formData.endTime) {
-        setLocalError("End time must be after start time");
+  useEffect(() => {
+    const fetchTeacherSubjects = async () => {
+      const teacherId = sessionStorage.getItem("teacherId");
+      if (!teacherId) {
+        setError("Teacher ID not found in session");
         return;
       }
 
+      setLoading(true);
       try {
-        await scheduleClass(formData);
-        setSuccessMessage("Class scheduled successfully!");
-        setFormData({
-          classId: "",
-          date: new Date().toISOString().split("T")[0],
-          startTime: "09:00",
-          endTime: "10:00",
-          title: "",
-          description: "",
-        });
-      } catch (err) {
-        setLocalError(err.message || "Failed to schedule class");
-      }
-    },
-    [formData, scheduleClass, clearError]
-  );
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
+        );
 
-  const error = localError || contextError;
+        // Transform subjects into classes format
+        const classOptions = response.data.subjects.map((subject) => ({
+          _id: subject._id,
+          className: `${subject.name} - ${subject.division}`,
+          year: subject.year,
+          division: subject.division,
+          subjectName: subject.name,
+        }));
+
+        setClasses(classOptions);
+        setSubjects(response.data.subjects);
+      } catch (err) {
+        setError(
+          err.response?.data?.message || "Failed to load assigned subjects"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeacherSubjects();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError(null);
+    setSuccessMessage(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    if (formData.startTime >= formData.endTime) {
+      setError("End time must be after start time");
+      return;
+    }
+
+    const selectedClass = classes.find((c) => c._id === formData.classId);
+    if (!selectedClass) {
+      setError("Selected class not found");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        "https://gradyzebackend.onrender.com/api/schedules",
+        {
+          ...formData,
+          title: selectedClass.subjectName, // Use subject name as title
+          year: selectedClass.year,
+          division: selectedClass.division,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      setSuccessMessage("Class scheduled successfully!");
+      setFormData({
+        classId: "",
+        subjectId: "",
+        date: new Date().toISOString().split("T")[0],
+        startTime: "09:00",
+        endTime: "10:00",
+        description: "",
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to schedule class");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">
@@ -83,37 +132,23 @@ const ScheduleClass = () => {
           <div className="grid grid-cols-1 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Class
+                Class/Subject
               </label>
               <select
                 name="classId"
                 value={formData.classId}
                 onChange={handleChange}
                 required
+                disabled={loading || classes.length === 0}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">-- Select Class --</option>
+                <option value="">-- Select Class/Subject --</option>
                 {classes.map((classItem) => (
                   <option key={classItem._id} value={classItem._id}>
                     {classItem.className}
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Title
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                placeholder="E.g. Mathematics Lecture"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
             </div>
 
             <AttendanceDatePicker
@@ -169,7 +204,7 @@ const ScheduleClass = () => {
             <div className="flex justify-end">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !formData.classId}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 {loading ? "Scheduling..." : "Schedule Class"}
