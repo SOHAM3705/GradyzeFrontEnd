@@ -7,7 +7,6 @@ import AttendanceRecords from "./attendance/AttendanceRecords";
 import ClassSchedules from "./attendance/ClassSchedules";
 import ManageClasses from "./attendance/ManageClasses";
 import ManageStudents from "./attendance/ManageStudents";
-import "./attendance/attendance.css";
 
 const TeacherAttendanceDashboard = () => {
   return (
