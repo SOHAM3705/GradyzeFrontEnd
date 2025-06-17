@@ -33,7 +33,6 @@ import StudentChangePassword from "./Pages/StudentLogin/studentchangepassword";
 
 import StudentManage from "./components/TeacherDashMenu/StudentManage";
 import SubjectMarks from "./components/TeacherDashMenu/SubjectMarks";
-import TeacherAttendanceDashboard from "./components/TeacherDashMenu/AttendanceReport";
 import TeacherNotifications from "./components/TeacherDashMenu/Notification";
 import TeacherSyllabusView from "./components/TeacherDashMenu/Syllabus";
 import TeacherFeedback from "./components/TeacherDashMenu/Feedback";
