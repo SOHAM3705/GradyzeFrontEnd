@@ -52,9 +52,13 @@ const Prerequisitetest = () => {
           }),
         ]);
 
+        const publishedTests = testsRes.data.filter(
+          (test) => test.status === "published"
+        );
+
         const submittedTestIds = submissionsRes.data.map((sub) => sub.testId);
 
-        const available = testsRes.data.filter(
+        const available = publishedTests.filter(
           (test) => !submittedTestIds.includes(test._id)
         );
 
