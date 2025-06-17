@@ -4,6 +4,7 @@ import { API_BASE_URL } from "../../../config";
 
 const StudentTestResults = ({ testId }) => {
   const [results, setResults] = useState([]);
+  const [filteredResults, setFilteredResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTest, setSelectedTest] = useState(testId || "all");
@@ -11,6 +12,7 @@ const StudentTestResults = ({ testId }) => {
   const [expandedResult, setExpandedResult] = useState(null);
   const [detailedResponse, setDetailedResponse] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,7 +29,6 @@ const StudentTestResults = ({ testId }) => {
         );
         setAllTests(testsResponse.data);
 
-        // Fetch results based on whether we have a specific testId
         const endpoint = testId
           ? `/api/teacher/test-results/${testId}`
           : "/api/teacher/test-results";
@@ -38,7 +39,6 @@ const StudentTestResults = ({ testId }) => {
           },
         });
 
-        // Transform data if needed to match frontend expectations
         const formattedResults = resultsResponse.data.map((result) => ({
           ...result,
           student: {
@@ -49,6 +49,7 @@ const StudentTestResults = ({ testId }) => {
         }));
 
         setResults(formattedResults);
+        setFilteredResults(formattedResults);
       } catch (err) {
         setError(err.response?.data?.error || "Failed to fetch results");
       } finally {
@@ -58,6 +59,13 @@ const StudentTestResults = ({ testId }) => {
 
     fetchData();
   }, [testId]);
+
+  useEffect(() => {
+    const filtered = results.filter((result) =>
+      result.student.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredResults(filtered);
+  }, [searchQuery, results]);
 
   const handleFilterChange = async (e) => {
     const selectedTestId = e.target.value;
@@ -77,7 +85,16 @@ const StudentTestResults = ({ testId }) => {
         },
       });
 
-      setResults(response.data);
+      const formattedResults = response.data.map((result) => ({
+        ...result,
+        student: {
+          _id: result.student?._id || result.studentId,
+          name: result.student?.name || result.studentName,
+          email: result.student?.email || result.studentEmail,
+        },
+      }));
+
+      setResults(formattedResults);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to filter results");
     } finally {
@@ -90,10 +107,8 @@ const StudentTestResults = ({ testId }) => {
       setLoadingDetails(true);
       setDetailedResponse(null);
 
-      // Try multiple endpoints to get detailed response
       let response;
       try {
-        // First try the submission ID endpoint
         response = await axios.get(
           `${API_BASE_URL}/api/teacher/submission/${submissionId}`,
           {
@@ -103,7 +118,6 @@ const StudentTestResults = ({ testId }) => {
           }
         );
       } catch (err) {
-        // Fall back to test/student endpoint if first fails
         response = await axios.get(
           `${API_BASE_URL}/api/teacher/submission/test/${testId}/student/${studentId}`,
           {
@@ -188,7 +202,15 @@ const StudentTestResults = ({ testId }) => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <h2 className="text-2xl font-bold">Student Test Results</h2>
+        <div className="w-full md:w-auto mb-4 md:mb-0">
+          <input
+            type="text"
+            placeholder="Search by student name..."
+            className="w-full p-2 border rounded"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
         {!testId && (
           <div className="flex items-center gap-2">
@@ -211,9 +233,9 @@ const StudentTestResults = ({ testId }) => {
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        {results.length > 0 ? (
+        {filteredResults.length > 0 ? (
           <div className="space-y-4">
-            {results.map((result, index) => (
+            {filteredResults.map((result, index) => (
               <div
                 key={index}
                 className="bg-white border border-gray-200 rounded-lg"
@@ -423,9 +445,10 @@ const StudentTestResults = ({ testId }) => {
         )}
       </div>
 
-      {results.length > 0 && (
+      {filteredResults.length > 0 && (
         <div className="mt-4 text-sm text-gray-500">
-          Showing {results.length} result{results.length !== 1 ? "s" : ""}
+          Showing {filteredResults.length} result
+          {filteredResults.length !== 1 ? "s" : ""}
           {selectedTest !== "all" && ` for this test`}
         </div>
       )}
