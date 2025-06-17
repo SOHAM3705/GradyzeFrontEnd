@@ -199,6 +199,20 @@ const TestPage = () => {
     );
   }
 
+  if (submitted) {
+    return (
+      <div className="text-center p-8">
+        <div className="text-green-600 mb-4">You have submitted this test.</div>
+        <button
+          onClick={() => navigate("/studentdash/Forms")}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#f5f1e6] min-h-screen overflow-auto">
       <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-8">
@@ -362,8 +376,7 @@ const TestPage = () => {
             </div>
           </div>
         )}
-        if (submitted)
-        {
+        {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
               <h3 className="text-xl font-bold text-green-600 mb-2">
@@ -381,7 +394,7 @@ const TestPage = () => {
               </button>
             </div>
           </div>
-        }
+        )}
       </div>
     </div>
   );
