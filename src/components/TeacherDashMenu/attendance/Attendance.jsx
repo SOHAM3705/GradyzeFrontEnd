@@ -1,9 +1,6 @@
 import React, { useContext, useState, useEffect, useCallback } from "react";
 import { AttendanceContext } from "../../../utils/AttendanceContext";
-import {
-  AttendanceDatePicker,
-  AttendanceStatusBadge,
-} from "../../components/shared";
+import { AttendanceDatePicker, AttendanceStatusBadge } from "./shared";
 
 const Attendance = () => {
   const {

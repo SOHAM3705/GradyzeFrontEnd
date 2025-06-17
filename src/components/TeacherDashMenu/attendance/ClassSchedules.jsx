@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { AttendanceContext } from "../../../utils/AttendanceContext";
-import { AttendanceDatePicker } from "../../components/shared";
+import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 
 const ClassSchedules = () => {
   const {
