@@ -12,27 +12,36 @@ const ClassSchedules = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Get authorization token from session storage
+  const getAuthToken = () => {
+    return sessionStorage.getItem("token");
+  };
+
   useEffect(() => {
     const fetchClassData = async () => {
-      const teacherId = sessionStorage.getItem("teacherId");
-      if (!teacherId) {
-        setError("Teacher ID not found in session");
+      const token = getAuthToken();
+      if (!token) {
+        setError("Authentication token not found");
         return;
       }
 
       setLoading(true);
       try {
+        // Fetch subjects with authentication
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
+          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
+
         setSubjects(response.data.subjects);
 
         if (response.data.subjects.length > 0) {
           const firstSubjectId = response.data.subjects[0]._id;
-          const scheduleResponse = await axios.get(
-            `https://gradyzebackend.onrender.com/api/schedules/class/${firstSubjectId}`
-          );
-          setSchedules(scheduleResponse.data);
+          await fetchSchedules(firstSubjectId);
           setFilter((prev) => ({ ...prev, classId: firstSubjectId }));
         }
       } catch (err) {
@@ -45,21 +54,32 @@ const ClassSchedules = () => {
     fetchClassData();
   }, []);
 
-  const handleRefresh = async () => {
-    if (!filter.classId) return;
+  const fetchSchedules = async (subjectId) => {
+    const token = getAuthToken();
+    if (!token) return;
 
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${filter.classId}`
+        `https://gradyzebackend.onrender.com/api/schedules/class/${subjectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setSchedules(response.data);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to refresh data");
+      setError(err.response?.data?.message || "Failed to load schedules");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    if (!filter.classId) return;
+    await fetchSchedules(filter.classId);
   };
 
   const handleFilterChange = async (e) => {
@@ -67,18 +87,7 @@ const ClassSchedules = () => {
     setFilter((prev) => ({ ...prev, [name]: value }));
 
     if (name === "classId" && value) {
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/schedules/class/${value}`
-        );
-        setSchedules(response.data);
-        setError(null);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load schedules");
-      } finally {
-        setLoading(false);
-      }
+      await fetchSchedules(value);
     }
   };
 
