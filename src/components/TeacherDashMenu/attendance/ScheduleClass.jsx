@@ -5,7 +5,7 @@ import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 const ScheduleClass = () => {
   const [formData, setFormData] = useState({
     classId: "",
-    date: new Date().toISOString().split("T")[0],
+    date: new Date(), // Initialize as a Date object
     startTime: "09:00",
     endTime: "10:00",
     description: "",
@@ -51,10 +51,11 @@ const ScheduleClass = () => {
   };
 
   const handleDateChange = (date) => {
-    setFormData((prev) => ({
-      ...prev,
-      date: date.toISOString().split("T")[0],
-    }));
+    if (!date || !(date instanceof Date)) {
+      console.error("Invalid date received:", date);
+      return;
+    }
+    setFormData((prev) => ({ ...prev, date }));
   };
 
   const handleSubmit = async (e) => {
@@ -78,18 +79,22 @@ const ScheduleClass = () => {
       return;
     }
 
+    // Convert date to ISO string format for submission
+    const submissionData = {
+      ...formData,
+      date: formData.date.toISOString().split("T")[0],
+      title: selectedSubject.name,
+      year: selectedSubject.year,
+      division: selectedSubject.division,
+      teacherId: teacherId,
+      subjectId: selectedSubject._id,
+    };
+
     setLoading(true);
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/schedules",
-        {
-          ...formData,
-          title: selectedSubject.name,
-          year: selectedSubject.year,
-          division: selectedSubject.division,
-          teacherId: teacherId,
-          subjectId: selectedSubject._id,
-        },
+        submissionData,
         {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -100,7 +105,7 @@ const ScheduleClass = () => {
       setSuccessMessage("Class scheduled successfully!");
       setFormData({
         classId: "",
-        date: new Date().toISOString().split("T")[0],
+        date: new Date(),
         startTime: "09:00",
         endTime: "10:00",
         description: "",
@@ -159,7 +164,7 @@ const ScheduleClass = () => {
                 Date
               </label>
               <AttendanceDatePicker
-                selectedDate={new Date(formData.date)}
+                selected={formData.date}
                 onChange={handleDateChange}
               />
             </div>
