@@ -14,9 +14,20 @@ const Attendance = () => {
     new Date().toISOString().split("T")[0]
   );
 
+  // Get authorization token from session storage
+  const getAuthToken = () => {
+    return sessionStorage.getItem("token");
+  };
+
   // Fetch teacher's classes
   useEffect(() => {
     const fetchClasses = async () => {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Authentication token not found");
+        return;
+      }
+
       const teacherId = sessionStorage.getItem("teacherId");
       if (!teacherId) {
         setError("Teacher ID not found in session");
@@ -26,7 +37,12 @@ const Attendance = () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-classes/${teacherId}`
+          `https://gradyzebackend.onrender.com/api/studentmanagement/teacher-classes/${teacherId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setClasses(response.data);
       } catch (err) {
@@ -41,10 +57,18 @@ const Attendance = () => {
 
   // Load students when class is selected
   const loadStudents = useCallback(async (classId) => {
+    const token = getAuthToken();
+    if (!token) return;
+
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/class-students/${classId}`
+        `https://gradyzebackend.onrender.com/api/studentmanagement/class-students/${classId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setStudents(response.data);
       setError(null);
@@ -89,6 +113,12 @@ const Attendance = () => {
   }, []);
 
   const handleSaveAttendance = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setError("Authentication token not found");
+      return;
+    }
+
     if (!selectedClass) {
       setError("Please select a class first");
       return;
@@ -111,12 +141,29 @@ const Attendance = () => {
 
     setLoading(true);
     try {
+      // First save attendance
       await axios.post(
         "https://gradyzebackend.onrender.com/api/attendance",
-        payload
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
+      // Then delete the corresponding schedule
+      await axios.delete(
+        `https://gradyzebackend.onrender.com/api/schedules/class/${selectedClass._id}/${selectedDate}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       setError(null);
-      alert("Attendance saved successfully!");
+      alert("Attendance saved and schedule removed successfully!");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save attendance");
     } finally {
@@ -176,8 +223,10 @@ const Attendance = () => {
                   {selectedClass.className} - Attendance
                 </h2>
                 <AttendanceDatePicker
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  selected={selectedDate ? new Date(selectedDate) : null}
+                  onChange={(date) =>
+                    setSelectedDate(date.toISOString().split("T")[0])
+                  }
                   className="w-48"
                 />
               </div>

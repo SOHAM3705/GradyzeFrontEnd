@@ -1,17 +1,18 @@
-import React, { useContext, useState, useEffect, useMemo } from "react";
-import { AttendanceContext } from "../../../utils/AttendanceContext";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import axios from "axios";
 import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 import { AttendanceStatusBadge } from "./shared/AttendanceStatusBadge";
 
 const AttendanceRecords = () => {
-  const {
-    classes,
-    attendanceRecords,
-    fetchAttendanceRecords,
-    loading,
-    error: contextError,
-    clearError,
-  } = useContext(AttendanceContext);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalPresent: 0,
+    totalAbsent: 0,
+    attendanceRate: 0,
+  });
 
   const [filters, setFilters] = useState({
     classId: "",
@@ -19,38 +20,122 @@ const AttendanceRecords = () => {
     endDate: new Date().toISOString().split("T")[0],
   });
 
-  const stats = useMemo(() => {
+  // Get authorization token from session storage
+  const getAuthToken = () => {
+    return sessionStorage.getItem("token");
+  };
+
+  const fetchClasses = async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setError("Authentication token not found");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/studentmanagement/classes",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setClasses(response.data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load classes");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAttendanceRecords = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    setLoading(true);
+    try {
+      const params = {};
+      if (filters.classId) params.classId = filters.classId;
+      if (filters.startDate) params.startDate = filters.startDate;
+      if (filters.endDate) params.endDate = filters.endDate;
+
+      const response = await axios.get(
+        "https://gradyzebackend.onrender.com/api/attendance",
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setAttendanceRecords(response.data);
+      calculateStats(response.data);
+      setError(null);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to load attendance records"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  const calculateStats = (records) => {
     let present = 0;
     let absent = 0;
 
-    attendanceRecords.forEach((record) => {
+    records.forEach((record) => {
       record.records.forEach((student) => {
         student.status === "Present" ? present++ : absent++;
       });
     });
 
     const total = present + absent;
-    return {
+    setStats({
       totalPresent: present,
       totalAbsent: absent,
       attendanceRate: total > 0 ? ((present / total) * 100).toFixed(2) : 0,
-    };
-  }, [attendanceRecords]);
+    });
+  };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFilter = useCallback(() => {
-    clearError();
-    fetchAttendanceRecords(filters.classId, filters.startDate, filters.endDate);
-  }, [filters, fetchAttendanceRecords, clearError]);
+  const handleDeleteSchedule = async (classId, date) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    setLoading(true);
+    try {
+      await axios.delete(
+        `https://gradyzebackend.onrender.com/api/schedules/class/${classId}/${date}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      await fetchAttendanceRecords();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete schedule");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Load initial data
-    handleFilter();
-  }, []); // Empty dependency array to run only once on mount
+    fetchClasses();
+  }, []);
+
+  useEffect(() => {
+    if (classes.length > 0) {
+      fetchAttendanceRecords();
+    }
+  }, [fetchAttendanceRecords, classes]);
 
   const filteredRecords = useMemo(() => {
     return attendanceRecords.filter((record) => {
@@ -64,13 +149,10 @@ const AttendanceRecords = () => {
     });
   }, [attendanceRecords, filters]);
 
-  const getClassName = useCallback(
-    (classId) => {
-      const foundClass = classes.find((c) => c._id === classId);
-      return foundClass ? foundClass.className : "Unknown Class";
-    },
-    [classes]
-  );
+  const getClassName = (classId) => {
+    const foundClass = classes.find((c) => c._id === classId);
+    return foundClass ? foundClass.className : "Unknown Class";
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
@@ -78,9 +160,9 @@ const AttendanceRecords = () => {
         Attendance Records
       </h1>
 
-      {contextError && (
+      {error && (
         <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
-          {contextError}
+          {error}
         </div>
       )}
 
@@ -107,26 +189,42 @@ const AttendanceRecords = () => {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              From Date
+            </label>
             <AttendanceDatePicker
-              label="From Date"
-              name="startDate"
-              value={filters.startDate}
-              onChange={(e) => handleFilterChange({ target: e.target })}
+              selected={filters.startDate ? new Date(filters.startDate) : null}
+              onChange={(date) =>
+                handleFilterChange({
+                  target: {
+                    name: "startDate",
+                    value: date.toISOString().split("T")[0],
+                  },
+                })
+              }
             />
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              To Date
+            </label>
             <AttendanceDatePicker
-              label="To Date"
-              name="endDate"
-              value={filters.endDate}
-              onChange={(e) => handleFilterChange({ target: e.target })}
+              selected={filters.endDate ? new Date(filters.endDate) : null}
+              onChange={(date) =>
+                handleFilterChange({
+                  target: {
+                    name: "endDate",
+                    value: date.toISOString().split("T")[0],
+                  },
+                })
+              }
             />
           </div>
 
           <div className="flex items-end">
             <button
-              onClick={handleFilter}
+              onClick={fetchAttendanceRecords}
               disabled={loading}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
@@ -183,6 +281,9 @@ const AttendanceRecords = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -200,6 +301,17 @@ const AttendanceRecords = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <AttendanceStatusBadge status={student.status} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button
+                          onClick={() =>
+                            handleDeleteSchedule(record.classId, record.date)
+                          }
+                          disabled={loading}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
