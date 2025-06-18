@@ -24,19 +24,23 @@ const ClassSchedules = () => {
         setError("Authentication token not found");
         return;
       }
+      const teacherId = sessionStorage.getItem("teacherId");
+      if (!teacherId) {
+        setError("Teacher ID not found in session");
+        return;
+      }
 
       setLoading(true);
       try {
         // Fetch subjects with authentication
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details`,
+          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-
         setSubjects(response.data.subjects);
 
         if (response.data.subjects.length > 0) {
