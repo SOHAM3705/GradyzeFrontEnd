@@ -12,7 +12,7 @@ export const AttendanceDatePicker = ({ selected, onChange }) => {
   return (
     <input
       type="date"
-      value={selected.toISOString().split("T")[0]}
+      value={selected ? selected.toISOString().split("T")[0] : ""} // safe check
       onChange={handleChange}
       className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
     />
