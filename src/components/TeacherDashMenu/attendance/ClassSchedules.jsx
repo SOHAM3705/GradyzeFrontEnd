@@ -91,23 +91,26 @@ const ClassSchedules = () => {
     }
   };
 
+  const safeDateParse = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? null : date;
+  };
+
   const filteredSchedules = useMemo(() => {
     return schedules.filter((schedule) => {
       if (!filter.date) return true;
 
-      try {
-        const scheduleDate = new Date(schedule.date);
-        const filterDate = new Date(filter.date);
+      const scheduleDate = safeDateParse(schedule.date);
+      const filterDate = safeDateParse(filter.date);
 
-        return (
-          scheduleDate.getFullYear() === filterDate.getFullYear() &&
-          scheduleDate.getMonth() === filterDate.getMonth() &&
-          scheduleDate.getDate() === filterDate.getDate()
-        );
-      } catch (e) {
-        console.error("Error parsing dates:", e);
-        return false;
-      }
+      if (!scheduleDate || !filterDate) return false;
+
+      return (
+        scheduleDate.getFullYear() === filterDate.getFullYear() &&
+        scheduleDate.getMonth() === filterDate.getMonth() &&
+        scheduleDate.getDate() === filterDate.getDate()
+      );
     });
   }, [schedules, filter.date]);
 
@@ -128,9 +131,15 @@ const ClassSchedules = () => {
   };
 
   const isToday = (dateString) => {
-    const today = new Date().toISOString().split("T")[0];
-    const scheduleDate = new Date(dateString).toISOString().split("T")[0];
-    return today === scheduleDate;
+    const date = safeDateParse(dateString);
+    if (!date) return false;
+
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
   };
 
   return (
@@ -181,11 +190,19 @@ const ClassSchedules = () => {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Filter by Date
+              </label>
               <AttendanceDatePicker
-                label="Filter by Date"
-                name="date"
-                value={filter.date}
-                onChange={(e) => handleFilterChange({ target: e.target })}
+                selected={filter.date ? new Date(filter.date) : null}
+                onChange={(date) =>
+                  handleFilterChange({
+                    target: {
+                      name: "date",
+                      value: date.toISOString().split("T")[0],
+                    },
+                  })
+                }
               />
             </div>
           </div>
@@ -221,12 +238,17 @@ const ClassSchedules = () => {
                     className={isToday(schedule.date) ? "bg-yellow-50" : ""}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(schedule.date).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        weekday: "short",
-                      })}
+                      {(() => {
+                        const date = safeDateParse(schedule.date);
+                        return date
+                          ? date.toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              weekday: "short",
+                            })
+                          : "Invalid date";
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="font-medium">
