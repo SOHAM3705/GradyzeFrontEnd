@@ -4,11 +4,11 @@ import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 import { AttendanceStatusBadge } from "./shared/AttendanceStatusBadge";
 
 const Attendance = () => {
-  const [classes, setClasses] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedSubject, setSelectedSubject] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -19,9 +19,9 @@ const Attendance = () => {
     return sessionStorage.getItem("token");
   };
 
-  // Fetch teacher's classes
+  // Fetch teacher's subjects
   useEffect(() => {
-    const fetchClasses = async () => {
+    const fetchSubjects = async () => {
       const token = getAuthToken();
       if (!token) {
         setError("Authentication token not found");
@@ -44,26 +44,26 @@ const Attendance = () => {
             },
           }
         );
-        setClasses(response.data);
+        setSubjects(response.data.subjects || []);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load classes");
+        setError(err.response?.data?.message || "Failed to load subjects");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClasses();
+    fetchSubjects();
   }, []);
 
-  // Load students when class is selected
-  const loadStudents = useCallback(async (classId) => {
+  // Load students when subject is selected
+  const loadStudents = useCallback(async (subjectId) => {
     const token = getAuthToken();
     if (!token) return;
 
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/class-students/${classId}`,
+        `https://gradyzebackend.onrender.com/api/studentmanagement/subject-students/${subjectId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -93,11 +93,11 @@ const Attendance = () => {
     }
   }, [students]);
 
-  const handleClassSelect = useCallback(
-    (classItem) => {
-      setSelectedClass(classItem);
+  const handleSubjectSelect = useCallback(
+    (subject) => {
+      setSelectedSubject(subject);
       setError(null);
-      loadStudents(classItem._id);
+      loadStudents(subject._id);
     },
     [loadStudents]
   );
@@ -119,8 +119,8 @@ const Attendance = () => {
       return;
     }
 
-    if (!selectedClass) {
-      setError("Please select a class first");
+    if (!selectedSubject) {
+      setError("Please select a subject first");
       return;
     }
 
@@ -130,7 +130,7 @@ const Attendance = () => {
     }
 
     const payload = {
-      classId: selectedClass._id,
+      classId: selectedSubject._id, // Using subjectId as classId
       date: selectedDate,
       records: Object.values(attendanceData).map(({ student, status }) => ({
         studentId: student._id,
@@ -154,7 +154,7 @@ const Attendance = () => {
 
       // Then delete the corresponding schedule
       await axios.delete(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${selectedClass._id}/${selectedDate}`,
+        `https://gradyzebackend.onrender.com/api/schedules/class/${selectedSubject._id}/${selectedDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -169,9 +169,14 @@ const Attendance = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedClass, attendanceData, selectedDate]);
+  }, [selectedSubject, attendanceData, selectedDate]);
 
-  const showAttendanceForm = selectedClass && students.length > 0;
+  const showAttendanceForm = selectedSubject && students.length > 0;
+
+  // Helper function to format subject display name
+  const formatSubjectName = (subject) => {
+    return `${subject.name} (${subject.year}, Sem ${subject.semester}, Div ${subject.division})`;
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
@@ -186,31 +191,31 @@ const Attendance = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Class Selection */}
+        {/* Subject Selection */}
         <div className="lg:col-span-1 bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold mb-4">Classes</h2>
+          <h2 className="text-lg font-semibold mb-4">Subjects</h2>
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
-          ) : classes.length > 0 ? (
+          ) : subjects.length > 0 ? (
             <div className="space-y-2">
-              {classes.map((classItem) => (
+              {subjects.map((subject) => (
                 <div
-                  key={classItem._id}
+                  key={subject._id}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedClass?._id === classItem._id
+                    selectedSubject?._id === subject._id
                       ? "bg-blue-50 border-l-4 border-blue-500"
                       : "hover:bg-gray-50"
                   }`}
-                  onClick={() => handleClassSelect(classItem)}
+                  onClick={() => handleSubjectSelect(subject)}
                 >
-                  <h3 className="font-medium">{classItem.className}</h3>
+                  <h3 className="font-medium">{formatSubjectName(subject)}</h3>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No classes available</p>
+            <p className="text-gray-500">No subjects available</p>
           )}
         </div>
 
@@ -220,7 +225,7 @@ const Attendance = () => {
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">
-                  {selectedClass.className} - Attendance
+                  {formatSubjectName(selectedSubject)} - Attendance
                 </h2>
                 <AttendanceDatePicker
                   selected={selectedDate ? new Date(selectedDate) : null}
@@ -294,9 +299,9 @@ const Attendance = () => {
           ) : (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <p className="text-gray-500">
-                {selectedClass
-                  ? "No students found in this class"
-                  : "Please select a class to take attendance"}
+                {selectedSubject
+                  ? "No students found for this subject"
+                  : "Please select a subject to take attendance"}
               </p>
             </div>
           )}
