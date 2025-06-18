@@ -4,7 +4,7 @@ import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 
 const ClassSchedules = () => {
   const [schedules, setSchedules] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const [subjects, setSubjects] = useState([]); // Changed from classes to subjects for clarity
   const [filter, setFilter] = useState({
     classId: "",
     date: "",
@@ -22,18 +22,18 @@ const ClassSchedules = () => {
 
       setLoading(true);
       try {
-        const classResponse = await axios.get(
+        const response = await axios.get(
           `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
         );
-        setClasses(classResponse.data.subjects); // fixed here
+        setSubjects(response.data.subjects); // Now storing subjects directly
 
-        if (classResponse.data.subjects.length > 0) {
-          const firstClassId = classResponse.data.subjects[0]._id;
+        if (response.data.subjects.length > 0) {
+          const firstSubjectId = response.data.subjects[0]._id;
           const scheduleResponse = await axios.get(
-            `https://gradyzebackend.onrender.com/api/schedules/class/${firstClassId}`
+            `https://gradyzebackend.onrender.com/api/schedules/class/${firstSubjectId}`
           );
           setSchedules(scheduleResponse.data);
-          setFilter((prev) => ({ ...prev, classId: firstClassId }));
+          setFilter((prev) => ({ ...prev, classId: firstSubjectId }));
         }
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load data");
@@ -66,7 +66,6 @@ const ClassSchedules = () => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
 
-    // If class is changed, fetch new schedules
     if (name === "classId" && value) {
       setLoading(true);
       try {
@@ -91,9 +90,12 @@ const ClassSchedules = () => {
     });
   }, [schedules, filter]);
 
-  const getClassName = (classId) => {
-    const cls = classes.find((c) => c._id === classId);
-    return cls ? `${cls.name} (${cls.gradeLevel})` : "Unknown Class";
+  // Updated to show subject name with year and division
+  const getSubjectDetails = (subjectId) => {
+    const subject = subjects.find((s) => s._id === subjectId);
+    return subject
+      ? `${subject.name} (${subject.year}, Div: ${subject.division})`
+      : "Unknown Subject";
   };
 
   const formatTime = (time24h) => {
@@ -134,23 +136,23 @@ const ClassSchedules = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Class
+                Subject
               </label>
               <select
                 name="classId"
                 value={filter.classId}
                 onChange={handleFilterChange}
-                disabled={loading || classes.length === 0}
+                disabled={loading || subjects.length === 0}
                 className="w-full p-2 border border-gray-300 rounded-md"
               >
-                {classes.length === 0 ? (
-                  <option value="">No classes available</option>
+                {subjects.length === 0 ? (
+                  <option value="">No subjects available</option>
                 ) : (
                   <>
-                    <option value="">All Classes</option>
-                    {classes.map((cls) => (
-                      <option key={cls._id} value={cls._id}>
-                        {cls.name} ({cls.gradeLevel})
+                    <option value="">All Subjects</option>
+                    {subjects.map((subject) => (
+                      <option key={subject._id} value={subject._id}>
+                        {subject.name} ({subject.year}, Div: {subject.division})
                       </option>
                     ))}
                   </>
@@ -182,13 +184,10 @@ const ClassSchedules = () => {
                     Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Class
+                    Subject Details
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Subject
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Description
@@ -205,14 +204,16 @@ const ClassSchedules = () => {
                       {new Date(schedule.date).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getClassName(schedule.classId)}
+                      <div className="font-medium">
+                        {schedule.title || "N/A"}
+                      </div>
+                      <div className="text-gray-400">
+                        {getSubjectDetails(schedule.classId)}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatTime(schedule.startTime)} -{" "}
                       {formatTime(schedule.endTime)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {schedule.title || "N/A"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {schedule.description || "N/A"}

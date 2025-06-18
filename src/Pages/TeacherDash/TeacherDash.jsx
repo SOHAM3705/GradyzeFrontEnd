@@ -93,8 +93,7 @@ function TeacherDash() {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-        ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:relative md:translate-x-0`}
       >
@@ -113,7 +112,21 @@ function TeacherDash() {
               <span className="font-medium text-lg">{item.label}</span>
             </Link>
           ))}
-          {(isClassTeacher || isSubjectTeacher) && (
+
+          {/* Conditionally render Attendance Report button for Class Teacher */}
+          {isClassTeacher && (
+            <Link
+              to="/teacherdash/attendance-report"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
+            >
+              <span className="mr-3 text-xl">📊</span>
+              <span className="font-medium text-lg">Attendance Report</span>
+            </Link>
+          )}
+
+          {/* Conditionally render Attendance Items dropdown for Subject Teacher */}
+          {isSubjectTeacher && (
             <div>
               <button
                 onClick={() =>
@@ -146,6 +159,7 @@ function TeacherDash() {
               )}
             </div>
           )}
+
           {bottomMenuItems.map((item) => (
             <Link
               key={item.path}
