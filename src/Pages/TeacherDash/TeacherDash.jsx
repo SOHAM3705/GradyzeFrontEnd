@@ -8,6 +8,8 @@ function TeacherDash() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [attendanceDropdownOpen, setAttendanceDropdownOpen] = useState(false);
+  const [isClassTeacher, setIsClassTeacher] = useState(false);
+  const [isSubjectTeacher, setIsSubjectTeacher] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,7 +38,21 @@ function TeacherDash() {
       }
     };
 
+    const fetchTeacherRoles = async () => {
+      try {
+        const teacherId = sessionStorage.getItem("teacherId");
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/teachermarks/teacher-role/${teacherId}`
+        );
+        setIsClassTeacher(response.data.isClassTeacher);
+        setIsSubjectTeacher(response.data.isSubjectTeacher);
+      } catch (error) {
+        console.error("Error fetching teacher roles:", error);
+      }
+    };
+
     fetchTeacherName();
+    fetchTeacherRoles();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -97,35 +113,39 @@ function TeacherDash() {
               <span className="font-medium text-lg">{item.label}</span>
             </Link>
           ))}
-          <div>
-            <button
-              onClick={() => setAttendanceDropdownOpen(!attendanceDropdownOpen)}
-              className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
-            >
-              <div className="flex items-center">
-                <span className="mr-3 text-xl">📅</span>
-                <span className="font-medium text-lg">Attendance</span>
-              </div>
-              {attendanceDropdownOpen ? <ChevronUp /> : <ChevronDown />}
-            </button>
-            {attendanceDropdownOpen && (
-              <div className="ml-8">
-                {attendanceItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => {
-                      setSidebarOpen(false);
-                      setAttendanceDropdownOpen(false);
-                    }}
-                    className="block px-4 py-2 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          {(isClassTeacher || isSubjectTeacher) && (
+            <div>
+              <button
+                onClick={() =>
+                  setAttendanceDropdownOpen(!attendanceDropdownOpen)
+                }
+                className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
+              >
+                <div className="flex items-center">
+                  <span className="mr-3 text-xl">📅</span>
+                  <span className="font-medium text-lg">Attendance</span>
+                </div>
+                {attendanceDropdownOpen ? <ChevronUp /> : <ChevronDown />}
+              </button>
+              {attendanceDropdownOpen && (
+                <div className="ml-8">
+                  {attendanceItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => {
+                        setSidebarOpen(false);
+                        setAttendanceDropdownOpen(false);
+                      }}
+                      className="block px-4 py-2 text-gray-700 hover:bg-[#10B981] hover:text-white rounded-lg transition-colors duration-200"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {bottomMenuItems.map((item) => (
             <Link
               key={item.path}
