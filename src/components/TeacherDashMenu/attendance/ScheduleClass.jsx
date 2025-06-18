@@ -5,12 +5,11 @@ import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 const ScheduleClass = () => {
   const [formData, setFormData] = useState({
     classId: "",
-    date: new Date(), // Initialize as a Date object
+    date: new Date(),
     startTime: "09:00",
     endTime: "10:00",
     description: "",
   });
-
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -29,7 +28,6 @@ const ScheduleClass = () => {
         const response = await axios.get(
           `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
         );
-
         setSubjects(response.data.subjects);
       } catch (err) {
         setError(
@@ -51,11 +49,9 @@ const ScheduleClass = () => {
   };
 
   const handleDateChange = (date) => {
-    if (!date || !(date instanceof Date)) {
-      console.error("Invalid date received:", date);
-      return;
+    if (date instanceof Date) {
+      setFormData((prev) => ({ ...prev, date }));
     }
-    setFormData((prev) => ({ ...prev, date }));
   };
 
   const handleSubmit = async (e) => {
@@ -79,24 +75,29 @@ const ScheduleClass = () => {
       return;
     }
 
-    // Convert date to ISO string format for submission
-    const submissionData = {
-      ...formData,
-      date: formData.date.toISOString().split("T")[0],
-      title: selectedSubject.name,
-      year: selectedSubject.year,
-      division: selectedSubject.division,
-      teacherId: teacherId,
-      subjectId: selectedSubject._id,
-    };
-
     setLoading(true);
     try {
+      const payload = {
+        classId: formData.classId,
+        date: formData.date.toISOString().split("T")[0],
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        description: formData.description,
+        title: selectedSubject.name,
+        year: selectedSubject.year,
+        division: selectedSubject.division,
+        teacherId: teacherId,
+        subjectId: selectedSubject._id,
+      };
+
+      console.log("Sending payload:", payload); // Debug log
+
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/schedules",
-        submissionData,
+        payload,
         {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           },
         }
@@ -111,6 +112,7 @@ const ScheduleClass = () => {
         description: "",
       });
     } catch (err) {
+      console.error("Error response:", err.response); // Debug log
       setError(err.response?.data?.message || "Failed to schedule class");
     } finally {
       setLoading(false);

@@ -46,6 +46,7 @@ import AttendanceRecords from "./components/TeacherDashMenu/attendance/Attendanc
 import ClassSchedules from "./components/TeacherDashMenu/attendance/ClassSchedules";
 import ManageClasses from "./components/TeacherDashMenu/attendance/ManageClasses";
 import ManageStudents from "./components/TeacherDashMenu/attendance/ManageStudents";
+import AttendanceReport from "./components/TeacherDashMenu/attendance/AttendanceReports";
 
 import AssignmentManage from "./components/TeacherDashMenu/AssignmentManage";
 
@@ -156,6 +157,7 @@ function App() {
         <Route path="feedback" element={<TeacherFeedback />} />
         <Route path="settings" element={<TeacherSettings />} />
         <Route path="assignment-manage" element={<AssignmentManage />} />
+        <Route path="attendance-report" element={<AttendanceReport />} />
         <Route path="create-test">
           <Route index element={<TestClassSelector />} />
           <Route
