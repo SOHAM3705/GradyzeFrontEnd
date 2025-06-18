@@ -4,7 +4,7 @@ import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 
 const ClassSchedules = () => {
   const [schedules, setSchedules] = useState([]);
-  const [subjects, setSubjects] = useState([]); // Changed from classes to subjects for clarity
+  const [subjects, setSubjects] = useState([]);
   const [filter, setFilter] = useState({
     classId: "",
     date: "",
@@ -25,7 +25,7 @@ const ClassSchedules = () => {
         const response = await axios.get(
           `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
         );
-        setSubjects(response.data.subjects); // Now storing subjects directly
+        setSubjects(response.data.subjects);
 
         if (response.data.subjects.length > 0) {
           const firstSubjectId = response.data.subjects[0]._id;
@@ -84,13 +84,24 @@ const ClassSchedules = () => {
 
   const filteredSchedules = useMemo(() => {
     return schedules.filter((schedule) => {
-      const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
-      const matchesDate = !filter.date || scheduleDate === filter.date;
-      return matchesDate;
-    });
-  }, [schedules, filter]);
+      if (!filter.date) return true;
 
-  // Updated to show subject name with year and division
+      try {
+        const scheduleDate = new Date(schedule.date);
+        const filterDate = new Date(filter.date);
+
+        return (
+          scheduleDate.getFullYear() === filterDate.getFullYear() &&
+          scheduleDate.getMonth() === filterDate.getMonth() &&
+          scheduleDate.getDate() === filterDate.getDate()
+        );
+      } catch (e) {
+        console.error("Error parsing dates:", e);
+        return false;
+      }
+    });
+  }, [schedules, filter.date]);
+
   const getSubjectDetails = (subjectId) => {
     const subject = subjects.find((s) => s._id === subjectId);
     return subject
@@ -201,7 +212,12 @@ const ClassSchedules = () => {
                     className={isToday(schedule.date) ? "bg-yellow-50" : ""}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(schedule.date).toLocaleDateString()}
+                      {new Date(schedule.date).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        weekday: "short",
+                      })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="font-medium">

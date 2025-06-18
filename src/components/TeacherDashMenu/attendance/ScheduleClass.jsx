@@ -5,14 +5,13 @@ import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 const ScheduleClass = () => {
   const [formData, setFormData] = useState({
     classId: "",
-    subjectId: "",
     date: new Date().toISOString().split("T")[0],
     startTime: "09:00",
     endTime: "10:00",
     description: "",
   });
+
   const [subjects, setSubjects] = useState([]);
-  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -31,16 +30,6 @@ const ScheduleClass = () => {
           `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
         );
 
-        // Transform subjects into classes format
-        const classOptions = response.data.subjects.map((subject) => ({
-          _id: subject._id,
-          className: `${subject.name} - ${subject.division}`,
-          year: subject.year,
-          division: subject.division,
-          subjectName: subject.name,
-        }));
-
-        setClasses(classOptions);
         setSubjects(response.data.subjects);
       } catch (err) {
         setError(
@@ -61,7 +50,13 @@ const ScheduleClass = () => {
     setSuccessMessage(null);
   };
 
-  // In the handleSubmit function of ScheduleClass.js
+  const handleDateChange = (date) => {
+    setFormData((prev) => ({
+      ...prev,
+      date: date.toISOString().split("T")[0],
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -71,9 +66,9 @@ const ScheduleClass = () => {
       return;
     }
 
-    const selectedClass = classes.find((c) => c._id === formData.classId);
-    if (!selectedClass) {
-      setError("Selected class not found");
+    const selectedSubject = subjects.find((s) => s._id === formData.classId);
+    if (!selectedSubject) {
+      setError("Selected subject not found");
       return;
     }
 
@@ -89,10 +84,11 @@ const ScheduleClass = () => {
         "https://gradyzebackend.onrender.com/api/schedules",
         {
           ...formData,
-          title: selectedClass.subjectName,
-          year: selectedClass.year,
-          division: selectedClass.division,
-          teacherId: teacherId, // Add teacherId to the request
+          title: selectedSubject.name,
+          year: selectedSubject.year,
+          division: selectedSubject.division,
+          teacherId: teacherId,
+          subjectId: selectedSubject._id,
         },
         {
           headers: {
@@ -104,7 +100,6 @@ const ScheduleClass = () => {
       setSuccessMessage("Class scheduled successfully!");
       setFormData({
         classId: "",
-        subjectId: "",
         date: new Date().toISOString().split("T")[0],
         startTime: "09:00",
         endTime: "10:00",
@@ -140,31 +135,34 @@ const ScheduleClass = () => {
           <div className="grid grid-cols-1 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Class/Subject
+                Subject
               </label>
               <select
                 name="classId"
                 value={formData.classId}
                 onChange={handleChange}
                 required
-                disabled={loading || classes.length === 0}
+                disabled={loading || subjects.length === 0}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">-- Select Class/Subject --</option>
-                {classes.map((classItem) => (
-                  <option key={classItem._id} value={classItem._id}>
-                    {classItem.className}
+                <option value="">-- Select Subject --</option>
+                {subjects.map((subject) => (
+                  <option key={subject._id} value={subject._id}>
+                    {subject.name} ({subject.year}, Div: {subject.division})
                   </option>
                 ))}
               </select>
             </div>
 
-            <AttendanceDatePicker
-              label="Date"
-              name="date"
-              value={formData.date}
-              onChange={(e) => handleChange({ target: e.target })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date
+              </label>
+              <AttendanceDatePicker
+                selectedDate={new Date(formData.date)}
+                onChange={handleDateChange}
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
