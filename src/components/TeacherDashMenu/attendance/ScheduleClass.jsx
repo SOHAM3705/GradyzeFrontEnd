@@ -61,6 +61,7 @@ const ScheduleClass = () => {
     setSuccessMessage(null);
   };
 
+  // In the handleSubmit function of ScheduleClass.js
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -76,15 +77,22 @@ const ScheduleClass = () => {
       return;
     }
 
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      setError("Teacher ID not found in session");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await axios.post(
         "https://gradyzebackend.onrender.com/api/schedules",
         {
           ...formData,
-          title: selectedClass.subjectName, // Use subject name as title
+          title: selectedClass.subjectName,
           year: selectedClass.year,
           division: selectedClass.division,
+          teacherId: teacherId, // Add teacherId to the request
         },
         {
           headers: {
