@@ -26,6 +26,7 @@ const AttendanceRecords = () => {
   };
 
   const fetchClasses = async () => {
+    const teacherId = sessionStorage.getItem("teacherId");
     const token = getAuthToken();
     if (!token) {
       setError("Authentication token not found");
@@ -35,7 +36,7 @@ const AttendanceRecords = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://gradyzebackend.onrender.com/api/studentmanagement/classes",
+        `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
