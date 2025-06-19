@@ -195,7 +195,7 @@ const Attendance = () => {
     setLoading(true);
     try {
       await axios.post(
-        "https://gradyzebackend.onrender.com/api/attendance",
+        "https://gradyzebackend.onrender.com/api/attendance/",
         payload,
         {
           headers: {
