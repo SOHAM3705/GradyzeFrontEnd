@@ -260,9 +260,7 @@ const Attendance = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">
-        Schedule-Based Attendance Management
-      </h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Attendance</h1>
 
       {error && (
         <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
@@ -439,9 +437,7 @@ const Attendance = () => {
                       disabled={loading}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                     >
-                      {loading
-                        ? "Saving..."
-                        : "Complete Attendance & Mark Schedule Done"}
+                      {loading ? "Saving..." : "save"}
                     </button>
                   </div>
                 </div>
