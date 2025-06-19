@@ -28,7 +28,6 @@ const AttendanceRecords = () => {
 
   const getAuthToken = () => sessionStorage.getItem("token");
 
-  // Fetch all classes for the teacher
   useEffect(() => {
     const fetchClasses = async () => {
       const teacherId = sessionStorage.getItem("teacherId");
@@ -83,7 +82,12 @@ const AttendanceRecords = () => {
         }
       );
 
-      const classStudents = response.data.studentData[classId] || [];
+      // Find the correct key in the response data
+      const classKey = Object.keys(response.data.studentData).find((key) =>
+        key.includes(classId)
+      );
+
+      const classStudents = classKey ? response.data.studentData[classKey] : [];
       setStudents(classStudents);
     } catch (err) {
       console.error("Error fetching students:", err);
@@ -161,7 +165,12 @@ const AttendanceRecords = () => {
         }
       );
 
-      const classStudents = response.data.studentData[record.classId] || [];
+      // Find the correct key in the response data
+      const classKey = Object.keys(response.data.studentData).find((key) =>
+        key.includes(record.classId)
+      );
+
+      const classStudents = classKey ? response.data.studentData[classKey] : [];
       setStudents(classStudents);
 
       const initialData = {};
