@@ -25,10 +25,10 @@ const AttendanceRecords = () => {
   const [editMode, setEditMode] = useState(false);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
-  const [selectedClass, setSelectedClass] = useState("");
 
   const getAuthToken = () => sessionStorage.getItem("token");
 
+  // Fetch all classes for the teacher
   useEffect(() => {
     const fetchClasses = async () => {
       const teacherId = sessionStorage.getItem("teacherId");
@@ -59,9 +59,7 @@ const AttendanceRecords = () => {
     fetchClasses();
   }, []);
 
-  const fetchStudentsForClass = useCallback(async () => {
-    if (!selectedClass) return;
-
+  const fetchStudentsForClass = useCallback(async (classId) => {
     const token = getAuthToken();
     if (!token) {
       setError("Authentication token not found");
@@ -85,7 +83,7 @@ const AttendanceRecords = () => {
         }
       );
 
-      const classStudents = response.data.studentData[selectedClass] || [];
+      const classStudents = response.data.studentData[classId] || [];
       setStudents(classStudents);
     } catch (err) {
       console.error("Error fetching students:", err);
@@ -93,7 +91,7 @@ const AttendanceRecords = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedClass]);
+  }, []);
 
   const fetchAttendanceRecords = useCallback(async () => {
     const token = getAuthToken();
@@ -147,58 +145,54 @@ const AttendanceRecords = () => {
     }
   }, [filters]);
 
-  const fetchStudentsAndInitialize = useCallback(
-    async (record) => {
-      const token = getAuthToken();
-      if (!token) return;
+  const fetchStudentsAndInitialize = useCallback(async (record) => {
+    const token = getAuthToken();
+    if (!token) return;
 
-      setLoading(true);
-      try {
-        const teacherId = sessionStorage.getItem("teacherId");
-        const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const classStudents = response.data.studentData[selectedClass] || [];
-        setStudents(classStudents);
-
-        const initialData = {};
-        if (record) {
-          record.records.forEach((item) => {
-            initialData[item.studentId] = {
-              status: item.status,
-              studentName: item.studentName,
-            };
-          });
-        } else {
-          classStudents.forEach((student) => {
-            initialData[student._id] = {
-              status: "Present",
-              studentName: student.name,
-            };
-          });
+    setLoading(true);
+    try {
+      const teacherId = sessionStorage.getItem("teacherId");
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-        setAttendanceData(initialData);
-        setCurrentRecord(record);
-        setEditMode(true);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load students");
-      } finally {
-        setLoading(false);
+      );
+
+      const classStudents = response.data.studentData[record.classId] || [];
+      setStudents(classStudents);
+
+      const initialData = {};
+      if (record) {
+        record.records.forEach((item) => {
+          initialData[item.studentId] = {
+            status: item.status,
+            studentName: item.studentName,
+          };
+        });
+      } else {
+        classStudents.forEach((student) => {
+          initialData[student._id] = {
+            status: "Present",
+            studentName: student.name,
+          };
+        });
       }
-    },
-    [selectedClass]
-  );
+      setAttendanceData(initialData);
+      setCurrentRecord(record);
+      setEditMode(true);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load students");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setSelectedClass(value);
     setError(null);
     setSuccessMessage(null);
   };
