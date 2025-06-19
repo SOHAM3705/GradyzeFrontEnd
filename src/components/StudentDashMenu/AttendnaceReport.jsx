@@ -11,7 +11,7 @@ import {
 import { API_BASE_URL } from "../../config";
 
 const StudentAttendanceDashboard = () => {
-  const [studentId] = useState("YOUR_STUDENT_ID"); // Replace with actual student ID from auth/context
+  const [studentId] = useState(sessionStorage.getItem("studentId")); // Replace with actual student ID from auth/context
   const [attendanceData, setAttendanceData] = useState(null);
   const [classesData, setClassesData] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);

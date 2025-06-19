@@ -5,7 +5,6 @@ import { AttendanceStatusBadge } from "./shared/AttendanceStatusBadge";
 
 const AttendanceRecords = () => {
   const [classes, setClasses] = useState([]);
-  const [students, setStudents] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -56,45 +55,6 @@ const AttendanceRecords = () => {
     };
 
     fetchClasses();
-  }, []);
-
-  const fetchStudentsForClass = useCallback(async (classId) => {
-    const token = getAuthToken();
-    if (!token) {
-      setError("Authentication token not found");
-      return;
-    }
-
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      setError("Teacher ID not found in session");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      // Find the correct key in the response data
-      const classKey = Object.keys(response.data.studentData).find((key) =>
-        key.includes(classId)
-      );
-
-      const classStudents = classKey ? response.data.studentData[classKey] : [];
-      setStudents(classStudents);
-    } catch (err) {
-      console.error("Error fetching students:", err);
-      setError(err.response?.data?.message || "Failed to load students");
-    } finally {
-      setLoading(false);
-    }
   }, []);
 
   const fetchAttendanceRecords = useCallback(async () => {
@@ -149,54 +109,20 @@ const AttendanceRecords = () => {
     }
   }, [filters]);
 
-  const fetchStudentsAndInitialize = useCallback(async (record) => {
-    const token = getAuthToken();
-    if (!token) return;
+  const initializeEditMode = useCallback((record) => {
+    if (!record) return;
 
-    setLoading(true);
-    try {
-      const teacherId = sessionStorage.getItem("teacherId");
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const initialData = {};
+    record.records.forEach((item) => {
+      initialData[item.studentId] = {
+        status: item.status,
+        studentName: item.studentName,
+      };
+    });
 
-      // Find the correct key in the response data
-      const classKey = Object.keys(response.data.studentData).find((key) =>
-        key.includes(record.classId)
-      );
-
-      const classStudents = classKey ? response.data.studentData[classKey] : [];
-      setStudents(classStudents);
-
-      const initialData = {};
-      if (record) {
-        record.records.forEach((item) => {
-          initialData[item.studentId] = {
-            status: item.status,
-            studentName: item.studentName,
-          };
-        });
-      } else {
-        classStudents.forEach((student) => {
-          initialData[student._id] = {
-            status: "Present",
-            studentName: student.name,
-          };
-        });
-      }
-      setAttendanceData(initialData);
-      setCurrentRecord(record);
-      setEditMode(true);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load students");
-    } finally {
-      setLoading(false);
-    }
+    setAttendanceData(initialData);
+    setCurrentRecord(record);
+    setEditMode(true);
   }, []);
 
   const handleFilterChange = (e) => {
@@ -246,23 +172,27 @@ const AttendanceRecords = () => {
     setLoading(true);
     try {
       const payload = {
-        classId: filters.classId,
+        classId: currentRecord?.classId || filters.classId,
         date: currentRecord?.date || new Date().toISOString().split("T")[0],
         records,
       };
 
-      const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/attendance",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const url = currentRecord
+        ? `https://gradyzebackend.onrender.com/api/attendance/${currentRecord._id}`
+        : "https://gradyzebackend.onrender.com/api/attendance";
 
-      setSuccessMessage("Attendance saved successfully!");
+      const method = currentRecord ? "put" : "post";
+
+      const response = await axios[method](url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setSuccessMessage(
+        `Attendance ${currentRecord ? "updated" : "saved"} successfully!`
+      );
       setEditMode(false);
       await fetchAttendanceRecords();
     } catch (err) {
@@ -311,6 +241,8 @@ const AttendanceRecords = () => {
   };
 
   const getClassName = (classId) => {
+    if (!classId) return "No Class Assigned";
+
     const classInfo = classes.find((c) => c._id === classId);
     return classInfo
       ? `${classInfo.name} (${classInfo.year}, Div: ${classInfo.division})`
@@ -423,7 +355,16 @@ const AttendanceRecords = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Attendance Records</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Attendance Records</h2>
+          <button
+            onClick={() => initializeEditMode(null)}
+            disabled={!filters.classId || loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            Create New
+          </button>
+        </div>
 
         {loading && attendanceRecords.length === 0 ? (
           <div className="flex justify-center p-8">
@@ -481,7 +422,7 @@ const AttendanceRecords = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
-                          onClick={() => fetchStudentsAndInitialize(record)}
+                          onClick={() => initializeEditMode(record)}
                           className="text-blue-600 hover:text-blue-900 mr-4"
                           disabled={loading}
                         >
@@ -515,7 +456,7 @@ const AttendanceRecords = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">
               {currentRecord ? "Update Attendance" : "Create New Attendance"} -{" "}
-              {getClassName(filters.classId)} -{" "}
+              {getClassName(currentRecord?.classId || filters.classId)} -{" "}
               {currentRecord
                 ? formatDate(currentRecord.date)
                 : formatDate(new Date())}
@@ -538,20 +479,17 @@ const AttendanceRecords = () => {
             </div>
           </div>
 
-          {loading && students.length === 0 ? (
+          {loading ? (
             <div className="flex justify-center p-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
-          ) : students.length > 0 ? (
+          ) : currentRecord?.records?.length > 0 || !currentRecord ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Student
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Roll No
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -562,33 +500,35 @@ const AttendanceRecords = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {students.map((student) => (
-                    <tr key={student._id}>
+                  {(currentRecord?.records || []).map((student) => (
+                    <tr key={student.studentId}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {student.name}
+                          {student.studentName}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.rollNo}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <AttendanceStatusBadge
                           status={
-                            attendanceData[student._id]?.status || "Present"
+                            attendanceData[student.studentId]?.status ||
+                            "Present"
                           }
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
-                          onClick={() => toggleAttendanceStatus(student._id)}
+                          onClick={() =>
+                            toggleAttendanceStatus(student.studentId)
+                          }
                           className={`px-3 py-1 rounded-md text-sm ${
-                            attendanceData[student._id]?.status === "Present"
+                            attendanceData[student.studentId]?.status ===
+                            "Present"
                               ? "bg-red-100 text-red-800 hover:bg-red-200"
                               : "bg-green-100 text-green-800 hover:bg-green-200"
                           }`}
                         >
-                          {attendanceData[student._id]?.status === "Present"
+                          {attendanceData[student.studentId]?.status ===
+                          "Present"
                             ? "Mark Absent"
                             : "Mark Present"}
                         </button>
@@ -600,7 +540,7 @@ const AttendanceRecords = () => {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No students found for this class
+              No attendance data found
             </div>
           )}
         </div>
