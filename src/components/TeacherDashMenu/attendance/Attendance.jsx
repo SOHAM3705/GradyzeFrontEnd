@@ -16,12 +16,8 @@ const Attendance = () => {
     new Date().toISOString().split("T")[0]
   );
 
-  // Get authorization token from session storage
-  const getAuthToken = () => {
-    return sessionStorage.getItem("token");
-  };
+  const getAuthToken = () => sessionStorage.getItem("token");
 
-  // Fetch teacher's subjects
   useEffect(() => {
     const fetchSubjects = async () => {
       const token = getAuthToken();
@@ -89,7 +85,6 @@ const Attendance = () => {
     }
   }, []);
 
-  // Load schedules when subject is selected
   const loadSchedules = useCallback(async (subjectId) => {
     const token = getAuthToken();
     if (!token) return;
@@ -113,7 +108,6 @@ const Attendance = () => {
     }
   }, []);
 
-  // Initialize attendance data when students change
   useEffect(() => {
     if (students.length > 0) {
       const initialAttendance = students.reduce(
@@ -414,9 +408,7 @@ const Attendance = () => {
                       disabled={loading}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                     >
-                      {loading
-                        ? "Saving..."
-                        : "Complete Attendance & Mark Schedule Done"}
+                      {loading ? "Saving..." : "Save Attendance"}
                     </button>
                   </div>
                 </div>
