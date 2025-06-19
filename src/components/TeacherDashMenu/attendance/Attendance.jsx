@@ -53,7 +53,7 @@ const Attendance = () => {
     fetchSubjects();
   }, []);
 
-  const fetchStudentsForClass = useCallback(async (subjectId) => {
+  const fetchStudentsForClass = useCallback(async () => {
     const token = getAuthToken();
     if (!token) {
       setError("Authentication token not found");
@@ -127,7 +127,7 @@ const Attendance = () => {
       setSelectedSchedule(null);
       setError(null);
       loadSchedules(subject._id);
-      fetchStudentsForClass(subject._id);
+      fetchStudentsForClass();
     },
     [loadSchedules, fetchStudentsForClass]
   );
