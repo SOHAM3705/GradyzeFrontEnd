@@ -6,9 +6,11 @@ import { AttendanceStatusBadge } from "./shared/AttendanceStatusBadge";
 const Attendance = () => {
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
+  const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -55,6 +57,30 @@ const Attendance = () => {
     fetchSubjects();
   }, []);
 
+  // Load schedules when subject is selected
+  const loadSchedules = useCallback(async (subjectId) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/schedules/class/${subjectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setSchedules(response.data);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load schedules");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Load students when subject is selected
   const loadStudents = useCallback(async (subjectId) => {
     const token = getAuthToken();
@@ -96,11 +122,20 @@ const Attendance = () => {
   const handleSubjectSelect = useCallback(
     (subject) => {
       setSelectedSubject(subject);
+      setSelectedSchedule(null);
       setError(null);
+      loadSchedules(subject._id);
       loadStudents(subject._id);
     },
-    [loadStudents]
+    [loadSchedules, loadStudents]
   );
+
+  const handleScheduleSelect = useCallback((schedule) => {
+    setSelectedSchedule(schedule);
+    // Set the date to the schedule's date
+    const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
+    setSelectedDate(scheduleDate);
+  }, []);
 
   const toggleAttendance = useCallback((studentId) => {
     setAttendanceData((prev) => ({
@@ -124,13 +159,18 @@ const Attendance = () => {
       return;
     }
 
+    if (!selectedSchedule) {
+      setError("Please select a schedule first");
+      return;
+    }
+
     if (Object.keys(attendanceData).length === 0) {
       setError("No students to mark attendance for");
       return;
     }
 
     const payload = {
-      classId: selectedSubject._id, // Using subjectId as classId
+      classId: selectedSubject._id,
       date: selectedDate,
       records: Object.values(attendanceData).map(({ student, status }) => ({
         studentId: student._id,
@@ -163,25 +203,53 @@ const Attendance = () => {
       );
 
       setError(null);
-      alert("Attendance saved and schedule removed successfully!");
+      alert("Attendance saved and schedule completed successfully!");
+
+      // Refresh schedules to remove the completed one
+      loadSchedules(selectedSubject._id);
+      setSelectedSchedule(null);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save attendance");
     } finally {
       setLoading(false);
     }
-  }, [selectedSubject, attendanceData, selectedDate]);
+  }, [
+    selectedSubject,
+    selectedSchedule,
+    attendanceData,
+    selectedDate,
+    loadSchedules,
+  ]);
 
-  const showAttendanceForm = selectedSubject && students.length > 0;
+  // Filter schedules by selected date
+  const filteredSchedules = schedules.filter((schedule) => {
+    if (!selectedDate) return true;
+    const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
+    return scheduleDate === selectedDate;
+  });
 
   // Helper function to format subject display name
   const formatSubjectName = (subject) => {
     return `${subject.name} (${subject.year}, Sem ${subject.semester}, Div ${subject.division})`;
   };
 
+  // Helper function to format time
+  const formatTime = (time24h) => {
+    if (!time24h) return "N/A";
+    const [hours, minutes] = time24h.split(":");
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${period}`;
+  };
+
+  const showAttendanceForm =
+    selectedSubject && selectedSchedule && students.length > 0;
+
   return (
     <div className="container mx-auto p-4 max-w-6xl">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">
-        Attendance Management
+        Schedule-Based Attendance Management
       </h1>
 
       {error && (
@@ -210,7 +278,9 @@ const Attendance = () => {
                   }`}
                   onClick={() => handleSubjectSelect(subject)}
                 >
-                  <h3 className="font-medium">{formatSubjectName(subject)}</h3>
+                  <h3 className="font-medium text-sm">
+                    {formatSubjectName(subject)}
+                  </h3>
                 </div>
               ))}
             </div>
@@ -219,89 +289,147 @@ const Attendance = () => {
           )}
         </div>
 
-        {/* Attendance Form */}
+        {/* Schedule and Attendance Form */}
         <div className="lg:col-span-3">
-          {showAttendanceForm ? (
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">
-                  {formatSubjectName(selectedSubject)} - Attendance
-                </h2>
-                <AttendanceDatePicker
-                  selected={selectedDate ? new Date(selectedDate) : null}
-                  onChange={(date) =>
-                    setSelectedDate(date.toISOString().split("T")[0])
-                  }
-                  className="w-48"
-                />
-              </div>
+          {selectedSubject ? (
+            <div className="space-y-6">
+              {/* Date Picker and Schedules */}
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold">
+                    Scheduled Classes - {formatSubjectName(selectedSubject)}
+                  </h2>
+                  <AttendanceDatePicker
+                    selected={selectedDate ? new Date(selectedDate) : null}
+                    onChange={(date) =>
+                      setSelectedDate(date.toISOString().split("T")[0])
+                    }
+                    className="w-48"
+                  />
+                </div>
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Student
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {students.map((student) => (
-                      <tr key={student._id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {student.name}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <AttendanceStatusBadge
-                            status={
-                              attendanceData[student._id]?.status || "Absent"
-                            }
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => toggleAttendance(student._id)}
-                            className={`px-3 py-1 rounded-md text-sm ${
-                              attendanceData[student._id]?.status === "Present"
-                                ? "bg-red-100 text-red-800 hover:bg-red-200"
-                                : "bg-green-100 text-green-800 hover:bg-green-200"
-                            }`}
-                          >
-                            {attendanceData[student._id]?.status === "Present"
-                              ? "Mark Absent"
-                              : "Mark Present"}
-                          </button>
-                        </td>
-                      </tr>
+                {filteredSchedules.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredSchedules.map((schedule) => (
+                      <div
+                        key={schedule._id}
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                          selectedSchedule?._id === schedule._id
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-blue-300"
+                        }`}
+                        onClick={() => handleScheduleSelect(schedule)}
+                      >
+                        <h3 className="font-medium text-gray-900">
+                          {schedule.title || "Class Session"}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {formatTime(schedule.startTime)} -{" "}
+                          {formatTime(schedule.endTime)}
+                        </p>
+                        {schedule.description && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            {schedule.description}
+                          </p>
+                        )}
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No scheduled classes for the selected date
+                  </div>
+                )}
               </div>
 
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={handleSaveAttendance}
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {loading ? "Saving..." : "Save Attendance"}
-                </button>
-              </div>
+              {/* Attendance Form */}
+              {showAttendanceForm && (
+                <div className="bg-white rounded-lg shadow p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold">
+                      Take Attendance -{" "}
+                      {selectedSchedule.title || "Class Session"}
+                    </h2>
+                    <div className="text-sm text-gray-600">
+                      {formatTime(selectedSchedule.startTime)} -{" "}
+                      {formatTime(selectedSchedule.endTime)}
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {students.map((student) => (
+                          <tr key={student._id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {student.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Roll: {student.rollNo}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <AttendanceStatusBadge
+                                status={
+                                  attendanceData[student._id]?.status ||
+                                  "Present"
+                                }
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <button
+                                onClick={() => toggleAttendance(student._id)}
+                                className={`px-3 py-1 rounded-md text-sm ${
+                                  attendanceData[student._id]?.status ===
+                                  "Present"
+                                    ? "bg-red-100 text-red-800 hover:bg-red-200"
+                                    : "bg-green-100 text-green-800 hover:bg-green-200"
+                                }`}
+                              >
+                                {attendanceData[student._id]?.status ===
+                                "Present"
+                                  ? "Mark Absent"
+                                  : "Mark Present"}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={handleSaveAttendance}
+                      disabled={loading}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      {loading
+                        ? "Saving..."
+                        : "Complete Attendance & Mark Schedule Done"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <p className="text-gray-500">
-                {selectedSubject
-                  ? "No students found for this subject"
-                  : "Please select a subject to take attendance"}
+                Please select a subject to view scheduled classes
               </p>
             </div>
           )}
