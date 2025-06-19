@@ -8,6 +8,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { API_BASE_URL } from "../../config";
 
 const StudentAttendanceDashboard = () => {
   const [studentId] = useState("YOUR_STUDENT_ID"); // Replace with actual student ID from auth/context
@@ -21,7 +22,9 @@ const StudentAttendanceDashboard = () => {
   // Fetch overall attendance data
   const fetchAttendanceData = async () => {
     try {
-      const response = await fetch(`/api/student/attendance/${studentId}`);
+      const response = await fetch(
+        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}`
+      );
       if (!response.ok) throw new Error("Failed to fetch attendance data");
       const result = await response.json();
       setAttendanceData(result.data);
@@ -34,7 +37,7 @@ const StudentAttendanceDashboard = () => {
   const fetchClassesData = async () => {
     try {
       const response = await fetch(
-        `/api/student/${studentId}/classes-attendance`
+        `${API_BASE_URL}/api/studentattendance/${studentId}/classes-attendance`
       );
       if (!response.ok) throw new Error("Failed to fetch classes data");
       const result = await response.json();
@@ -49,7 +52,7 @@ const StudentAttendanceDashboard = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/student/attendance/${studentId}/class/${classId}`
+        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}/class/${classId}`
       );
       if (!response.ok)
         throw new Error("Failed to fetch class attendance details");
