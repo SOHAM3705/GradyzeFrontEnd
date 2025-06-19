@@ -69,7 +69,7 @@ const Attendance = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}/${subjectId}`,
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
