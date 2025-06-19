@@ -25,10 +25,10 @@ const AttendanceRecords = () => {
   const [editMode, setEditMode] = useState(false);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
+  const [selectedClass, setSelectedClass] = useState("");
 
   const getAuthToken = () => sessionStorage.getItem("token");
 
-  // Fetch all classes for the teacher
   useEffect(() => {
     const fetchClasses = async () => {
       const teacherId = sessionStorage.getItem("teacherId");
@@ -59,7 +59,42 @@ const AttendanceRecords = () => {
     fetchClasses();
   }, []);
 
-  // Fetch attendance records when filters change
+  const fetchStudentsForClass = useCallback(async () => {
+    if (!selectedClass) return;
+
+    const token = getAuthToken();
+    if (!token) {
+      setError("Authentication token not found");
+      return;
+    }
+
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      setError("Teacher ID not found in session");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const classStudents = response.data.studentData[selectedClass] || [];
+      setStudents(classStudents);
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      setError(err.response?.data?.message || "Failed to load students");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedClass]);
+
   const fetchAttendanceRecords = useCallback(async () => {
     const token = getAuthToken();
     if (!token) return;
@@ -112,59 +147,58 @@ const AttendanceRecords = () => {
     }
   }, [filters]);
 
-  // Fetch students and initialize attendance data when updating a record
-  const fetchStudentsAndInitialize = useCallback(async (record) => {
-    const token = getAuthToken();
-    if (!token) return;
+  const fetchStudentsAndInitialize = useCallback(
+    async (record) => {
+      const token = getAuthToken();
+      if (!token) return;
 
-    setLoading(true);
-    try {
-      // Fetch students for the class
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${record.classId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      setLoading(true);
+      try {
+        const teacherId = sessionStorage.getItem("teacherId");
+        const response = await axios.get(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const classStudents = response.data.studentData[selectedClass] || [];
+        setStudents(classStudents);
+
+        const initialData = {};
+        if (record) {
+          record.records.forEach((item) => {
+            initialData[item.studentId] = {
+              status: item.status,
+              studentName: item.studentName,
+            };
+          });
+        } else {
+          classStudents.forEach((student) => {
+            initialData[student._id] = {
+              status: "Present",
+              studentName: student.name,
+            };
+          });
         }
-      );
-
-      const classStudents = response.data.studentData[record.classId] || [];
-      setStudents(classStudents);
-
-      // Initialize attendance data
-      const initialData = {};
-      if (record) {
-        // If we have an existing record, use its data
-        record.records.forEach((item) => {
-          initialData[item.studentId] = {
-            status: item.status,
-            studentName: item.studentName,
-          };
-        });
-      } else {
-        // Otherwise, default all to present
-        classStudents.forEach((student) => {
-          initialData[student._id] = {
-            status: "Present",
-            studentName: student.name,
-          };
-        });
+        setAttendanceData(initialData);
+        setCurrentRecord(record);
+        setEditMode(true);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load students");
+      } finally {
+        setLoading(false);
       }
-      setAttendanceData(initialData);
-
-      setCurrentRecord(record);
-      setEditMode(true);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load students");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [selectedClass]
+  );
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
+    setSelectedClass(value);
     setError(null);
     setSuccessMessage(null);
   };
@@ -227,7 +261,7 @@ const AttendanceRecords = () => {
 
       setSuccessMessage("Attendance saved successfully!");
       setEditMode(false);
-      await fetchAttendanceRecords(); // Refresh the records
+      await fetchAttendanceRecords();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save attendance");
     } finally {
@@ -260,7 +294,7 @@ const AttendanceRecords = () => {
       );
 
       setSuccessMessage("Attendance record deleted successfully!");
-      await fetchAttendanceRecords(); // Refresh the records
+      await fetchAttendanceRecords();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete record");
     } finally {
@@ -361,7 +395,6 @@ const AttendanceRecords = () => {
           </div>
         </div>
 
-        {/* Statistics */}
         {attendanceRecords.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-green-50 p-4 rounded-lg">
@@ -386,7 +419,6 @@ const AttendanceRecords = () => {
         )}
       </div>
 
-      {/* Records List */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Attendance Records</h2>
 
@@ -475,7 +507,6 @@ const AttendanceRecords = () => {
         )}
       </div>
 
-      {/* Edit/Update Form (only shown when in edit mode) */}
       {editMode && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-6">
