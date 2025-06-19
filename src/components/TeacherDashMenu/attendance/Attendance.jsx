@@ -5,8 +5,8 @@ import { AttendanceStatusBadge } from "./shared/AttendanceStatusBadge";
 
 const Attendance = () => {
   const [subjects, setSubjects] = useState([]);
-  const [schedules, setSchedules] = useState([]);
   const [students, setStudents] = useState([]);
+  const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -15,6 +15,7 @@ const Attendance = () => {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [selectedClass, setSelectedClass] = useState("");
 
   const getAuthToken = () => sessionStorage.getItem("token");
 
@@ -53,6 +54,43 @@ const Attendance = () => {
     fetchSubjects();
   }, []);
 
+  const fetchStudentsForClass = useCallback(async () => {
+    if (!selectedClass) return;
+
+    const token = getAuthToken();
+    if (!token) {
+      setError("Authentication token not found");
+      return;
+    }
+
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      setError("Teacher ID not found in session");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Assuming response.data.studentData is structured as { [classKey]: [students] }
+      const classStudents = response.data.studentData[selectedClass] || [];
+      setStudents(classStudents);
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      setError(err.response?.data?.message || "Failed to load students");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedClass]);
+
   const loadSchedules = useCallback(async (subjectId) => {
     const token = getAuthToken();
     if (!token) return;
@@ -76,30 +114,6 @@ const Attendance = () => {
     }
   }, []);
 
-  const loadStudents = useCallback(async (subject) => {
-    const token = getAuthToken();
-    if (!token) return;
-
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/students/class/${subject._id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setStudents(response.data);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching students:", err);
-      setError(err.response?.data?.message || "Failed to load students");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     if (students.length > 0) {
       const initialAttendance = students.reduce(
@@ -117,12 +131,16 @@ const Attendance = () => {
     (subject) => {
       setSelectedSubject(subject);
       setSelectedSchedule(null);
+      setSelectedClass(`${subject.year}-${subject.division}`); // Set selected class
       setError(null);
       loadSchedules(subject._id);
-      loadStudents(subject);
     },
-    [loadSchedules, loadStudents]
+    [loadSchedules]
   );
+
+  useEffect(() => {
+    fetchStudentsForClass();
+  }, [fetchStudentsForClass]);
 
   const handleScheduleSelect = useCallback((schedule) => {
     setSelectedSchedule(schedule);
