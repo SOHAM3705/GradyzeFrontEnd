@@ -57,6 +57,38 @@ const Attendance = () => {
     fetchSubjects();
   }, []);
 
+  const fetchStudentsForClass = useCallback(async (subjectId) => {
+    const token = getAuthToken();
+    if (!token) {
+      setError("Authentication token not found");
+      return;
+    }
+
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      setError("Teacher ID not found in session");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}/${subjectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setStudents(response.data);
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      setError(err.response?.data?.message || "Failed to load students");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Load schedules when subject is selected
   const loadSchedules = useCallback(async (subjectId) => {
     const token = getAuthToken();
@@ -81,38 +113,6 @@ const Attendance = () => {
     }
   }, []);
 
-  const fetchStudentsForClass = async (subjectId) => {
-    const token = getAuthToken();
-    if (!token) {
-      setError("Authentication token not found");
-      return;
-    }
-
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      setError("Teacher ID not found in session");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setStudents(response.data);
-    } catch (err) {
-      console.error("Error fetching students:", err);
-      setError(err.response?.data?.message || "Failed to load students");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Initialize attendance data when students change
   useEffect(() => {
     if (students.length > 0) {
@@ -135,12 +135,11 @@ const Attendance = () => {
       loadSchedules(subject._id);
       fetchStudentsForClass(subject._id);
     },
-    [loadSchedules]
+    [loadSchedules, fetchStudentsForClass]
   );
 
   const handleScheduleSelect = useCallback((schedule) => {
     setSelectedSchedule(schedule);
-    // Set the date to the schedule's date
     const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
     setSelectedDate(scheduleDate);
   }, []);
@@ -189,7 +188,6 @@ const Attendance = () => {
 
     setLoading(true);
     try {
-      // First save attendance
       await axios.post(
         "https://gradyzebackend.onrender.com/api/attendance",
         payload,
@@ -200,7 +198,6 @@ const Attendance = () => {
         }
       );
 
-      // Then delete the corresponding schedule
       await axios.delete(
         `https://gradyzebackend.onrender.com/api/schedules/class/${selectedSubject._id}/${selectedDate}`,
         {
@@ -212,8 +209,6 @@ const Attendance = () => {
 
       setError(null);
       alert("Attendance saved and schedule completed successfully!");
-
-      // Refresh schedules to remove the completed one
       loadSchedules(selectedSubject._id);
       setSelectedSchedule(null);
     } catch (err) {
@@ -229,19 +224,16 @@ const Attendance = () => {
     loadSchedules,
   ]);
 
-  // Filter schedules by selected date
   const filteredSchedules = schedules.filter((schedule) => {
     if (!selectedDate) return true;
     const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
     return scheduleDate === selectedDate;
   });
 
-  // Helper function to format subject display name
   const formatSubjectName = (subject) => {
     return `${subject.name} (${subject.year}, Sem ${subject.semester}, Div ${subject.division})`;
   };
 
-  // Helper function to format time
   const formatTime = (time24h) => {
     if (!time24h) return "N/A";
     const [hours, minutes] = time24h.split(":");
@@ -267,7 +259,6 @@ const Attendance = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Subject Selection */}
         <div className="lg:col-span-1 bg-white rounded-lg shadow p-4">
           <h2 className="text-lg font-semibold mb-4">Subjects</h2>
           {loading ? (
@@ -297,11 +288,9 @@ const Attendance = () => {
           )}
         </div>
 
-        {/* Schedule and Attendance Form */}
         <div className="lg:col-span-3">
           {selectedSubject ? (
             <div className="space-y-6">
-              {/* Date Picker and Schedules */}
               <div className="bg-white rounded-lg shadow p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold">
@@ -350,7 +339,6 @@ const Attendance = () => {
                 )}
               </div>
 
-              {/* Attendance Form */}
               {showAttendanceForm && (
                 <div className="bg-white rounded-lg shadow p-4">
                   <div className="flex justify-between items-center mb-4">
