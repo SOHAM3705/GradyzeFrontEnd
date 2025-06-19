@@ -18,16 +18,17 @@ const AttendanceRecords = () => {
 
   const [filters, setFilters] = useState({
     classId: "",
-    date: new Date().toISOString().split("T")[0],
+    startDate: "",
+    endDate: new Date().toISOString().split("T")[0],
   });
 
   const [editMode, setEditMode] = useState(false);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
-  const [selectedClass, setSelectedClass] = useState("");
 
   const getAuthToken = () => sessionStorage.getItem("token");
 
+  // Fetch all classes for the teacher
   useEffect(() => {
     const fetchClasses = async () => {
       const teacherId = sessionStorage.getItem("teacherId");
@@ -58,25 +59,69 @@ const AttendanceRecords = () => {
     fetchClasses();
   }, []);
 
-  const fetchStudentsForClass = useCallback(async () => {
-    if (!selectedClass) return;
-
+  // Fetch attendance records when filters change
+  const fetchAttendanceRecords = useCallback(async () => {
     const token = getAuthToken();
-    if (!token) {
-      setError("Authentication token not found");
-      return;
-    }
-
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      setError("Teacher ID not found in session");
-      return;
-    }
+    if (!token) return;
 
     setLoading(true);
     try {
+      const params = {
+        classId: filters.classId,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      };
+
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+        "https://gradyzebackend.onrender.com/api/attendance",
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setAttendanceRecords(response.data);
+      setError(null);
+
+      // Calculate statistics
+      let present = 0;
+      let absent = 0;
+
+      response.data.forEach((record) => {
+        record.records.forEach((item) => {
+          item.status === "Present" ? present++ : absent++;
+        });
+      });
+
+      const total = present + absent;
+      const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+      setStats({
+        present,
+        absent,
+        percentage,
+      });
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to load attendance records"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  // Fetch students and initialize attendance data when updating a record
+  const fetchStudentsAndInitialize = useCallback(async (record) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    setLoading(true);
+    try {
+      // Fetch students for the class
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${record.classId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -84,113 +129,51 @@ const AttendanceRecords = () => {
         }
       );
 
-      // Assuming response.data.studentData is structured as { [classKey]: [students] }
-      const classStudents = response.data.studentData[selectedClass] || [];
+      const classStudents = response.data.studentData[record.classId] || [];
       setStudents(classStudents);
+
+      // Initialize attendance data
+      const initialData = {};
+      if (record) {
+        // If we have an existing record, use its data
+        record.records.forEach((item) => {
+          initialData[item.studentId] = {
+            status: item.status,
+            studentName: item.studentName,
+          };
+        });
+      } else {
+        // Otherwise, default all to present
+        classStudents.forEach((student) => {
+          initialData[student._id] = {
+            status: "Present",
+            studentName: student.name,
+          };
+        });
+      }
+      setAttendanceData(initialData);
+
+      setCurrentRecord(record);
+      setEditMode(true);
     } catch (err) {
-      console.error("Error fetching students:", err);
       setError(err.response?.data?.message || "Failed to load students");
     } finally {
       setLoading(false);
     }
-  }, [selectedClass]);
-
-  useEffect(() => {
-    fetchStudentsForClass();
-  }, [fetchStudentsForClass]);
-
-  useEffect(() => {
-    const fetchAttendanceRecords = async () => {
-      if (!filters.classId || !filters.date) return;
-
-      const token = getAuthToken();
-      if (!token) return;
-
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/attendance`,
-          {
-            params: {
-              classId: filters.classId,
-              startDate: filters.date,
-              endDate: filters.date,
-            },
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.data.length > 0) {
-          const record = response.data[0];
-          setCurrentRecord(record);
-          const initialData = {};
-
-          // Initialize attendance data from existing record
-          record.records.forEach((item) => {
-            initialData[item.studentId] = {
-              status: item.status,
-              studentName: item.studentName,
-            };
-          });
-          setAttendanceData(initialData);
-        } else {
-          setCurrentRecord(null);
-          // Initialize empty attendance data
-          const initialData = {};
-          students.forEach((student) => {
-            initialData[student._id] = {
-              status: "Present",
-              studentName: student.name,
-            };
-          });
-          setAttendanceData(initialData);
-        }
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load attendance");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAttendanceRecords();
-  }, [filters, students]);
-
-  useEffect(() => {
-    if (Object.keys(attendanceData).length === 0) return;
-
-    let present = 0;
-    let absent = 0;
-
-    Object.values(attendanceData).forEach((item) => {
-      if (item.status === "Present") present++;
-      else absent++;
-    });
-
-    const total = present + absent;
-    const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
-
-    setStats({
-      present,
-      absent,
-      percentage,
-    });
-  }, [attendanceData]);
+  }, []);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setSelectedClass(value); // Set selected class
     setError(null);
     setSuccessMessage(null);
   };
 
-  const handleDateChange = (date) => {
+  const handleDateChange = (date, field) => {
     if (date instanceof Date) {
       setFilters((prev) => ({
         ...prev,
-        date: date.toISOString().split("T")[0],
+        [field]: date.toISOString().split("T")[0],
       }));
     }
   };
@@ -212,8 +195,8 @@ const AttendanceRecords = () => {
       return;
     }
 
-    if (!filters.classId || !filters.date) {
-      setError("Please select a class and date");
+    if (!filters.classId) {
+      setError("Please select a class");
       return;
     }
 
@@ -227,7 +210,7 @@ const AttendanceRecords = () => {
     try {
       const payload = {
         classId: filters.classId,
-        date: filters.date,
+        date: currentRecord?.date || new Date().toISOString().split("T")[0],
         records,
       };
 
@@ -243,8 +226,8 @@ const AttendanceRecords = () => {
       );
 
       setSuccessMessage("Attendance saved successfully!");
-      setCurrentRecord(response.data);
       setEditMode(false);
+      await fetchAttendanceRecords(); // Refresh the records
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save attendance");
     } finally {
@@ -252,9 +235,7 @@ const AttendanceRecords = () => {
     }
   };
 
-  const handleDeleteRecord = async () => {
-    if (!currentRecord) return;
-
+  const handleDeleteRecord = async (recordId) => {
     const token = getAuthToken();
     if (!token) {
       setError("Authentication required");
@@ -270,7 +251,7 @@ const AttendanceRecords = () => {
     setLoading(true);
     try {
       await axios.delete(
-        `https://gradyzebackend.onrender.com/api/attendance/${currentRecord._id}`,
+        `https://gradyzebackend.onrender.com/api/attendance/${recordId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -279,16 +260,7 @@ const AttendanceRecords = () => {
       );
 
       setSuccessMessage("Attendance record deleted successfully!");
-      setCurrentRecord(null);
-      // Reset attendance data to default (all present)
-      const initialData = {};
-      students.forEach((student) => {
-        initialData[student._id] = {
-          status: "Present",
-          studentName: student.name,
-        };
-      });
-      setAttendanceData(initialData);
+      await fetchAttendanceRecords(); // Refresh the records
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete record");
     } finally {
@@ -296,22 +268,9 @@ const AttendanceRecords = () => {
     }
   };
 
-  const handleEditRecord = () => {
-    setEditMode(true);
-  };
-
   const handleCancelEdit = () => {
-    if (currentRecord) {
-      const initialData = {};
-      currentRecord.records.forEach((item) => {
-        initialData[item.studentId] = {
-          status: item.status,
-          studentName: item.studentName,
-        };
-      });
-      setAttendanceData(initialData);
-    }
     setEditMode(false);
+    setCurrentRecord(null);
   };
 
   const getClassName = (classId) => {
@@ -321,10 +280,20 @@ const AttendanceRecords = () => {
       : "Unknown Class";
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-6xl">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">
-        Attendance Recording
+        Attendance Records
       </h1>
 
       {error && (
@@ -340,7 +309,7 @@ const AttendanceRecords = () => {
       )}
 
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Class
@@ -363,30 +332,37 @@ const AttendanceRecords = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date
+              From Date
             </label>
             <AttendanceDatePicker
-              selected={filters.date ? new Date(filters.date) : null}
-              onChange={handleDateChange}
+              selected={filters.startDate ? new Date(filters.startDate) : null}
+              onChange={(date) => handleDateChange(date, "startDate")}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              To Date
+            </label>
+            <AttendanceDatePicker
+              selected={filters.endDate ? new Date(filters.endDate) : null}
+              onChange={(date) => handleDateChange(date, "endDate")}
             />
           </div>
 
           <div className="flex items-end">
             <button
-              onClick={() => {
-                setError(null);
-                setSuccessMessage(null);
-              }}
+              onClick={fetchAttendanceRecords}
               disabled={loading || !filters.classId}
-              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              Refresh
+              {loading ? "Loading..." : "Filter Records"}
             </button>
           </div>
         </div>
 
         {/* Statistics */}
-        {filters.classId && (
+        {attendanceRecords.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-green-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-green-800">Present</h3>
@@ -410,66 +386,121 @@ const AttendanceRecords = () => {
         )}
       </div>
 
-      {/* Attendance Recording Area */}
-      {filters.classId && (
+      {/* Records List */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Attendance Records</h2>
+
+        {loading && attendanceRecords.length === 0 ? (
+          <div className="flex justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : attendanceRecords.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Class
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Present/Absent
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {attendanceRecords.map((record) => {
+                  const presentCount = record.records.filter(
+                    (r) => r.status === "Present"
+                  ).length;
+                  const absentCount = record.records.filter(
+                    (r) => r.status === "Absent"
+                  ).length;
+
+                  return (
+                    <tr key={record._id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {formatDate(record.date)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {getClassName(record.classId)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex space-x-2">
+                          <span className="text-green-600">
+                            {presentCount} Present
+                          </span>
+                          <span className="text-red-600">
+                            {absentCount} Absent
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => fetchStudentsAndInitialize(record)}
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                          disabled={loading}
+                        >
+                          Update
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRecord(record._id)}
+                          className="text-red-600 hover:text-red-900"
+                          disabled={loading}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            {filters.classId
+              ? "No attendance records found"
+              : "Please select a class and date range"}
+          </div>
+        )}
+      </div>
+
+      {/* Edit/Update Form (only shown when in edit mode) */}
+      {editMode && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">
+              {currentRecord ? "Update Attendance" : "Create New Attendance"} -{" "}
               {getClassName(filters.classId)} -{" "}
-              {new Date(filters.date).toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
+              {currentRecord
+                ? formatDate(currentRecord.date)
+                : formatDate(new Date())}
             </h2>
 
             <div className="flex space-x-2">
-              {currentRecord && !editMode && (
-                <>
-                  <button
-                    onClick={handleEditRecord}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={handleDeleteRecord}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                    disabled={loading}
-                  >
-                    Delete
-                  </button>
-                </>
-              )}
-
-              {editMode && (
-                <>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveAttendance}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                    disabled={loading}
-                  >
-                    {loading ? "Saving..." : "Save Changes"}
-                  </button>
-                </>
-              )}
-
-              {!currentRecord && !editMode && (
-                <button
-                  onClick={handleSaveAttendance}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                  disabled={loading}
-                >
-                  {loading ? "Saving..." : "Save Attendance"}
-                </button>
-              )}
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveAttendance}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save Changes"}
+              </button>
             </div>
           </div>
 
@@ -515,20 +546,18 @@ const AttendanceRecords = () => {
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {(editMode || !currentRecord) && (
-                          <button
-                            onClick={() => toggleAttendanceStatus(student._id)}
-                            className={`px-3 py-1 rounded-md text-sm ${
-                              attendanceData[student._id]?.status === "Present"
-                                ? "bg-red-100 text-red-800 hover:bg-red-200"
-                                : "bg-green-100 text-green-800 hover:bg-green-200"
-                            }`}
-                          >
-                            {attendanceData[student._id]?.status === "Present"
-                              ? "Mark Absent"
-                              : "Mark Present"}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => toggleAttendanceStatus(student._id)}
+                          className={`px-3 py-1 rounded-md text-sm ${
+                            attendanceData[student._id]?.status === "Present"
+                              ? "bg-red-100 text-red-800 hover:bg-red-200"
+                              : "bg-green-100 text-green-800 hover:bg-green-200"
+                          }`}
+                        >
+                          {attendanceData[student._id]?.status === "Present"
+                            ? "Mark Absent"
+                            : "Mark Present"}
+                        </button>
                       </td>
                     </tr>
                   ))}
