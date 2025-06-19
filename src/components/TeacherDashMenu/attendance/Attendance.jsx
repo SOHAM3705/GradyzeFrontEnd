@@ -81,15 +81,23 @@ const Attendance = () => {
     }
   }, []);
 
-  // Load students when subject is selected
-  const loadStudents = useCallback(async (subjectId) => {
+  const fetchStudentsForClass = async (subjectId) => {
     const token = getAuthToken();
-    if (!token) return;
+    if (!token) {
+      setError("Authentication token not found");
+      return;
+    }
+
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      setError("Teacher ID not found in session");
+      return;
+    }
 
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/subject-students/${subjectId}`,
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}/${subjectId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -97,13 +105,13 @@ const Attendance = () => {
         }
       );
       setStudents(response.data);
-      setError(null);
     } catch (err) {
+      console.error("Error fetching students:", err);
       setError(err.response?.data?.message || "Failed to load students");
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   // Initialize attendance data when students change
   useEffect(() => {
@@ -125,9 +133,9 @@ const Attendance = () => {
       setSelectedSchedule(null);
       setError(null);
       loadSchedules(subject._id);
-      loadStudents(subject._id);
+      fetchStudentsForClass(subject._id);
     },
-    [loadSchedules, loadStudents]
+    [loadSchedules]
   );
 
   const handleScheduleSelect = useCallback((schedule) => {
