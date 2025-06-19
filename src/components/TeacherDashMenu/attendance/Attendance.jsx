@@ -16,8 +16,12 @@ const Attendance = () => {
     new Date().toISOString().split("T")[0]
   );
 
-  const getAuthToken = () => sessionStorage.getItem("token");
+  // Get authorization token from session storage
+  const getAuthToken = () => {
+    return sessionStorage.getItem("token");
+  };
 
+  // Fetch teacher's subjects
   useEffect(() => {
     const fetchSubjects = async () => {
       const token = getAuthToken();
@@ -53,38 +57,7 @@ const Attendance = () => {
     fetchSubjects();
   }, []);
 
-  const fetchStudentsForClass = useCallback(async () => {
-    const token = getAuthToken();
-    if (!token) {
-      setError("Authentication token not found");
-      return;
-    }
-
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      setError("Teacher ID not found in session");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setStudents(response.data);
-    } catch (err) {
-      console.error("Error fetching students:", err);
-      setError(err.response?.data?.message || "Failed to load students");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Load schedules when subject is selected
   const loadSchedules = useCallback(async (subjectId) => {
     const token = getAuthToken();
     if (!token) return;
@@ -108,6 +81,45 @@ const Attendance = () => {
     }
   }, []);
 
+  // Load students when subject is selected
+  const loadStudents = useCallback(async (subject) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!teacherId) {
+      setError("Teacher ID not found in session");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Fetch all subjects and students data
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Create class key from subject details (year-division combination)
+      const classKey = `${subject.year}-${subject.division}`;
+
+      // Find students for the selected class (year-division combination)
+      const classStudents = response.data.studentData[classKey] || [];
+      setStudents(classStudents);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      setError(err.response?.data?.message || "Failed to load students");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initialize attendance data when students change
   useEffect(() => {
     if (students.length > 0) {
       const initialAttendance = students.reduce(
@@ -127,13 +139,14 @@ const Attendance = () => {
       setSelectedSchedule(null);
       setError(null);
       loadSchedules(subject._id);
-      fetchStudentsForClass();
+      loadStudents(subject); // Pass the whole subject object instead of just ID
     },
-    [loadSchedules, fetchStudentsForClass]
+    [loadSchedules, loadStudents]
   );
 
   const handleScheduleSelect = useCallback((schedule) => {
     setSelectedSchedule(schedule);
+    // Set the date to the schedule's date
     const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
     setSelectedDate(scheduleDate);
   }, []);
@@ -182,6 +195,7 @@ const Attendance = () => {
 
     setLoading(true);
     try {
+      // First save attendance
       await axios.post(
         "https://gradyzebackend.onrender.com/api/attendance",
         payload,
@@ -192,6 +206,7 @@ const Attendance = () => {
         }
       );
 
+      // Then delete the corresponding schedule
       await axios.delete(
         `https://gradyzebackend.onrender.com/api/schedules/class/${selectedSubject._id}/${selectedDate}`,
         {
@@ -203,6 +218,8 @@ const Attendance = () => {
 
       setError(null);
       alert("Attendance saved and schedule completed successfully!");
+
+      // Refresh schedules to remove the completed one
       loadSchedules(selectedSubject._id);
       setSelectedSchedule(null);
     } catch (err) {
@@ -218,16 +235,19 @@ const Attendance = () => {
     loadSchedules,
   ]);
 
+  // Filter schedules by selected date
   const filteredSchedules = schedules.filter((schedule) => {
     if (!selectedDate) return true;
     const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
     return scheduleDate === selectedDate;
   });
 
+  // Helper function to format subject display name
   const formatSubjectName = (subject) => {
     return `${subject.name} (${subject.year}, Sem ${subject.semester}, Div ${subject.division})`;
   };
 
+  // Helper function to format time
   const formatTime = (time24h) => {
     if (!time24h) return "N/A";
     const [hours, minutes] = time24h.split(":");
@@ -253,6 +273,7 @@ const Attendance = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Subject Selection */}
         <div className="lg:col-span-1 bg-white rounded-lg shadow p-4">
           <h2 className="text-lg font-semibold mb-4">Subjects</h2>
           {loading ? (
@@ -282,9 +303,11 @@ const Attendance = () => {
           )}
         </div>
 
+        {/* Schedule and Attendance Form */}
         <div className="lg:col-span-3">
           {selectedSubject ? (
             <div className="space-y-6">
+              {/* Date Picker and Schedules */}
               <div className="bg-white rounded-lg shadow p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold">
@@ -304,12 +327,11 @@ const Attendance = () => {
                     {filteredSchedules.map((schedule) => (
                       <div
                         key={schedule._id}
-                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        className={`p-4 border rounded-lg transition-colors ${
                           selectedSchedule?._id === schedule._id
                             ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200 hover:border-blue-300"
+                            : "border-gray-200"
                         }`}
-                        onClick={() => handleScheduleSelect(schedule)}
                       >
                         <h3 className="font-medium text-gray-900">
                           {schedule.title || "Class Session"}
@@ -323,6 +345,20 @@ const Attendance = () => {
                             {schedule.description}
                           </p>
                         )}
+                        <div className="mt-3 flex justify-end">
+                          <button
+                            onClick={() => handleScheduleSelect(schedule)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              selectedSchedule?._id === schedule._id
+                                ? "bg-blue-600 text-white"
+                                : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                            }`}
+                          >
+                            {selectedSchedule?._id === schedule._id
+                              ? "Taking Attendance"
+                              : "Take Attendance"}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -333,6 +369,7 @@ const Attendance = () => {
                 )}
               </div>
 
+              {/* Attendance Form */}
               {showAttendanceForm && (
                 <div className="bg-white rounded-lg shadow p-4">
                   <div className="flex justify-between items-center mb-4">
@@ -408,7 +445,9 @@ const Attendance = () => {
                       disabled={loading}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                     >
-                      {loading ? "Saving..." : "Save Attendance"}
+                      {loading
+                        ? "Saving..."
+                        : "Complete Attendance & Mark Schedule Done"}
                     </button>
                   </div>
                 </div>
