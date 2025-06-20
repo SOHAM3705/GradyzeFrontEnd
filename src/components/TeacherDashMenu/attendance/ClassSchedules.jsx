@@ -72,7 +72,7 @@ const ClassSchedules = () => {
           },
         }
       );
-      setSchedules(response.data);
+      setSchedules(response.data.data);
       setError(null);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load schedules");
