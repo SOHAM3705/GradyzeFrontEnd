@@ -26,7 +26,7 @@ const StudentAttendanceDashboard = () => {
 
       // 1. Fetch student details
       const studentResponse = await fetch(
-        `${API_BASE_URL}/api/students/${studentId}`
+        `${API_BASE_URL}/api/studentattendance/${studentId}`
       );
       if (!studentResponse.ok) throw new Error("Failed to fetch student data");
       const studentData = await studentResponse.json();
@@ -34,7 +34,7 @@ const StudentAttendanceDashboard = () => {
 
       // 2. Fetch subjects for student
       const subjectsResponse = await fetch(
-        `${API_BASE_URL}/api/students/${studentId}/subjects`
+        `${API_BASE_URL}/api/studentattendance/${studentId}/subjects`
       );
       if (!subjectsResponse.ok) throw new Error("Failed to fetch subjects");
       const subjectsData = await subjectsResponse.json();
@@ -50,7 +50,7 @@ const StudentAttendanceDashboard = () => {
   const fetchAttendanceData = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/student/attendance/${studentId}`
+        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}`
       );
       if (!response.ok) throw new Error("Failed to fetch attendance data");
       const result = await response.json();
@@ -65,7 +65,7 @@ const StudentAttendanceDashboard = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${API_BASE_URL}/api/student/attendance/${studentId}/subject/${encodeURIComponent(
+        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}/subject/${encodeURIComponent(
           subjectName
         )}`
       );
