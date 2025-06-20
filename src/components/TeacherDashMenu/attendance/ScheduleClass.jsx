@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 
+const API_BASE_URL = "https://gradyzebackend.onrender.com";
+
 const ScheduleClass = () => {
   const [formData, setFormData] = useState({
     subjectName: "",
@@ -29,8 +31,9 @@ const ScheduleClass = () => {
 
       setLoading(true);
       try {
+        // Using the correct endpoint to get teacher's subjects
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`,
+          `${API_BASE_URL}/api/studentmanagement/subject-details/${teacherId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -38,8 +41,9 @@ const ScheduleClass = () => {
           }
         );
 
-        // Check if the response has subjects array
-        const receivedSubjects = response.data.subjects || [];
+        // Make sure we're accessing the correct data property
+        const receivedSubjects =
+          response.data.subjects || response.data.data || [];
         setSubjects(receivedSubjects);
       } catch (err) {
         setError(
@@ -117,6 +121,7 @@ const ScheduleClass = () => {
         teacherName: sessionStorage.getItem("teacherName") || "Teacher",
       };
 
+      // Using the correct endpoint for creating schedules
       const response = await axios.post(
         `${API_BASE_URL}/api/schedules`,
         payload,
@@ -187,7 +192,7 @@ const ScheduleClass = () => {
                   ))
                 ) : (
                   <option value="" disabled>
-                    No subjects assigned
+                    {loading ? "Loading subjects..." : "No subjects assigned"}
                   </option>
                 )}
               </select>
