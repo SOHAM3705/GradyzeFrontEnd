@@ -4,11 +4,14 @@ import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 
 const ScheduleClass = () => {
   const [formData, setFormData] = useState({
-    classId: "",
+    subjectName: "",
+    year: "",
+    division: "",
     date: new Date(),
     startTime: "09:00",
     endTime: "10:00",
     description: "",
+    title: "",
   });
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,17 +21,23 @@ const ScheduleClass = () => {
   useEffect(() => {
     const fetchTeacherSubjects = async () => {
       const teacherId = sessionStorage.getItem("teacherId");
-      if (!teacherId) {
-        setError("Teacher ID not found in session");
+      const token = sessionStorage.getItem("token");
+      if (!teacherId || !token) {
+        setError("Authentication required");
         return;
       }
 
       setLoading(true);
       try {
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`
+          `${API_BASE_URL}/api/teachers/${teacherId}/subjects`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
-        setSubjects(response.data.subjects);
+        setSubjects(response.data.data || []);
       } catch (err) {
         setError(
           err.response?.data?.message || "Failed to load assigned subjects"
@@ -54,6 +63,21 @@ const ScheduleClass = () => {
     }
   };
 
+  const handleSubjectChange = (e) => {
+    const subjectId = e.target.value;
+    const selectedSubject = subjects.find((s) => s._id === subjectId);
+
+    if (selectedSubject) {
+      setFormData((prev) => ({
+        ...prev,
+        subjectName: selectedSubject.name,
+        year: selectedSubject.year,
+        division: selectedSubject.division,
+        title: `${selectedSubject.name} Class`,
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -63,56 +87,56 @@ const ScheduleClass = () => {
       return;
     }
 
-    const selectedSubject = subjects.find((s) => s._id === formData.classId);
-    if (!selectedSubject) {
-      setError("Selected subject not found");
+    if (!formData.subjectName || !formData.year || !formData.division) {
+      setError("Please select a valid subject");
       return;
     }
 
     const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      setError("Teacher ID not found in session");
+    const token = sessionStorage.getItem("token");
+    if (!teacherId || !token) {
+      setError("Authentication required");
       return;
     }
 
     setLoading(true);
     try {
       const payload = {
-        classId: formData.classId,
+        subjectName: formData.subjectName,
+        year: formData.year,
+        division: formData.division,
         date: formData.date.toISOString().split("T")[0],
         startTime: formData.startTime,
         endTime: formData.endTime,
         description: formData.description,
-        title: selectedSubject.name,
-        year: selectedSubject.year,
-        division: selectedSubject.division,
+        title: formData.title || `${formData.subjectName} Class`,
         teacherId: teacherId,
-        subjectId: selectedSubject._id,
+        teacherName: sessionStorage.getItem("teacherName") || "Teacher",
       };
 
-      console.log("Sending payload:", payload); // Debug log
-
       const response = await axios.post(
-        "https://gradyzebackend.onrender.com/api/schedules",
+        `${API_BASE_URL}/api/schedules`,
         payload,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
       setSuccessMessage("Class scheduled successfully!");
       setFormData({
-        classId: "",
+        subjectName: "",
+        year: "",
+        division: "",
         date: new Date(),
         startTime: "09:00",
         endTime: "10:00",
         description: "",
+        title: "",
       });
     } catch (err) {
-      console.error("Error response:", err.response); // Debug log
       setError(err.response?.data?.message || "Failed to schedule class");
     } finally {
       setLoading(false);
@@ -145,9 +169,8 @@ const ScheduleClass = () => {
                 Subject
               </label>
               <select
-                name="classId"
-                value={formData.classId}
-                onChange={handleChange}
+                name="subject"
+                onChange={handleSubjectChange}
                 required
                 disabled={loading || subjects.length === 0}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -159,6 +182,21 @@ const ScheduleClass = () => {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Class Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                placeholder="E.g. Mathematics Lecture"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
 
             <div>
@@ -217,7 +255,7 @@ const ScheduleClass = () => {
             <div className="flex justify-end">
               <button
                 type="submit"
-                disabled={loading || !formData.classId}
+                disabled={loading || !formData.subjectName}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 {loading ? "Scheduling..." : "Schedule Class"}

@@ -4,9 +4,10 @@ import { AttendanceDatePicker } from "./shared/AttendanceDataPicker";
 
 const ClassSchedules = () => {
   const [schedules, setSchedules] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [classes, setClasses] = useState([]); // Will store unique year/division combinations
   const [filter, setFilter] = useState({
-    classId: "",
+    year: "",
+    division: "",
     date: "",
   });
   const [loading, setLoading] = useState(false);
@@ -18,80 +19,100 @@ const ClassSchedules = () => {
   };
 
   useEffect(() => {
-    const fetchClassData = async () => {
+    const fetchSchedulesData = async () => {
       const token = getAuthToken();
       if (!token) {
         setError("Authentication token not found");
         return;
       }
-      const teacherId = sessionStorage.getItem("teacherId");
-      if (!teacherId) {
-        setError("Teacher ID not found in session");
-        return;
-      }
 
       setLoading(true);
       try {
-        // Fetch subjects with authentication
+        // Fetch teacher's schedules
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`,
+          `https://gradyzebackend.onrender.com/api/schedules`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setSubjects(response.data.subjects);
 
-        if (response.data.subjects.length > 0) {
-          const firstSubjectId = response.data.subjects[0]._id;
-          await fetchSchedules(firstSubjectId);
-          setFilter((prev) => ({ ...prev, classId: firstSubjectId }));
+        setSchedules(response.data.data || []);
+
+        // Extract unique year/division combinations
+        const uniqueClasses = Array.from(
+          new Set(
+            response.data.data.map(
+              (schedule) => `${schedule.year}_${schedule.division}`
+            )
+          )
+        ).map((classStr) => {
+          const [year, division] = classStr.split("_");
+          return { year, division };
+        });
+
+        setClasses(uniqueClasses);
+
+        if (uniqueClasses.length > 0) {
+          // Set initial filter to first class
+          setFilter((prev) => ({
+            ...prev,
+            year: uniqueClasses[0].year,
+            division: uniqueClasses[0].division,
+          }));
         }
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load data");
+        setError(err.response?.data?.error || "Failed to load schedules");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClassData();
+    fetchSchedulesData();
   }, []);
 
-  const fetchSchedules = async (subjectId) => {
+  const fetchSchedulesByClass = async (year, division) => {
     const token = getAuthToken();
     if (!token) return;
 
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${subjectId}`,
+        `https://gradyzebackend.onrender.com/api/schedules/class/${year}/${division}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setSchedules(response.data);
+      setSchedules(response.data.data || []);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load schedules");
+      setError(err.response?.data?.error || "Failed to load schedules");
     } finally {
       setLoading(false);
     }
   };
 
   const handleRefresh = async () => {
-    if (!filter.classId) return;
-    await fetchSchedules(filter.classId);
+    if (!filter.year || !filter.division) return;
+    await fetchSchedulesByClass(filter.year, filter.division);
   };
 
   const handleFilterChange = async (e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
 
-    if (name === "classId" && value) {
-      await fetchSchedules(value);
+    if (
+      (name === "year" || name === "division") &&
+      filter.year &&
+      filter.division
+    ) {
+      await fetchSchedulesByClass(
+        name === "year" ? value : filter.year,
+        name === "division" ? value : filter.division
+      );
     }
   };
 
@@ -117,13 +138,6 @@ const ClassSchedules = () => {
       );
     });
   }, [schedules, filter.date]);
-
-  const getSubjectDetails = (subjectId) => {
-    const subject = subjects.find((s) => s._id === subjectId);
-    return subject
-      ? `${subject.name} (${subject.year}, Div: ${subject.division})`
-      : "Unknown Subject";
-  };
 
   const formatTime = (time24h) => {
     if (!time24h) return "N/A";
@@ -166,28 +180,58 @@ const ClassSchedules = () => {
             {loading ? "Refreshing..." : "Refresh Data"}
           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Subject
+                Year
               </label>
               <select
-                name="classId"
-                value={filter.classId}
+                name="year"
+                value={filter.year}
                 onChange={handleFilterChange}
-                disabled={loading || subjects.length === 0}
+                disabled={loading || classes.length === 0}
                 className="w-full p-2 border border-gray-300 rounded-md"
               >
-                {subjects.length === 0 ? (
-                  <option value="">No subjects available</option>
+                {classes.length === 0 ? (
+                  <option value="">No classes available</option>
                 ) : (
                   <>
-                    <option value="">All Subjects</option>
-                    {subjects.map((subject) => (
-                      <option key={subject._id} value={subject._id}>
-                        {subject.name} ({subject.year}, Div: {subject.division})
-                      </option>
-                    ))}
+                    <option value="">All Years</option>
+                    {Array.from(new Set(classes.map((c) => c.year))).map(
+                      (year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      )
+                    )}
+                  </>
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Division
+              </label>
+              <select
+                name="division"
+                value={filter.division}
+                onChange={handleFilterChange}
+                disabled={loading || classes.length === 0 || !filter.year}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                {classes.length === 0 ? (
+                  <option value="">No divisions available</option>
+                ) : (
+                  <>
+                    <option value="">All Divisions</option>
+                    {classes
+                      .filter((c) => !filter.year || c.year === filter.year)
+                      .map((cls) => (
+                        <option key={cls.division} value={cls.division}>
+                          {cls.division}
+                        </option>
+                      ))}
                   </>
                 )}
               </select>
@@ -200,12 +244,10 @@ const ClassSchedules = () => {
               <AttendanceDatePicker
                 selected={filter.date ? new Date(filter.date) : null}
                 onChange={(date) =>
-                  handleFilterChange({
-                    target: {
-                      name: "date",
-                      value: date.toISOString().split("T")[0],
-                    },
-                  })
+                  setFilter((prev) => ({
+                    ...prev,
+                    date: date.toISOString().split("T")[0],
+                  }))
                 }
               />
             </div>
@@ -225,7 +267,7 @@ const ClassSchedules = () => {
                     Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Subject Details
+                    Class & Subject
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Time
@@ -259,7 +301,8 @@ const ClassSchedules = () => {
                         {schedule.title || "N/A"}
                       </div>
                       <div className="text-gray-400">
-                        {getSubjectDetails(schedule.classId)}
+                        {schedule.year} - {schedule.division} |{" "}
+                        {schedule.subjectName}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
