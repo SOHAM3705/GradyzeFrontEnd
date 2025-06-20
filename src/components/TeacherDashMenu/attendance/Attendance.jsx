@@ -73,6 +73,8 @@ const Attendance = () => {
       return;
     }
 
+    const teacherId = sessionStorage.getItem("teacherId");
+
     setLoading(true);
     try {
       // This endpoint needs to be updated to fetch students by year and division
