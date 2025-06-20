@@ -19,7 +19,7 @@ const Attendance = () => {
   const getAuthToken = () => sessionStorage.getItem("token");
 
   useEffect(() => {
-    const fetchTeacherSubjects = async () => {
+    const fetchTeacherSchedules = async () => {
       const token = getAuthToken();
       if (!token) {
         setError("Authentication token not found");
@@ -28,7 +28,6 @@ const Attendance = () => {
 
       setLoading(true);
       try {
-        // Fetch teacher's schedules which contain subject information
         const response = await axios.get(
           `https://gradyzebackend.onrender.com/api/schedules`,
           {
@@ -37,6 +36,9 @@ const Attendance = () => {
             },
           }
         );
+
+        // Set all schedules
+        setSchedules(response.data.data || []);
 
         // Extract unique subjects from schedules
         const uniqueSubjects = {};
@@ -55,13 +57,13 @@ const Attendance = () => {
 
         setSubjects(Object.values(uniqueSubjects));
       } catch (err) {
-        setError(err.response?.data?.error || "Failed to load subjects");
+        setError(err.response?.data?.error || "Failed to load schedules");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTeacherSubjects();
+    fetchTeacherSchedules();
   }, []);
 
   const fetchStudentsForClass = useCallback(async (year, division) => {
@@ -77,7 +79,6 @@ const Attendance = () => {
 
     setLoading(true);
     try {
-      // This endpoint needs to be updated to fetch students by year and division
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/studentmanagement/${teacherId}/students`,
         {
@@ -92,30 +93,6 @@ const Attendance = () => {
     } catch (err) {
       console.error("Error fetching students:", err);
       setError(err.response?.data?.message || "Failed to load students");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const loadSchedules = useCallback(async (subjectName, year, division) => {
-    const token = getAuthToken();
-    if (!token) return;
-
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${year}/${division}`,
-        {
-          params: { subjectName },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setSchedules(response.data.data || []);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to load schedules");
     } finally {
       setLoading(false);
     }
@@ -139,10 +116,9 @@ const Attendance = () => {
       setSelectedSubject(subject);
       setSelectedSchedule(null);
       setError(null);
-      loadSchedules(subject.subjectName, subject.year, subject.division);
       fetchStudentsForClass(subject.year, subject.division);
     },
-    [loadSchedules, fetchStudentsForClass]
+    [fetchStudentsForClass]
   );
 
   const handleScheduleSelect = useCallback((schedule) => {
@@ -197,12 +173,11 @@ const Attendance = () => {
         studentName: student.name,
         status: status === "Present" ? "Present" : "Absent",
       })),
-      adminId: sessionStorage.getItem("userId"), // Assuming adminId comes from authenticated user
+      adminId: sessionStorage.getItem("userId"),
     };
 
     setLoading(true);
     try {
-      // Save attendance using the new endpoint
       await axios.post(
         "https://gradyzebackend.onrender.com/api/attendance",
         payload,
@@ -214,7 +189,6 @@ const Attendance = () => {
         }
       );
 
-      // Optionally delete the schedule after attendance is taken
       await axios.delete(
         `https://gradyzebackend.onrender.com/api/schedules/${selectedSchedule._id}`,
         {
@@ -227,12 +201,17 @@ const Attendance = () => {
       setError(null);
       alert("Attendance saved successfully!");
 
-      // Refresh schedules
-      loadSchedules(
-        selectedSubject.subjectName,
-        selectedSubject.year,
-        selectedSubject.division
+      // Refresh schedules by refetching all schedules
+      const response = await axios.get(
+        `https://gradyzebackend.onrender.com/api/schedules`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+      setSchedules(response.data.data || []);
+
       setSelectedSchedule(null);
     } catch (err) {
       console.error("Error saving attendance:", err);
@@ -244,16 +223,20 @@ const Attendance = () => {
     } finally {
       setLoading(false);
     }
-  }, [
-    selectedSubject,
-    selectedSchedule,
-    attendanceData,
-    selectedDate,
-    loadSchedules,
-  ]);
+  }, [selectedSubject, selectedSchedule, attendanceData, selectedDate]);
 
+  // Filter schedules by selected subject and date
   const filteredSchedules = schedules.filter((schedule) => {
+    const matchesSubject =
+      selectedSubject &&
+      schedule.subjectName === selectedSubject.subjectName &&
+      schedule.year === selectedSubject.year &&
+      schedule.division === selectedSubject.division;
+
+    if (!matchesSubject) return false;
+
     if (!selectedDate) return true;
+
     const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
     return scheduleDate === selectedDate;
   });
