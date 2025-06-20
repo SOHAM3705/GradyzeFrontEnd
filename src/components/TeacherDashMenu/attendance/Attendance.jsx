@@ -173,7 +173,7 @@ const Attendance = () => {
         studentName: student.name,
         status: status === "Present" ? "Present" : "Absent",
       })),
-      adminId: sessionStorage.getItem("userId"),
+      adminId: sessionStorage.getItem("adminId"),
     };
 
     setLoading(true);

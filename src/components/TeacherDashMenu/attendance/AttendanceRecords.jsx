@@ -177,11 +177,8 @@ const AttendanceRecords = () => {
         records,
       };
 
-      const url = currentRecord
-        ? `https://gradyzebackend.onrender.com/api/attendance/${currentRecord._id}`
-        : "https://gradyzebackend.onrender.com/api/attendance";
-
-      const method = currentRecord ? "put" : "post";
+      const url = `https://gradyzebackend.onrender.com/api/attendance/${currentRecord._id}`;
+      const method = "put";
 
       const response = await axios[method](url, payload, {
         headers: {
@@ -190,9 +187,7 @@ const AttendanceRecords = () => {
         },
       });
 
-      setSuccessMessage(
-        `Attendance ${currentRecord ? "updated" : "saved"} successfully!`
-      );
+      setSuccessMessage(`Attendance updated successfully!`);
       setEditMode(false);
       await fetchAttendanceRecords();
     } catch (err) {
@@ -357,13 +352,6 @@ const AttendanceRecords = () => {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Attendance Records</h2>
-          <button
-            onClick={() => initializeEditMode(null)}
-            disabled={!filters.classId || loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            Create New
-          </button>
         </div>
 
         {loading && attendanceRecords.length === 0 ? (
@@ -455,7 +443,7 @@ const AttendanceRecords = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">
-              {currentRecord ? "Update Attendance" : "Create New Attendance"} -{" "}
+              Update Attendance -{" "}
               {getClassName(currentRecord?.classId || filters.classId)} -{" "}
               {currentRecord
                 ? formatDate(currentRecord.date)
@@ -483,7 +471,7 @@ const AttendanceRecords = () => {
             <div className="flex justify-center p-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
-          ) : currentRecord?.records?.length > 0 || !currentRecord ? (
+          ) : currentRecord?.records?.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -500,7 +488,7 @@ const AttendanceRecords = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {(currentRecord?.records || []).map((student) => (
+                  {currentRecord.records.map((student) => (
                     <tr key={student.studentId}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
