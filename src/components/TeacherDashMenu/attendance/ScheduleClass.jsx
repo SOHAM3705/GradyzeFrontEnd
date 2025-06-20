@@ -30,7 +30,7 @@ const ScheduleClass = () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/api/teachers/${teacherId}/subjects`,
+          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

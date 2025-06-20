@@ -15,47 +15,57 @@ const Attendance = () => {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [selectedClass, setSelectedClass] = useState("");
 
   const getAuthToken = () => sessionStorage.getItem("token");
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchTeacherSubjects = async () => {
       const token = getAuthToken();
       if (!token) {
         setError("Authentication token not found");
         return;
       }
 
-      const teacherId = sessionStorage.getItem("teacherId");
-      if (!teacherId) {
-        setError("Teacher ID not found in session");
-        return;
-      }
-
       setLoading(true);
       try {
+        // Fetch teacher's schedules which contain subject information
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`,
+          `https://gradyzebackend.onrender.com/api/schedules`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setSubjects(response.data.subjects || []);
+
+        // Extract unique subjects from schedules
+        const uniqueSubjects = {};
+        response.data.data?.forEach((schedule) => {
+          const key = `${schedule.subjectName}_${schedule.year}_${schedule.division}`;
+          if (!uniqueSubjects[key]) {
+            uniqueSubjects[key] = {
+              subjectName: schedule.subjectName,
+              year: schedule.year,
+              division: schedule.division,
+              teacherId: schedule.teacherId,
+              teacherName: schedule.teacherName,
+            };
+          }
+        });
+
+        setSubjects(Object.values(uniqueSubjects));
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load subjects");
+        setError(err.response?.data?.error || "Failed to load subjects");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubjects();
+    fetchTeacherSubjects();
   }, []);
 
-  const fetchStudentsForClass = useCallback(async () => {
-    if (!selectedClass) return;
+  const fetchStudentsForClass = useCallback(async (year, division) => {
+    if (!year || !division) return;
 
     const token = getAuthToken();
     if (!token) {
@@ -63,52 +73,47 @@ const Attendance = () => {
       return;
     }
 
-    const teacherId = sessionStorage.getItem("teacherId");
-    if (!teacherId) {
-      setError("Teacher ID not found in session");
-      return;
-    }
-
     setLoading(true);
     try {
+      // This endpoint needs to be updated to fetch students by year and division
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`,
+        `https://gradyzebackend.onrender.com/api/studentmanagement/${teacherId}/students`,
         {
+          params: { year, division },
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      // Assuming response.data.studentData is structured as { [classKey]: [students] }
-      const classStudents = response.data.studentData[selectedClass] || [];
-      setStudents(classStudents);
+      setStudents(response.data.students || []);
     } catch (err) {
       console.error("Error fetching students:", err);
       setError(err.response?.data?.message || "Failed to load students");
     } finally {
       setLoading(false);
     }
-  }, [selectedClass]);
+  }, []);
 
-  const loadSchedules = useCallback(async (subjectId) => {
+  const loadSchedules = useCallback(async (subjectName, year, division) => {
     const token = getAuthToken();
     if (!token) return;
 
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${subjectId}`,
+        `https://gradyzebackend.onrender.com/api/schedules/class/${year}/${division}`,
         {
+          params: { subjectName },
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setSchedules(response.data);
+      setSchedules(response.data.data || []);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load schedules");
+      setError(err.response?.data?.error || "Failed to load schedules");
     } finally {
       setLoading(false);
     }
@@ -131,16 +136,12 @@ const Attendance = () => {
     (subject) => {
       setSelectedSubject(subject);
       setSelectedSchedule(null);
-      setSelectedClass(`${subject.year}-${subject.division}`); // Set selected class
       setError(null);
-      loadSchedules(subject._id);
+      loadSchedules(subject.subjectName, subject.year, subject.division);
+      fetchStudentsForClass(subject.year, subject.division);
     },
-    [loadSchedules]
+    [loadSchedules, fetchStudentsForClass]
   );
-
-  useEffect(() => {
-    fetchStudentsForClass();
-  }, [fetchStudentsForClass]);
 
   const handleScheduleSelect = useCallback((schedule) => {
     setSelectedSchedule(schedule);
@@ -180,22 +181,28 @@ const Attendance = () => {
       return;
     }
 
-    const formattedDate = new Date(selectedDate).toISOString();
-
     const payload = {
-      classId: selectedSubject._id,
-      date: formattedDate,
+      year: selectedSubject.year,
+      division: selectedSubject.division,
+      subjectName: selectedSubject.subjectName,
+      teacherId: selectedSubject.teacherId,
+      teacherName: selectedSubject.teacherName,
+      date: selectedDate,
+      startTime: selectedSchedule.startTime,
+      endTime: selectedSchedule.endTime,
       records: Object.values(attendanceData).map(({ student, status }) => ({
         studentId: student._id,
         studentName: student.name,
-        status,
+        status: status === "Present" ? "Present" : "Absent",
       })),
+      adminId: sessionStorage.getItem("userId"), // Assuming adminId comes from authenticated user
     };
 
     setLoading(true);
     try {
+      // Save attendance using the new endpoint
       await axios.post(
-        "https://gradyzebackend.onrender.com/api/attendance/",
+        "https://gradyzebackend.onrender.com/api/attendance",
         payload,
         {
           headers: {
@@ -205,8 +212,9 @@ const Attendance = () => {
         }
       );
 
+      // Optionally delete the schedule after attendance is taken
       await axios.delete(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${selectedSubject._id}/${formattedDate}`,
+        `https://gradyzebackend.onrender.com/api/schedules/${selectedSchedule._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -215,8 +223,14 @@ const Attendance = () => {
       );
 
       setError(null);
-      alert("Attendance saved and schedule marked as completed!");
-      loadSchedules(selectedSubject._id);
+      alert("Attendance saved successfully!");
+
+      // Refresh schedules
+      loadSchedules(
+        selectedSubject.subjectName,
+        selectedSubject.year,
+        selectedSubject.division
+      );
       setSelectedSchedule(null);
     } catch (err) {
       console.error("Error saving attendance:", err);
@@ -243,7 +257,7 @@ const Attendance = () => {
   });
 
   const formatSubjectName = (subject) => {
-    return `${subject.name} (${subject.year}, Sem ${subject.semester}, Div ${subject.division})`;
+    return `${subject.subjectName} (${subject.year}, Div ${subject.division})`;
   };
 
   const formatTime = (time24h) => {
@@ -277,11 +291,13 @@ const Attendance = () => {
             </div>
           ) : subjects.length > 0 ? (
             <div className="space-y-2">
-              {subjects.map((subject) => (
+              {subjects.map((subject, index) => (
                 <div
-                  key={subject._id}
+                  key={index}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedSubject?._id === subject._id
+                    selectedSubject?.subjectName === subject.subjectName &&
+                    selectedSubject?.year === subject.year &&
+                    selectedSubject?.division === subject.division
                       ? "bg-blue-50 border-l-4 border-blue-500"
                       : "hover:bg-gray-50"
                   }`}
@@ -437,7 +453,7 @@ const Attendance = () => {
                       disabled={loading}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                     >
-                      {loading ? "Saving..." : "save"}
+                      {loading ? "Saving..." : "Save Attendance"}
                     </button>
                   </div>
                 </div>
