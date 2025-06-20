@@ -37,7 +37,10 @@ const ScheduleClass = () => {
             },
           }
         );
-        setSubjects(response.data.data || []);
+
+        // Check if the response has subjects array
+        const receivedSubjects = response.data.subjects || [];
+        setSubjects(receivedSubjects);
       } catch (err) {
         setError(
           err.response?.data?.message || "Failed to load assigned subjects"
@@ -176,11 +179,17 @@ const ScheduleClass = () => {
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">-- Select Subject --</option>
-                {subjects.map((subject) => (
-                  <option key={subject._id} value={subject._id}>
-                    {subject.name} ({subject.year}, Div: {subject.division})
+                {subjects.length > 0 ? (
+                  subjects.map((subject) => (
+                    <option key={subject._id} value={subject._id}>
+                      {subject.name} ({subject.year}, Div: {subject.division})
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>
+                    No subjects assigned
                   </option>
-                ))}
+                )}
               </select>
             </div>
 
