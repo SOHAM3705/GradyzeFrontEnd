@@ -24,6 +24,10 @@ const AttendanceRecords = () => {
   const [editMode, setEditMode] = useState(false);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
+  const [timeData, setTimeData] = useState({
+    startTime: "09:00",
+    endTime: "10:00",
+  });
 
   const getAuthToken = () => sessionStorage.getItem("token");
 
@@ -122,6 +126,10 @@ const AttendanceRecords = () => {
 
     setAttendanceData(initialData);
     setCurrentRecord(record);
+    setTimeData({
+      startTime: record.startTime || "09:00",
+      endTime: record.endTime || "10:00",
+    });
     setEditMode(true);
   }, []);
 
@@ -151,6 +159,14 @@ const AttendanceRecords = () => {
     }));
   };
 
+  const handleTimeChange = (e) => {
+    const { name, value } = e.target;
+    setTimeData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSaveAttendance = async () => {
     const token = getAuthToken();
     if (!token) {
@@ -163,6 +179,15 @@ const AttendanceRecords = () => {
       return;
     }
 
+    // Find the class details from the classes array
+    const classInfo = classes.find(
+      (c) => c._id === (currentRecord?.classId || filters.classId)
+    );
+    if (!classInfo) {
+      setError("Class information not found");
+      return;
+    }
+
     const records = Object.entries(attendanceData).map(([studentId, data]) => ({
       studentId,
       studentName: data.studentName,
@@ -172,20 +197,27 @@ const AttendanceRecords = () => {
     setLoading(true);
     try {
       const payload = {
-        classId: currentRecord?.classId || filters.classId,
+        year: classInfo.year,
+        division: classInfo.division,
+        subjectName: classInfo.name,
+        teacherId: sessionStorage.getItem("teacherId"),
+        teacherName: sessionStorage.getItem("teacherName"),
         date: currentRecord?.date || new Date().toISOString().split("T")[0],
+        startTime: timeData.startTime,
+        endTime: timeData.endTime,
         records,
       };
 
-      const url = `https://gradyzebackend.onrender.com/api/attendance/${currentRecord._id}`;
-      const method = "put";
-
-      const response = await axios[method](url, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.put(
+        `https://gradyzebackend.onrender.com/api/attendance/${currentRecord._id}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       setSuccessMessage(`Attendance updated successfully!`);
       setEditMode(false);
@@ -370,6 +402,9 @@ const AttendanceRecords = () => {
                     Class
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Present/Absent
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -396,6 +431,11 @@ const AttendanceRecords = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           {getClassName(record.classId)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {record.startTime} - {record.endTime}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -442,13 +482,20 @@ const AttendanceRecords = () => {
       {editMode && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">
-              Update Attendance -{" "}
-              {getClassName(currentRecord?.classId || filters.classId)} -{" "}
-              {currentRecord
-                ? formatDate(currentRecord.date)
-                : formatDate(new Date())}
-            </h2>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800">
+                Update Attendance
+              </h2>
+              <p className="text-sm text-gray-600">
+                {getClassName(currentRecord?.classId || filters.classId)}
+              </p>
+              <p className="text-sm text-gray-600">
+                Date:{" "}
+                {currentRecord
+                  ? formatDate(currentRecord.date)
+                  : formatDate(new Date())}
+              </p>
+            </div>
 
             <div className="flex space-x-2">
               <button
@@ -464,6 +511,33 @@ const AttendanceRecords = () => {
               >
                 {loading ? "Saving..." : "Save Changes"}
               </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Start Time
+              </label>
+              <input
+                type="time"
+                name="startTime"
+                value={timeData.startTime}
+                onChange={handleTimeChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Time
+              </label>
+              <input
+                type="time"
+                name="endTime"
+                value={timeData.endTime}
+                onChange={handleTimeChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
             </div>
           </div>
 
