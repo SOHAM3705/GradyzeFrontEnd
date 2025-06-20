@@ -62,10 +62,18 @@ const ClassSchedules = () => {
     const token = getAuthToken();
     if (!token) return;
 
+    const subject = subjects.find((subj) => subj._id === subjectId);
+    if (!subject) {
+      setError("Subject not found");
+      return;
+    }
+
+    const { year, division } = subject;
+
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${subjectId}`,
+        `https://gradyzebackend.onrender.com/api/schedules/class/${year}/${division}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -75,7 +83,7 @@ const ClassSchedules = () => {
       setSchedules(response.data.data);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load schedules");
+      setError(err.response?.data?.error || "Failed to load schedules");
     } finally {
       setLoading(false);
     }
