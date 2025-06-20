@@ -119,6 +119,7 @@ const ScheduleClass = () => {
         title: formData.title || `${formData.subjectName} Class`,
         teacherId: teacherId,
         teacherName: sessionStorage.getItem("teacherName") || "Teacher",
+        adminId: sessionStorage.getItem("adminId"),
       };
 
       // Using the correct endpoint for creating schedules
