@@ -190,7 +190,7 @@ const Attendance = () => {
       );
 
       await axios.delete(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${selectedSchedule.classId}/${selectedSchedule.date}`,
+        `https://gradyzebackend.onrender.com/api/schedules/${selectedSchedule._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
