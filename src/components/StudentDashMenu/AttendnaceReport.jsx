@@ -30,15 +30,15 @@ const StudentAttendanceDashboard = () => {
       );
       if (!studentResponse.ok) throw new Error("Failed to fetch student data");
       const studentData = await studentResponse.json();
-      setStudentInfo(studentData);
+      setStudentInfo(studentData.data); // Updated to match response structure
 
-      // 2. Fetch subjects for student (based on adminId, year, division)
+      // 2. Fetch subjects for student
       const subjectsResponse = await fetch(
-        `${API_BASE_URL}/api/studentattendance/${studentId}/subjects`
+        `${API_BASE_URL}/api/students/${studentId}/subjects`
       );
       if (!subjectsResponse.ok) throw new Error("Failed to fetch subjects");
       const subjectsData = await subjectsResponse.json();
-      setSubjects(subjectsData.data || []);
+      setSubjects(subjectsData.data || []); // Ensure we get the array of subjects
     } catch (err) {
       setError(err.message);
     } finally {
@@ -50,7 +50,7 @@ const StudentAttendanceDashboard = () => {
   const fetchAttendanceData = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}`
+        `${API_BASE_URL}/api/student/attendance/${studentId}`
       );
       if (!response.ok) throw new Error("Failed to fetch attendance data");
       const result = await response.json();
@@ -65,7 +65,7 @@ const StudentAttendanceDashboard = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}/subject/${encodeURIComponent(
+        `${API_BASE_URL}/api/student/attendance/${studentId}/subject/${encodeURIComponent(
           subjectName
         )}`
       );
@@ -97,9 +97,9 @@ const StudentAttendanceDashboard = () => {
   };
 
   const getAttendanceColor = (percentage) => {
-    if (percentage >= 85) return "text-green-600 bg-green-50";
-    if (percentage >= 75) return "text-yellow-600 bg-yellow-50";
-    return "text-red-600 bg-red-50";
+    if (percentage >= 85) return "text-green-600";
+    if (percentage >= 75) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getStatusIcon = (status) => {
@@ -151,7 +151,7 @@ const StudentAttendanceDashboard = () => {
           </h1>
           {studentInfo && (
             <p className="text-gray-600">
-              {studentInfo.year} - Division {studentInfo.division}
+              {studentInfo.name} - {studentInfo.year} {studentInfo.division}
             </p>
           )}
         </div>
@@ -166,11 +166,9 @@ const StudentAttendanceDashboard = () => {
                     Overall Attendance
                   </p>
                   <p
-                    className={`text-3xl font-bold ${
-                      getAttendanceColor(
-                        attendanceData.attendancePercentage
-                      ).split(" ")[0]
-                    }`}
+                    className={`text-3xl font-bold ${getAttendanceColor(
+                      attendanceData.attendancePercentage
+                    )}`}
                   >
                     {attendanceData.attendancePercentage}%
                   </p>
@@ -219,140 +217,114 @@ const StudentAttendanceDashboard = () => {
           </div>
         )}
 
-        {/* Subjects Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Subjects List */}
-          <div className="bg-white rounded-xl shadow-sm border">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Subjects</h2>
-              <p className="text-gray-600">
-                Click on any subject to view detailed attendance
-              </p>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {subjects.map((subject) => (
-                  <div
-                    key={subject}
-                    onClick={() => fetchSubjectAttendanceDetails(subject)}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                      selectedSubject === subject
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {subject}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Year {studentInfo?.year} - Division{" "}
-                          {studentInfo?.division}
-                        </p>
-                      </div>
-                      <BookOpen className="w-5 h-5 text-gray-400" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Subjects Section */}
+        <div className="bg-white rounded-xl shadow-sm border mb-8">
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-semibold text-gray-900">My Subjects</h2>
+            <p className="text-gray-600">{subjects.length} subjects enrolled</p>
+          </div>
+          <div className="p-6">
+            <div className="flex flex-wrap gap-3">
+              {subjects.map((subject) => (
+                <div
+                  key={subject}
+                  onClick={() => fetchSubjectAttendanceDetails(subject)}
+                  className={`px-4 py-2 rounded-full border cursor-pointer transition-all ${
+                    selectedSubject === subject
+                      ? "bg-blue-100 border-blue-500 text-blue-800"
+                      : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  {subject}
+                </div>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* Detailed Attendance */}
+        {/* Subject Attendance Details */}
+        {selectedSubject && (
           <div className="bg-white rounded-xl shadow-sm border">
             <div className="p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">
-                Attendance Details
+                {selectedSubject} Attendance
               </h2>
-              {subjectAttendanceDetails && (
-                <p className="text-gray-600">{selectedSubject}</p>
-              )}
             </div>
             <div className="p-6">
-              {!subjectAttendanceDetails ? (
-                <div className="text-center py-8">
-                  <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">
-                    Select a subject to view detailed attendance
-                  </p>
-                </div>
-              ) : loading ? (
+              {loading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-500">Loading details...</p>
+                  <p className="text-gray-500">Loading attendance details...</p>
                 </div>
-              ) : (
+              ) : subjectAttendanceDetails ? (
                 <div>
-                  {/* Subject Summary */}
                   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-2 gap-4 text-center">
+                    <div className="grid grid-cols-3 gap-4 text-center">
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <p className="text-2xl font-bold text-green-600">
                           {subjectAttendanceDetails.presentClasses}
                         </p>
                         <p className="text-sm text-gray-600">Present</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <p className="text-2xl font-bold text-red-600">
                           {subjectAttendanceDetails.absentClasses}
                         </p>
                         <p className="text-sm text-gray-600">Absent</p>
                       </div>
-                    </div>
-                    <div className="mt-4 text-center">
-                      <p
-                        className={`text-lg font-semibold ${
-                          getAttendanceColor(
+                      <div>
+                        <p
+                          className={`text-2xl font-bold ${getAttendanceColor(
                             subjectAttendanceDetails.attendancePercentage
-                          ).split(" ")[0]
-                        }`}
-                      >
-                        {subjectAttendanceDetails.attendancePercentage}%
-                        Attendance
-                      </p>
+                          )}`}
+                        >
+                          {subjectAttendanceDetails.attendancePercentage}%
+                        </p>
+                        <p className="text-sm text-gray-600">Attendance</p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Attendance Records */}
-                  <div className="max-h-96 overflow-y-auto">
-                    <div className="space-y-3">
-                      {subjectAttendanceDetails.attendanceDetails.map(
-                        (record, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <div className="flex items-center space-x-3">
-                              {getStatusIcon(record.status)}
-                              <div>
-                                <p className="font-medium text-gray-900">
-                                  {formatDate(record.date)}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {record.status}
-                                </p>
-                              </div>
-                            </div>
-                            <div
-                              className={`px-2 py-1 rounded text-xs font-medium ${
-                                record.status === "Present"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {record.status}
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {subjectAttendanceDetails.attendanceDetails.map(
+                      (record, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                          <div className="flex items-center space-x-3">
+                            {getStatusIcon(record.status)}
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {formatDate(record.date)}
+                              </p>
                             </div>
                           </div>
-                        )
-                      )}
-                    </div>
+                          <span
+                            className={`text-sm font-medium ${
+                              record.status === "Present"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {record.status}
+                          </span>
+                        </div>
+                      )
+                    )}
                   </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">
+                    No attendance records found for {selectedSubject}
+                  </p>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
