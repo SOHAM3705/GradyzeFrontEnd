@@ -6,79 +6,56 @@ const ClassSchedules = () => {
   const [schedules, setSchedules] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [filter, setFilter] = useState({
-    classId: "",
+    subjectId: "",
     date: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Get authorization token from session storage
-  const getAuthToken = () => {
-    return sessionStorage.getItem("token");
-  };
+  const getAuthToken = () => sessionStorage.getItem("token");
 
   useEffect(() => {
-    const fetchClassData = async () => {
+    const fetchSubjects = async () => {
       const token = getAuthToken();
-      if (!token) {
-        setError("Authentication token not found");
-        return;
-      }
       const teacherId = sessionStorage.getItem("teacherId");
-      if (!teacherId) {
-        setError("Teacher ID not found in session");
+
+      if (!token || !teacherId) {
+        setError("Authentication error: Token or Teacher ID missing.");
         return;
       }
 
       setLoading(true);
       try {
-        // Fetch subjects with authentication
         const response = await axios.get(
           `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setSubjects(response.data.subjects);
 
         if (response.data.subjects.length > 0) {
-          const firstSubjectId = response.data.subjects[0]._id;
-          await fetchSchedules(firstSubjectId);
-          setFilter((prev) => ({ ...prev, classId: firstSubjectId }));
+          const firstSubject = response.data.subjects[0];
+          await fetchSchedules(firstSubject.year, firstSubject.division);
+          setFilter((prev) => ({ ...prev, subjectId: firstSubject._id }));
         }
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load data");
+        setError(err.response?.data?.message || "Failed to load subjects");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClassData();
+    fetchSubjects();
   }, []);
 
-  const fetchSchedules = async (subjectId) => {
+  const fetchSchedules = async (year, division) => {
     const token = getAuthToken();
     if (!token) return;
-
-    const subject = subjects.find((subj) => subj._id === subjectId);
-    if (!subject) {
-      setError("Subject not found");
-      return;
-    }
-
-    const { year, division } = subject;
 
     setLoading(true);
     try {
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/schedules/class/${year}/${division}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setSchedules(response.data.data);
       setError(null);
@@ -90,16 +67,23 @@ const ClassSchedules = () => {
   };
 
   const handleRefresh = async () => {
-    if (!filter.classId) return;
-    await fetchSchedules(filter.classId);
+    if (!filter.subjectId) return;
+
+    const subject = subjects.find((s) => s._id === filter.subjectId);
+    if (subject) {
+      await fetchSchedules(subject.year, subject.division);
+    }
   };
 
   const handleFilterChange = async (e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
 
-    if (name === "classId" && value) {
-      await fetchSchedules(value);
+    if (name === "subjectId" && value) {
+      const selectedSubject = subjects.find((subj) => subj._id === value);
+      if (selectedSubject) {
+        await fetchSchedules(selectedSubject.year, selectedSubject.division);
+      }
     }
   };
 
@@ -116,9 +100,9 @@ const ClassSchedules = () => {
       const scheduleDate = safeDateParse(schedule.date);
       const filterDate = safeDateParse(filter.date);
 
-      if (!scheduleDate || !filterDate) return false;
-
       return (
+        scheduleDate &&
+        filterDate &&
         scheduleDate.getFullYear() === filterDate.getFullYear() &&
         scheduleDate.getMonth() === filterDate.getMonth() &&
         scheduleDate.getDate() === filterDate.getDate()
@@ -180,8 +164,8 @@ const ClassSchedules = () => {
                 Subject
               </label>
               <select
-                name="classId"
-                value={filter.classId}
+                name="subjectId"
+                value={filter.subjectId}
                 onChange={handleFilterChange}
                 disabled={loading || subjects.length === 0}
                 className="w-full p-2 border border-gray-300 rounded-md"
@@ -190,7 +174,7 @@ const ClassSchedules = () => {
                   <option value="">No subjects available</option>
                 ) : (
                   <>
-                    <option value="">All Subjects</option>
+                    <option value="">Select Subject</option>
                     {subjects.map((subject) => (
                       <option key={subject._id} value={subject._id}>
                         {subject.name} ({subject.year}, Div: {subject.division})
@@ -267,7 +251,7 @@ const ClassSchedules = () => {
                         {schedule.title || "N/A"}
                       </div>
                       <div className="text-gray-400">
-                        {getSubjectDetails(schedule.classId)}
+                        {getSubjectDetails(filter.subjectId)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -284,7 +268,7 @@ const ClassSchedules = () => {
           </div>
         ) : (
           <div className="p-8 text-center text-gray-500">
-            No schedules found. Please add schedules or adjust your filters.
+            No schedules found. Please adjust your filters.
           </div>
         )}
       </div>
