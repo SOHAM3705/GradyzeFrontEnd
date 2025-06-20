@@ -1,23 +1,50 @@
 import React, { useState, useEffect } from "react";
 import {
   Calendar,
-  User,
   BookOpen,
   TrendingUp,
-  Clock,
   CheckCircle,
   XCircle,
 } from "lucide-react";
 import { API_BASE_URL } from "../../config";
 
 const StudentAttendanceDashboard = () => {
-  const [studentId] = useState(sessionStorage.getItem("studentId")); // Replace with actual student ID from auth/context
+  const [studentId] = useState(sessionStorage.getItem("studentId"));
+  const [studentInfo, setStudentInfo] = useState(null);
   const [attendanceData, setAttendanceData] = useState(null);
-  const [classesData, setClassesData] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [classAttendanceDetails, setClassAttendanceDetails] = useState(null);
+  const [subjects, setSubjects] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [subjectAttendanceDetails, setSubjectAttendanceDetails] =
+    useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Fetch student info and subjects
+  const fetchStudentInfoAndSubjects = async () => {
+    try {
+      setLoading(true);
+
+      // 1. Fetch student details
+      const studentResponse = await fetch(
+        `${API_BASE_URL}/api/students/${studentId}`
+      );
+      if (!studentResponse.ok) throw new Error("Failed to fetch student data");
+      const studentData = await studentResponse.json();
+      setStudentInfo(studentData);
+
+      // 2. Fetch subjects for student (based on adminId, year, division)
+      const subjectsResponse = await fetch(
+        `${API_BASE_URL}/api/students/${studentId}/subjects`
+      );
+      if (!subjectsResponse.ok) throw new Error("Failed to fetch subjects");
+      const subjectsData = await subjectsResponse.json();
+      setSubjects(subjectsData.data || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch overall attendance data
   const fetchAttendanceData = async () => {
@@ -33,32 +60,19 @@ const StudentAttendanceDashboard = () => {
     }
   };
 
-  // Fetch classes with attendance summary
-  const fetchClassesData = async () => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/studentattendance/${studentId}/classes-attendance`
-      );
-      if (!response.ok) throw new Error("Failed to fetch classes data");
-      const result = await response.json();
-      setClassesData(result.data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Fetch detailed attendance for specific class
-  const fetchClassAttendanceDetails = async (classId) => {
+  // Fetch detailed attendance for specific subject
+  const fetchSubjectAttendanceDetails = async (subjectName) => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}/class/${classId}`
+        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}/subject/${encodeURIComponent(
+          subjectName
+        )}`
       );
-      if (!response.ok)
-        throw new Error("Failed to fetch class attendance details");
+      if (!response.ok) throw new Error("Failed to fetch subject attendance");
       const result = await response.json();
-      setClassAttendanceDetails(result.data);
-      setSelectedClass(classId);
+      setSubjectAttendanceDetails(result.data);
+      setSelectedSubject(subjectName);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -68,9 +82,8 @@ const StudentAttendanceDashboard = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      setLoading(true);
-      await Promise.all([fetchAttendanceData(), fetchClassesData()]);
-      setLoading(false);
+      await fetchStudentInfoAndSubjects();
+      await fetchAttendanceData();
     };
     loadData();
   }, [studentId]);
@@ -97,12 +110,12 @@ const StudentAttendanceDashboard = () => {
     );
   };
 
-  if (loading && !attendanceData) {
+  if (loading && !studentInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading attendance data...</p>
+          <p className="mt-4 text-gray-600">Loading student data...</p>
         </div>
       </div>
     );
@@ -136,9 +149,11 @@ const StudentAttendanceDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             My Attendance Dashboard
           </h1>
-          <p className="text-gray-600">
-            Track your attendance across all classes
-          </p>
+          {studentInfo && (
+            <p className="text-gray-600">
+              {studentInfo.year} - Division {studentInfo.division}
+            </p>
+          )}
         </div>
 
         {/* Overall Statistics */}
@@ -204,26 +219,24 @@ const StudentAttendanceDashboard = () => {
           </div>
         )}
 
-        {/* Classes Grid */}
+        {/* Subjects Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Classes List */}
+          {/* Subjects List */}
           <div className="bg-white rounded-xl shadow-sm border">
             <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Classes</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Subjects</h2>
               <p className="text-gray-600">
-                Click on any class to view detailed attendance
+                Click on any subject to view detailed attendance
               </p>
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                {classesData.map((classData) => (
+                {subjects.map((subject) => (
                   <div
-                    key={classData.classId}
-                    onClick={() =>
-                      fetchClassAttendanceDetails(classData.classId)
-                    }
+                    key={subject}
+                    onClick={() => fetchSubjectAttendanceDetails(subject)}
                     className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                      selectedClass === classData.classId
+                      selectedSubject === subject
                         ? "border-blue-500 bg-blue-50"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
@@ -231,23 +244,14 @@ const StudentAttendanceDashboard = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold text-gray-900">
-                          {classData.className}
+                          {subject}
                         </h3>
-                        <p className="text-sm text-gray-600">
-                          {classData.subject}
-                        </p>
                         <p className="text-sm text-gray-500 mt-1">
-                          {classData.presentClasses}/{classData.totalClasses}{" "}
-                          classes attended
+                          Year {studentInfo?.year} - Division{" "}
+                          {studentInfo?.division}
                         </p>
                       </div>
-                      <div
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${getAttendanceColor(
-                          classData.attendancePercentage
-                        )}`}
-                      >
-                        {classData.attendancePercentage}%
-                      </div>
+                      <BookOpen className="w-5 h-5 text-gray-400" />
                     </div>
                   </div>
                 ))}
@@ -261,19 +265,16 @@ const StudentAttendanceDashboard = () => {
               <h2 className="text-xl font-semibold text-gray-900">
                 Attendance Details
               </h2>
-              {classAttendanceDetails && (
-                <p className="text-gray-600">
-                  {classAttendanceDetails.className} -{" "}
-                  {classAttendanceDetails.subject}
-                </p>
+              {subjectAttendanceDetails && (
+                <p className="text-gray-600">{selectedSubject}</p>
               )}
             </div>
             <div className="p-6">
-              {!classAttendanceDetails ? (
+              {!subjectAttendanceDetails ? (
                 <div className="text-center py-8">
                   <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">
-                    Select a class to view detailed attendance
+                    Select a subject to view detailed attendance
                   </p>
                 </div>
               ) : loading ? (
@@ -283,18 +284,18 @@ const StudentAttendanceDashboard = () => {
                 </div>
               ) : (
                 <div>
-                  {/* Class Summary */}
+                  {/* Subject Summary */}
                   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
                         <p className="text-2xl font-bold text-gray-900">
-                          {classAttendanceDetails.presentClasses}
+                          {subjectAttendanceDetails.presentClasses}
                         </p>
                         <p className="text-sm text-gray-600">Present</p>
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-gray-900">
-                          {classAttendanceDetails.absentClasses}
+                          {subjectAttendanceDetails.absentClasses}
                         </p>
                         <p className="text-sm text-gray-600">Absent</p>
                       </div>
@@ -303,11 +304,11 @@ const StudentAttendanceDashboard = () => {
                       <p
                         className={`text-lg font-semibold ${
                           getAttendanceColor(
-                            classAttendanceDetails.attendancePercentage
+                            subjectAttendanceDetails.attendancePercentage
                           ).split(" ")[0]
                         }`}
                       >
-                        {classAttendanceDetails.attendancePercentage}%
+                        {subjectAttendanceDetails.attendancePercentage}%
                         Attendance
                       </p>
                     </div>
@@ -316,7 +317,7 @@ const StudentAttendanceDashboard = () => {
                   {/* Attendance Records */}
                   <div className="max-h-96 overflow-y-auto">
                     <div className="space-y-3">
-                      {classAttendanceDetails.attendanceDetails.map(
+                      {subjectAttendanceDetails.attendanceDetails.map(
                         (record, index) => (
                           <div
                             key={index}
