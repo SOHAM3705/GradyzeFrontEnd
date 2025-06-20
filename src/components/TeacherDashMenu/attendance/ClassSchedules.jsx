@@ -6,7 +6,7 @@ const ClassSchedules = () => {
   const [schedules, setSchedules] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [filter, setFilter] = useState({
-    subjectId: "",
+    subjectKey: "",
     date: "",
   });
   const [loading, setLoading] = useState(false);
@@ -15,76 +15,84 @@ const ClassSchedules = () => {
   const getAuthToken = () => sessionStorage.getItem("token");
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchTeacherSubjects = async () => {
       const token = getAuthToken();
-      const teacherId = sessionStorage.getItem("teacherId");
-
-      if (!token || !teacherId) {
-        setError("Authentication error: Token or Teacher ID missing.");
+      if (!token) {
+        setError("Authentication token not found");
         return;
       }
 
       setLoading(true);
       try {
         const response = await axios.get(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/subject-details/${teacherId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          `https://gradyzebackend.onrender.com/api/schedules`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
-        setSubjects(response.data.subjects);
 
-        if (response.data.subjects.length > 0) {
-          const firstSubject = response.data.subjects[0];
-          await fetchSchedules(firstSubject.year, firstSubject.division);
-          setFilter((prev) => ({ ...prev, subjectId: firstSubject._id }));
+        setSchedules(response.data.data); // all schedules fetched
+
+        // Extract unique subjects from schedules
+        const uniqueSubjects = {};
+        response.data.data?.forEach((schedule) => {
+          const key = `${schedule.subjectName}_${schedule.year}_${schedule.division}`;
+          if (!uniqueSubjects[key]) {
+            uniqueSubjects[key] = {
+              key,
+              subjectName: schedule.subjectName,
+              year: schedule.year,
+              division: schedule.division,
+              teacherId: schedule.teacherId,
+              teacherName: schedule.teacherName,
+            };
+          }
+        });
+
+        const subjectsArray = Object.values(uniqueSubjects);
+        setSubjects(subjectsArray);
+
+        if (subjectsArray.length > 0) {
+          setFilter((prev) => ({ ...prev, subjectKey: subjectsArray[0].key }));
         }
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load subjects");
+        setError(err.response?.data?.error || "Failed to load subjects");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubjects();
+    fetchTeacherSubjects();
   }, []);
 
-  const fetchSchedules = async (year, division) => {
+  const handleRefresh = async () => {
     const token = getAuthToken();
     if (!token) return;
 
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://gradyzebackend.onrender.com/api/schedules/class/${year}/${division}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `https://gradyzebackend.onrender.com/api/schedules`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       setSchedules(response.data.data);
-      setError(null);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to load schedules");
+      setError(err.response?.data?.error || "Failed to refresh schedules");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRefresh = async () => {
-    if (!filter.subjectId) return;
-
-    const subject = subjects.find((s) => s._id === filter.subjectId);
-    if (subject) {
-      await fetchSchedules(subject.year, subject.division);
-    }
-  };
-
-  const handleFilterChange = async (e) => {
+  const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
-
-    if (name === "subjectId" && value) {
-      const selectedSubject = subjects.find((subj) => subj._id === value);
-      if (selectedSubject) {
-        await fetchSchedules(selectedSubject.year, selectedSubject.division);
-      }
-    }
   };
 
   const safeDateParse = (dateString) => {
@@ -95,27 +103,25 @@ const ClassSchedules = () => {
 
   const filteredSchedules = useMemo(() => {
     return schedules.filter((schedule) => {
-      if (!filter.date) return true;
+      const subjectKey = `${schedule.subjectName}_${schedule.year}_${schedule.division}`;
+
+      const matchesSubject =
+        !filter.subjectKey || subjectKey === filter.subjectKey;
 
       const scheduleDate = safeDateParse(schedule.date);
       const filterDate = safeDateParse(filter.date);
 
-      return (
-        scheduleDate &&
-        filterDate &&
-        scheduleDate.getFullYear() === filterDate.getFullYear() &&
-        scheduleDate.getMonth() === filterDate.getMonth() &&
-        scheduleDate.getDate() === filterDate.getDate()
-      );
-    });
-  }, [schedules, filter.date]);
+      const matchesDate =
+        !filter.date ||
+        (scheduleDate &&
+          filterDate &&
+          scheduleDate.getFullYear() === filterDate.getFullYear() &&
+          scheduleDate.getMonth() === filterDate.getMonth() &&
+          scheduleDate.getDate() === filterDate.getDate());
 
-  const getSubjectDetails = (subjectId) => {
-    const subject = subjects.find((s) => s._id === subjectId);
-    return subject
-      ? `${subject.name} (${subject.year}, Div: ${subject.division})`
-      : "Unknown Subject";
-  };
+      return matchesSubject && matchesDate;
+    });
+  }, [schedules, filter]);
 
   const formatTime = (time24h) => {
     if (!time24h) return "N/A";
@@ -164,8 +170,8 @@ const ClassSchedules = () => {
                 Subject
               </label>
               <select
-                name="subjectId"
-                value={filter.subjectId}
+                name="subjectKey"
+                value={filter.subjectKey}
                 onChange={handleFilterChange}
                 disabled={loading || subjects.length === 0}
                 className="w-full p-2 border border-gray-300 rounded-md"
@@ -176,8 +182,9 @@ const ClassSchedules = () => {
                   <>
                     <option value="">Select Subject</option>
                     {subjects.map((subject) => (
-                      <option key={subject._id} value={subject._id}>
-                        {subject.name} ({subject.year}, Div: {subject.division})
+                      <option key={subject.key} value={subject.key}>
+                        {subject.subjectName} ({subject.year}, Div:{" "}
+                        {subject.division})
                       </option>
                     ))}
                   </>
@@ -251,7 +258,8 @@ const ClassSchedules = () => {
                         {schedule.title || "N/A"}
                       </div>
                       <div className="text-gray-400">
-                        {getSubjectDetails(filter.subjectId)}
+                        {schedule.subjectName} ({schedule.year}, Div:{" "}
+                        {schedule.division})
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
