@@ -34,7 +34,7 @@ const StudentAttendanceDashboard = () => {
 
       // 2. Fetch subjects for student (based on adminId, year, division)
       const subjectsResponse = await fetch(
-        `${API_BASE_URL}/api/students/${studentId}/subjects`
+        `${API_BASE_URL}/api/studentattendance/${studentId}/subjects`
       );
       if (!subjectsResponse.ok) throw new Error("Failed to fetch subjects");
       const subjectsData = await subjectsResponse.json();
