@@ -88,7 +88,9 @@ const Attendance = () => {
         }
       );
 
-      setStudents(response.data.students || []);
+      const key = `${year}-${division}`;
+      const studentsArray = response.data.studentData?.[key] || [];
+      setStudents(studentsArray);
     } catch (err) {
       console.error("Error fetching students:", err);
       setError(err.response?.data?.message || "Failed to load students");
