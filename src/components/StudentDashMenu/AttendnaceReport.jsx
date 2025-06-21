@@ -26,7 +26,7 @@ const StudentAttendanceDashboard = () => {
 
       // 1. Fetch student details
       const studentResponse = await fetch(
-        `${API_BASE_URL}/api/students/${studentId}`
+        `${API_BASE_URL}/api/student/${studentId}`
       );
       if (!studentResponse.ok) throw new Error("Failed to fetch student data");
       const studentData = await studentResponse.json();
