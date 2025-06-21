@@ -136,7 +136,8 @@ const AttendanceReport = () => {
 
       response.data.forEach((attendance) => {
         const date = new Date(attendance.date).toISOString().split("T")[0];
-        const subject = attendance.subjectName || "General";
+        const subject =
+          attendance.subject || attendance.subjectName || "General";
 
         if (!subjectDays[subject]) {
           subjectDays[subject] = new Set();
@@ -144,24 +145,26 @@ const AttendanceReport = () => {
         subjectDays[subject].add(date);
 
         attendance.records.forEach((record) => {
-          if (!processedAttendance[record.studentId]) {
-            processedAttendance[record.studentId] = {};
+          const studentId = record.studentId;
+          if (!processedAttendance[studentId]) {
+            processedAttendance[studentId] = {};
           }
 
-          if (!processedAttendance[record.studentId][subject]) {
-            processedAttendance[record.studentId][subject] = {
+          if (!processedAttendance[studentId][subject]) {
+            processedAttendance[studentId][subject] = {
               present: 0,
               total: 0,
             };
           }
 
-          processedAttendance[record.studentId][subject].total += 1;
+          processedAttendance[studentId][subject].total += 1;
           if (record.status === "Present") {
-            processedAttendance[record.studentId][subject].present += 1;
+            processedAttendance[studentId][subject].present += 1;
           }
         });
       });
 
+      console.log("Processed Attendance Data:", processedAttendance); // Debug log
       setAttendanceData({
         studentAttendance: processedAttendance,
         subjectDays,
@@ -300,18 +303,22 @@ const AttendanceReport = () => {
     }
 
     return filteredStudents.map((student) => {
+      // Check both student._id and student.studentId
+      const studentId = student._id || student.studentId;
       const studentAttendance =
-        attendanceData.studentAttendance?.[student._id] ||
-        attendanceData.studentAttendance?.[student.studentId] ||
-        {};
+        attendanceData.studentAttendance?.[studentId] || {};
+
       let overallPresent = 0;
       let overallTotal = 0;
 
       const subjectCells = subjects.map((subject) => {
-        const subjectAttendance = studentAttendance[subject.name] || {
+        // Use subject.name to match with attendance data
+        const subjectName = subject.name || subject.subject;
+        const subjectAttendance = studentAttendance[subjectName] || {
           present: 0,
           total: 0,
         };
+
         const percentage = calculateAttendancePercentage(
           subjectAttendance.present,
           subjectAttendance.total
