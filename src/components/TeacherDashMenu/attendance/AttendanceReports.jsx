@@ -301,7 +301,9 @@ const AttendanceReport = () => {
 
     return filteredStudents.map((student) => {
       const studentAttendance =
-        attendanceData.studentAttendance?.[student._id] || {};
+        attendanceData.studentAttendance?.[student._id] ||
+        attendanceData.studentAttendance?.[student.studentId] ||
+        {};
       let overallPresent = 0;
       let overallTotal = 0;
 
