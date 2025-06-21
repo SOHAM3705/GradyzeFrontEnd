@@ -12,51 +12,50 @@ const StudentAttendanceDashboard = () => {
   const [studentId] = useState(sessionStorage.getItem("studentId"));
   const [studentInfo, setStudentInfo] = useState(null);
   const [attendanceData, setAttendanceData] = useState(null);
-  const [subjects, setSubjects] = useState([]);
+  const [subjectsAttendance, setSubjectsAttendance] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [subjectAttendanceDetails, setSubjectAttendanceDetails] =
     useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch student info and subjects
-  const fetchStudentInfoAndSubjects = async () => {
+  // Fetch student info and subjects with attendance
+  const fetchStudentData = async () => {
     try {
       setLoading(true);
 
       // 1. Fetch student details
       const studentResponse = await fetch(
-        `${API_BASE_URL}/api/studentattendance/${studentId}`
+        `${API_BASE_URL}/api/student/${studentId}`
       );
       if (!studentResponse.ok) throw new Error("Failed to fetch student data");
       const studentData = await studentResponse.json();
-      setStudentInfo(studentData.data); // Updated to match response structure
+      setStudentInfo(studentData);
 
-      // 2. Fetch subjects for student
+      // 2. Fetch overall attendance summary
+      const attendanceResponse = await fetch(
+        `${API_BASE_URL}/api/student/attendance/${studentId}`
+      );
+      if (!attendanceResponse.ok) throw new Error("Failed to fetch attendance");
+      const attendanceResult = await attendanceResponse.json();
+      setAttendanceData(attendanceResult.data);
+
+      // 3. Fetch subjects with attendance stats
       const subjectsResponse = await fetch(
-        `${API_BASE_URL}/api/studentattendance/${studentId}/subjects`
+        `${API_BASE_URL}/api/student/${studentId}/subjects-attendance`
       );
       if (!subjectsResponse.ok) throw new Error("Failed to fetch subjects");
-      const subjectsData = await subjectsResponse.json();
-      setSubjects(subjectsData.data || []); // Ensure we get the array of subjects
+      const subjectsResult = await subjectsResponse.json();
+      setSubjectsAttendance(subjectsResult.data || []);
+
+      // Set first subject as selected by default if available
+      if (subjectsResult.data?.length > 0) {
+        setSelectedSubject(subjectsResult.data[0].subject);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Fetch overall attendance data
-  const fetchAttendanceData = async () => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch attendance data");
-      const result = await response.json();
-      setAttendanceData(result.data);
-    } catch (err) {
-      setError(err.message);
     }
   };
 
@@ -65,7 +64,7 @@ const StudentAttendanceDashboard = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${API_BASE_URL}/api/studentattendance/attendance/${studentId}/subject/${encodeURIComponent(
+        `${API_BASE_URL}/api/student/attendance/${studentId}/subject/${encodeURIComponent(
           subjectName
         )}`
       );
@@ -81,12 +80,15 @@ const StudentAttendanceDashboard = () => {
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      await fetchStudentInfoAndSubjects();
-      await fetchAttendanceData();
-    };
-    loadData();
+    fetchStudentData();
   }, [studentId]);
+
+  // Auto-fetch details when selected subject changes
+  useEffect(() => {
+    if (selectedSubject) {
+      fetchSubjectAttendanceDetails(selectedSubject);
+    }
+  }, [selectedSubject]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -151,7 +153,8 @@ const StudentAttendanceDashboard = () => {
           </h1>
           {studentInfo && (
             <p className="text-gray-600">
-              {studentInfo.name} - {studentInfo.year} {studentInfo.division}
+              {studentInfo.studentName} - {studentInfo.year}{" "}
+              {studentInfo.division}
             </p>
           )}
         </div>
@@ -221,21 +224,32 @@ const StudentAttendanceDashboard = () => {
         <div className="bg-white rounded-xl shadow-sm border mb-8">
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900">My Subjects</h2>
-            <p className="text-gray-600">{subjects.length} subjects enrolled</p>
+            <p className="text-gray-600">
+              {subjectsAttendance.length} subjects enrolled
+            </p>
           </div>
           <div className="p-6">
             <div className="flex flex-wrap gap-3">
-              {subjects.map((subject) => (
+              {subjectsAttendance.map((subject) => (
                 <div
-                  key={subject}
-                  onClick={() => fetchSubjectAttendanceDetails(subject)}
+                  key={subject.subject}
+                  onClick={() => setSelectedSubject(subject.subject)}
                   className={`px-4 py-2 rounded-full border cursor-pointer transition-all ${
-                    selectedSubject === subject
+                    selectedSubject === subject.subject
                       ? "bg-blue-100 border-blue-500 text-blue-800"
                       : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                   }`}
                 >
-                  {subject}
+                  <div className="flex items-center gap-2">
+                    <span>{subject.subject}</span>
+                    <span
+                      className={`text-xs font-medium ${getAttendanceColor(
+                        subject.attendancePercentage
+                      )}`}
+                    >
+                      {subject.attendancePercentage}%
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -247,8 +261,45 @@ const StudentAttendanceDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border">
             <div className="p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">
-                {selectedSubject} Attendance
+                {selectedSubject} Attendance Details
               </h2>
+              {subjectsAttendance.find(
+                (s) => s.subject === selectedSubject
+              ) && (
+                <div className="flex items-center gap-4 mt-2">
+                  <span
+                    className={`text-sm font-medium ${getAttendanceColor(
+                      subjectsAttendance.find(
+                        (s) => s.subject === selectedSubject
+                      ).attendancePercentage
+                    )}`}
+                  >
+                    Overall:{" "}
+                    {
+                      subjectsAttendance.find(
+                        (s) => s.subject === selectedSubject
+                      ).attendancePercentage
+                    }
+                    %
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    Present:{" "}
+                    {
+                      subjectsAttendance.find(
+                        (s) => s.subject === selectedSubject
+                      ).presentClasses
+                    }
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    Absent:{" "}
+                    {
+                      subjectsAttendance.find(
+                        (s) => s.subject === selectedSubject
+                      ).absentClasses
+                    }
+                  </span>
+                </div>
+              )}
             </div>
             <div className="p-6">
               {loading ? (
@@ -257,62 +308,33 @@ const StudentAttendanceDashboard = () => {
                   <p className="text-gray-500">Loading attendance details...</p>
                 </div>
               ) : subjectAttendanceDetails ? (
-                <div>
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <p className="text-2xl font-bold text-green-600">
-                          {subjectAttendanceDetails.presentClasses}
-                        </p>
-                        <p className="text-sm text-gray-600">Present</p>
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-red-600">
-                          {subjectAttendanceDetails.absentClasses}
-                        </p>
-                        <p className="text-sm text-gray-600">Absent</p>
-                      </div>
-                      <div>
-                        <p
-                          className={`text-2xl font-bold ${getAttendanceColor(
-                            subjectAttendanceDetails.attendancePercentage
-                          )}`}
-                        >
-                          {subjectAttendanceDetails.attendancePercentage}%
-                        </p>
-                        <p className="text-sm text-gray-600">Attendance</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {subjectAttendanceDetails.attendanceDetails.map(
-                      (record, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-3">
-                            {getStatusIcon(record.status)}
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {formatDate(record.date)}
-                              </p>
-                            </div>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {subjectAttendanceDetails.attendanceDetails.map(
+                    (record, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          {getStatusIcon(record.status)}
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {formatDate(record.date)}
+                            </p>
                           </div>
-                          <span
-                            className={`text-sm font-medium ${
-                              record.status === "Present"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {record.status}
-                          </span>
                         </div>
-                      )
-                    )}
-                  </div>
+                        <span
+                          className={`text-sm font-medium ${
+                            record.status === "Present"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {record.status}
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">
