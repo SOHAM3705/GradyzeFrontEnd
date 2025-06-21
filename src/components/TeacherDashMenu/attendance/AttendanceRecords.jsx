@@ -487,9 +487,7 @@ const AttendanceRecords = () => {
               <h2 className="text-xl font-semibold text-gray-800">
                 Update Attendance
               </h2>
-              <p className="text-sm text-gray-600">
-                {getClassName(currentRecord?.classId || filters.classId)}
-              </p>
+              <p className="text-sm text-gray-600">{getClassName(record)}</p>
               <p className="text-sm text-gray-600">
                 Date:{" "}
                 {currentRecord
