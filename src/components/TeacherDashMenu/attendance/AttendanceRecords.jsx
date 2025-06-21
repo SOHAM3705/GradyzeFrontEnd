@@ -68,7 +68,10 @@ const AttendanceRecords = () => {
     setLoading(true);
     try {
       const params = {
-        classId: filters.classId,
+        year: filters.year,
+        division: filters.division,
+        subjectName: filters.subjectName,
+        teacherId: sessionStorage.getItem("teacherId"), // Ensure filtering by correct teacher
         startDate: filters.startDate,
         endDate: filters.endDate,
       };
