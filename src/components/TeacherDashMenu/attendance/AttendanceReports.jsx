@@ -26,8 +26,30 @@ const AttendanceReport = () => {
   const teacherId = sessionStorage.getItem("teacherId");
 
   useEffect(() => {
-    fetchStudentsAndAttendance();
-    fetchAssignedDivision();
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const divisionInfo = await fetchAssignedDivision();
+        await fetchStudentsAndSubjects(divisionInfo);
+
+        // Set default date range to current month
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+        setDateRange({
+          startDate: firstDay.toISOString().split("T")[0],
+          endDate: lastDay.toISOString().split("T")[0],
+        });
+      } catch (error) {
+        console.error("Error initializing data:", error);
+        toast.error("Failed to initialize data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -36,7 +58,7 @@ const AttendanceReport = () => {
   }, [students, attendanceData, searchQuery]);
 
   useEffect(() => {
-    if (dateRange.startDate && dateRange.endDate) {
+    if (dateRange.startDate && dateRange.endDate && division && year) {
       fetchAttendanceData();
     }
   }, [dateRange, division, year]);
@@ -50,70 +72,47 @@ const AttendanceReport = () => {
       );
       setDivision(response.data.division);
       setYear(response.data.year);
-
-      // Set default date range to current month
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-      setDateRange({
-        startDate: firstDay.toISOString().split("T")[0],
-        endDate: lastDay.toISOString().split("T")[0],
-      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching assigned division:", error);
       toast.error("Failed to fetch division information");
+      throw error;
     }
   };
 
-  const fetchStudentsAndAttendance = async () => {
+  const fetchStudentsAndSubjects = async (divisionInfo) => {
     try {
-      setIsLoading(true);
       const token = sessionStorage.getItem("token");
+      const assignedYear = divisionInfo?.year || year;
+      const assignedDivision = divisionInfo?.division || division;
 
-      // Fetch students and subjects similar to marks dashboard
-      const [studentsResponse, divisionResponse] = await Promise.all([
+      const [studentsResponse, subjectsResponse] = await Promise.all([
         axios.get(
           `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/class-students`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { year: assignedYear, division: assignedDivision },
+          }
         ),
         axios.get(
-          `https://gradyzebackend.onrender.com/api/teachermarks/${teacherId}/divisions`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          `https://gradyzebackend.onrender.com/api/subjects/class-subjects`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { year: assignedYear, division: assignedDivision },
+          }
         ),
       ]);
 
-      const assignedYear = divisionResponse.data.year;
-      const assignedDivision = divisionResponse.data.division;
-
-      // Fetch subjects (you might need to create this endpoint or use existing one)
-      const subjectsResponse = await axios.get(
-        `https://gradyzebackend.onrender.com/api/subjects/class-subjects`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: {
-            year: assignedYear,
-            division: assignedDivision,
-          },
-        }
-      );
-
-      setStudents(studentsResponse.data.students);
+      setStudents(studentsResponse.data.students || []);
       setSubjects(subjectsResponse.data || []);
-      setYear(assignedYear);
-      setDivision(assignedDivision);
     } catch (error) {
       console.error("Error fetching students and subjects:", error);
       toast.error("Failed to fetch student data");
-    } finally {
-      setIsLoading(false);
+      throw error;
     }
   };
 
   const fetchAttendanceData = async () => {
-    if (!division || !year || !dateRange.startDate || !dateRange.endDate)
-      return;
-
     try {
       setIsLoading(true);
       const token = sessionStorage.getItem("token");
@@ -131,13 +130,13 @@ const AttendanceReport = () => {
         }
       );
 
-      // Process attendance data
+      // Process attendance data based on the schema
       const processedAttendance = {};
       const subjectDays = {};
 
       response.data.forEach((attendance) => {
         const date = new Date(attendance.date).toISOString().split("T")[0];
-        const subject = attendance.subject || "General"; // Handle if subject is not specified
+        const subject = attendance.subjectName || "General";
 
         if (!subjectDays[subject]) {
           subjectDays[subject] = new Set();
@@ -363,8 +362,10 @@ const AttendanceReport = () => {
       {/* Controls */}
       <div className="flex flex-wrap gap-4 mb-4">
         <div className="flex items-center gap-2">
-          <label className="font-medium text-gray-600">Division</label>
-          <span className="p-2 border rounded bg-white">{division}</span>
+          <label className="font-medium text-gray-600">Class</label>
+          <span className="p-2 border rounded bg-white">
+            {year} - {division}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <label className="font-medium text-gray-600">Start Date</label>
@@ -472,7 +473,10 @@ const AttendanceReport = () => {
                 <th className="p-2 text-left border">Roll No.</th>
                 <th className="p-2 text-left border">Student Name</th>
                 {subjects.map((subject) => (
-                  <th key={subject._id} className="p-2 text-center border">
+                  <th
+                    key={subject._id || subject.name}
+                    className="p-2 text-center border"
+                  >
                     <div>{subject.name}</div>
                     <div className="text-xs font-normal">Attendance %</div>
                   </th>
