@@ -431,7 +431,7 @@ const AttendanceRecords = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {`${record.subjectName} (${record.year}, Div: ${record.division})`}
+                          {getClassName(record)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -487,7 +487,12 @@ const AttendanceRecords = () => {
               <h2 className="text-xl font-semibold text-gray-800">
                 Update Attendance
               </h2>
-              <p className="text-sm text-gray-600">{getClassName(record)}</p>
+              <p className="text-sm text-gray-600">
+                Class:{" "}
+                {currentRecord
+                  ? `${currentRecord.year} - ${currentRecord.division}`
+                  : `${filters.year} - ${filters.division}`}
+              </p>
               <p className="text-sm text-gray-600">
                 Date:{" "}
                 {currentRecord
