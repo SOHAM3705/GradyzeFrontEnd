@@ -267,13 +267,11 @@ const AttendanceRecords = () => {
     setCurrentRecord(null);
   };
 
-  const getClassName = (classId) => {
-    if (!classId) return "No Class Assigned";
+  const getClassName = (record) => {
+    if (!record) return "No Class Assigned";
 
-    const classInfo = classes.find((c) => c._id === classId);
-    return classInfo
-      ? `${classInfo.name} (${classInfo.year}, Div: ${classInfo.division})`
-      : "Unknown Class";
+    // Use the subjectName directly from the record
+    return `${record.subjectName} (${record.year}, Div: ${record.division})`;
   };
 
   const formatDate = (dateString) => {
@@ -430,7 +428,7 @@ const AttendanceRecords = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {getClassName(record.classId)}
+                          {getClassName(record)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
