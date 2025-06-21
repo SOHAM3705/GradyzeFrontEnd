@@ -95,7 +95,7 @@ const AttendanceReport = () => {
           }
         ),
         axios.get(
-          `https://gradyzebackend.onrender.com/api/subjects/class-subjects`,
+          `https://gradyzebackend.onrender.com/api/attendance/class-subjects`,
           {
             headers: { Authorization: `Bearer ${token}` },
             params: { year: assignedYear, division: assignedDivision },
