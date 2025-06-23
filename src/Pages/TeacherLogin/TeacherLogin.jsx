@@ -10,9 +10,49 @@ const TeacherLogin = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const gsiRendered = useRef(false); // Prevent duplicate renders
+  const gsiRendered = useRef(false);
+  const gapiLoaded = useRef(false);
 
-  // Google Sign-In
+  // Google Classroom API scopes
+  const CLASSROOM_SCOPES = [
+    "https://www.googleapis.com/auth/classroom.courses",
+    "https://www.googleapis.com/auth/classroom.rosters",
+    "https://www.googleapis.com/auth/classroom.coursework.me",
+    "https://www.googleapis.com/auth/classroom.coursework.students",
+    "https://www.googleapis.com/auth/drive",
+  ].join(" ");
+
+  // Load GAPI script for Classroom API
+  useEffect(() => {
+    if (gapiLoaded.current || document.getElementById("google-gapi-script"))
+      return;
+
+    const script = document.createElement("script");
+    script.src = "https://apis.google.com/js/api.js";
+    script.id = "google-gapi-script";
+    script.async = true;
+    script.defer = true;
+
+    script.onload = () => {
+      console.log("Google GAPI script loaded successfully");
+      gapiLoaded.current = true;
+    };
+
+    script.onerror = () => {
+      console.error("Failed to load Google GAPI script");
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      const scriptElement = document.getElementById("google-gapi-script");
+      if (scriptElement) {
+        scriptElement.remove();
+      }
+    };
+  }, []);
+
+  // Initialize Google Sign-In
   useEffect(() => {
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -35,14 +75,13 @@ const TeacherLogin = () => {
         cancel_on_tap_outside: true,
       });
 
-      // Render button with fixed width and proper text
       window.google.accounts.id.renderButton(
         document.getElementById("gsi-button"),
         {
           theme: "outline",
           size: "large",
-          text: "Login_with", // Forces "Sign in with Google"
-          width: "100%", // Fix for shrinking issue
+          text: "login_with",
+          width: "100%",
         }
       );
 
@@ -51,6 +90,7 @@ const TeacherLogin = () => {
 
     const handleCredentialResponse = async (response) => {
       try {
+        // First authenticate with your backend
         const res = await api.post(`${API_BASE_URL}/api/auth/google`, {
           token: response.credential,
           role: "teacher",
@@ -58,16 +98,72 @@ const TeacherLogin = () => {
 
         const { token, teacherId, name, adminId } = res.data;
 
+        // Store authentication data
         sessionStorage.setItem("token", token);
         sessionStorage.setItem("role", "teacher");
         sessionStorage.setItem("teacherId", teacherId);
         sessionStorage.setItem("teacherName", name);
         sessionStorage.setItem("adminId", adminId);
 
+        // Now request additional Classroom API permissions
+        await requestClassroomAccess(response.credential);
+
         navigate("/teacherdash");
       } catch (err) {
         console.error("Google login failed:", err);
         setError("Google login failed. Try again.");
+      }
+    };
+
+    const requestClassroomAccess = async (idToken) => {
+      if (!window.google?.accounts?.oauth2) {
+        console.error("Google OAuth2 library not loaded");
+        return;
+      }
+
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: CLASSROOM_SCOPES,
+          callback: async (tokenResponse) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              // Store the Classroom access token
+              sessionStorage.setItem(
+                "classroomToken",
+                tokenResponse.access_token
+              );
+
+              // Initialize GAPI client if needed
+              if (window.gapi?.client && !window.gapi.client.getToken()) {
+                await initGapiClient(tokenResponse.access_token);
+              }
+            }
+          },
+          error_callback: (error) => {
+            console.error("Classroom access error:", error);
+          },
+        });
+
+        // Request access token
+        tokenClient.requestAccessToken({ prompt: "consent" });
+      } catch (err) {
+        console.error("Error requesting Classroom access:", err);
+      }
+    };
+
+    const initGapiClient = async (accessToken) => {
+      try {
+        await window.gapi.client.init({
+          apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+          discoveryDocs: [
+            "https://classroom.googleapis.com/$discovery/rest?version=v1",
+            "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+          ],
+        });
+        window.gapi.client.setToken({ access_token: accessToken });
+        console.log("GAPI client initialized with Classroom access");
+      } catch (err) {
+        console.error("Error initializing GAPI client:", err);
       }
     };
 
@@ -157,12 +253,11 @@ const TeacherLogin = () => {
           </button>
         </form>
 
-        {/* Google Login Button */}
         <div
           id="gsi-button"
           style={{
             marginTop: "10px",
-            width: "100%", // Ensures full width
+            width: "100%",
             minHeight: "40px",
             display: "flex",
             justifyContent: "center",

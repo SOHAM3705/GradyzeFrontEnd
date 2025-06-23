@@ -149,7 +149,7 @@ const StudentAttendanceDashboard = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            My Attendance Dashboard
+            My Attendance
           </h1>
           {studentInfo && (
             <p className="text-gray-600">
