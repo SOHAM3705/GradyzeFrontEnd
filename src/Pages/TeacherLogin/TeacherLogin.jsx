@@ -159,6 +159,7 @@ const TeacherLogin = () => {
             useOneTap
             auto_select
             ux_mode="popup"
+            flow="auth-code" // 🔍 THIS IS MANDATORY FOR AUTH CODE
             scope={googleScopes.join(" ")}
             prompt="consent"
             cookiePolicy="single_host_origin"
