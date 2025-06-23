@@ -1,1574 +1,803 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Search,
-  Bell,
-  ChevronDown,
-  Plus,
-  Calendar,
+  Book,
+  ChevronRight,
+  School,
   Users,
-  FileText,
-  MessageSquare,
+  Calendar,
+  BookPlus,
+  Plus,
+  Search,
   Filter,
-  Download,
   Edit,
   Trash2,
-  X,
+  Copy,
   Eye,
+  Settings,
+  Download,
+  Upload,
+  MoreVertical,
+  BookOpen,
+  Clock,
+  Award,
+  TrendingUp,
 } from "lucide-react";
 
-// Sample data
-const initialClasses = [
-  { id: 1, name: "Physics 101", students: 28, code: "PHY101" },
-  { id: 2, name: "Chemistry 201", students: 24, code: "CHEM201" },
-  { id: 3, name: "Biology 301", students: 32, code: "BIO301" },
-];
-
-const initialAnnouncements = [
-  {
-    id: 1,
-    title: "End of Term Exam Schedule",
-    content:
-      "The final exams will be held from June 12-16. Please review the attached schedule and prepare accordingly.",
-    date: "2025-04-03",
-    class: "Physics 101",
-  },
-  {
-    id: 2,
-    title: "Lab Report Deadline Extended",
-    content:
-      "Due to technical issues in the lab last week, the deadline for the titration lab report has been extended to April 12th.",
-    date: "2025-04-01",
-    class: "Chemistry 201",
-  },
-  {
-    id: 3,
-    title: "Field Trip Permission Forms",
-    content:
-      "Please remind students to submit their signed permission forms for the upcoming field trip to the botanical gardens by this Friday.",
-    date: "2025-03-28",
-    class: "Biology 301",
-  },
-];
-
-const initialAssignments = [
-  {
-    id: 1,
-    title: "Problem Set 5",
-    description: "Complete problems 1-10 on circular motion.",
-    dueDate: "2025-04-15",
-    class: "Physics 101",
-    status: "active",
-    submissions: 18,
-  },
-  {
-    id: 2,
-    title: "Periodic Table Quiz",
-    description: "Online quiz covering elements and their properties.",
-    dueDate: "2025-04-10",
-    class: "Chemistry 201",
-    status: "active",
-    submissions: 20,
-  },
-  {
-    id: 3,
-    title: "Ecosystem Research Paper",
-    description: "Write a 5-page paper on a specific ecosystem of your choice.",
-    dueDate: "2025-04-20",
-    class: "Biology 301",
-    status: "active",
-    submissions: 15,
-  },
-  {
-    id: 4,
-    title: "Midterm Exam",
-    description:
-      "Comprehensive exam covering all topics from first half of semester.",
-    dueDate: "2025-03-20",
-    class: "Physics 101",
-    status: "graded",
-    submissions: 28,
-  },
-];
-
-const initialStudents = [
-  {
-    id: 1,
-    name: "Alex Johnson",
-    email: "alex.j@example.edu",
-    class: "Physics 101",
-    grade: "A-",
-  },
-  {
-    id: 2,
-    name: "Jamie Smith",
-    email: "jamie.s@example.edu",
-    class: "Chemistry 201",
-    grade: "B+",
-  },
-  {
-    id: 3,
-    name: "Taylor Williams",
-    email: "taylor.w@example.edu",
-    class: "Biology 301",
-    grade: "A",
-  },
-  {
-    id: 4,
-    name: "Morgan Lee",
-    email: "morgan.l@example.edu",
-    class: "Physics 101",
-    grade: "B",
-  },
-  {
-    id: 5,
-    name: "Casey Brown",
-    email: "casey.b@example.edu",
-    class: "Chemistry 201",
-    grade: "A",
-  },
-  {
-    id: 6,
-    name: "Riley Garcia",
-    email: "riley.g@example.edu",
-    class: "Biology 301",
-    grade: "B-",
-  },
-];
-
-const TeacherDashboard = () => {
-  const [activeTab, setActiveTab] = useState("announcements");
+const TeacherAssignmentDashboard = () => {
+  const [courses, setCourses] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("courses");
   const [searchTerm, setSearchTerm] = useState("");
-  const [classFilter, setClassFilter] = useState("all");
-  const [classes] = useState(initialClasses);
-  const [announcements, setAnnouncements] = useState(initialAnnouncements);
-  const [assignments, setAssignments] = useState(initialAssignments);
-  const [students] = useState(initialStudents);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [modalType, setModalType] = useState(null);
-  const [modalData, setModalData] = useState(null);
-  const [notification, setNotification] = useState(null);
+  const [filterType, setFilterType] = useState("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const navigate = useNavigate();
 
-  // Filtered data based on search term and class filter
-  const filteredAnnouncements = announcements.filter((announcement) => {
-    const matchesSearch =
-      announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      announcement.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass =
-      classFilter === "all" || announcement.class === classFilter;
-    return matchesSearch && matchesClass;
+  // Form states
+  const [newCourse, setNewCourse] = useState({
+    name: "",
+    section: "",
+    room: "",
+    description: "",
+    subject: "",
+    createInGoogle: false,
   });
 
-  const filteredAssignments = assignments.filter((assignment) => {
-    const matchesSearch =
-      assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass =
-      classFilter === "all" || assignment.class === classFilter;
-    return matchesSearch && matchesClass;
+  const [newAssignment, setNewAssignment] = useState({
+    title: "",
+    description: "",
+    dueDate: "",
+    totalMarks: 100,
+    type: "assignment",
+    courseId: "",
+    instructions: "",
+    attachments: [],
   });
 
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass = classFilter === "all" || student.class === classFilter;
-    return matchesSearch && matchesClass;
-  });
+  // Mock data for demonstration
+  const mockCourses = [
+    {
+      _id: "1",
+      name: "Mathematics Grade 10",
+      section: "A",
+      room: "101",
+      description: "Advanced Mathematics",
+      enrollmentCode: "MATH10A",
+      students: 25,
+      assignments: 8,
+      isGoogleClass: false,
+      createdAt: new Date("2024-01-15"),
+      lastActive: "Yesterday",
+    },
+    {
+      _id: "2",
+      name: "Physics Grade 11",
+      section: "B",
+      room: "205",
+      description: "Physics Fundamentals",
+      enrollmentCode: "PHY11B",
+      students: 30,
+      assignments: 12,
+      isGoogleClass: true,
+      createdAt: new Date("2024-01-10"),
+      lastActive: "2 days ago",
+    },
+  ];
 
-  const openModal = (type, data = null) => {
-    setModalType(type);
-    setModalData(data);
-  };
-
-  const closeModal = () => {
-    setModalType(null);
-    setModalData(null);
-  };
-
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-  };
-
-  const showNotification = (message, type = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleCreateAnnouncement = (formData) => {
-    const newAnnouncement = {
-      id: announcements.length + 1,
-      title: formData.title,
-      content: formData.content,
-      class: formData.class,
-      date: new Date().toISOString().split("T")[0],
-    };
-    setAnnouncements([newAnnouncement, ...announcements]);
-    closeModal();
-    showNotification("Announcement created successfully!");
-  };
-
-  const handleUpdateAnnouncement = (formData) => {
-    const updatedAnnouncements = announcements.map((announcement) =>
-      announcement.id === formData.id
-        ? { ...announcement, ...formData }
-        : announcement
-    );
-    setAnnouncements(updatedAnnouncements);
-    closeModal();
-    showNotification("Announcement updated successfully!");
-  };
-
-  const handleDeleteAnnouncement = (id) => {
-    setAnnouncements(
-      announcements.filter((announcement) => announcement.id !== id)
-    );
-    closeModal();
-    showNotification("Announcement deleted successfully!");
-  };
-
-  const handleCreateAssignment = (formData) => {
-    const newAssignment = {
-      id: assignments.length + 1,
-      title: formData.title,
-      description: formData.description,
-      dueDate: formData.dueDate,
-      class: formData.class,
+  const mockAssignments = [
+    {
+      _id: "1",
+      title: "Quadratic Equations Test",
+      description: "Chapter 4 assessment on quadratic equations",
+      dueDate: "2024-12-30",
+      totalMarks: 100,
+      type: "test",
+      courseId: "1",
+      courseName: "Mathematics Grade 10",
+      submissions: 18,
+      pending: 7,
       status: "active",
-      submissions: 0,
-    };
-    setAssignments([newAssignment, ...assignments]);
-    closeModal();
-    showNotification("Assignment created successfully!");
+      createdAt: new Date("2024-12-20"),
+    },
+    {
+      _id: "2",
+      title: "Physics Lab Report",
+      description: "Pendulum experiment analysis",
+      dueDate: "2025-01-05",
+      totalMarks: 50,
+      type: "assignment",
+      courseId: "2",
+      courseName: "Physics Grade 11",
+      submissions: 22,
+      pending: 8,
+      status: "active",
+      createdAt: new Date("2024-12-18"),
+    },
+  ];
+
+  // Simulate API calls
+  const fetchCourses = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // In real implementation, this would be:
+      // const response = await fetch('/api/classroom/courses', {
+      //   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      // });
+      // const data = await response.json();
+      // setCourses(data.courses);
+
+      setCourses(mockCourses);
+      setAssignments(mockAssignments);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check authentication
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    fetchCourses();
+  }, [fetchCourses, navigate]);
+
+  const handleCreateCourse = async (e) => {
+    e.preventDefault();
+    try {
+      // In real implementation:
+      // const response = await fetch('/api/classroom/courses', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     Authorization: `Bearer ${localStorage.getItem('token')}`
+      //   },
+      //   body: JSON.stringify(newCourse)
+      // });
+      // const data = await response.json();
+
+      // Mock implementation
+      const courseData = {
+        ...newCourse,
+        _id: Date.now().toString(),
+        enrollmentCode: Math.random()
+          .toString(36)
+          .substring(2, 8)
+          .toUpperCase(),
+        students: 0,
+        assignments: 0,
+        createdAt: new Date(),
+        lastActive: "Just now",
+      };
+
+      setCourses([...courses, courseData]);
+      setShowCreateModal(false);
+      setNewCourse({
+        name: "",
+        section: "",
+        room: "",
+        description: "",
+        subject: "",
+        createInGoogle: false,
+      });
+
+      alert("✅ Course created successfully!");
+    } catch (error) {
+      console.error("Error creating course:", error);
+      alert("Failed to create course. Please try again.");
+    }
   };
 
-  const handleUpdateAssignment = (formData) => {
-    const updatedAssignments = assignments.map((assignment) =>
-      assignment.id === formData.id
-        ? { ...assignment, ...formData }
-        : assignment
-    );
-    setAssignments(updatedAssignments);
-    closeModal();
-    showNotification("Assignment updated successfully!");
+  const handleCreateAssignment = async (e) => {
+    e.preventDefault();
+    try {
+      // Mock implementation
+      const assignmentData = {
+        ...newAssignment,
+        _id: Date.now().toString(),
+        courseName:
+          courses.find((c) => c._id === newAssignment.courseId)?.name || "",
+        submissions: 0,
+        pending:
+          courses.find((c) => c._id === newAssignment.courseId)?.students || 0,
+        status: "active",
+        createdAt: new Date(),
+      };
+
+      setAssignments([...assignments, assignmentData]);
+      setShowAssignmentModal(false);
+      setNewAssignment({
+        title: "",
+        description: "",
+        dueDate: "",
+        totalMarks: 100,
+        type: "assignment",
+        courseId: "",
+        instructions: "",
+        attachments: [],
+      });
+
+      alert("✅ Assignment created successfully!");
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+      alert("Failed to create assignment. Please try again.");
+    }
   };
 
-  const handleDeleteAssignment = (id) => {
-    setAssignments(assignments.filter((assignment) => assignment.id !== id));
-    closeModal();
-    showNotification("Assignment deleted successfully!");
+  const handleCopyEnrollmentCode = (code) => {
+    navigator.clipboard.writeText(code);
+    alert(`Enrollment code "${code}" copied to clipboard!`);
   };
+
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.section.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredAssignments = assignments.filter(
+    (assignment) =>
+      assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      assignment.courseName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
-              Teacher Dashboard
-            </h1>
-            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
-              <div className="relative w-full md:w-auto">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500 w-full"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
-              <div className="relative">
-                <button
-                  className="p-2 text-gray-500 hover:text-gray-700 relative"
-                  onClick={() => setShowNotifications(!showNotifications)}
-                >
-                  <Bell className="h-6 w-6" />
-                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-                </button>
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-10">
-                    <div className="p-4 border-b">
-                      <h3 className="font-medium">Notifications</h3>
-                    </div>
-                    <div className="p-2">
-                      <div className="p-2 hover:bg-gray-100 rounded">
-                        <p className="text-sm">
-                          5 new submissions for Problem Set 5
-                        </p>
-                        <p className="text-xs text-gray-500">2 hours ago</p>
-                      </div>
-                      <div className="p-2 hover:bg-gray-100 rounded">
-                        <p className="text-sm">
-                          Student question on Chemistry assignment
-                        </p>
-                        <p className="text-xs text-gray-500">Yesterday</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center">
-                <img
-                  src="/api/placeholder/40/40"
-                  alt="Profile"
-                  className="h-8 w-8 rounded-full"
-                />
-                <span className="ml-2 text-sm font-medium text-gray-700">
-                  Prof. Emma Davis
-                </span>
-                <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
-              </div>
-            </div>
+    <div className="dashboard">
+      <nav className="top-nav">
+        <div className="container nav-container">
+          <div className="logo-container">
+            <School size={28} />
+            <h1 className="site-title">Teacher Portal</h1>
           </div>
-        </div>
-      </header>
-
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filter row */}
-        <div className="mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <div className="flex flex-wrap space-x-2 md:space-x-4">
+          <div className="nav-tabs">
             <button
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === "announcements"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-white hover:bg-gray-50"
-              }`}
-              onClick={() => setActiveTab("announcements")}
+              className={`nav-tab ${activeTab === "courses" ? "active" : ""}`}
+              onClick={() => setActiveTab("courses")}
             >
-              <MessageSquare className="mr-2 h-5 w-5" />
-              Announcements
+              <Book size={18} />
+              Courses
             </button>
             <button
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === "assignments"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-white hover:bg-gray-50"
+              className={`nav-tab ${
+                activeTab === "assignments" ? "active" : ""
               }`}
               onClick={() => setActiveTab("assignments")}
             >
-              <FileText className="mr-2 h-5 w-5" />
+              <BookOpen size={18} />
               Assignments
             </button>
-            <button
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === "students"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-white hover:bg-gray-50"
-              }`}
-              onClick={() => setActiveTab("students")}
-            >
-              <Users className="mr-2 h-5 w-5" />
-              Students
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === "calendar"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-white hover:bg-gray-50"
-              }`}
-              onClick={() => setActiveTab("calendar")}
-            >
-              <Calendar className="mr-2 h-5 w-5" />
-              Calendar
-            </button>
           </div>
-          <div className="flex flex-wrap space-x-2 md:space-x-4">
-            <div className="relative">
-              <button className="px-4 py-2 bg-white rounded-lg border flex items-center">
-                <Filter className="mr-2 h-4 w-4" />
-                <span>
-                  Class: {classFilter === "all" ? "All Classes" : classFilter}
-                </span>
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10 hidden">
-                <div className="py-1">
-                  <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    onClick={() => setClassFilter("all")}
-                  >
-                    All Classes
-                  </button>
-                  {classes.map((cls) => (
-                    <button
-                      key={cls.id}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      onClick={() => setClassFilter(cls.name)}
-                    >
-                      {cls.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <div className="user-avatar">
+            <div className="avatar-circle">
+              <span className="avatar-initials">TC</span>
             </div>
-            {activeTab === "announcements" && (
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center hover:bg-green-700"
-                onClick={() => openModal("createAnnouncement")}
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                New Announcement
-              </button>
-            )}
-            {activeTab === "assignments" && (
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center hover:bg-green-700"
-                onClick={() => openModal("createAssignment")}
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                New Assignment
-              </button>
-            )}
+          </div>
+        </div>
+      </nav>
+
+      <div className="main-container">
+        {/* Dashboard Header */}
+        <div className="dashboard-header">
+          <div>
+            <h1 className="page-title">
+              {activeTab === "courses"
+                ? "Course Management"
+                : "Assignment Management"}
+            </h1>
+            <p className="page-subtitle">
+              {activeTab === "courses"
+                ? "Manage your classroom courses and enrollment"
+                : "Create and manage assignments for your courses"}
+            </p>
+          </div>
+          <div className="header-actions">
+            <div className="search-container">
+              <Search size={18} className="search-icon" />
+              <input
+                type="text"
+                placeholder={`Search ${activeTab}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+            </div>
+            <button
+              className="create-button"
+              onClick={() =>
+                activeTab === "courses"
+                  ? setShowCreateModal(true)
+                  : setShowAssignmentModal(true)
+              }
+            >
+              <Plus size={18} />
+              {activeTab === "courses" ? "New Course" : "New Assignment"}
+            </button>
           </div>
         </div>
 
-        {/* Notification toast */}
-        {notification && (
-          <div
-            className={`fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${
-              notification.type === "success"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {notification.message}
+        {/* Stats Cards */}
+        <div className="stats-grid">
+          <div className="stats-card">
+            <div className="stats-icon-container blue">
+              <Book size={24} />
+            </div>
+            <div className="stats-content">
+              <h3 className="stats-value">{courses.length}</h3>
+              <p className="stats-label">Total Courses</p>
+            </div>
           </div>
-        )}
+          <div className="stats-card">
+            <div className="stats-icon-container green">
+              <Users size={24} />
+            </div>
+            <div className="stats-content">
+              <h3 className="stats-value">
+                {courses.reduce(
+                  (total, course) => total + (course.students || 0),
+                  0
+                )}
+              </h3>
+              <p className="stats-label">Total Students</p>
+            </div>
+          </div>
+          <div className="stats-card">
+            <div className="stats-icon-container orange">
+              <BookOpen size={24} />
+            </div>
+            <div className="stats-content">
+              <h3 className="stats-value">{assignments.length}</h3>
+              <p className="stats-label">Active Assignments</p>
+            </div>
+          </div>
+          <div className="stats-card">
+            <div className="stats-icon-container purple">
+              <TrendingUp size={24} />
+            </div>
+            <div className="stats-content">
+              <h3 className="stats-value">
+                {Math.round(
+                  assignments.reduce(
+                    (acc, a) =>
+                      acc +
+                      ((a.submissions / (a.submissions + a.pending)) * 100 ||
+                        0),
+                    0
+                  ) / assignments.length || 0
+                )}
+                %
+              </h3>
+              <p className="stats-label">Avg Submission Rate</p>
+            </div>
+          </div>
+        </div>
 
-        {/* Announcements Tab */}
-        {activeTab === "announcements" && (
-          <div className="space-y-4">
-            {filteredAnnouncements.length > 0 ? (
-              filteredAnnouncements.map((announcement) => (
-                <div
-                  key={announcement.id}
-                  className="bg-white p-4 rounded-lg shadow-md"
-                >
-                  <div className="flex flex-col md:flex-row justify-between items-start">
-                    <div className="w-full md:w-auto mb-4 md:mb-0">
-                      <h3
-                        className="text-lg font-medium cursor-pointer hover:text-green-600"
-                        onClick={() =>
-                          openModal("viewAnnouncement", announcement)
-                        }
-                      >
-                        {announcement.title}
-                      </h3>
-                      <div className="mt-1 flex flex-wrap items-center text-sm text-gray-500">
-                        <span className="mr-2">
-                          {formatDate(announcement.date)}
-                        </span>
-                        <span>{announcement.class}</span>
-                      </div>
-                      {announcement.content && (
-                        <div className="mt-2 text-sm text-gray-700">
-                          {announcement.content.length > 100
-                            ? announcement.content.substring(0, 100) + "..."
-                            : announcement.content}
+        {/* Content Area */}
+        <div className="content-container">
+          {isLoading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Loading {activeTab}...</p>
+            </div>
+          ) : (
+            <>
+              {activeTab === "courses" ? (
+                <div className="courses-grid">
+                  {filteredCourses.map((course) => (
+                    <div key={course._id} className="course-card">
+                      <div className="course-header">
+                        <div className="course-icon">
+                          <Book size={20} />
                         </div>
-                      )}
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        className="p-1 text-gray-400 hover:text-green-600"
-                        onClick={() =>
-                          openModal("editAnnouncement", announcement)
-                        }
-                      >
-                        <Edit className="h-5 w-5" />
-                      </button>
-                      <button
-                        className="p-1 text-gray-400 hover:text-red-600"
-                        onClick={() =>
-                          openModal("deleteAnnouncement", announcement)
-                        }
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500">
-                  No announcements found. Create a new announcement to get
-                  started.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+                        <div className="course-actions">
+                          <button className="action-btn">
+                            <MoreVertical size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="course-content">
+                        <h3 className="course-name">{course.name}</h3>
+                        <p className="course-section">
+                          Section {course.section} • Room {course.room}
+                        </p>
+                        <p className="course-description">
+                          {course.description}
+                        </p>
 
-        {/* Assignments Tab */}
-        {activeTab === "assignments" && (
-          <div className="space-y-4">
-            {filteredAssignments.length > 0 ? (
-              filteredAssignments.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="bg-white p-4 rounded-lg shadow-md"
-                >
-                  <div className="flex flex-col md:flex-row justify-between items-start">
-                    <div className="w-full md:w-auto mb-4 md:mb-0">
-                      <h3
-                        className="text-lg font-medium cursor-pointer hover:text-green-600"
-                        onClick={() => openModal("viewAssignment", assignment)}
-                      >
-                        {assignment.title}
-                      </h3>
-                      <div className="mt-1 flex flex-wrap items-center text-sm text-gray-500">
-                        <span className="mr-2">
-                          Due: {formatDate(assignment.dueDate)}
-                        </span>
-                        <span className="mr-2">{assignment.class}</span>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs ${
-                            assignment.status === "active"
-                              ? "bg-blue-100 text-blue-800"
-                              : assignment.status === "graded"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
+                        <div className="course-stats">
+                          <div className="stat-item">
+                            <Users size={14} />
+                            <span>{course.students} students</span>
+                          </div>
+                          <div className="stat-item">
+                            <BookOpen size={14} />
+                            <span>{course.assignments} assignments</span>
+                          </div>
+                          <div className="stat-item">
+                            <Clock size={14} />
+                            <span>{course.lastActive}</span>
+                          </div>
+                        </div>
+
+                        <div className="enrollment-code">
+                          <span className="code-label">Code:</span>
+                          <code className="code-value">
+                            {course.enrollmentCode}
+                          </code>
+                          <button
+                            className="copy-btn"
+                            onClick={() =>
+                              handleCopyEnrollmentCode(course.enrollmentCode)
+                            }
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="course-footer">
+                        <button
+                          className="course-btn secondary"
+                          onClick={() => navigate(`/course/${course._id}`)}
                         >
-                          {assignment.status.charAt(0).toUpperCase() +
-                            assignment.status.slice(1)}
-                        </span>
-                      </div>
-                      {assignment.description && (
-                        <div className="mt-2 text-sm text-gray-700">
-                          {assignment.description.length > 100
-                            ? assignment.description.substring(0, 100) + "..."
-                            : assignment.description}
-                        </div>
-                      )}
-                      <div className="mt-2 text-sm text-gray-500">
-                        {assignment.submissions} submissions
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        className="p-1 text-gray-400 hover:text-blue-600"
-                        onClick={() => openModal("viewSubmissions", assignment)}
-                      >
-                        <Eye className="h-5 w-5" />
-                      </button>
-                      <button
-                        className="p-1 text-gray-400 hover:text-green-600"
-                        onClick={() => openModal("editAssignment", assignment)}
-                      >
-                        <Edit className="h-5 w-5" />
-                      </button>
-                      <button
-                        className="p-1 text-gray-400 hover:text-red-600"
-                        onClick={() =>
-                          openModal("deleteAssignment", assignment)
-                        }
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500">
-                  No assignments found. Create a new assignment to get started.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Students Tab */}
-        {activeTab === "students" && (
-          <div className="bg-white rounded-lg shadow-md overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Name
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Email
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Class
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Grade
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredStudents.map((student) => (
-                  <tr key={student.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full overflow-hidden">
-                          <img src={`/api/placeholder/32/32`} alt="" />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {student.name}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {student.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {student.class}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          student.grade.startsWith("A")
-                            ? "bg-green-100 text-green-800"
-                            : student.grade.startsWith("B")
-                            ? "bg-blue-100 text-blue-800"
-                            : student.grade.startsWith("C")
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {student.grade}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900 mr-3"
-                        onClick={() => openModal("viewStudent", student)}
-                      >
-                        View
-                      </button>
-                      <button
-                        className="text-green-600 hover:text-green-900"
-                        onClick={() => openModal("editStudent", student)}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filteredStudents.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">No students found.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Calendar Tab */}
-        {activeTab === "calendar" && (
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-              <h2 className="text-lg font-medium mb-4 md:mb-0">April 2025</h2>
-              <div className="flex space-x-2">
-                <button className="p-1 rounded hover:bg-gray-100">
-                  <ChevronDown className="h-5 w-5 rotate-90" />
-                </button>
-                <button className="p-1 rounded hover:bg-gray-100">
-                  <ChevronDown className="h-5 w-5 -rotate-90" />
-                </button>
-              </div>
-            </div>
-            <div className="grid grid-cols-7 gap-4">
-              <div className="text-center text-sm font-medium text-gray-500">
-                Sun
-              </div>
-              <div className="text-center text-sm font-medium text-gray-500">
-                Mon
-              </div>
-              <div className="text-center text-sm font-medium text-gray-500">
-                Tue
-              </div>
-              <div className="text-center text-sm font-medium text-gray-500">
-                Wed
-              </div>
-              <div className="text-center text-sm font-medium text-gray-500">
-                Thu
-              </div>
-              <div className="text-center text-sm font-medium text-gray-500">
-                Fri
-              </div>
-              <div className="text-center text-sm font-medium text-gray-500">
-                Sat
-              </div>
-
-              <div className="text-center p-2 text-gray-400">30</div>
-              <div className="text-center p-2 text-gray-400">31</div>
-              <div className="text-center p-2">1</div>
-              <div className="text-center p-2">2</div>
-              <div className="text-center p-2">3</div>
-              <div className="text-center p-2">4</div>
-              <div className="text-center p-2">5</div>
-
-              <div className="text-center p-2 bg-green-100 rounded-lg border border-green-300">
-                6
-              </div>
-              <div className="text-center p-2">7</div>
-              <div className="text-center p-2">8</div>
-              <div className="text-center p-2">9</div>
-              <div className="text-center p-2 relative">
-                10
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
-              </div>
-              <div className="text-center p-2">11</div>
-              <div className="text-center p-2">12</div>
-
-              <div className="text-center p-2">13</div>
-              <div className="text-center p-2">14</div>
-              <div className="text-center p-2 relative">
-                15
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-red-500 rounded-full"></div>
-              </div>
-              <div className="text-center p-2">16</div>
-              <div className="text-center p-2">17</div>
-              <div className="text-center p-2">18</div>
-              <div className="text-center p-2">19</div>
-
-              <div className="text-center p-2">20</div>
-              <div className="text-center p-2 relative">
-                21
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full"></div>
-              </div>
-              <div className="text-center p-2">22</div>
-              <div className="text-center p-2">23</div>
-              <div className="text-center p-2">24</div>
-              <div className="text-center p-2">25</div>
-              <div className="text-center p-2">26</div>
-
-              <div className="text-center p-2">27</div>
-              <div className="text-center p-2">28</div>
-              <div className="text-center p-2">29</div>
-              <div className="text-center p-2">30</div>
-              <div className="text-center p-2 text-gray-400">1</div>
-              <div className="text-center p-2 text-gray-400">2</div>
-              <div className="text-center p-2 text-gray-400">3</div>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="text-md font-medium mb-3">Upcoming Events</h3>
-              <div className="space-y-2">
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex justify-between">
-                    <h4 className="font-medium">Chemistry Quiz Due</h4>
-                    <span className="text-sm text-gray-500">Apr 10</span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Chemistry 201 - Periodic Table Quiz
-                  </p>
-                </div>
-                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                  <div className="flex justify-between">
-                    <h4 className="font-medium">Physics Problem Set Due</h4>
-                    <span className="text-sm text-gray-500">Apr 15</span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Physics 101 - Problem Set 5
-                  </p>
-                </div>
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex justify-between">
-                    <h4 className="font-medium">Department Meeting</h4>
-                    <span className="text-sm text-gray-500">Apr 21</span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Science Building, Room 302 - 3:00 PM
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modals */}
-        {modalType && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-              {/* View Announcement Modal */}
-              {modalType === "viewAnnouncement" && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">{modalData.title}</h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="mb-4 text-sm text-gray-500">
-                    <span className="mr-3">{formatDate(modalData.date)}</span>
-                    <span>{modalData.class}</span>
-                  </div>
-                  <div className="prose max-w-none">
-                    <p>{modalData.content}</p>
-                  </div>
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <button
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                      onClick={closeModal}
-                    >
-                      Close
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                      onClick={() => openModal("editAnnouncement", modalData)}
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Create/Edit Announcement Modal */}
-              {(modalType === "createAnnouncement" ||
-                modalType === "editAnnouncement") && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">
-                      {modalType === "createAnnouncement"
-                        ? "Create Announcement"
-                        : "Edit Announcement"}
-                    </h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const formData = {
-                        id: modalData?.id,
-                        title: e.target.title.value,
-                        content: e.target.content.value,
-                        class: e.target.class.value,
-                        date:
-                          modalData?.date ||
-                          new Date().toISOString().split("T")[0],
-                      };
-
-                      if (modalType === "createAnnouncement") {
-                        handleCreateAnnouncement(formData);
-                      } else {
-                        handleUpdateAnnouncement(formData);
-                      }
-                    }}
-                  >
-                    <div className="mb-4">
-                      <label
-                        htmlFor="title"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Title
-                      </label>
-                      <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.title || ""}
-                        required
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="content"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Content
-                      </label>
-                      <textarea
-                        id="content"
-                        name="content"
-                        rows="5"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.content || ""}
-                        required
-                      ></textarea>
-                    </div>
-                    <div className="mb-6">
-                      <label
-                        htmlFor="class"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Class
-                      </label>
-                      <select
-                        id="class"
-                        name="class"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.class || ""}
-                        required
-                      >
-                        <option value="" disabled>
-                          Select a class
-                        </option>
-                        {classes.map((cls) => (
-                          <option key={cls.id} value={cls.name}>
-                            {cls.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                        onClick={closeModal}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                      >
-                        {modalType === "createAnnouncement"
-                          ? "Create"
-                          : "Save Changes"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {/* Delete Announcement Modal */}
-              {modalType === "deleteAnnouncement" && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">
-                      Delete Announcement
-                    </h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <p className="mb-4">
-                    Are you sure you want to delete the announcement "
-                    {modalData.title}"? This action cannot be undone.
-                  </p>
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                      onClick={closeModal}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                      onClick={() => handleDeleteAnnouncement(modalData.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* View Assignment Modal */}
-              {modalType === "viewAssignment" && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">{modalData.title}</h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="mb-4 text-sm text-gray-500">
-                    <span className="mr-3">
-                      Due: {formatDate(modalData.dueDate)}
-                    </span>
-                    <span className="mr-3">{modalData.class}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs ${
-                        modalData.status === "active"
-                          ? "bg-blue-100 text-blue-800"
-                          : modalData.status === "graded"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {modalData.status.charAt(0).toUpperCase() +
-                        modalData.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="prose max-w-none">
-                    <p>{modalData.description}</p>
-                  </div>
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Submissions</span>
-                      <span className="text-sm">
-                        {modalData.submissions} /{" "}
-                        {
-                          students.filter((s) => s.class === modalData.class)
-                            .length
-                        }
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <button
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                      onClick={closeModal}
-                    >
-                      Close
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                      onClick={() => openModal("editAssignment", modalData)}
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Create/Edit Assignment Modal */}
-              {(modalType === "createAssignment" ||
-                modalType === "editAssignment") && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">
-                      {modalType === "createAssignment"
-                        ? "Create Assignment"
-                        : "Edit Assignment"}
-                    </h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const formData = {
-                        id: modalData?.id,
-                        title: e.target.title.value,
-                        description: e.target.description.value,
-                        class: e.target.class.value,
-                        dueDate: e.target.dueDate.value,
-                        status: modalData?.status || "active",
-                        submissions: modalData?.submissions || 0,
-                      };
-
-                      if (modalType === "createAssignment") {
-                        handleCreateAssignment(formData);
-                      } else {
-                        handleUpdateAssignment(formData);
-                      }
-                    }}
-                  >
-                    <div className="mb-4">
-                      <label
-                        htmlFor="title"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Title
-                      </label>
-                      <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.title || ""}
-                        required
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="description"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Description
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        rows="5"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.description || ""}
-                        required
-                      ></textarea>
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="class"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Class
-                      </label>
-                      <select
-                        id="class"
-                        name="class"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.class || ""}
-                        required
-                      >
-                        <option value="" disabled>
-                          Select a class
-                        </option>
-                        {classes.map((cls) => (
-                          <option key={cls.id} value={cls.name}>
-                            {cls.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="mb-6">
-                      <label
-                        htmlFor="dueDate"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Due Date
-                      </label>
-                      <input
-                        type="date"
-                        id="dueDate"
-                        name="dueDate"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={
-                          modalData?.dueDate ||
-                          new Date().toISOString().split("T")[0]
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                        onClick={closeModal}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                      >
-                        {modalType === "createAssignment"
-                          ? "Create"
-                          : "Save Changes"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {/* Delete Assignment Modal */}
-              {modalType === "deleteAssignment" && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">Delete Assignment</h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <p className="mb-4">
-                    Are you sure you want to delete the assignment "
-                    {modalData.title}"? This action cannot be undone.
-                  </p>
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                      onClick={closeModal}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                      onClick={() => handleDeleteAssignment(modalData.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* View Submissions Modal */}
-              {modalType === "viewSubmissions" && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">
-                      Submissions: {modalData.title}
-                    </h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="mb-4 text-sm text-gray-500">
-                    <span>
-                      {modalData.class} • Due: {formatDate(modalData.dueDate)}
-                    </span>
-                  </div>
-                  <div className="mb-4 flex justify-between items-center">
-                    <div>
-                      <span className="text-sm font-medium">
-                        {modalData.submissions} submissions
-                      </span>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="flex items-center text-sm text-gray-700 hover:text-gray-900">
-                        <Download className="h-4 w-4 mr-1" />
-                        Download All
-                      </button>
-                    </div>
-                  </div>
-                  <div className="max-h-96 overflow-y-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th
-                            scope="col"
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Student
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Status
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Submitted
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Grade
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {students
-                          .filter((s) => s.class === modalData.class)
-                          .slice(0, modalData.submissions)
-                          .map((student, index) => (
-                            <tr key={student.id}>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {student.name}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                  Submitted
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                {formatDate(
-                                  new Date(
-                                    new Date(modalData.dueDate).getTime() -
-                                      Math.floor(Math.random() * 172800000)
-                                  )
-                                    .toISOString()
-                                    .split("T")[0]
-                                )}
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                {modalData.status === "graded" ? (
-                                  <span>
-                                    {
-                                      ["A", "A-", "B+", "B", "B-"][
-                                        Math.floor(Math.random() * 5)
-                                      ]
-                                    }
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400">—</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="mt-6 flex justify-end">
-                    <button
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                      onClick={closeModal}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* View Student Modal */}
-              {modalType === "viewStudent" && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">{modalData.name}</h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="flex flex-col md:flex-row items-start mb-6">
-                    <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden mb-4 md:mb-0">
-                      <img src={`/api/placeholder/64/64`} alt="" />
-                    </div>
-                    <div className="ml-0 md:ml-4">
-                      <div className="text-sm text-gray-500">
-                        {modalData.email}
-                      </div>
-                      <div className="text-sm mt-1">
-                        Class: {modalData.class}
-                      </div>
-                      <div className="mt-2">
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            modalData.grade.startsWith("A")
-                              ? "bg-green-100 text-green-800"
-                              : modalData.grade.startsWith("B")
-                              ? "bg-blue-100 text-blue-800"
-                              : modalData.grade.startsWith("C")
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                          <Eye size={16} />
+                          View Details
+                        </button>
+                        <button
+                          className="course-btn primary"
+                          onClick={() => {
+                            setSelectedCourse(course);
+                            setNewAssignment({
+                              ...newAssignment,
+                              courseId: course._id,
+                            });
+                            setShowAssignmentModal(true);
+                          }}
                         >
-                          Grade: {modalData.grade}
-                        </span>
+                          <Plus size={16} />
+                          Add Assignment
+                        </button>
                       </div>
                     </div>
-                  </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="assignments-list">
+                  {filteredAssignments.map((assignment) => (
+                    <div key={assignment._id} className="assignment-card">
+                      <div className="assignment-header">
+                        <div className="assignment-info">
+                          <h3 className="assignment-title">
+                            {assignment.title}
+                          </h3>
+                          <p className="assignment-course">
+                            {assignment.courseName}
+                          </p>
+                        </div>
+                        <div className="assignment-type">
+                          <span className={`type-badge ${assignment.type}`}>
+                            {assignment.type}
+                          </span>
+                        </div>
+                      </div>
 
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-3">
-                      Recent Activity
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex justify-between">
-                          <div>
-                            <span className="font-medium">
-                              Submitted: Problem Set 5
-                            </span>
-                            <p className="text-sm text-gray-600">Physics 101</p>
+                      <p className="assignment-description">
+                        {assignment.description}
+                      </p>
+
+                      <div className="assignment-stats">
+                        <div className="stat-group">
+                          <div className="stat-item">
+                            <Award size={16} />
+                            <span>{assignment.totalMarks} marks</span>
                           </div>
-                          <span className="text-sm text-gray-500">Apr 5</span>
+                          <div className="stat-item">
+                            <Calendar size={16} />
+                            <span>
+                              Due:{" "}
+                              {new Date(
+                                assignment.dueDate
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="submission-stats">
+                          <div className="submission-item">
+                            <span className="submission-count">
+                              {assignment.submissions}
+                            </span>
+                            <span className="submission-label">Submitted</span>
+                          </div>
+                          <div className="submission-item">
+                            <span className="submission-count pending">
+                              {assignment.pending}
+                            </span>
+                            <span className="submission-label">Pending</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex justify-between">
-                          <div>
-                            <span className="font-medium">
-                              Commented on: Lab Report Guidelines
-                            </span>
-                            <p className="text-sm text-gray-600">
-                              "Are we supposed to include error analysis in this
-                              report?"
-                            </p>
-                          </div>
-                          <span className="text-sm text-gray-500">Apr 2</span>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex justify-between">
-                          <div>
-                            <span className="font-medium">
-                              Received: B+ on Midterm Exam
-                            </span>
-                            <p className="text-sm text-gray-600">Physics 101</p>
-                          </div>
-                          <span className="text-sm text-gray-500">Mar 22</span>
-                        </div>
+
+                      <div className="assignment-actions">
+                        <button className="action-btn-sm">
+                          <Edit size={16} />
+                          Edit
+                        </button>
+                        <button className="action-btn-sm">
+                          <Eye size={16} />
+                          View Submissions
+                        </button>
+                        <button className="action-btn-sm">
+                          <Download size={16} />
+                          Export
+                        </button>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <button
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                      onClick={closeModal}
-                    >
-                      Close
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                      onClick={() => openModal("editStudent", modalData)}
-                    >
-                      Edit Student
-                    </button>
-                  </div>
+                  ))}
                 </div>
               )}
+            </>
+          )}
+        </div>
+      </div>
 
-              {/* Edit Student Modal */}
-              {modalType === "editStudent" && (
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">Edit Student</h2>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={closeModal}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <form>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="name"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.name || ""}
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.email || ""}
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="student-class"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Class
-                      </label>
-                      <select
-                        id="student-class"
-                        name="class"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.class || ""}
-                      >
-                        {classes.map((cls) => (
-                          <option key={cls.id} value={cls.name}>
-                            {cls.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="mb-6">
-                      <label
-                        htmlFor="grade"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Current Grade
-                      </label>
-                      <select
-                        id="grade"
-                        name="grade"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-green-500"
-                        defaultValue={modalData?.grade || ""}
-                      >
-                        {[
-                          "A+",
-                          "A",
-                          "A-",
-                          "B+",
-                          "B",
-                          "B-",
-                          "C+",
-                          "C",
-                          "C-",
-                          "D+",
-                          "D",
-                          "F",
-                        ].map((grade) => (
-                          <option key={grade} value={grade}>
-                            {grade}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                        onClick={closeModal}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                        onClick={closeModal}
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
+      {/* Create Course Modal */}
+      {showCreateModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h2>Create New Course</h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="modal-close"
+              >
+                ×
+              </button>
             </div>
+            <form onSubmit={handleCreateCourse} className="modal-form">
+              <div className="form-group">
+                <label>Course Name *</label>
+                <input
+                  type="text"
+                  value={newCourse.name}
+                  onChange={(e) =>
+                    setNewCourse({ ...newCourse, name: e.target.value })
+                  }
+                  required
+                  placeholder="e.g., Mathematics Grade 10"
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Section</label>
+                  <input
+                    type="text"
+                    value={newCourse.section}
+                    onChange={(e) =>
+                      setNewCourse({ ...newCourse, section: e.target.value })
+                    }
+                    placeholder="e.g., A"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Room</label>
+                  <input
+                    type="text"
+                    value={newCourse.room}
+                    onChange={(e) =>
+                      setNewCourse({ ...newCourse, room: e.target.value })
+                    }
+                    placeholder="e.g., 101"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Subject</label>
+                <input
+                  type="text"
+                  value={newCourse.subject}
+                  onChange={(e) =>
+                    setNewCourse({ ...newCourse, subject: e.target.value })
+                  }
+                  placeholder="e.g., Mathematics"
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={newCourse.description}
+                  onChange={(e) =>
+                    setNewCourse({ ...newCourse, description: e.target.value })
+                  }
+                  placeholder="Brief description of the course..."
+                  rows="3"
+                />
+              </div>
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={newCourse.createInGoogle}
+                    onChange={(e) =>
+                      setNewCourse({
+                        ...newCourse,
+                        createInGoogle: e.target.checked,
+                      })
+                    }
+                  />
+                  Create in Google Classroom
+                </label>
+              </div>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Create Course
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </main>
+        </div>
+      )}
+
+      {/* Create Assignment Modal */}
+      {showAssignmentModal && (
+        <div className="modal-overlay">
+          <div className="modal large">
+            <div className="modal-header">
+              <h2>Create New Assignment</h2>
+              <button
+                onClick={() => setShowAssignmentModal(false)}
+                className="modal-close"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleCreateAssignment} className="modal-form">
+              <div className="form-group">
+                <label>Assignment Title *</label>
+                <input
+                  type="text"
+                  value={newAssignment.title}
+                  onChange={(e) =>
+                    setNewAssignment({
+                      ...newAssignment,
+                      title: e.target.value,
+                    })
+                  }
+                  required
+                  placeholder="e.g., Chapter 4 Test"
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Course *</label>
+                  <select
+                    value={newAssignment.courseId}
+                    onChange={(e) =>
+                      setNewAssignment({
+                        ...newAssignment,
+                        courseId: e.target.value,
+                      })
+                    }
+                    required
+                  >
+                    <option value="">Select a course</option>
+                    {courses.map((course) => (
+                      <option key={course._id} value={course._id}>
+                        {course.name} - Section {course.section}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Type</label>
+                  <select
+                    value={newAssignment.type}
+                    onChange={(e) =>
+                      setNewAssignment({
+                        ...newAssignment,
+                        type: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="assignment">Assignment</option>
+                    <option value="test">Test</option>
+                    <option value="quiz">Quiz</option>
+                    <option value="project">Project</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Due Date *</label>
+                  <input
+                    type="date"
+                    value={newAssignment.dueDate}
+                    onChange={(e) =>
+                      setNewAssignment({
+                        ...newAssignment,
+                        dueDate: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Total Marks</label>
+                  <input
+                    type="number"
+                    value={newAssignment.totalMarks}
+                    onChange={(e) =>
+                      setNewAssignment({
+                        ...newAssignment,
+                        totalMarks: parseInt(e.target.value),
+                      })
+                    }
+                    min="1"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={newAssignment.description}
+                  onChange={(e) =>
+                    setNewAssignment({
+                      ...newAssignment,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Brief description of the assignment..."
+                  rows="3"
+                />
+              </div>
+              <div className="form-group">
+                <label>Instructions</label>
+                <textarea
+                  value={newAssignment.instructions}
+                  onChange={(e) =>
+                    setNewAssignment({
+                      ...newAssignment,
+                      instructions: e.target.value,
+                    })
+                  }
+                  placeholder="Detailed instructions for students..."
+                  rows="4"
+                />
+              </div>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowAssignmentModal(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Create Assignment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default TeacherDashboard;
+export default TeacherAssignmentDashboard;
