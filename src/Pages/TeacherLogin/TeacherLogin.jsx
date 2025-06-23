@@ -30,7 +30,7 @@ const TeacherLogin = () => {
     setError(null);
 
     try {
-      const response = await api.post("/teacher/login", {
+      const response = await api.post("/api/teacher/login", {
         email: formData.email,
         password: formData.password,
       });
@@ -61,7 +61,7 @@ const TeacherLogin = () => {
     setError(null);
 
     try {
-      const response = await api.post("/teacher/login", {
+      const response = await api.post("/api/teacher/login", {
         googleAuthCode: credentialResponse.code,
       });
 
