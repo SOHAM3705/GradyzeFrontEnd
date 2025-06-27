@@ -11,14 +11,6 @@ const TeacherLogin = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
-  const googleScopes = [
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/classroom.courses",
-    "https://www.googleapis.com/auth/classroom.rosters",
-    "https://www.googleapis.com/auth/classroom.coursework.me",
-    "https://www.googleapis.com/auth/classroom.coursework.students",
-  ];
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -60,33 +52,28 @@ const TeacherLogin = () => {
     setError(null);
 
     try {
-      const response = await api.post("/api/teacher/login", {
+      const { data } = await api.post("/api/teacher/login", {
         googleAuthCode: credentialResponse.code,
       });
 
-      const { token, teacher, googleAccessToken } = response.data;
-
-      sessionStorage.setItem("token", token);
-      sessionStorage.setItem("teacherId", teacher._id);
-      sessionStorage.setItem("teacherName", teacher.name);
-      sessionStorage.setItem("adminId", teacher.adminId);
-      sessionStorage.setItem("role", "teacher");
-      sessionStorage.setItem("hasGoogleAccess", "true");
-
-      if (googleAccessToken) {
-        sessionStorage.setItem("googleAccessToken", googleAccessToken);
-      }
-
+      persistSession(data);
       navigate("/teacherdash");
     } catch (err) {
-      console.error("Google login failed:", err);
-      setError(
-        err.response?.data?.message || "Google login failed. Try again."
-      );
+      setError(err.response?.data?.message || "Google login failed");
     } finally {
       setIsGoogleLoading(false);
     }
   };
+
+  const googleScopes = [
+    "openid",
+    "profile",
+    "email",
+    "https://www.googleapis.com/auth/classroom.courses",
+    "https://www.googleapis.com/auth/classroom.rosters",
+    "https://www.googleapis.com/auth/classroom.coursework.me",
+    "https://www.googleapis.com/auth/classroom.coursework.students",
+  ];
 
   const handleGoogleError = () => {
     setError("Google login failed. Please try again.");
