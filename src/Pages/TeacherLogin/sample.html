@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PDFMake Example</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+</head>
+
+<body>
+
+    <button onclick="generatePDF()">Download PDF</button>
+
+    <script>
+        function generatePDF() {
+            const docDefinition = {
+                content: [
+                    { text: 'Evaluation Sheet – Internal Exam', style: 'header' },
+                    { text: 'Subject: Computer Graphics', margin: [0, 10] },
+                    {
+                        table: {
+                            headerRows: 1,
+                            widths: ['auto', '*', 'auto', 'auto', 'auto'],
+                            body: [
+                                ['Roll No', 'Name', 'Q1/Q2', 'Q3/Q4', 'Total'],
+                                ['SECOD01', 'ACHARI SAMRUDDHI DIPAK', 8, 12, 20],
+                                ['SECOD03', 'DESHMUKH KHUSHI SACHIN', 14, 15, 29],
+                                // Add more rows...
+                            ]
+                        }
+                    },
+                    { text: '\nName of Subject Teacher: Mrs. Vaishali P. Latke', margin: [0, 20] }
+                ],
+                styles: {
+                    header: {
+                        fontSize: 18,
+                        bold: true,
+                        alignment: 'center'
+                    }
+                }
+            };
+
+            pdfMake.createPdf(docDefinition).download('Evaluation_Sheet.pdf');
+        }
+    </script>
+
+</body>
+
+</html>

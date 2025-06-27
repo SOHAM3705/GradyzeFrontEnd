@@ -53,7 +53,7 @@ const TeacherLogin = () => {
 
     try {
       const { data } = await api.post("/api/teacher/login", {
-        googleAuthCode: credentialResponse.code,
+        googleAuthCode: credentialResponse.credential,
       });
 
       persistSession(data);
