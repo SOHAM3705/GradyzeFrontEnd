@@ -100,6 +100,7 @@ const FacultyManagementSystem = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState(null);
+  const [expandedCards, setExpandedCards] = useState({});
 
   const fetchFaculty = async () => {
     try {
@@ -115,7 +116,12 @@ const FacultyManagementSystem = () => {
       console.error("Error fetching faculty:", error);
     }
   };
-
+  const toggleCardExpansion = (facultyId) => {
+    setExpandedCards((prev) => ({
+      ...prev,
+      [facultyId]: !prev[facultyId],
+    }));
+  };
   const createFaculty = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -453,6 +459,96 @@ const FacultyManagementSystem = () => {
         </div>
       );
     }
+
+    return filteredFaculty.map((faculty) => (
+      <div
+        key={faculty._id}
+        className="border rounded-lg shadow-sm mb-3 overflow-hidden"
+      >
+        {/* Header row with name and buttons */}
+        <div className="flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100">
+          <h3 className="font-medium text-gray-800">{faculty.name}</h3>
+          <div className="flex items-center space-x-2">
+            {/* Toggle button */}
+            <button
+              onClick={() => toggleCardExpansion(faculty._id)}
+              className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+            >
+              {expandedCards[faculty._id] ? (
+                <>
+                  <i className="fas fa-chevron-up mr-1 text-xs"></i>
+                  Hide
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-chevron-down mr-1 text-xs"></i>
+                  Show
+                </>
+              )}
+            </button>
+
+            {/* Edit button */}
+            <button
+              onClick={() => {
+                setSelectedFacultyId(faculty._id);
+                setIsModifyModalOpen(true);
+              }}
+              className="text-yellow-600 hover:text-yellow-800"
+              title="Edit"
+            >
+              <i className="fas fa-edit text-sm"></i>
+            </button>
+
+            {/* Delete button */}
+            <button
+              onClick={() => {
+                setTeacherToDelete(faculty._id);
+                setIsDeleteModalOpen(true);
+              }}
+              className="text-red-600 hover:text-red-800"
+              title="Delete"
+            >
+              <i className="fas fa-trash-alt text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        {/* Details section (conditionally rendered) */}
+        {expandedCards[faculty._id] && (
+          <div className="p-3 border-t">
+            {/* Subjects list */}
+            {faculty.isSubjectTeacher && faculty.subjects?.length > 0 && (
+              <div className="mb-3">
+                <h4 className="font-medium text-sm text-gray-700 mb-1">
+                  Assigned Subjects:
+                </h4>
+                <ul className="space-y-1">
+                  {faculty.subjects.map((subject, index) => (
+                    <li key={index} className="text-sm text-gray-600">
+                      • {subject.name} (Year: {subject.year}, Sem:{" "}
+                      {subject.semester}, Div: {subject.division})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Class assignment */}
+            {faculty.isClassTeacher && faculty.assignedClass && (
+              <div>
+                <h4 className="font-medium text-sm text-gray-700 mb-1">
+                  Assigned Class:
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Year: {faculty.assignedClass.year}, Division:{" "}
+                  {faculty.assignedClass.division}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    ));
 
     return filteredFaculty.map((faculty) => (
       <div

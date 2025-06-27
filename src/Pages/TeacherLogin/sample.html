@@ -1,46 +1,169 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>PDFMake Example</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+    <meta charset="UTF-8">
+    <title>PDF Maker – Exam Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #333;
+        }
+
+        th,
+        td {
+            padding: 6px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .download-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
 
-    <button onclick="generatePDF()">Download PDF</button>
+    <h1>Evaluation Sheet – Internal Exam</h1>
+    <h3>Subject: Computer Graphics | Code: 210244</h3>
+    <h4>Class: SE D | Max Marks: 30 | Date: 24/08/2024</h4>
+
+    <div id="content">
+        <table>
+            <thead>
+                <tr>
+                    <th>Roll No</th>
+                    <th>Student Name</th>
+                    <th>Q1/Q2</th>
+                    <th>Q3/Q4</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Auto-filled from JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
-        function generatePDF() {
-            const docDefinition = {
-                content: [
-                    { text: 'Evaluation Sheet – Internal Exam', style: 'header' },
-                    { text: 'Subject: Computer Graphics', margin: [0, 10] },
-                    {
-                        table: {
-                            headerRows: 1,
-                            widths: ['auto', '*', 'auto', 'auto', 'auto'],
-                            body: [
-                                ['Roll No', 'Name', 'Q1/Q2', 'Q3/Q4', 'Total'],
-                                ['SECOD01', 'ACHARI SAMRUDDHI DIPAK', 8, 12, 20],
-                                ['SECOD03', 'DESHMUKH KHUSHI SACHIN', 14, 15, 29],
-                                // Add more rows...
-                            ]
-                        }
-                    },
-                    { text: '\nName of Subject Teacher: Mrs. Vaishali P. Latke', margin: [0, 20] }
-                ],
-                styles: {
-                    header: {
-                        fontSize: 18,
-                        bold: true,
-                        alignment: 'center'
-                    }
-                }
-            };
+        const data = [
+            ["SECOD01", "ACHARI SAMRUDDHI DIPAK", 8, 12, 20],
+            ["SECOD02", "DESAI INDRASEN UDAY", 0, 0, 0],
+            ["SECOD03", "DESHMUKH KHUSHI SACHIN", 14, 15, 29],
+            ["SECOD04", "DESHMUKH PARTH PRASHANT", 10, 4, 14],
+            ["SECOD05", "DHAKE MADHURA KANCHAN", 14, 7, 21],
+            ["SECOD06", "DHANWANI MIRNAL SHEVAK", 15, 6, 21],
+            ["SECOD07", "GORE MRUNMAYEE GANESH", 15, 9, 24],
+            ["SECOD08", "KATKE VIJAYALAXMI PRASHANT", 14, 11, 25],
+            ["SECOD09", "KHARADE SHREYA PRAVIN", 11, 14, 25],
+            ["SECOD10", "KINKAR TEJAS SANDEEP", 13, 6, 19],
+            ["SECOD11", "LOHAKARE RUGVED NITIN", 11, 11, 22],
+            ["SECOD12", "MULE ROHAN MAHADEO", 11, 5, 16],
+            ["SECOD13", "NAIK SOHAM SHRIRAM", 15, 10, 25],
+            ["SECOD14", "PADHYE UDIT ATUL", 7, 10, 17],
+            ["SECOD15", "PATIL VAISHNAVI SANDIP", 12, 10, 22],
+            ["SECOD16", "PATIL VEDANT VAIBHAV", 16, 6, 18],
+            ["SECOD17", "PAWAR OMKAR SAHEBRAO", 15, 12, 27],
+            ["SECOD18", "PAWAR PRATIK RAVINDRA", 9, 13, 22],
+            ["SECOD19", "PAYMODE PRASAD RAMESH", 13, 6, 19],
+            ["SECOD20", "PILGAR SHRAWANI RAMNATH", 13, 5, 18],
+            ["SECOD21", "PINGALE AVADHOOT BHARAT", 10, 9, 19],
+            ["SECOD22", "POUNIKAR SRUSHTI VINOD", 15, 10, 25],
+            ["SECOD23", "AKHILESH PURE", 5, 4, 9],
+            ["SECOD24", "RAJIGARE ANISH AMOL", 14, 5, 19],
+            ["SECOD25", "RAJURKAR RAJ MAROTI", 15, 14, 29],
+            ["SECOD26", "RAJVAIBHAVI GAJENDRA KALBHOR", 13, 11, 24],
+            ["SECOD27", "RAMANE PRANAV SUBHASH", 15, 13, 28],
+            ["SECOD28", "RANAWARE ARYA SANTOSH", 15, 7, 22],
+            ["SECOD29", "RANE VEDANT YOGESH", 15, 9, 24],
+            ["SECOD30", "SABALE AJAY ANKUSH", "AB", "AB", "AB"],
+            ["SECOD31", "SALDANHA GRESHAL WILFRED", 15, 15, 30],
+            ["SECOD32", "SANGOKAR ASHWIN NAGESH", 14, 13, 27],
+            ["SECOD33", "SAWAL SRUSHTI BABURAO", 10, 12, 22],
+            ["SECOD34", "SHAH SAGARPRASAD BIRJUKUMAR", "AB", "AB", "AB"],
+            ["SECOD35", "SHAIKH MAHAMAD BILAL", "AB", "AB", "AB"],
+            ["SECOD36", "SHETE OM SANJAY", "AB", "AB", "AB"],
+            ["SECOD37", "SHINDE MANSI BABASAHEB", 12, 11, 23],
+            ["SECOD38", "SHINDE ONKAR DNYANDEV", 9, 6, 15],
+            ["SECOD39", "SHINDE ROHIT SURESH", 5, 0, 5],
+            ["SECOD40", "SHINDE SAKSHI DADASO", 15, 15, 30],
+            ["SECOD41", "SHRIVASTAVA AKSHAT SHIVANAND", 15, 9, 24],
+            ["SECOD42", "SONALKAR SHRUTI SANTOSH", "AB", "AB", "AB"],
+            ["SECOD43", "SURYAWANSHI SHRADDHA PRAKASH", 15, 13, 28],
+            ["SECOD44", "SWAMY MITALI AMIT", 15, 15, 30],
+            ["SECOD45", "SWAMY TANVI AJIT", 15, 15, 30],
+            ["SECOD46", "TAMBE KIMAYA DINESH", 14, 10, 24],
+            ["SECOD47", "TARE ROHIT SURESHBABU", 10, 12, 22],
+            ["SECOD48", "TAWARE DHRUV AJIT", 15, 11, 26],
+            ["SECOD49", "TAYDE PRAJYOT MOHAN", 15, 14, 29],
+            ["SECOD50", "TEJWANI SRUSHTI SATISH", 15, 15, 30],
+            ["SECOD51", "TELGAD KARAN HARIBHAU", "AB", "AB", "AB"],
+            ["SECOD52", "THAKARE ADARSH YOGESH", 15, 15, 30],
+            ["SECOD53", "THAKARE HEMRAJ RAVINDRA", "AB", "AB", "AB"],
+            ["SECOD54", "THAKARE NEHA MAHESH", 14, 2, 16],
+            ["SECOD55", "THORAT DHIRAJ SHARAD", 12, 12, 24],
+            ["SECOD56", "TIJORE AMOL SUNIL", 8, 12, 20],
+            ["SECOD57", "TONGAONKAR MRUDULA MILIND", 15, 15, 30],
+            ["SECOD58", "TUMMEWAR MAYUR RAMDAS", 10, 10, 20],
+            ["SECOD59", "URADE YASH VISHAL", 15, 15, 30],
+            ["SECOD60", "VANJARI PRANAV VIKAS", "AB", "AB", "AB"],
+            ["SECOD61", "WADIKAR BHUSHAN BHASKAR", 14, 4, 18],
+            ["SECOD62", "WAGHMARE ARYAN PANKAJ", 10, 2, 12],
+            ["SECOD63", "WAJE PUSHPARAJ SANTOSH", "AB", "AB", "AB"],
+            ["SECOD64", "WAKCHOURE ANISH ANANT", 14, 12, 26],
+            ["SECOD65", "WEER ABHISHEK ASARAM", "AB", "AB", "AB"],
+            ["SECOD66", "YEOTE OMKAR LAXMIKANT", 14, 8, 22],
+            ["SECOD67", "YESUGADE PRERANA SADASHIV", 15, 15, 30],
+            ["SECOD68", "ZAMBRE CHETAN ANAND", 10, 7, 17],
+            ["ECOD69", "TATIPAMULWAR KASHISH NILESH", 8, 2, 10],
+            ["SECOD70", "KAMBLE NIRBHAY NILESH", "AB", "AB", "AB"],
+            ["SECOD71", "PATIL OMKAR TANAJI", 15, 10, 25]
+        ];
 
-            pdfMake.createPdf(docDefinition).download('Evaluation_Sheet.pdf');
+        const tbody = document.querySelector("tbody");
+
+        data.forEach(([roll, name, q1, q2, total]) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${roll}</td><td>${name}</td><td>${q1}</td><td>${q2}</td><td>${total}</td>`;
+            tbody.appendChild(tr);
+        });
+
+        function downloadPDF() {
+            const element = document.getElementById("content");
+            const opt = {
+                margin: 0.3,
+                filename: 'Computer_Graphics_Internal_Results.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
         }
     </script>
 
