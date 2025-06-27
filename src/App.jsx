@@ -21,7 +21,6 @@ import StudentManagement from "./components/DashBoardMenu/StudentManage";
 import FacultyManagement from "./components/DashBoardMenu/FacultyManage";
 import AdminStudentMarks from "./components/DashBoardMenu/StudentsMarks";
 import AdminOverview from "./components/DashBoardMenu/Overview";
-import AdminAttendanceDashboard from "./components/DashBoardMenu/AttendanceReport";
 
 import TeacherDash from "./Pages/TeacherDash/TeacherDash";
 import ChangePassword from "./Pages/ForgetPassword/ChangePassword";
