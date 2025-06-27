@@ -131,7 +131,6 @@ function App() {
         <Route path="FacultyManage" element={<FacultyManagement />} />
         <Route path="students-marks" element={<AdminStudentMarks />} />
         <Route path="" element={<AdminOverview />} />
-        <Route path="AttendanceReport" element={<AdminAttendanceDashboard />} />
       </Route>
 
       <Route path="/teacherlogin" element={<TeacherLogin />} />

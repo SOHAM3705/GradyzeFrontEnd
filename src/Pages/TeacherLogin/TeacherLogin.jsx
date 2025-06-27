@@ -59,7 +59,7 @@ const TeacherLogin = () => {
   const handleGoogleSuccess = async (credentialResponse) => {
     setIsGoogleLoading(true);
     setError(null);
-
+    console.log("Google credential response:", credentialResponse);
     try {
       const response = await api.post("/api/teacher/login", {
         googleAuthCode: credentialResponse.code,

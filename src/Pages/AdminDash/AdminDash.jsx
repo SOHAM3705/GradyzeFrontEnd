@@ -51,11 +51,6 @@ function AdminDash() {
       path: "/admindash/StudentManage",
     },
     { icon: "📝", label: "Students' Marks", path: "/admindash/students-marks" },
-    {
-      icon: "📅",
-      label: "Attendance Reports",
-      path: "/admindash/AttendanceReport",
-    },
     { icon: "🔔", label: "Notifications", path: "/admindash/notifications" },
     { icon: "📚", label: "Syllabus", path: "/admindash/Syllbus" },
     {
