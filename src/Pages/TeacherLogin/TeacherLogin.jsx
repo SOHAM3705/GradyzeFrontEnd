@@ -11,7 +11,6 @@ const TeacherLogin = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Required Google scopes
   const googleScopes = [
     "https://www.googleapis.com/auth/drive",
     "https://www.googleapis.com/auth/classroom.courses",
@@ -35,15 +34,15 @@ const TeacherLogin = () => {
         password: formData.password,
       });
 
-      if (response.data.token) {
-        sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("teacherId", response.data.teacher._id);
-        sessionStorage.setItem("teacherName", response.data.teacher.name);
-        sessionStorage.setItem("adminId", response.data.teacher.adminId);
+      const { token, teacher } = response.data;
+      if (token) {
+        sessionStorage.setItem("token", token);
+        sessionStorage.setItem("teacherId", teacher._id);
+        sessionStorage.setItem("teacherName", teacher.name);
+        sessionStorage.setItem("adminId", teacher.adminId);
         sessionStorage.setItem("role", "teacher");
 
-        // Check if teacher has Google access
-        if (response.data.teacher.hasGoogleAccess) {
+        if (teacher.hasGoogleAccess) {
           sessionStorage.setItem("hasGoogleAccess", "true");
         }
 
@@ -59,25 +58,23 @@ const TeacherLogin = () => {
   const handleGoogleSuccess = async (credentialResponse) => {
     setIsGoogleLoading(true);
     setError(null);
-    console.log("Google credential response:", credentialResponse);
+
     try {
       const response = await api.post("/api/teacher/login", {
         googleAuthCode: credentialResponse.code,
       });
 
-      sessionStorage.setItem("token", response.data.token);
-      sessionStorage.setItem("teacherId", response.data.teacher._id);
-      sessionStorage.setItem("teacherName", response.data.teacher.name);
-      sessionStorage.setItem("adminId", response.data.teacher.adminId);
+      const { token, teacher, googleAccessToken } = response.data;
+
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("teacherId", teacher._id);
+      sessionStorage.setItem("teacherName", teacher.name);
+      sessionStorage.setItem("adminId", teacher.adminId);
       sessionStorage.setItem("role", "teacher");
       sessionStorage.setItem("hasGoogleAccess", "true");
 
-      // Store Google access token if returned
-      if (response.data.googleAccessToken) {
-        sessionStorage.setItem(
-          "googleAccessToken",
-          response.data.googleAccessToken
-        );
+      if (googleAccessToken) {
+        sessionStorage.setItem("googleAccessToken", googleAccessToken);
       }
 
       navigate("/teacherdash");
@@ -159,24 +156,9 @@ const TeacherLogin = () => {
             useOneTap
             auto_select
             ux_mode="popup"
-            flow="auth-code" // 🔍 THIS IS MANDATORY FOR AUTH CODE
+            flow="auth-code"
             scope={googleScopes.join(" ")}
             prompt="consent"
-            cookiePolicy="single_host_origin"
-            render={(renderProps) => (
-              <button
-                onClick={renderProps.onClick}
-                disabled={renderProps.disabled || loading || isGoogleLoading}
-                className={styles.googleLoginButton}
-              >
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-                  alt="Google logo"
-                  className={styles.googleLogo}
-                />
-                {isGoogleLoading ? "Signing in..." : "Sign in with Google"}
-              </button>
-            )}
           />
         </GoogleOAuthProvider>
 
