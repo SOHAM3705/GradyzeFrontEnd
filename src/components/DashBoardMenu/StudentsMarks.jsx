@@ -200,21 +200,28 @@ const AdminStudentMarks = () => {
 
       // Check if we have any marks data
       if (marksData && marksData.length > 0) {
-        // Add student marks to table
-        marksData.forEach((student) => {
+        // Sort marksData by roll number
+        const sortedMarks = [...marksData].sort((a, b) => {
+          // Convert to numbers if they are string-based roll numbers
+          const rollA = isNaN(a.rollNo) ? a.rollNo : Number(a.rollNo);
+          const rollB = isNaN(b.rollNo) ? b.rollNo : Number(b.rollNo);
+          return rollA > rollB ? 1 : rollA < rollB ? -1 : 0;
+        });
+
+        sortedMarks.forEach((student) => {
           html += `
-            <tr>
-              <td class="py-2 px-2 sm:px-4 border-b">${student.rollNo}</td>
-              <td class="py-2 px-2 sm:px-4 border-b">${student.name}</td>
-              <td class="py-2 px-2 sm:px-4 border-b ${
-                student.marks === null ? "text-red-500" : ""
-              }">${
+      <tr>
+        <td class="py-2 px-2 sm:px-4 border-b">${student.rollNo}</td>
+        <td class="py-2 px-2 sm:px-4 border-b">${student.name}</td>
+        <td class="py-2 px-2 sm:px-4 border-b ${
+          student.marks === null ? "text-red-500" : ""
+        }">${
             student.marks !== null && student.marks !== undefined
               ? student.marks
               : "Not Available"
           }</td>
-            </tr>
-          `;
+      </tr>
+    `;
         });
       } else {
         // No marks data available
@@ -310,7 +317,13 @@ const AdminStudentMarks = () => {
 
       if (students.length > 0) {
         const headers = ["Roll No", "Name", "Marks"];
-        const body = students.map((s) => [
+        const sorted = [...students].sort((a, b) => {
+          const rollA = isNaN(a.rollNo) ? a.rollNo : Number(a.rollNo);
+          const rollB = isNaN(b.rollNo) ? b.rollNo : Number(b.rollNo);
+          return rollA > rollB ? 1 : rollA < rollB ? -1 : 0;
+        });
+
+        const body = sorted.map((s) => [
           s.rollNo,
           s.name,
           s.marks !== null && s.marks !== undefined ? s.marks : "Not Available",
@@ -357,15 +370,16 @@ const AdminStudentMarks = () => {
             return (
               <div
                 key={deptId}
-                className="department-container bg-white p-3 sm:p-4 rounded-lg shadow-md mb-4 border-l-4 border-blue-500"
+                className="department-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-blue-500"
               >
                 <div
                   className="container-header flex justify-between items-center cursor-pointer"
                   onClick={() => toggleContainer(`${deptId}-body`)}
                 >
-                  <h3 className="text-sm sm:text-base font-semibold">
+                  <h3 className="text-base sm:text-lg font-semibold">
                     {department} Department
                   </h3>
+
                   <i
                     className={`fas fa-chevron-${
                       expandedSections[`${deptId}-body`] ? "up" : "down"
@@ -388,15 +402,16 @@ const AdminStudentMarks = () => {
                       return (
                         <div
                           key={yearId}
-                          className="year-container bg-white p-3 sm:p-4 rounded-lg shadow-md mb-4 border-l-4 border-green-500"
+                          className="year-container bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4 border-l-4 border-green-500"
                         >
                           <div
                             className="container-header flex justify-between items-center cursor-pointer"
                             onClick={() => toggleContainer(`${yearId}-body`)}
                           >
-                            <h3 className="text-sm sm:text-base font-semibold">
+                            <h3 className="text-base sm:text-lg font-semibold">
                               {year}
                             </h3>
+
                             <i
                               className={`fas fa-chevron-${
                                 expandedSections[`${yearId}-body`]
