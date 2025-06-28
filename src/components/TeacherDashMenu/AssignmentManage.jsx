@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Book,
@@ -22,782 +22,636 @@ import {
   Clock,
   Award,
   TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
 
-const TeacherAssignmentDashboard = () => {
+const GoogleClassroomIntegration = () => {
   const [courses, setCourses] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("courses");
+  const [googleStatus, setGoogleStatus] = useState(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [activeTab, setActiveTab] = useState("courses");
   const navigate = useNavigate();
 
-  // Form states
-  const [newCourse, setNewCourse] = useState({
-    name: "",
-    section: "",
-    room: "",
-    description: "",
-    subject: "",
-    createInGoogle: false,
-  });
-
-  const [newAssignment, setNewAssignment] = useState({
-    title: "",
-    description: "",
-    dueDate: "",
-    totalMarks: 100,
-    type: "assignment",
-    courseId: "",
-    instructions: "",
-    attachments: [],
-  });
-
-  // Mock data for demonstration
-  const mockCourses = [
-    {
-      _id: "1",
-      name: "Mathematics Grade 10",
-      section: "A",
-      room: "101",
-      description: "Advanced Mathematics",
-      enrollmentCode: "MATH10A",
-      students: 25,
-      assignments: 8,
-      isGoogleClass: false,
-      createdAt: new Date("2024-01-15"),
-      lastActive: "Yesterday",
-    },
-    {
-      _id: "2",
-      name: "Physics Grade 11",
-      section: "B",
-      room: "205",
-      description: "Physics Fundamentals",
-      enrollmentCode: "PHY11B",
-      students: 30,
-      assignments: 12,
-      isGoogleClass: true,
-      createdAt: new Date("2024-01-10"),
-      lastActive: "2 days ago",
-    },
-  ];
-
-  const mockAssignments = [
-    {
-      _id: "1",
-      title: "Quadratic Equations Test",
-      description: "Chapter 4 assessment on quadratic equations",
-      dueDate: "2024-12-30",
-      totalMarks: 100,
-      type: "test",
-      courseId: "1",
-      courseName: "Mathematics Grade 10",
-      submissions: 18,
-      pending: 7,
-      status: "active",
-      createdAt: new Date("2024-12-20"),
-    },
-    {
-      _id: "2",
-      title: "Physics Lab Report",
-      description: "Pendulum experiment analysis",
-      dueDate: "2025-01-05",
-      totalMarks: 50,
-      type: "assignment",
-      courseId: "2",
-      courseName: "Physics Grade 11",
-      submissions: 22,
-      pending: 8,
-      status: "active",
-      createdAt: new Date("2024-12-18"),
-    },
-  ];
-
-  // Simulate API calls
-  const fetchCourses = useCallback(async () => {
+  // Check Google access status
+  const checkGoogleStatus = async () => {
     try {
       setIsLoading(true);
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/auth/classroom/status", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-      // In real implementation, this would be:
-      // const response = await fetch('/api/classroom/courses', {
-      //   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      // });
-      // const data = await response.json();
-      // setCourses(data.courses);
+      if (!response.ok) throw new Error("Failed to check Google status");
 
-      setCourses(mockCourses);
-      setAssignments(mockAssignments);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching courses:", error);
+      const data = await response.json();
+      setGoogleStatus(data);
+
+      if (data.isExpired) {
+        setNeedsAuth(true);
+        setError("Google access expired. Please reconnect your account.");
+      }
+    } catch (err) {
+      console.error("Error checking Google status:", err);
+      setError(err.message);
+    } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
+
+  // Initiate OAuth flow
+  const initiateOAuth = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch("/api/auth/initiate-oauth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to initiate OAuth");
+
+      const data = await response.json();
+
+      // Redirect to Google OAuth URL
+      window.location.href = data.authUrl;
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch Google Classroom courses
+  const fetchCourses = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch("/api/auth/classroom/courses", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch courses");
+      }
+
+      const data = await response.json();
+      setCourses(data.courses || []);
+      setSuccess(`Successfully loaded ${data.courses?.length || 0} courses`);
+      setNeedsAuth(false);
+    } catch (err) {
+      if (
+        err.message.includes("expired") ||
+        err.message.includes("permissions")
+      ) {
+        setNeedsAuth(true);
+        setError("Google access expired. Please reconnect your account.");
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Revoke Google access
+  const revokeGoogleAccess = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch("/api/auth/classroom/revoke", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to revoke access");
+
+      setGoogleStatus({ hasGoogleAccess: false });
+      setCourses([]);
+      setNeedsAuth(false);
+      setSuccess("Google access revoked successfully");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearMessages = () => {
+    setError(null);
+    setSuccess(null);
+  };
 
   useEffect(() => {
-    // Check authentication
-    const token = sessionStorage.getItem("token");
-    if (!token) {
-      navigate("/teacherlogin");
-      return;
-    }
+    checkGoogleStatus();
+  }, []);
 
-    fetchCourses();
-  }, [fetchCourses, navigate]);
+  // Check if Google is connected
+  const hasGoogleAccess = googleStatus?.hasGoogleAccess;
 
-  const handleCreateCourse = async (e) => {
-    e.preventDefault();
-    try {
-      // In real implementation:
-      // const response = await fetch('/api/classroom/courses', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${localStorage.getItem('token')}`
-      //   },
-      //   body: JSON.stringify(newCourse)
-      // });
-      // const data = await response.json();
-
-      // Mock implementation
-      const courseData = {
-        ...newCourse,
-        _id: Date.now().toString(),
-        enrollmentCode: Math.random()
-          .toString(36)
-          .substring(2, 8)
-          .toUpperCase(),
-        students: 0,
-        assignments: 0,
-        createdAt: new Date(),
-        lastActive: "Just now",
-      };
-
-      setCourses([...courses, courseData]);
-      setShowCreateModal(false);
-      setNewCourse({
-        name: "",
-        section: "",
-        room: "",
-        description: "",
-        subject: "",
-        createInGoogle: false,
-      });
-
-      alert("✅ Course created successfully!");
-    } catch (error) {
-      console.error("Error creating course:", error);
-      alert("Failed to create course. Please try again.");
-    }
-  };
-
-  const handleCreateAssignment = async (e) => {
-    e.preventDefault();
-    try {
-      // Mock implementation
-      const assignmentData = {
-        ...newAssignment,
-        _id: Date.now().toString(),
-        courseName:
-          courses.find((c) => c._id === newAssignment.courseId)?.name || "",
-        submissions: 0,
-        pending:
-          courses.find((c) => c._id === newAssignment.courseId)?.students || 0,
-        status: "active",
-        createdAt: new Date(),
-      };
-
-      setAssignments([...assignments, assignmentData]);
-      setShowAssignmentModal(false);
-      setNewAssignment({
-        title: "",
-        description: "",
-        dueDate: "",
-        totalMarks: 100,
-        type: "assignment",
-        courseId: "",
-        instructions: "",
-        attachments: [],
-      });
-
-      alert("✅ Assignment created successfully!");
-    } catch (error) {
-      console.error("Error creating assignment:", error);
-      alert("Failed to create assignment. Please try again.");
-    }
-  };
-
-  const handleCopyEnrollmentCode = (code) => {
-    navigator.clipboard.writeText(code);
-    alert(`Enrollment code "${code}" copied to clipboard!`);
-  };
-
+  // Filter courses based on search term
   const filteredCourses = courses.filter(
     (course) =>
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.section.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredAssignments = assignments.filter(
-    (assignment) =>
-      assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.courseName.toLowerCase().includes(searchTerm.toLowerCase())
+      course.section?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="dashboard">
-      <nav className="top-nav">
-        <div className="container nav-container">
-          <div className="logo-container">
-            <School size={28} />
-            <h1 className="site-title">Teacher Portal</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <School className="w-6 h-6 text-blue-600" />
           </div>
-          <div className="nav-tabs">
-            <button
-              className={`nav-tab ${activeTab === "courses" ? "active" : ""}`}
-              onClick={() => setActiveTab("courses")}
-            >
-              <Book size={18} />
-              Courses
-            </button>
-            <button
-              className={`nav-tab ${
-                activeTab === "assignments" ? "active" : ""
-              }`}
-              onClick={() => setActiveTab("assignments")}
-            >
-              <BookOpen size={18} />
-              Assignments
-            </button>
-          </div>
-          <div className="user-avatar">
-            <div className="avatar-circle">
-              <span className="avatar-initials">TC</span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="main-container">
-        {/* Dashboard Header */}
-        <div className="dashboard-header">
           <div>
-            <h1 className="page-title">
-              {activeTab === "courses"
-                ? "Course Management"
-                : "Assignment Management"}
+            <h1 className="text-2xl font-bold text-gray-900">
+              Google Classroom Integration
             </h1>
-            <p className="page-subtitle">
-              {activeTab === "courses"
-                ? "Manage your classroom courses and enrollment"
-                : "Create and manage assignments for your courses"}
+            <p className="text-gray-600">
+              Connect your Google Classroom to import and manage your courses
             </p>
           </div>
-          <div className="header-actions">
-            <div className="search-container">
-              <Search size={18} className="search-icon" />
+        </div>
+      </div>
+
+      {/* Status Messages */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <span className="text-red-800">{error}</span>
+          </div>
+          <button
+            onClick={clearMessages}
+            className="text-red-500 hover:text-red-700"
+          >
+            <span className="sr-only">Close</span>
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-green-500" />
+            <span className="text-green-800">{success}</span>
+          </div>
+          <button
+            onClick={clearMessages}
+            className="text-green-500 hover:text-green-700"
+          >
+            <span className="sr-only">Close</span>
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {isLoading && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+          <Loader2 className="animate-spin w-5 h-5 text-blue-500" />
+          <span className="text-blue-800">Loading...</span>
+        </div>
+      )}
+
+      {/* Connection Status Card */}
+      {googleStatus && (
+        <div
+          className={`mb-6 rounded-lg border-2 p-4 ${
+            googleStatus.hasGoogleAccess
+              ? "bg-green-50 border-green-200"
+              : "bg-gray-50 border-gray-200"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  googleStatus.hasGoogleAccess ? "bg-green-500" : "bg-red-500"
+                }`}
+              ></div>
+              <div>
+                <span
+                  className={`font-semibold ${
+                    googleStatus.hasGoogleAccess
+                      ? "text-green-800"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {googleStatus.hasGoogleAccess ? "Connected" : "Not Connected"}
+                </span>
+                {googleStatus.hasGoogleAccess && (
+                  <p className="text-sm text-green-600">
+                    Connected as: {googleStatus.connectedEmail}
+                  </p>
+                )}
+              </div>
+            </div>
+            {googleStatus.hasGoogleAccess && (
+              <CheckCircle className="w-6 h-6 text-green-500" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Connection Flow */}
+      {!hasGoogleAccess && !needsAuth && (
+        <div className="mb-8 text-center">
+          <div className="max-w-md mx-auto bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <School className="w-8 h-8 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Connect Google Classroom
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Link your Google Classroom account to access and manage your
+              courses directly from here.
+            </p>
+            <button
+              onClick={initiateOAuth}
+              disabled={isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <Loader2 className="animate-spin w-5 h-5" />
+              ) : (
+                <>
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Connect with Google
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reauth Prompt */}
+      {needsAuth && (
+        <div className="mb-8 text-center">
+          <div className="max-w-md mx-auto bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-8 border border-yellow-200">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-yellow-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Reconnection Required
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Your Google access has expired. Please reconnect to continue
+              accessing your courses.
+            </p>
+            <button
+              onClick={initiateOAuth}
+              disabled={isLoading}
+              className="w-full bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-300 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <Loader2 className="animate-spin w-5 h-5" />
+              ) : (
+                <>
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Reconnect
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content - When Connected */}
+      {hasGoogleAccess && !needsAuth && (
+        <div className="space-y-6">
+          {/* Search and Actions */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="relative flex-1 min-w-[250px]">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
               <input
                 type="text"
                 placeholder={`Search ${activeTab}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
             </div>
-            <button
-              className="create-button"
-              onClick={() =>
-                activeTab === "courses"
-                  ? setShowCreateModal(true)
-                  : setShowAssignmentModal(true)
-              }
-            >
-              <Plus size={18} />
-              {activeTab === "courses" ? "New Course" : "New Assignment"}
-            </button>
-          </div>
-        </div>
 
-        {/* Stats Cards */}
-        <div className="stats-grid">
-          <div className="stats-card">
-            <div className="stats-icon-container blue">
-              <Book size={24} />
-            </div>
-            <div className="stats-content">
-              <h3 className="stats-value">{courses.length}</h3>
-              <p className="stats-label">Total Courses</p>
-            </div>
-          </div>
-          <div className="stats-card">
-            <div className="stats-icon-container green">
-              <Users size={24} />
-            </div>
-            <div className="stats-content">
-              <h3 className="stats-value">
-                {courses.reduce(
-                  (total, course) => total + (course.students || 0),
-                  0
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={fetchCourses}
+                disabled={isLoading}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+              >
+                {isLoading ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : (
+                  <BookOpen className="mr-2 h-4 w-4" />
                 )}
-              </h3>
-              <p className="stats-label">Total Students</p>
-            </div>
-          </div>
-          <div className="stats-card">
-            <div className="stats-icon-container orange">
-              <BookOpen size={24} />
-            </div>
-            <div className="stats-content">
-              <h3 className="stats-value">{assignments.length}</h3>
-              <p className="stats-label">Active Assignments</p>
-            </div>
-          </div>
-          <div className="stats-card">
-            <div className="stats-icon-container purple">
-              <TrendingUp size={24} />
-            </div>
-            <div className="stats-content">
-              <h3 className="stats-value">
-                {Math.round(
-                  assignments.reduce(
-                    (acc, a) =>
-                      acc +
-                      ((a.submissions / (a.submissions + a.pending)) * 100 ||
-                        0),
-                    0
-                  ) / assignments.length || 0
-                )}
-                %
-              </h3>
-              <p className="stats-label">Avg Submission Rate</p>
-            </div>
-          </div>
-        </div>
+                Refresh Courses
+              </button>
 
-        {/* Content Area */}
-        <div className="content-container">
-          {isLoading ? (
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-              <p className="loading-text">Loading {activeTab}...</p>
+              <button
+                onClick={revokeGoogleAccess}
+                disabled={isLoading}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-100"
+              >
+                <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                Disconnect
+              </button>
             </div>
-          ) : (
-            <>
-              {activeTab === "courses" ? (
-                <div className="courses-grid">
+          </div>
+
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab("courses")}
+                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "courses"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <Book className="inline mr-2 h-4 w-4" />
+                Courses ({courses.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("assignments")}
+                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "assignments"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <BookPlus className="inline mr-2 h-4 w-4" />
+                Assignments ({assignments.length})
+              </button>
+            </nav>
+          </div>
+
+          {/* Courses Tab */}
+          {activeTab === "courses" && (
+            <div className="space-y-6">
+              {filteredCourses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredCourses.map((course) => (
-                    <div key={course._id} className="course-card">
-                      <div className="course-header">
-                        <div className="course-icon">
-                          <Book size={20} />
-                        </div>
-                        <div className="course-actions">
-                          <button className="action-btn">
-                            <MoreVertical size={16} />
-                          </button>
+                    <div
+                      key={course.id}
+                      className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-200"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-2">
+                            {course.name}
+                          </h4>
+                          {course.section && (
+                            <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                              {course.section}
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div className="course-content">
-                        <h3 className="course-name">{course.name}</h3>
-                        <p className="course-section">
-                          Section {course.section} • Room {course.room}
-                        </p>
-                        <p className="course-description">
+
+                      {course.description && (
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                           {course.description}
                         </p>
+                      )}
 
-                        <div className="course-stats">
-                          <div className="stat-item">
-                            <Users size={14} />
-                            <span>{course.students} students</span>
+                      <div className="space-y-2 mb-4">
+                        {course.room && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <svg
+                              className="w-4 h-4"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span>{course.room}</span>
                           </div>
-                          <div className="stat-item">
-                            <BookOpen size={14} />
-                            <span>{course.assignments} assignments</span>
+                        )}
+                        {course.enrollmentCode && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <svg
+                              className="w-4 h-4"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span>Code: {course.enrollmentCode}</span>
+                            <button
+                              onClick={() =>
+                                navigator.clipboard.writeText(
+                                  course.enrollmentCode
+                                )
+                              }
+                              className="text-blue-500 hover:text-blue-700"
+                              title="Copy enrollment code"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
                           </div>
-                          <div className="stat-item">
-                            <Clock size={14} />
-                            <span>{course.lastActive}</span>
-                          </div>
-                        </div>
-
-                        <div className="enrollment-code">
-                          <span className="code-label">Code:</span>
-                          <code className="code-value">
-                            {course.enrollmentCode}
-                          </code>
-                          <button
-                            className="copy-btn"
-                            onClick={() =>
-                              handleCopyEnrollmentCode(course.enrollmentCode)
-                            }
-                          >
-                            <Copy size={14} />
-                          </button>
-                        </div>
+                        )}
                       </div>
 
-                      <div className="course-footer">
-                        <button
-                          className="course-btn secondary"
-                          onClick={() => navigate(`/course/${course._id}`)}
+                      {course.alternateLink && (
+                        <a
+                          href={course.alternateLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm"
                         >
-                          <Eye size={16} />
-                          View Details
-                        </button>
-                        <button
-                          className="course-btn primary"
-                          onClick={() => {
-                            setSelectedCourse(course);
-                            setNewAssignment({
-                              ...newAssignment,
-                              courseId: course._id,
-                            });
-                            setShowAssignmentModal(true);
-                          }}
-                        >
-                          <Plus size={16} />
-                          Add Assignment
-                        </button>
-                      </div>
+                          <span>Open in Classroom</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="assignments-list">
-                  {filteredAssignments.map((assignment) => (
-                    <div key={assignment._id} className="assignment-card">
-                      <div className="assignment-header">
-                        <div className="assignment-info">
-                          <h3 className="assignment-title">
-                            {assignment.title}
-                          </h3>
-                          <p className="assignment-course">
-                            {assignment.courseName}
-                          </p>
-                        </div>
-                        <div className="assignment-type">
-                          <span className={`type-badge ${assignment.type}`}>
-                            {assignment.type}
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="assignment-description">
-                        {assignment.description}
-                      </p>
-
-                      <div className="assignment-stats">
-                        <div className="stat-group">
-                          <div className="stat-item">
-                            <Award size={16} />
-                            <span>{assignment.totalMarks} marks</span>
-                          </div>
-                          <div className="stat-item">
-                            <Calendar size={16} />
-                            <span>
-                              Due:{" "}
-                              {new Date(
-                                assignment.dueDate
-                              ).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="submission-stats">
-                          <div className="submission-item">
-                            <span className="submission-count">
-                              {assignment.submissions}
-                            </span>
-                            <span className="submission-label">Submitted</span>
-                          </div>
-                          <div className="submission-item">
-                            <span className="submission-count pending">
-                              {assignment.pending}
-                            </span>
-                            <span className="submission-label">Pending</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="assignment-actions">
-                        <button className="action-btn-sm">
-                          <Edit size={16} />
-                          Edit
-                        </button>
-                        <button className="action-btn-sm">
-                          <Eye size={16} />
-                          View Submissions
-                        </button>
-                        <button className="action-btn-sm">
-                          <Download size={16} />
-                          Export
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No Courses Found
+                  </h3>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    {searchTerm
+                      ? "No courses match your search criteria."
+                      : "You don't have any active courses in Google Classroom."}
+                  </p>
                 </div>
               )}
-            </>
+            </div>
           )}
-        </div>
-      </div>
 
-      {/* Create Course Modal */}
-      {showCreateModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Create New Course</h2>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="modal-close"
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleCreateCourse} className="modal-form">
-              <div className="form-group">
-                <label>Course Name *</label>
-                <input
-                  type="text"
-                  value={newCourse.name}
-                  onChange={(e) =>
-                    setNewCourse({ ...newCourse, name: e.target.value })
-                  }
-                  required
-                  placeholder="e.g., Mathematics Grade 10"
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Section</label>
-                  <input
-                    type="text"
-                    value={newCourse.section}
-                    onChange={(e) =>
-                      setNewCourse({ ...newCourse, section: e.target.value })
-                    }
-                    placeholder="e.g., A"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Room</label>
-                  <input
-                    type="text"
-                    value={newCourse.room}
-                    onChange={(e) =>
-                      setNewCourse({ ...newCourse, room: e.target.value })
-                    }
-                    placeholder="e.g., 101"
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Subject</label>
-                <input
-                  type="text"
-                  value={newCourse.subject}
-                  onChange={(e) =>
-                    setNewCourse({ ...newCourse, subject: e.target.value })
-                  }
-                  placeholder="e.g., Mathematics"
-                />
-              </div>
-              <div className="form-group">
-                <label>Description</label>
-                <textarea
-                  value={newCourse.description}
-                  onChange={(e) =>
-                    setNewCourse({ ...newCourse, description: e.target.value })
-                  }
-                  placeholder="Brief description of the course..."
-                  rows="3"
-                />
-              </div>
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={newCourse.createInGoogle}
-                    onChange={(e) =>
-                      setNewCourse({
-                        ...newCourse,
-                        createInGoogle: e.target.checked,
-                      })
-                    }
-                  />
-                  Create in Google Classroom
-                </label>
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary">
-                  Create Course
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Create Assignment Modal */}
-      {showAssignmentModal && (
-        <div className="modal-overlay">
-          <div className="modal large">
-            <div className="modal-header">
-              <h2>Create New Assignment</h2>
-              <button
-                onClick={() => setShowAssignmentModal(false)}
-                className="modal-close"
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleCreateAssignment} className="modal-form">
-              <div className="form-group">
-                <label>Assignment Title *</label>
-                <input
-                  type="text"
-                  value={newAssignment.title}
-                  onChange={(e) =>
-                    setNewAssignment({
-                      ...newAssignment,
-                      title: e.target.value,
-                    })
-                  }
-                  required
-                  placeholder="e.g., Chapter 4 Test"
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Course *</label>
-                  <select
-                    value={newAssignment.courseId}
-                    onChange={(e) =>
-                      setNewAssignment({
-                        ...newAssignment,
-                        courseId: e.target.value,
-                      })
-                    }
-                    required
-                  >
-                    <option value="">Select a course</option>
-                    {courses.map((course) => (
-                      <option key={course._id} value={course._id}>
-                        {course.name} - Section {course.section}
-                      </option>
+          {/* Assignments Tab */}
+          {activeTab === "assignments" && (
+            <div className="space-y-6">
+              {filteredCourses.length > 0 ? (
+                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                  <ul className="divide-y divide-gray-200">
+                    {filteredCourses.map((course) => (
+                      <li key={course.id}>
+                        <div className="px-4 py-4 sm:px-6">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-medium text-gray-900">
+                              {course.name}
+                            </h3>
+                            <button
+                              onClick={() => {
+                                // Implement assignment creation for this course
+                              }}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              <Plus className="mr-1 h-3 w-3" />
+                              Add Assignment
+                            </button>
+                          </div>
+                          <div className="mt-2 sm:flex sm:justify-between">
+                            <div className="sm:flex">
+                              <p className="flex items-center text-sm text-gray-500">
+                                <svg
+                                  className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
+                                    clipRule="evenodd"
+                                  />
+                                  <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
+                                </svg>
+                                {course.section || "No section"}
+                              </p>
+                              <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                                <svg
+                                  className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                {course.room || "No room"}
+                              </p>
+                            </div>
+                            <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                              <svg
+                                className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <span>
+                                Created on{" "}
+                                <time dateTime={course.creationTime}>
+                                  {new Date(
+                                    course.creationTime
+                                  ).toLocaleDateString()}
+                                </time>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
                     ))}
-                  </select>
+                  </ul>
                 </div>
-                <div className="form-group">
-                  <label>Type</label>
-                  <select
-                    value={newAssignment.type}
-                    onChange={(e) =>
-                      setNewAssignment({
-                        ...newAssignment,
-                        type: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="assignment">Assignment</option>
-                    <option value="test">Test</option>
-                    <option value="quiz">Quiz</option>
-                    <option value="project">Project</option>
-                  </select>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <BookPlus className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No Assignments Found
+                  </h3>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    {searchTerm
+                      ? "No assignments match your search criteria."
+                      : "You don't have any assignments created yet."}
+                  </p>
                 </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Due Date *</label>
-                  <input
-                    type="date"
-                    value={newAssignment.dueDate}
-                    onChange={(e) =>
-                      setNewAssignment({
-                        ...newAssignment,
-                        dueDate: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Total Marks</label>
-                  <input
-                    type="number"
-                    value={newAssignment.totalMarks}
-                    onChange={(e) =>
-                      setNewAssignment({
-                        ...newAssignment,
-                        totalMarks: parseInt(e.target.value),
-                      })
-                    }
-                    min="1"
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Description</label>
-                <textarea
-                  value={newAssignment.description}
-                  onChange={(e) =>
-                    setNewAssignment({
-                      ...newAssignment,
-                      description: e.target.value,
-                    })
-                  }
-                  placeholder="Brief description of the assignment..."
-                  rows="3"
-                />
-              </div>
-              <div className="form-group">
-                <label>Instructions</label>
-                <textarea
-                  value={newAssignment.instructions}
-                  onChange={(e) =>
-                    setNewAssignment({
-                      ...newAssignment,
-                      instructions: e.target.value,
-                    })
-                  }
-                  placeholder="Detailed instructions for students..."
-                  rows="4"
-                />
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  onClick={() => setShowAssignmentModal(false)}
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary">
-                  Create Assignment
-                </button>
-              </div>
-            </form>
-          </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-export default TeacherAssignmentDashboard;
+export default GoogleClassroomIntegration;
