@@ -143,7 +143,7 @@ const TeacherAssignmentDashboard = () => {
 
   useEffect(() => {
     // Check authentication
-    const token = sessionStorageStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (!token) {
       navigate("/teacherlogin");
       return;
