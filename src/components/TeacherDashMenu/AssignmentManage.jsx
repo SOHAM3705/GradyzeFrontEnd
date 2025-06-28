@@ -49,7 +49,7 @@ const GoogleClassroomIntegration = () => {
         `${API_BASE_URL}/api/auth/classroom/status`,
         {
           headers: {
-            Authorization: `Bearer ${SessionStorage.getItem("token")}`,
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           },
         }
       );
@@ -80,7 +80,7 @@ const GoogleClassroomIntegration = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${SessionStorage.getItem("token")}`,
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
       });
 
@@ -120,7 +120,7 @@ const GoogleClassroomIntegration = () => {
         `${API_BASE_URL}/api/auth/classroom/courses`,
         {
           headers: {
-            Authorization: `Bearer ${SessionStorage.getItem("token")}`,
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           },
         }
       );
@@ -159,7 +159,7 @@ const GoogleClassroomIntegration = () => {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${SessionStorage.getItem("token")}`,
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           },
         }
       );
