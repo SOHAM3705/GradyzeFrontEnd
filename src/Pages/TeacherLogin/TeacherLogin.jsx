@@ -15,7 +15,6 @@ const TeacherLogin = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
-    // Clear error when user starts typing
     if (error) setError(null);
   };
 
@@ -37,9 +36,7 @@ const TeacherLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
-
     setLoading(true);
     setError(null);
 
@@ -52,7 +49,6 @@ const TeacherLogin = () => {
       const { token, teacher } = response.data;
 
       if (token && teacher) {
-        // Store session data
         sessionStorage.setItem("token", token);
         sessionStorage.setItem("teacherId", teacher._id);
         sessionStorage.setItem("teacherName", teacher.name);
@@ -65,7 +61,6 @@ const TeacherLogin = () => {
 
         setSuccess("Login successful! Redirecting...");
 
-        // Small delay to show success message
         setTimeout(() => {
           navigate("/teacherdash");
         }, 1000);
@@ -92,7 +87,6 @@ const TeacherLogin = () => {
       const { token, teacher } = response.data;
 
       if (token && teacher) {
-        // Store session data
         sessionStorage.setItem("token", token);
         sessionStorage.setItem("teacherId", teacher._id);
         sessionStorage.setItem("teacherName", teacher.name);
@@ -132,7 +126,6 @@ const TeacherLogin = () => {
     setSuccess(null);
   };
 
-  // Check if user is already logged in
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const role = sessionStorage.getItem("role");
@@ -159,7 +152,6 @@ const TeacherLogin = () => {
           <p>Sign in to access your dashboard</p>
         </div>
 
-        {/* Status Messages */}
         {error && (
           <div className={styles.errorMessage}>
             <span>{error}</span>
@@ -186,62 +178,57 @@ const TeacherLogin = () => {
           </div>
         )}
 
-        {/* Loading Indicator */}
         {(loading || isGoogleLoading) && (
-          <div className={styles.loadingIndicator}>Loading...</div>
+          <div className={styles.loadingMessage}>Loading...</div>
         )}
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className={styles.loginForm}>
-          <div className={styles.formGroup}>
-            <label htmlFor="email">Email</label>
+        <form onSubmit={handleSubmit}>
+          <div className={styles.inputGroup}>
+            <i className="fas fa-envelope"></i>
             <input
               type="email"
               id="email"
+              placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
-              className={styles.inputField}
+              required
             />
           </div>
 
-          <div className={styles.formGroup}>
-            <label htmlFor="password">Password</label>
-            <div className={styles.passwordInputContainer}>
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                className={styles.inputField}
-              />
-              <button
-                type="button"
-                onClick={togglePasswordVisibility}
-                className={styles.togglePassword}
-              >
-                {showPassword ? (
-                  <i className="fas fa-eye-slash"></i>
-                ) : (
-                  <i className="fas fa-eye"></i>
-                )}
-              </button>
-            </div>
+          <div className={styles.inputGroup}>
+            <i className="fas fa-lock"></i>
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className={styles.togglePassword}
+            >
+              {showPassword ? (
+                <i className="fas fa-eye-slash"></i>
+              ) : (
+                <i className="fas fa-eye"></i>
+              )}
+            </button>
           </div>
 
-          <button
-            type="submit"
-            className={styles.loginButton}
-            disabled={loading}
-          >
+          <button type="submit" className={styles.TloginBut} disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        {/* Google Login Button */}
-        <div className={styles.googleLoginContainer}>
-          <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
+        <div className={styles.orDivider}>
+          <span>OR</span>
+        </div>
+
+        <div className={styles.googleLoginButton}>
+          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
@@ -249,6 +236,13 @@ const TeacherLogin = () => {
             />
           </GoogleOAuthProvider>
         </div>
+
+        <p>Don't have an account? Contact Your College/School Admin</p>
+        <p>
+          <Link to="/teacher-forget-password" className={styles.teacherLoginA}>
+            Forgot Password?
+          </Link>
+        </p>
       </div>
     </div>
   );
