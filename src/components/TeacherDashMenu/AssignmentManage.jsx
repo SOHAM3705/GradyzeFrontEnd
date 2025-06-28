@@ -27,6 +27,7 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
+import { API_BASE_URL } from "../../config";
 
 const GoogleClassroomIntegration = () => {
   const [courses, setCourses] = useState([]);
@@ -44,11 +45,14 @@ const GoogleClassroomIntegration = () => {
   const checkGoogleStatus = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/auth/classroom/status", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/classroom/status`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to check Google status");
 
@@ -72,7 +76,7 @@ const GoogleClassroomIntegration = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/auth/initiate-oauth", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/initiate-oauth`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -112,11 +116,14 @@ const GoogleClassroomIntegration = () => {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch("/api/auth/classroom/courses", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/classroom/courses`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -147,12 +154,15 @@ const GoogleClassroomIntegration = () => {
     try {
       setIsLoading(true);
 
-      const response = await fetch("/api/auth/classroom/revoke", {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/classroom/revoke`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to revoke access");
 
