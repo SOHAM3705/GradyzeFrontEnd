@@ -67,7 +67,6 @@ const GoogleClassroomIntegration = () => {
     }
   };
 
-  // Initiate OAuth flow
   const initiateOAuth = async () => {
     try {
       setIsLoading(true);
@@ -81,14 +80,27 @@ const GoogleClassroomIntegration = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to initiate OAuth");
+      const contentType = response.headers.get("content-type");
+
+      if (!response.ok) {
+        const errorText = contentType?.includes("application/json")
+          ? await response.json()
+          : await response.text(); // fallback for HTML
+        throw new Error(
+          typeof errorText === "string"
+            ? errorText
+            : errorText.message || "Unknown error"
+        );
+      }
 
       const data = await response.json();
-
-      // Redirect to Google OAuth URL
-      window.location.href = data.authUrl;
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        throw new Error("OAuth URL not received.");
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Error initiating OAuth");
       setIsLoading(false);
     }
   };
