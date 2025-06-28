@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./TeacherLogin.module.css";
-import api from "../../utils/axiosConfig";
+import api from "../../utils/api";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 const TeacherLogin = () => {
@@ -21,7 +21,7 @@ const TeacherLogin = () => {
     setError(null);
 
     try {
-      const response = await api.post("/api/teacher/login", {
+      const response = await api.post("/api/auth/email-login", {
         email: formData.email,
         password: formData.password,
       });
@@ -33,10 +33,10 @@ const TeacherLogin = () => {
         sessionStorage.setItem("teacherName", teacher.name);
         sessionStorage.setItem("adminId", teacher.adminId);
         sessionStorage.setItem("role", "teacher");
-
-        if (teacher.hasGoogleAccess) {
-          sessionStorage.setItem("hasGoogleAccess", "true");
-        }
+        sessionStorage.setItem(
+          "hasGoogleAccess",
+          teacher.hasGoogleAccess ? "true" : "false"
+        );
 
         navigate("/teacherdash");
       }
@@ -52,11 +52,23 @@ const TeacherLogin = () => {
     setError(null);
 
     try {
-      const { data } = await api.post("/api/teacher/login", {
-        googleAuthCode: credentialResponse.credential,
+      const response = await api.post("/api/auth/google-login", {
+        googleJWT: credentialResponse.credential,
       });
 
-      persistSession(data);
+      const { token, teacher } = response.data;
+
+      // Store session data
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("teacherId", teacher._id);
+      sessionStorage.setItem("teacherName", teacher.name);
+      sessionStorage.setItem("adminId", teacher.adminId);
+      sessionStorage.setItem("role", "teacher");
+      sessionStorage.setItem(
+        "hasGoogleAccess",
+        teacher.hasGoogleAccess ? "true" : "false"
+      );
+
       navigate("/teacherdash");
     } catch (err) {
       setError(err.response?.data?.message || "Google login failed");
@@ -64,16 +76,6 @@ const TeacherLogin = () => {
       setIsGoogleLoading(false);
     }
   };
-
-  const googleScopes = [
-    "openid",
-    "profile",
-    "email",
-    "https://www.googleapis.com/auth/classroom.courses",
-    "https://www.googleapis.com/auth/classroom.rosters",
-    "https://www.googleapis.com/auth/classroom.coursework.me",
-    "https://www.googleapis.com/auth/classroom.coursework.students",
-  ];
 
   const handleGoogleError = () => {
     setError("Google login failed. Please try again.");
@@ -143,9 +145,6 @@ const TeacherLogin = () => {
             useOneTap
             auto_select
             ux_mode="popup"
-            flow="auth-code"
-            scope={googleScopes.join(" ")}
-            prompt="consent"
           />
         </GoogleOAuthProvider>
 
