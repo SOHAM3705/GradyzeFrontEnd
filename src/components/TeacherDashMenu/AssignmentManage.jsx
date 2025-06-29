@@ -40,6 +40,12 @@ const GoogleClassroomIntegration = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("courses");
   const navigate = useNavigate();
+  const [showCourseModal, setShowCourseModal] = useState(false);
+  const [newCourse, setNewCourse] = useState({
+    name: "",
+    section: "",
+    room: "",
+  });
 
   // Check Google access status
   const checkGoogleStatus = async () => {
@@ -423,6 +429,14 @@ const GoogleClassroomIntegration = () => {
               </button>
 
               <button
+                onClick={() => setShowCourseModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Course
+              </button>
+
+              <button
                 onClick={revokeGoogleAccess}
                 disabled={isLoading}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-100"
@@ -568,6 +582,93 @@ const GoogleClassroomIntegration = () => {
             </div>
           )}
 
+          {showCourseModal && (
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md space-y-4">
+                <h2 className="text-lg font-semibold">Create New Course</h2>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Course Name"
+                    value={newCourse.name}
+                    onChange={(e) =>
+                      setNewCourse({ ...newCourse, name: e.target.value })
+                    }
+                    className="w-full border p-2 rounded"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Section (optional)"
+                    value={newCourse.section}
+                    onChange={(e) =>
+                      setNewCourse({ ...newCourse, section: e.target.value })
+                    }
+                    className="w-full border p-2 rounded"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Room (optional)"
+                    value={newCourse.room}
+                    onChange={(e) =>
+                      setNewCourse({ ...newCourse, room: e.target.value })
+                    }
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <button
+                    onClick={() => setShowCourseModal(false)}
+                    className="px-4 py-2 rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsLoading(true);
+                        const token = sessionStorage.getItem("token");
+
+                        const response = await fetch(
+                          `https://classroom.googleapis.com/v1/courses`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              name: newCourse.name,
+                              section: newCourse.section,
+                              room: newCourse.room,
+                            }),
+                          }
+                        );
+
+                        if (!response.ok)
+                          throw new Error("Failed to create course");
+
+                        const created = await response.json();
+                        setSuccess(
+                          `Course '${created.name}' created successfully!`
+                        );
+                        setShowCourseModal(false);
+                        setNewCourse({ name: "", section: "", room: "" });
+
+                        await fetchCourses(); // Refresh list
+                      } catch (err) {
+                        setError(err.message || "Error creating course");
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Assignments Tab */}
           {activeTab === "assignments" && (
             <div className="space-y-6">
