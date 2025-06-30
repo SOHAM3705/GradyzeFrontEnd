@@ -3,7 +3,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 import axios from 'axios';
 
 // Register fonts
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+pdfMake.vfs = pdfFonts.vfs;
 
 // Function to generate Division wise Result Analysis PDF
 export const generateResultAnalysisPDF = async (classId, marksData, classMetaMap) => {
