@@ -12,6 +12,7 @@ import {
   faBell,
   faEllipsisV,
 } from "@fortawesome/free-solid-svg-icons";
+import { Link } from "react-router-dom";
 
 const TeacherOverview = () => {
   const [activeTab, setActiveTab] = useState("All Classes");
@@ -194,34 +195,44 @@ const TeacherOverview = () => {
             </h2>
           </div>
           <div className="flex flex-col gap-3">
-            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
-                <FontAwesomeIcon icon={faFileExport} />
-              </div>
-              <span className="text-gray-600 font-medium">Export Grades</span>
-            </button>
-            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
-                <FontAwesomeIcon icon={faUsers} />
-              </div>
-              <span className="text-gray-600 font-medium">
-                Export Student List
-              </span>
-            </button>
-            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
-                <FontAwesomeIcon icon={faFileAlt} />
-              </div>
-              <span className="text-gray-600 font-medium">Export Reports</span>
-            </button>
-            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
-                <FontAwesomeIcon icon={faBell} />
-              </div>
-              <span className="text-gray-600 font-medium">
-                Send Notification
-              </span>
-            </button>
+            <Link to="/teacherdash/subject-marks">
+              <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
+                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+                  <FontAwesomeIcon icon={faFileExport} />
+                </div>
+                <span className="text-gray-600 font-medium">Export Grades</span>
+              </button>
+            </Link>
+            <Link to="/teacherdash/manage-students">
+              <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
+                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+                  <FontAwesomeIcon icon={faUsers} />
+                </div>
+                <span className="text-gray-600 font-medium">
+                  Export Student List
+                </span>
+              </button>
+            </Link>
+            <Link to="/teacherdash/attendance">
+              <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
+                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+                  <FontAwesomeIcon icon={faFileAlt} />
+                </div>
+                <span className="text-gray-600 font-medium">
+                  Take Attendance
+                </span>
+              </button>
+            </Link>
+            <Link to="/teacherdash/notifications">
+              <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
+                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+                  <FontAwesomeIcon icon={faBell} />
+                </div>
+                <span className="text-gray-600 font-medium">
+                  Send Notification
+                </span>
+              </button>
+            </Link>
           </div>
         </div>
       </div>
