@@ -225,7 +225,7 @@ const AttendanceReport = () => {
           student.rollNo?.toString().includes(searchQuery);
         return matchesSearch;
       })
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.rollNo - b.rollNo);
 
     setFilteredStudents(filtered);
   };
