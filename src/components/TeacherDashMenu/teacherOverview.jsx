@@ -14,6 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../../config";
+import axios from "axios";
 
 const TeacherOverview = () => {
   const [activeTab, setActiveTab] = useState("All Classes");
