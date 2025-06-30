@@ -164,7 +164,7 @@ const ClassSchedules = () => {
             {loading ? "Refreshing..." : "Refresh Data"}
           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-4 md:grid md:grid-cols-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subject
@@ -206,6 +206,7 @@ const ClassSchedules = () => {
                     },
                   })
                 }
+                className="w-full"
               />
             </div>
           </div>

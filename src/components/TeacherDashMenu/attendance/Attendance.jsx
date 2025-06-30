@@ -304,7 +304,7 @@ const Attendance = () => {
           {selectedSubject ? (
             <div className="space-y-6">
               <div className="bg-white rounded-lg shadow p-4">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-2">
                   <h2 className="text-lg font-semibold">
                     Scheduled Classes - {formatSubjectName(selectedSubject)}
                   </h2>
@@ -313,7 +313,7 @@ const Attendance = () => {
                     onChange={(date) =>
                       setSelectedDate(date.toISOString().split("T")[0])
                     }
-                    className="w-48"
+                    className="w-full md:w-48"
                   />
                 </div>
 

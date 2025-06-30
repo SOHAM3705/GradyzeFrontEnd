@@ -323,15 +323,15 @@ const StudentManagementSystem = () => {
   };
 
   return (
-    <div className="container mx-auto p-5">
-      <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-3 mb-6">
-        <span className="w-2 h-8 bg-[#059669] rounded"></span>
+    <div className="container mx-auto p-4 md:p-5">
+      <h1 className="text-xl md:text-2xl font-semibold text-gray-800 flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+        <span className="w-2 h-6 md:h-8 bg-[#059669] rounded"></span>
         Student Management System
       </h1>
 
-      <div className="flex bg-gray-200 rounded-lg p-1 mb-6 max-w-xl">
+      <div className="flex bg-gray-200 rounded-lg p-1 mb-4 md:mb-6 w-full max-w-xl">
         <button
-          className={`flex-1 p-3 rounded-md text-gray-700 ${
+          className={`flex-1 py-2 md:p-3 rounded-md text-sm md:text-base text-gray-700 ${
             view === "class-teacher" ? "bg-white shadow-md text-gray-800" : ""
           }`}
           onClick={() => setView("class-teacher")}
@@ -341,7 +341,7 @@ const StudentManagementSystem = () => {
         </button>
 
         <button
-          className={`flex-1 p-3 rounded-md text-gray-700 ${
+          className={`flex-1 py-2 md:p-3 rounded-md text-sm md:text-base text-gray-700 ${
             view === "students" ? "bg-white shadow-md text-gray-800" : ""
           }`}
           onClick={() => setView("students")}
@@ -352,48 +352,48 @@ const StudentManagementSystem = () => {
       </div>
 
       {view === "class-teacher" && (
-        <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
-          <div className="class-info flex flex-wrap gap-6 mb-6">
-            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
+        <div className="card bg-white rounded-xl shadow-md p-4 md:p-6 mb-6">
+          <div className="class-info grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+            <div className="info-item bg-gray-200 p-4 md:p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2 text-sm md:text-base">
+                <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#059669] rounded-full"></span>
                 Department
               </h3>
-              <p className="text-lg font-medium">
+              <p className="text-base md:text-lg font-medium">
                 {teacherDetails.department || "N/A"}
               </p>
             </div>
-            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
+            <div className="info-item bg-gray-200 p-4 md:p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2 text-sm md:text-base">
+                <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#059669] rounded-full"></span>
                 Year
               </h3>
-              <p className="text-lg font-medium">
+              <p className="text-base md:text-lg font-medium">
                 {teacherDetails.year || "N/A"}
               </p>
             </div>
-            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
+            <div className="info-item bg-gray-200 p-4 md:p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2 text-sm md:text-base">
+                <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#059669] rounded-full"></span>
                 Division
               </h3>
-              <p className="text-lg font-medium">
+              <p className="text-base md:text-lg font-medium">
                 {teacherDetails.division || "N/A"}
               </p>
             </div>
-            <div className="info-item flex-1 min-w-xs bg-gray-200 p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
-              <h3 className="text-gray-800 font-semibold flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
+            <div className="info-item bg-gray-200 p-4 md:p-5 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">
+              <h3 className="text-gray-800 font-semibold flex items-center gap-2 text-sm md:text-base">
+                <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#059669] rounded-full"></span>
                 Class Teacher
               </h3>
-              <p className="text-lg font-medium">
+              <p className="text-base md:text-lg font-medium">
                 {teacherDetails.classTeacher || "N/A"}
               </p>
             </div>
           </div>
 
-          <div className="button-group flex flex-wrap gap-4 mb-6">
-            <label className="file-label flex items-center justify-center gap-2 bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1 cursor-pointer">
+          <div className="button-group flex flex-col sm:flex-row gap-3 md:gap-4 mb-6">
+            <label className="file-label flex items-center justify-center gap-2 bg-[#059669] text-white p-2 md:p-3 rounded-lg text-sm md:text-base font-medium transition-transform transform hover:-translate-y-1 cursor-pointer">
               {uploading ? "Uploading..." : "Import from Excel"}
               <input
                 type="file"
@@ -405,7 +405,7 @@ const StudentManagementSystem = () => {
             </label>
             {students.length > 0 && (
               <button
-                className="bg-[#059669] text-white p-3 rounded-lg font-medium transition-transform transform hover:-translate-y-1 flex-1"
+                className="bg-[#059669] text-white p-2 md:p-3 rounded-lg text-sm md:text-base font-medium transition-transform transform hover:-translate-y-1"
                 onClick={downloadStudentReport}
               >
                 Generate Class PDF
@@ -413,48 +413,50 @@ const StudentManagementSystem = () => {
             )}
           </div>
 
-          <div className="mt-6">
-            <h3 className="text-gray-800 font-semibold mb-4">
+          <div className="mt-4 md:mt-6">
+            <h3 className="text-gray-800 font-semibold mb-3 md:mb-4">
               Add New Student
             </h3>
-            <div className="student-form flex flex-wrap gap-5 bg-gray-200 p-6 rounded-lg">
-              <div className="form-group flex-1 min-w-xs">
-                <label className="block mb-2 font-medium text-dark">
+            <div className="student-form grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 bg-gray-200 p-4 md:p-6 rounded-lg">
+              <div className="form-group">
+                <label className="block mb-1 md:mb-2 text-sm md:text-base font-medium text-dark">
                   Roll No
                 </label>
                 <input
                   type="number"
                   value={rollNo}
                   onChange={(e) => setRollNo(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  placeholder="Enter roll number"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-lg text-sm md:text-base"
+                  placeholder="Roll number"
                 />
               </div>
-              <div className="form-group flex-1 min-w-xs">
-                <label className="block mb-2 font-medium text-dark">Name</label>
+              <div className="form-group">
+                <label className="block mb-1 md:mb-2 text-sm md:text-base font-medium text-dark">
+                  Name
+                </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  placeholder="Enter student name"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-lg text-sm md:text-base"
+                  placeholder="Student name"
                 />
               </div>
-              <div className="form-group flex-1 min-w-xs">
-                <label className="block mb-2 font-medium text-dark">
+              <div className="form-group">
+                <label className="block mb-1 md:mb-2 text-sm md:text-base font-medium text-dark">
                   Email
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  placeholder="Enter student email"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-lg text-sm md:text-base"
+                  placeholder="Student email"
                 />
               </div>
-              <div className="form-group flex-1 min-w-xs flex items-end">
+              <div className="form-group flex items-end">
                 <button
-                  className="bg-[#059669] text-white p-3 rounded-lg w-full font-medium transition-transform transform hover:-translate-y-1"
+                  className="bg-[#059669] text-white p-2 md:p-3 rounded-lg w-full text-sm md:text-base font-medium transition-transform transform hover:-translate-y-1"
                   onClick={handleAddStudent}
                 >
                   Add Student
@@ -463,13 +465,15 @@ const StudentManagementSystem = () => {
             </div>
           </div>
 
-          <div className="mt-8">
-            <h3 className="text-gray-800 font-semibold mb-4">Student List</h3>
-            <div className="flex justify-between items-center mb-4">
+          <div className="mt-6 md:mt-8">
+            <h3 className="text-gray-800 font-semibold mb-3 md:mb-4">
+              Student List
+            </h3>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 md:mb-4 gap-2 md:gap-0">
               <input
                 type="text"
                 placeholder="Search students..."
-                className="p-2 border border-gray-300 rounded-lg"
+                className="p-2 border border-gray-300 rounded-lg w-full md:w-auto text-sm md:text-base"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -482,16 +486,16 @@ const StudentManagementSystem = () => {
                 <table className="min-w-full bg-white">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                      <th className="py-2 px-2 md:px-4 text-left text-sm md:text-base font-semibold text-gray-800">
                         Roll No
                       </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                      <th className="py-2 px-2 md:px-4 text-left text-sm md:text-base font-semibold text-gray-800">
                         Name
                       </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                      <th className="py-2 px-2 md:px-4 text-left text-sm md:text-base font-semibold text-gray-800">
                         Email
                       </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                      <th className="py-2 px-2 md:px-4 text-left text-sm md:text-base font-semibold text-gray-800">
                         Actions
                       </th>
                     </tr>
@@ -512,18 +516,24 @@ const StudentManagementSystem = () => {
                           key={student.rollNo}
                           className="hover:bg-gray-100 transition"
                         >
-                          <td className="py-2 px-4">{student.rollNo}</td>
-                          <td className="py-2 px-4">{student.name}</td>
-                          <td className="py-2 px-4">{student.email}</td>
-                          <td className="py-2 px-4 flex gap-2">
+                          <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                            {student.rollNo}
+                          </td>
+                          <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                            {student.name}
+                          </td>
+                          <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                            {student.email}
+                          </td>
+                          <td className="py-2 px-2 md:px-4 flex gap-1 md:gap-2">
                             <button
-                              className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
+                              className="bg-blue-500 text-white px-2 py-1 md:px-3 md:py-1 rounded-lg hover:bg-blue-600 transition text-xs md:text-sm"
                               onClick={() => openEditModal(student)}
                             >
                               Edit
                             </button>
                             <button
-                              className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
+                              className="bg-red-500 text-white px-2 py-1 md:px-3 md:py-1 rounded-lg hover:bg-red-600 transition text-xs md:text-sm"
                               onClick={() => openDeleteModal(student)}
                             >
                               Remove
@@ -539,11 +549,13 @@ const StudentManagementSystem = () => {
             )}
 
             {editStudentModalOpen && selectedStudent && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
+                <div className="bg-white p-4 md:p-6 rounded-lg shadow-lg w-full max-w-md">
                   <h3 className="text-lg font-semibold">Edit Student</h3>
-                  <div className="mt-4">
-                    <label className="block font-medium">Roll No</label>
+                  <div className="mt-3 md:mt-4">
+                    <label className="block font-medium text-sm md:text-base">
+                      Roll No
+                    </label>
                     <input
                       type="number"
                       value={selectedStudent.rollNo}
@@ -553,11 +565,13 @@ const StudentManagementSystem = () => {
                           rollNo: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm md:text-base"
                     />
                   </div>
-                  <div className="mt-4">
-                    <label className="block font-medium">Name</label>
+                  <div className="mt-3 md:mt-4">
+                    <label className="block font-medium text-sm md:text-base">
+                      Name
+                    </label>
                     <input
                       type="text"
                       value={selectedStudent.name}
@@ -567,11 +581,13 @@ const StudentManagementSystem = () => {
                           name: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm md:text-base"
                     />
                   </div>
-                  <div className="mt-4">
-                    <label className="block font-medium">Email</label>
+                  <div className="mt-3 md:mt-4">
+                    <label className="block font-medium text-sm md:text-base">
+                      Email
+                    </label>
                     <input
                       type="email"
                       value={selectedStudent.email}
@@ -581,19 +597,19 @@ const StudentManagementSystem = () => {
                           email: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm md:text-base"
                     />
                   </div>
-                  <div className="flex justify-end gap-3 mt-4">
+                  <div className="flex justify-end gap-2 md:gap-3 mt-4">
                     <button
                       onClick={closeModals}
-                      className="bg-gray-400 text-white px-4 py-2 rounded-lg"
+                      className="bg-gray-400 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={updateStudent}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                      className="bg-green-500 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base"
                     >
                       Update
                     </button>
@@ -603,23 +619,23 @@ const StudentManagementSystem = () => {
             )}
 
             {deleteStudentModalOpen && selectedStudent && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
+                <div className="bg-white p-4 md:p-6 rounded-lg shadow-lg w-full max-w-md">
                   <h3 className="text-lg font-semibold">Confirm Delete</h3>
-                  <p>
+                  <p className="text-sm md:text-base mt-2">
                     Are you sure you want to remove{" "}
                     <strong>{selectedStudent.name}</strong>?
                   </p>
-                  <div className="flex justify-end mt-4 gap-3">
+                  <div className="flex justify-end mt-4 gap-2 md:gap-3">
                     <button
                       onClick={closeModals}
-                      className="bg-gray-400 text-white px-4 py-2 rounded-lg"
+                      className="bg-gray-400 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={confirmDelete}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                      className="bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base"
                     >
                       Delete
                     </button>
@@ -632,27 +648,29 @@ const StudentManagementSystem = () => {
       )}
 
       {view === "students" && (
-        <div className="card bg-white rounded-xl shadow-md p-6 mb-6">
+        <div className="card bg-white rounded-xl shadow-md p-4 md:p-6 mb-6">
           {subjects.length > 0 && (
             <div>
-              <h3 className="text-gray-800 font-semibold mb-4">
+              <h3 className="text-gray-800 font-semibold mb-3 md:mb-4">
                 Assigned Subjects
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {subjects.map((subject, index) => (
                   <div
                     key={index}
-                    className="bg-gray-200 p-5 rounded-lg shadow-sm"
+                    className="bg-gray-200 p-3 md:p-5 rounded-lg shadow-sm"
                   >
-                    <h3 className="text-gray-800 font-semibold flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 bg-[#059669] rounded-full"></span>
+                    <h3 className="text-gray-800 font-semibold flex items-center gap-2 text-sm md:text-base">
+                      <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#059669] rounded-full"></span>
                       {subject.name}
                     </h3>
-                    <p className="text-lg font-medium">Year: {subject.year}</p>
-                    <p className="text-lg font-medium">
+                    <p className="text-sm md:text-base font-medium">
+                      Year: {subject.year}
+                    </p>
+                    <p className="text-sm md:text-base font-medium">
                       Semester: {subject.semester}
                     </p>
-                    <p className="text-lg font-medium">
+                    <p className="text-sm md:text-base font-medium">
                       Division: {subject.division}
                     </p>
                   </div>
@@ -662,8 +680,8 @@ const StudentManagementSystem = () => {
           )}
 
           {Object.keys(subjectStudents).map((key) => (
-            <div key={key} className="mt-8">
-              <h3 className="text-gray-800 font-semibold mb-4">
+            <div key={key} className="mt-6 md:mt-8">
+              <h3 className="text-gray-800 font-semibold mb-3 md:mb-4">
                 Students for {key}
               </h3>
 
@@ -671,13 +689,13 @@ const StudentManagementSystem = () => {
                 <table className="min-w-full bg-white">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                      <th className="py-2 px-2 md:px-4 text-left text-sm md:text-base font-semibold text-gray-800">
                         Roll No
                       </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                      <th className="py-2 px-2 md:px-4 text-left text-sm md:text-base font-semibold text-gray-800">
                         Name
                       </th>
-                      <th className="py-2 px-4 text-left font-semibold text-gray-800">
+                      <th className="py-2 px-2 md:px-4 text-left text-sm md:text-base font-semibold text-gray-800">
                         Email
                       </th>
                     </tr>
@@ -685,9 +703,15 @@ const StudentManagementSystem = () => {
                   <tbody>
                     {subjectStudents[key].map((student) => (
                       <tr key={student.rollNo}>
-                        <td className="py-2 px-4">{student.rollNo}</td>
-                        <td className="py-2 px-4">{student.name}</td>
-                        <td className="py-2 px-4">{student.email}</td>
+                        <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                          {student.rollNo}
+                        </td>
+                        <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                          {student.name}
+                        </td>
+                        <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                          {student.email}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -700,7 +724,7 @@ const StudentManagementSystem = () => {
 
       {toast.message && (
         <div
-          className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg text-white font-medium flex items-center gap-3 ${
+          className={`fixed top-4 right-4 p-3 md:p-4 rounded-lg shadow-lg text-white font-medium flex items-center gap-2 md:gap-3 text-sm md:text-base ${
             toast.type === "success" ? "bg-[#059669]" : "bg-red-500"
           } transition-transform transform ${
             toast.message ? "translate-y-0" : "-translate-y-5"
@@ -712,7 +736,7 @@ const StudentManagementSystem = () => {
 
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm z-50">
-          <div className="w-12 h-12 border-4 border-t-4 border-[#059669] border-t-[#059669] rounded-full animate-spin"></div>
+          <div className="w-10 h-10 md:w-12 md:h-12 border-4 border-t-4 border-[#059669] border-t-[#059669] rounded-full animate-spin"></div>
         </div>
       )}
     </div>
