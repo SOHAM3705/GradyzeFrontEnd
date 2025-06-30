@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Division wise Result Analysis – Internal Exam PDF</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    button { 
+      padding: 12px 24px; 
+      background: linear-gradient(135deg, #4CAF50, #45a049); 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    button:hover { 
+      background: linear-gradient(135deg, #45a049, #3d8b40); 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+    h1 { color: #333; text-align: center; margin-bottom: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 Division wise Result Analysis – Internal Exam</h1>
+    <div style="text-align: center;">
+      <button id="generatePdf">Generate PDF</button>
+    </div>
+  </div>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+
+    document.getElementById('generatePdf').addEventListener('click', function () {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      const darkGrey = '#333333';
+      const lightGrey = '#555555';
+
+      function addHeader() {
+        const imgWidth = 35;
+        const imgHeight = 30;
+        const headerHeight = 35;
+        const subHeaderHeight = 22;
+
+        doc.setFillColor(darkGrey);
+        doc.rect(0, 0, doc.internal.pageSize.width, headerHeight, 'F');
+
+        doc.setFillColor(255, 255, 255);
+        doc.rect(8, 3, imgWidth, imgHeight, 'FD');
+        doc.setTextColor(150);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text("LOGO", 8 + imgWidth / 2, 3 + imgHeight / 2, { align: 'center', baseline: 'middle' });
+
+        doc.rect(doc.internal.pageSize.width - 43, 3, imgWidth, imgHeight, 'FD');
+        doc.text("LOGO", doc.internal.pageSize.width - 43 + imgWidth / 2, 3 + imgHeight / 2, { align: 'center', baseline: 'middle' });
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.text("Pimpri Chinchwad Education Trust’s", doc.internal.pageSize.width / 2, 10, { align: 'center' });
+        doc.setFontSize(14);
+        doc.text("Pimpri Chinchwad College of Engineering &", doc.internal.pageSize.width / 2, 16, { align: 'center' });
+        doc.text("Research Ravet, Pune", doc.internal.pageSize.width / 2, 22, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text("IQAC PCCOER", doc.internal.pageSize.width / 2, 28, { align: 'center' });
+
+        doc.setFillColor(lightGrey);
+        doc.rect(0, headerHeight, doc.internal.pageSize.width, subHeaderHeight, 'F');
+        doc.setFontSize(10);
+        doc.setTextColor(255);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Academic Year:", 15, headerHeight + 6);
+        doc.setFont('helvetica', 'normal');
+        doc.text("2023 – 24", 15, headerHeight + 11);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Term:", 15, headerHeight + 16);
+        doc.setFont('helvetica', 'normal');
+        doc.text("II", 30, headerHeight + 16);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text("Division wise Result Analysis – Internal Exam", doc.internal.pageSize.width / 2, headerHeight + subHeaderHeight / 2 + 2, { align: 'center' });
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text("Record No.:", doc.internal.pageSize.width - 45, headerHeight + 6);
+        doc.setFont('helvetica', 'normal');
+        doc.text("ACAD/R/012-C", doc.internal.pageSize.width - 45, headerHeight + 11);
+      }
+
+      addHeader();
+
+      let currentY = 35 + 22 + 6;
+      doc.setFontSize(10);
+      doc.setTextColor(0);
+
+      doc.text("Department: Computer Engineering", 15, currentY);
+      doc.text("Class: TE", doc.internal.pageSize.width / 2 + 5, currentY);
+      currentY += 6;
+      doc.text("Div.: A", doc.internal.pageSize.width / 2 + 5, currentY);
+      currentY += 6;
+      doc.text("Date of Exam: 20th feb 2024", doc.internal.pageSize.width / 2 + 5, currentY);
+      currentY += 8;
+      doc.text("Examination: UT Exam", 15, currentY);
+      doc.text("Max Marks: 30", doc.internal.pageSize.width / 2 + 5, currentY);
+      currentY += 8;
+
+      const commonStyles = {
+        fontSize: 9,
+        lineColor: [0, 0, 0],
+        lineWidth: 0.2,
+        cellPadding: 1.5,
+        valign: 'middle',
+        halign: 'center'
+      };
+
+      const mainTableHeaders = [["Subjects", "DSBDA", "WT", "AI", "CC"]];
+      const mainTableData = [
+        ["Total Strength of Class", "78", "78", "78", "78"],
+        ["No. of students Present", "66", "62", "67", "68"],
+        ["No. of students Absent", "12", "16", "11", "10"],
+        ["No. of students having marks from 0 to 11", "2", "4", "3", "3"],
+        ["No. of students having marks from 12 to 20", "20", "45", "32", "57"],
+        ["No. of students having marks from 21 to 28", "41", "13", "30", "8"],
+        ["No. of students having marks 28 above", "3", "0", "2", "0"],
+        ["% Pass Result (Without absent students)", "95.52%", "92.06%", "94.12%", "94.20%"],
+        ["% Fail Students (Without absent students)", "2.99%", "6.35%", "4.41%", "4.35%"],
+        ["% Pass Result (With absent students)", "81.01%", "73.42%", "81.01%", "82.28%"],
+        ["Total No. of students appearing for Retest (Fail + Absent)", "14 (2+12)", "20 (16+4)", "14 (3+11)", "13 (10+3)"],
+        ["Average Attendance of students", "84.62%", "79.49%", "85.90%", "87.18%"],
+        ["Course (Subject) Faculty", "VAK", "DPM", "AK", "VPL"]
+      ];
+
+      doc.autoTable({
+        startY: currentY + 5,
+        head: mainTableHeaders,
+        body: mainTableData,
+        margin: { left: 8, right: 8 },
+        styles: commonStyles,
+        headStyles: {
+          fillColor: [22, 160, 133],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'center',
+          lineColor: [0, 0, 0],
+          lineWidth: 0.2
+        },
+        columnStyles: {
+          0: { cellWidth: 70, halign: 'left' },
+          1: { halign: 'center' },
+          2: { halign: 'center' },
+          3: { halign: 'center' },
+          4: { halign: 'center' }
+        }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 10;
+
+      doc.autoTable({
+        startY: currentY,
+        head: [["Internal Exam Incharge", "Class Teacher", "Head of Department"]],
+        body: [["Mrs. Madhavi M.Kapre", "Mrs. Deepa Mahajan", "Dr. A. A. Chaugule"]],
+        margin: { left: 8, right: 8 },
+        styles: commonStyles,
+        headStyles: {
+          fillColor: [70, 130, 180],
+          textColor: 255,
+          fontStyle: 'bold',
+          lineColor: [0, 0, 0],
+          lineWidth: 0.2
+        }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 10;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text("Remark: (Root Cause Analysis & corrective action):", 8, currentY);
+      currentY += 5;
+
+      doc.autoTable({
+        startY: currentY,
+        head: [["Sr. No.", "Root Cause", "Corrective Action"]],
+        body: [["", "", ""], ["", "", ""]],
+        margin: { left: 8, right: 8 },
+        styles: commonStyles,
+        headStyles: {
+          fillColor: [70, 130, 180],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'center',
+          lineColor: [0, 0, 0],
+          lineWidth: 0.2
+        },
+        columnStyles: {
+          0: { cellWidth: 20 },
+          1: { cellWidth: 80 },
+          2: { cellWidth: 80 }
+        }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 10;
+
+      doc.autoTable({
+        startY: currentY,
+        head: [["Class Teacher", "Department Academic Coordinator", "Head of Department"]],
+        body: [["Mrs. Deepa Mahajan", "Dr. G. R. Suryavanshi", "Dr. A. A. Chaugule"]],
+        margin: { left: 8, right: 8 },
+        styles: commonStyles,
+        headStyles: {
+          fillColor: [70, 130, 180],
+          textColor: 255,
+          fontStyle: 'bold',
+          lineColor: [0, 0, 0],
+          lineWidth: 0.2
+        }
+      });
+
+      doc.save('Division_wise_Result_Analysis_Internal_Exam.pdf');
+    });
+  </script>
+</body>
+</html>
+

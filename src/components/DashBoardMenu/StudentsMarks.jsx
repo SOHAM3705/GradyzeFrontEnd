@@ -234,9 +234,14 @@ const AdminStudentMarks = () => {
 
       html += `</tbody></table>`;
 
-      // Only add PDF button if we have marks data
+      // Only add buttons if we have marks data
       if (marksData && marksData.length > 0) {
-        html += `<button class="btn bg-green-500 text-white px-2 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm mt-4" onclick="generatePDF('${classId}')">Generate PDF</button>`;
+        html += `
+          <div class="flex gap-2 mt-4">
+            <button class="btn bg-green-500 text-white px-2 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm" onclick="generatePDF('${classId}')">Generate PDF</button>
+            <button class="btn bg-green-500 text-white px-2 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm" onclick="generateReport('${classId}')">Generate Report</button>
+          </div>
+        `;
       }
 
       marksContainer.innerHTML = html;
@@ -346,6 +351,48 @@ const AdminStudentMarks = () => {
           "_"
         );
       doc.save(fileName);
+    };
+
+    // Make generateReport function available globally
+    window.generateReport = (classId) => {
+      const students = marksData[classId]; // use marksData for marks
+      const meta = classMetaMap[classId]; // use classMetaMap for meta
+
+      if (!students || !meta) {
+        alert("No data available to generate report.");
+        return;
+      }
+
+      const { department, year, division, examType } = meta;
+      let examTypeDisplay = "";
+      switch (examType) {
+        case "unitTest":
+          examTypeDisplay = "Unit Test";
+          break;
+        case "reunitTest":
+          examTypeDisplay = "Re-Unit Test";
+          break;
+        case "prelims":
+          examTypeDisplay = "Prelims";
+          break;
+        case "reprelims":
+          examTypeDisplay = "Re-Prelims";
+          break;
+        default:
+          examTypeDisplay = examType;
+      }
+
+      // Add your report generation logic here
+      console.log("Generating report for:", {
+        department,
+        year,
+        division,
+        examType,
+        students,
+      });
+      alert(
+        `Report generation functionality for ${department} - ${year} Division ${division} (${examTypeDisplay}) will be implemented here.`
+      );
     };
   }, [marksData, classMetaMap]);
 

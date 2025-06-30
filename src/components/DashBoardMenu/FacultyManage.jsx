@@ -654,26 +654,37 @@ const FacultyManagementSystem = () => {
         </div>
       </header>
 
-      <div className="bg-white p-2 sm:p-4 rounded-lg shadow-md mb-4 sm:mb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-2 sm:mb-4">
-          <h2 className="text-lg sm:text-xl">Faculty Directory</h2>
-          <div>
+      <div className="bg-white p-4 rounded-lg shadow-md mb-6 border border-gray-100">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+            Faculty Directory
+          </h2>
+          <div className="w-full sm:w-auto">
             <button
-              className="bg-purple-600 text-white px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md w-full sm:w-auto transition-colors"
               onClick={() => setIsFacultyModalOpen(true)}
             >
               Add Faculty
             </button>
           </div>
         </div>
-        <input
-          type="text"
-          placeholder="Search for a teacher..."
-          value={searchQuery}
-          onChange={handleSearch}
-          className="w-full p-1 sm:p-2 border rounded mb-2 sm:mb-4 text-xs sm:text-base"
-        />
-        <div id="facultyContainer">{renderFaculties()}</div>
+
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by name, department or subject..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
+        </div>
+
+        <div
+          className="w-full overflow-y-auto rounded-lg border border-gray-200"
+          style={{ maxHeight: "60vh" }}
+        >
+          {renderFaculties()}
+        </div>
       </div>
 
       {isFacultyModalOpen && (
