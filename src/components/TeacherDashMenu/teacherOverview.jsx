@@ -37,7 +37,7 @@ const TeacherOverview = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const teacherId = localStorage.getItem("teacherId"); // Or get from context
+        const teacherId = sessionStorage.getItem("teacherId"); // Or get from context
         const res = await axios.get(
           `${API_BASE_URL}/api/teacher/overview-stats/${teacherId}`
         );
@@ -52,7 +52,7 @@ const TeacherOverview = () => {
 
   const fetchLectureStats = async () => {
     try {
-      const teacherId = localStorage.getItem("teacherId");
+      const teacherId = sessionStorage.getItem("teacherId");
       const res = await axios.get(
         `${API_BASE_URL}/api/teacher/lectures-held/${teacherId}`
       );
