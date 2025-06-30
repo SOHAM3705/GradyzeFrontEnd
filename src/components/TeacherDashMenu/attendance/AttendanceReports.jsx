@@ -303,7 +303,6 @@ const AttendanceReport = () => {
     }
 
     return filteredStudents.map((student) => {
-      // Check both student._id and student.studentId
       const studentId = student._id || student.studentId;
       const studentAttendance =
         attendanceData.studentAttendance?.[studentId] || {};
@@ -312,7 +311,6 @@ const AttendanceReport = () => {
       let overallTotal = 0;
 
       const subjectCells = subjects.map((subject) => {
-        // Use subject.name to match with attendance data
         const subjectName = subject.name || subject.subject;
         const subjectAttendance = studentAttendance[subjectName] || {
           present: 0,
@@ -328,10 +326,13 @@ const AttendanceReport = () => {
         overallTotal += subjectAttendance.total;
 
         return (
-          <td key={subject._id} className="p-2 text-center border">
+          <td
+            key={subject._id}
+            className="p-1 md:p-2 text-center border text-xs md:text-sm"
+          >
             <div className={getAttendanceColor(percentage)}>
               <div className="font-semibold">{percentage}%</div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 whitespace-nowrap">
                 {subjectAttendance.present}/{subjectAttendance.total}
               </div>
             </div>
@@ -346,16 +347,20 @@ const AttendanceReport = () => {
 
       return (
         <tr key={student._id} className="border-b hover:bg-gray-100">
-          <td className="p-2 border">{student.rollNo}</td>
-          <td className="p-2 border">{student.name}</td>
+          <td className="p-1 md:p-2 border text-xs md:text-sm">
+            {student.rollNo}
+          </td>
+          <td className="p-1 md:p-2 border text-xs md:text-sm">
+            {student.name}
+          </td>
           {subjectCells}
           <td
-            className={`p-2 border font-semibold text-center bg-gray-50 ${getAttendanceColor(
+            className={`p-1 md:p-2 border font-semibold text-center bg-gray-50 text-xs md:text-sm ${getAttendanceColor(
               overallPercentage
             )}`}
           >
             <div className="font-bold">{overallPercentage}%</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-500 whitespace-nowrap">
               {overallPresent}/{overallTotal}
             </div>
           </td>
@@ -365,86 +370,106 @@ const AttendanceReport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 p-4">
+    <div className="min-h-screen bg-gray-100 text-gray-800 p-3 md:p-4">
       <ToastContainer position="top-right" autoClose={5000} />
 
       {/* Controls */}
-      <div className="flex flex-wrap gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <label className="font-medium text-gray-600">Class</label>
-          <span className="p-2 border rounded bg-white">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-4 mb-3 md:mb-4">
+        <div className="flex items-center gap-1 md:gap-2">
+          <label className="font-medium text-gray-600 text-sm md:text-base">
+            Class
+          </label>
+          <span className="p-1 md:p-2 border rounded bg-white text-sm md:text-base">
             {year} - {division}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <label className="font-medium text-gray-600">Start Date</label>
+        <div className="flex items-center gap-1 md:gap-2">
+          <label className="font-medium text-gray-600 text-sm md:text-base">
+            Start Date
+          </label>
           <input
             type="date"
             value={dateRange.startDate}
             onChange={(e) =>
               setDateRange((prev) => ({ ...prev, startDate: e.target.value }))
             }
-            className="p-2 border rounded"
+            className="p-1 md:p-2 border rounded text-sm md:text-base"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <label className="font-medium text-gray-600">End Date</label>
+        <div className="flex items-center gap-1 md:gap-2">
+          <label className="font-medium text-gray-600 text-sm md:text-base">
+            End Date
+          </label>
           <input
             type="date"
             value={dateRange.endDate}
             onChange={(e) =>
               setDateRange((prev) => ({ ...prev, endDate: e.target.value }))
             }
-            className="p-2 border rounded"
+            className="p-1 md:p-2 border rounded text-sm md:text-base"
           />
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-semibold mb-2">Total Students</h3>
-          <p className="text-2xl font-bold">{summaryData.totalStudents}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-3 md:mb-4">
+        <div className="bg-white p-3 md:p-4 rounded shadow">
+          <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">
+            Total Students
+          </h3>
+          <p className="text-xl md:text-2xl font-bold">
+            {summaryData.totalStudents}
+          </p>
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-semibold mb-2">Average Attendance</h3>
+        <div className="bg-white p-3 md:p-4 rounded shadow">
+          <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">
+            Average Attendance
+          </h3>
           <p
-            className={`text-2xl font-bold ${getAttendanceColor(
+            className={`text-xl md:text-2xl font-bold ${getAttendanceColor(
               summaryData.averageAttendance
             )}`}
           >
             {summaryData.averageAttendance.toFixed(1)}%
           </p>
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-semibold mb-2">Working Days</h3>
-          <p className="text-2xl font-bold">{summaryData.totalWorkingDays}</p>
+        <div className="bg-white p-3 md:p-4 rounded shadow">
+          <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">
+            Working Days
+          </h3>
+          <p className="text-xl md:text-2xl font-bold">
+            {summaryData.totalWorkingDays}
+          </p>
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-semibold mb-2">Date Range</h3>
-          <p className="text-sm text-gray-600">
+        <div className="bg-white p-3 md:p-4 rounded shadow">
+          <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">
+            Date Range
+          </h3>
+          <p className="text-xs md:text-sm text-gray-600">
             {dateRange.startDate} to {dateRange.endDate}
           </p>
         </div>
       </div>
 
       {/* Attendance Table */}
-      <div className="bg-white p-4 rounded shadow mb-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Student Attendance Report</h2>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-2">
+      <div className="bg-white p-3 md:p-4 rounded shadow mb-3 md:mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 md:mb-4 gap-2">
+          <h2 className="text-lg md:text-xl font-semibold">
+            Student Attendance Report
+          </h2>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <div className="flex gap-1 md:gap-2 w-full sm:w-auto">
               <button
                 onClick={() => handleExportAttendance("pdf")}
                 disabled={isLoading}
-                className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-red-600"
+                className="bg-red-500 text-white px-2 py-1 md:px-4 md:py-2 rounded disabled:opacity-50 hover:bg-red-600 text-xs md:text-sm"
               >
                 {isLoading ? "Exporting..." : "Export PDF"}
               </button>
               <button
                 onClick={() => handleExportAttendance("excel")}
                 disabled={isLoading}
-                className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-green-600"
+                className="bg-green-500 text-white px-2 py-1 md:px-4 md:py-2 rounded disabled:opacity-50 hover:bg-green-600 text-xs md:text-sm"
               >
                 {isLoading ? "Exporting..." : "Export Excel"}
               </button>
@@ -454,13 +479,13 @@ const AttendanceReport = () => {
               placeholder="Search students..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="p-2 border rounded"
+              className="p-1 md:p-2 border rounded text-sm md:text-base w-full sm:w-auto"
             />
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex gap-4 mb-4 text-sm">
+        <div className="flex flex-wrap gap-2 md:gap-4 mb-3 md:mb-4 text-xs md:text-sm">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-green-500 rounded"></div>
             <span>≥90% (Excellent)</span>
@@ -479,18 +504,22 @@ const AttendanceReport = () => {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-200">
-                <th className="p-2 text-left border">Roll No.</th>
-                <th className="p-2 text-left border">Student Name</th>
+                <th className="p-1 md:p-2 text-left border text-xs md:text-sm">
+                  Roll No.
+                </th>
+                <th className="p-1 md:p-2 text-left border text-xs md:text-sm">
+                  Student Name
+                </th>
                 {subjects.map((subject) => (
                   <th
                     key={subject._id || subject.name}
-                    className="p-2 text-center border"
+                    className="p-1 md:p-2 text-center border text-xs md:text-sm"
                   >
                     <div>{subject.name}</div>
                     <div className="text-xs font-normal">Attendance %</div>
                   </th>
                 ))}
-                <th className="p-2 text-center border bg-gray-100">
+                <th className="p-1 md:p-2 text-center border bg-gray-100 text-xs md:text-sm">
                   <div>Overall</div>
                   <div className="text-xs font-normal">Attendance %</div>
                 </th>

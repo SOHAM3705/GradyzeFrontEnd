@@ -1015,14 +1015,18 @@ const TeacherDashboard = () => {
     if (!confirmAction) return null;
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
-        <div className="bg-white p-6 rounded shadow-lg w-96">
-          <h3 className="text-lg font-semibold mb-4">{confirmAction.title}</h3>
-          <p className="mb-4">{confirmAction.message}</p>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30 p-4">
+        <div className="bg-white p-4 md:p-6 rounded shadow-lg w-full max-w-md">
+          <h3 className="text-lg font-semibold mb-3 md:mb-4">
+            {confirmAction.title}
+          </h3>
+          <p className="mb-3 md:mb-4 text-sm md:text-base">
+            {confirmAction.message}
+          </p>
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setConfirmAction(null)}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+              className="bg-gray-300 text-gray-700 px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base"
             >
               Cancel
             </button>
@@ -1031,7 +1035,7 @@ const TeacherDashboard = () => {
                 confirmAction.onConfirm();
                 setConfirmAction(null);
               }}
-              className="bg-red-500 text-white px-4 py-2 rounded"
+              className="bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base"
             >
               Confirm
             </button>
@@ -1044,10 +1048,12 @@ const TeacherDashboard = () => {
   const renderModalContent = () => {
     if (modalContent?.type === "loading") {
       return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-          <div className="bg-white p-8 rounded shadow-lg flex flex-col items-center">
-            <ClipLoader size={50} color="#3B82F6" />
-            <p className="mt-4 text-lg">{modalContent.message}</p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 p-4">
+          <div className="bg-white p-4 md:p-8 rounded shadow-lg flex flex-col items-center w-full max-w-xs md:max-w-sm">
+            <ClipLoader size={40} color="#3B82F6" />
+            <p className="mt-3 md:mt-4 text-base md:text-lg">
+              {modalContent.message}
+            </p>
           </div>
         </div>
       );
@@ -1057,27 +1063,27 @@ const TeacherDashboard = () => {
     switch (modalContent.type) {
       case "exam-selection":
         return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 p-4">
+            <div className="bg-white p-4 md:p-6 rounded shadow-lg w-full max-w-md relative">
               <button
                 onClick={closeModal}
-                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl md:text-2xl"
               >
                 &times;
               </button>
-              <div className="mb-4 border-b pb-2">
-                <h3 className="font-semibold text-gray-800">
+              <div className="mb-3 md:mb-4 border-b pb-2">
+                <h3 className="font-semibold text-gray-800 text-base md:text-lg">
                   Select Exam Type
                 </h3>
               </div>
-              <div className="mb-4">
-                <label className="block font-medium text-gray-600">
+              <div className="mb-3 md:mb-4">
+                <label className="block font-medium text-gray-600 text-sm md:text-base">
                   Exam Type
                 </label>
                 <select
                   value={selectedExamType}
                   onChange={handleExamTypeChange}
-                  className="w-full p-2 border rounded mt-1"
+                  className="w-full p-2 border rounded mt-1 text-sm md:text-base"
                 >
                   <option value="">Select an exam type</option>
                   <option value="unit-test">Unit Test</option>
@@ -1085,9 +1091,9 @@ const TeacherDashboard = () => {
                   <option value="prelim">Prelim</option>
                   <option value="reprelim">Re-Prelim</option>
                 </select>
-                {selectedExamType === "re-unit-test" ||
-                selectedExamType === "reprelim" ? (
-                  <div className="mt-2 p-2 bg-blue-50 text-blue-800 text-sm rounded">
+                {(selectedExamType === "re-unit-test" ||
+                  selectedExamType === "reprelim") && (
+                  <div className="mt-2 p-2 bg-blue-50 text-blue-800 text-xs md:text-sm rounded">
                     <p>
                       Only students who failed or were absent in the previous{" "}
                       {selectedExamType === "re-unit-test"
@@ -1105,18 +1111,18 @@ const TeacherDashboard = () => {
                       </p>
                     )}
                   </div>
-                ) : null}
+                )}
               </div>
               <div className="flex justify-end gap-2">
                 <button
                   onClick={closeModal}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                  className="bg-gray-300 text-gray-700 px-3 py-1 md:px-4 md:py-2 rounded hover:bg-gray-400 text-sm md:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleContinueExam}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  className="bg-blue-500 text-white px-3 py-1 md:px-4 md:py-2 rounded hover:bg-blue-600 text-sm md:text-base"
                 >
                   Continue
                 </button>
@@ -1124,21 +1130,21 @@ const TeacherDashboard = () => {
             </div>
           </div>
         );
-
       case "export-selection":
         return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-96">
-              <h3 className="text-lg font-semibold mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 p-4">
+            <div className="bg-white p-4 md:p-6 rounded shadow-lg w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-3 md:mb-4">
                 Export Marks for {modalContent.subjectName}
               </h3>
-
-              <div className="mb-4">
-                <label className="block mb-2">Exam Type:</label>
+              <div className="mb-3 md:mb-4">
+                <label className="block mb-1 md:mb-2 text-sm md:text-base">
+                  Exam Type:
+                </label>
                 <select
                   value={selectedExamType}
                   onChange={(e) => setSelectedExamType(e.target.value)}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded text-sm md:text-base"
                 >
                   <option value="">Select Exam Type</option>
                   <option value="unit-test">Unit Test</option>
@@ -1147,8 +1153,7 @@ const TeacherDashboard = () => {
                   <option value="re-prelim">Re-Prelim</option>
                 </select>
               </div>
-
-              <div className="flex justify-center gap-4 mt-6">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 md:gap-4 mt-4 md:mt-6">
                 <button
                   onClick={() =>
                     handleExport(
@@ -1158,7 +1163,7 @@ const TeacherDashboard = () => {
                     )
                   }
                   disabled={!selectedExamType || isLoading}
-                  className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                  className="bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 rounded disabled:opacity-50 text-sm md:text-base"
                 >
                   {isLoading ? "Exporting..." : "Export PDF"}
                 </button>
@@ -1171,16 +1176,15 @@ const TeacherDashboard = () => {
                     )
                   }
                   disabled={!selectedExamType || isLoading}
-                  className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                  className="bg-green-500 text-white px-3 py-1 md:px-4 md:py-2 rounded disabled:opacity-50 text-sm md:text-base"
                 >
                   {isLoading ? "Exporting..." : "Export Excel"}
                 </button>
               </div>
-
-              <div className="flex justify-end mt-6">
+              <div className="flex justify-end mt-4 md:mt-6">
                 <button
                   onClick={closeModal}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                  className="bg-gray-300 text-gray-700 px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base"
                 >
                   Cancel
                 </button>
@@ -1188,7 +1192,6 @@ const TeacherDashboard = () => {
             </div>
           </div>
         );
-
       case "students-list":
         const {
           subjectId,
@@ -1198,46 +1201,67 @@ const TeacherDashboard = () => {
           studentsToShow,
         } = modalContent;
         const isUnitTest = examType.includes("unit");
-
         return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-5xl relative pl-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 p-2 md:p-4">
+            <div className="bg-white p-3 md:p-6 rounded shadow-lg w-full max-w-5xl relative max-h-[90vh] overflow-hidden flex flex-col">
               <button
                 onClick={closeModal}
-                className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl font-bold"
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl md:text-2xl font-bold"
               >
                 &times;
               </button>
-              <div className="mb-4 border-b pb-2">
-                <h3 className="font-semibold text-gray-800">
+              <div className="mb-3 md:mb-4 border-b pb-2">
+                <h3 className="font-semibold text-gray-800 text-base md:text-lg">
                   {examTypeToText(examType)} - Enter Student Marks
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs md:text-sm text-gray-600 mt-1">
                   {isUnitTest ? "Pass mark: 12" : "Pass mark: 28"}
                 </p>
               </div>
-              <div className="overflow-x-auto max-h-[70vh]">
-                <table className="w-full mb-4">
+              <div className="overflow-x-auto overflow-y-auto flex-1">
+                <table className="w-full mb-3 md:mb-4">
                   <thead className="bg-gray-100 sticky top-0">
                     <tr>
-                      <th className="p-2 text-left">Absent</th>
-                      <th className="p-2 text-left">Roll No.</th>
-                      <th className="p-2 text-left">Name</th>
+                      <th className="p-1 md:p-2 text-left text-xs md:text-sm">
+                        Absent
+                      </th>
+                      <th className="p-1 md:p-2 text-left text-xs md:text-sm">
+                        Roll No.
+                      </th>
+                      <th className="p-1 md:p-2 text-left text-xs md:text-sm">
+                        Name
+                      </th>
                       {isUnitTest ? (
                         <>
-                          <th className="p-2 text-center">Q1/Q2 (Max 15)</th>
-                          <th className="p-2 text-center">Q3/Q4 (Max 15)</th>
+                          <th className="p-1 md:p-2 text-center text-xs md:text-sm">
+                            Q1/Q2 (Max 15)
+                          </th>
+                          <th className="p-1 md:p-2 text-center text-xs md:text-sm">
+                            Q3/Q4 (Max 15)
+                          </th>
                         </>
                       ) : (
                         <>
-                          <th className="p-2 text-center">Q1/Q2 (Max 17)</th>
-                          <th className="p-2 text-center">Q3/Q4 (Max 18)</th>
-                          <th className="p-2 text-center">Q5/Q6 (Max 17)</th>
-                          <th className="p-2 text-center">Q7/Q8 (Max 18)</th>
+                          <th className="p-1 md:p-2 text-center text-xs md:text-sm">
+                            Q1/Q2 (Max 17)
+                          </th>
+                          <th className="p-1 md:p-2 text-center text-xs md:text-sm">
+                            Q3/Q4 (Max 18)
+                          </th>
+                          <th className="p-1 md:p-2 text-center text-xs md:text-sm">
+                            Q5/Q6 (Max 17)
+                          </th>
+                          <th className="p-1 md:p-2 text-center text-xs md:text-sm">
+                            Q7/Q8 (Max 18)
+                          </th>
                         </>
                       )}
-                      <th className="p-2 text-center">Total</th>
-                      <th className="p-2 text-center">Status</th>
+                      <th className="p-1 md:p-2 text-center text-xs md:text-sm">
+                        Total
+                      </th>
+                      <th className="p-1 md:p-2 text-center text-xs md:text-sm">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1246,15 +1270,13 @@ const TeacherDashboard = () => {
                         existingMarks[student._id]?.[examType];
                       const isAbsent = studentMarks?.status === "Absent";
                       const marksData = studentMarks?.marksObtained;
-
                       return (
                         <tr
                           key={student._id}
                           className="student-row border-b hover:bg-gray-50"
                           data-id={student._id}
                         >
-                          {/* Absent Checkbox */}
-                          <td className="p-2 text-center">
+                          <td className="p-1 md:p-2 text-center">
                             <input
                               type="checkbox"
                               className="absent-checkbox"
@@ -1269,7 +1291,6 @@ const TeacherDashboard = () => {
                                   if (e.target.checked) {
                                     input.value = "";
                                   } else {
-                                    // Reset to default values when unchecked
                                     const marksData =
                                       existingMarks[student._id]?.[examType]
                                         ?.marksObtained;
@@ -1291,9 +1312,10 @@ const TeacherDashboard = () => {
                               }}
                             />
                           </td>
-
-                          <td className="p-2">{student.rollNo}</td>
-                          <td className="p-2">
+                          <td className="p-1 md:p-2 text-xs md:text-sm">
+                            {student.rollNo}
+                          </td>
+                          <td className="p-1 md:p-2 text-xs md:text-sm">
                             {student.name}
                             {getRetestInfo(
                               student._id,
@@ -1301,20 +1323,17 @@ const TeacherDashboard = () => {
                               examType
                             )}
                           </td>
-
-                          {/* Q1/Q2 Input */}
-                          <td className="p-2 text-center">
+                          <td className="p-1 md:p-2 text-center">
                             <input
                               type="number"
                               min="0"
                               max={isUnitTest ? 15 : 17}
-                              className="q1q2-input w-16 p-1 border rounded text-center"
+                              className="q1q2-input w-12 md:w-16 p-1 border rounded text-center text-xs md:text-sm"
                               defaultValue={
                                 isAbsent ? "" : marksData?.q1q2 || 0
                               }
                               disabled={isAbsent}
                               onChange={(e) => {
-                                // Enforce max value
                                 if (
                                   parseInt(e.target.value) >
                                   (isUnitTest ? 15 : 17)
@@ -1334,14 +1353,12 @@ const TeacherDashboard = () => {
                               }}
                             />
                           </td>
-
-                          {/* Q3/Q4 Input */}
-                          <td className="p-2 text-center">
+                          <td className="p-1 md:p-2 text-center">
                             <input
                               type="number"
                               min="0"
                               max={isUnitTest ? 15 : 18}
-                              className="q3q4-input w-16 p-1 border rounded text-center"
+                              className="q3q4-input w-12 md:w-16 p-1 border rounded text-center text-xs md:text-sm"
                               defaultValue={
                                 isAbsent ? "" : marksData?.q3q4 || 0
                               }
@@ -1366,16 +1383,14 @@ const TeacherDashboard = () => {
                               }}
                             />
                           </td>
-
-                          {/* Conditionally render Q5/Q6 and Q7/Q8 for non-unit tests */}
                           {!isUnitTest && (
                             <>
-                              <td className="p-2 text-center">
+                              <td className="p-1 md:p-2 text-center">
                                 <input
                                   type="number"
                                   min="0"
                                   max={17}
-                                  className="q5q6-input w-16 p-1 border rounded text-center"
+                                  className="q5q6-input w-12 md:w-16 p-1 border rounded text-center text-xs md:text-sm"
                                   defaultValue={
                                     isAbsent ? "" : marksData?.q5q6 || 0
                                   }
@@ -1397,12 +1412,12 @@ const TeacherDashboard = () => {
                                   }}
                                 />
                               </td>
-                              <td className="p-2 text-center">
+                              <td className="p-1 md:p-2 text-center">
                                 <input
                                   type="number"
                                   min="0"
                                   max={18}
-                                  className="q7q8-input w-16 p-1 border rounded text-center"
+                                  className="q7q8-input w-12 md:w-16 p-1 border rounded text-center text-xs md:text-sm"
                                   defaultValue={
                                     isAbsent ? "" : marksData?.q7q8 || 0
                                   }
@@ -1426,12 +1441,11 @@ const TeacherDashboard = () => {
                               </td>
                             </>
                           )}
-
-                          <td className="p-2 total-cell text-center font-medium">
+                          <td className="p-1 md:p-2 total-cell text-center font-medium text-xs md:text-sm">
                             {isAbsent ? "Absent" : marksData?.total || 0}
                           </td>
                           <td
-                            className={`p-2 status-cell text-center ${
+                            className={`p-1 md:p-2 status-cell text-center text-xs md:text-sm ${
                               studentMarks?.status === "Pass"
                                 ? "text-green-600"
                                 : studentMarks?.status === "Fail"
@@ -1447,24 +1461,24 @@ const TeacherDashboard = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="flex justify-end gap-2 mt-4">
+              <div className="flex justify-end gap-2 mt-3 md:mt-4">
                 <button
                   onClick={closeModal}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                  className="bg-gray-300 text-gray-700 px-3 py-1 md:px-4 md:py-2 rounded hover:bg-gray-400 text-sm md:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveMarks}
                   disabled={isSaving}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+                  className="bg-blue-500 text-white px-3 py-1 md:px-4 md:py-2 rounded hover:bg-blue-600 disabled:opacity-50 text-sm md:text-base"
                 >
                   {isSaving ? (
                     <>
                       <ClipLoader
-                        size={20}
+                        size={16}
                         color="#ffffff"
-                        className="inline mr-2"
+                        className="inline mr-1 md:mr-2"
                       />
                       Saving...
                     </>
@@ -1476,21 +1490,21 @@ const TeacherDashboard = () => {
             </div>
           </div>
         );
-
       case "delete-confirmation":
         return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-            <div className="bg-white p-6 rounded shadow-lg w-96">
-              <h3 className="text-lg font-semibold mb-4">Delete Marks</h3>
-
-              <div className="mb-4">
-                <label className="block mb-2">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 p-4">
+            <div className="bg-white p-4 md:p-6 rounded shadow-lg w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-3 md:mb-4">
+                Delete Marks
+              </h3>
+              <div className="mb-3 md:mb-4">
+                <label className="block mb-1 md:mb-2 text-sm md:text-base">
                   Select Exam Type to Delete:
                 </label>
                 <select
                   value={selectedDeleteExamType}
                   onChange={(e) => setSelectedDeleteExamType(e.target.value)}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded text-sm md:text-base"
                 >
                   <option value="">Select Exam Type</option>
                   <option value="unit-test">Unit Test</option>
@@ -1499,21 +1513,20 @@ const TeacherDashboard = () => {
                   <option value="reprelim">Re-Prelim</option>
                 </select>
               </div>
-
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => {
                     setDeleteSubjectId(null);
                     setSelectedDeleteExamType("");
                   }}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                  className="bg-gray-300 text-gray-700 px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteMarks}
                   disabled={!selectedDeleteExamType}
-                  className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                  className="bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 rounded disabled:opacity-50 text-sm md:text-base"
                 >
                   Confirm Delete
                 </button>
@@ -1526,56 +1539,14 @@ const TeacherDashboard = () => {
     }
   };
 
-  const updateStudentRow = (studentId) => {
-    const row = document.querySelector(`.student-row[data-id="${studentId}"]`);
-    if (!row) return;
-
-    const isUnitTest = selectedExamType.includes("unit");
-    const passingMark = isUnitTest ? 12 : 28;
-    const isAbsent = row.querySelector(".absent-checkbox").checked;
-
-    if (isAbsent) {
-      row.querySelector(".total-cell").textContent = "Absent";
-      row.querySelector(".status-cell").textContent = "Absent";
-      row.querySelector(".status-cell").className =
-        "p-2 status-cell text-center text-gray-600";
-      return;
-    }
-
-    const q1q2 = parseInt(row.querySelector(".q1q2-input").value) || 0;
-    const q3q4 = parseInt(row.querySelector(".q3q4-input").value) || 0;
-    const q5q6 = isUnitTest
-      ? 0
-      : parseInt(row.querySelector(".q5q6-input")?.value) || 0;
-    const q7q8 = isUnitTest
-      ? 0
-      : parseInt(row.querySelector(".q7q8-input")?.value) || 0;
-    const total = q1q2 + q3q4 + q5q6 + q7q8;
-
-    row.querySelector(".total-cell").textContent = total;
-
-    const statusCell = row.querySelector(".status-cell");
-    if (total > 0) {
-      const status = total >= passingMark ? "Pass" : "Fail";
-      statusCell.textContent = status;
-      statusCell.className = `p-2 status-cell text-center ${
-        status === "Pass" ? "text-green-600" : "text-red-600"
-      }`;
-    } else {
-      statusCell.textContent = "-";
-      statusCell.className = "p-2 status-cell text-center";
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 p-4">
+    <div className="min-h-screen bg-gray-100 text-gray-800 p-3 md:p-4">
       <ToastContainer position="top-right" autoClose={5000} />
-
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 md:mb-4 gap-2">
+        <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("class-teacher")}
-            className={`px-4 py-2 rounded ${
+            className={`px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base ${
               activeTab === "class-teacher"
                 ? "bg-blue-500 text-white"
                 : "bg-gray-300 text-gray-700"
@@ -1586,7 +1557,7 @@ const TeacherDashboard = () => {
           </button>
           <button
             onClick={() => setActiveTab("subject-teacher")}
-            className={`px-4 py-2 rounded ${
+            className={`px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base ${
               activeTab === "subject-teacher"
                 ? "bg-blue-500 text-white"
                 : "bg-gray-300 text-gray-700"
@@ -1597,20 +1568,25 @@ const TeacherDashboard = () => {
           </button>
         </div>
       </div>
-
       {activeTab === "class-teacher" && (
         <div>
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <label className="font-medium text-gray-600">Division</label>
-              <span className="p-2 border rounded">{division}</span>
+          <div className="flex flex-wrap gap-2 md:gap-4 mb-3 md:mb-4">
+            <div className="flex items-center gap-1 md:gap-2">
+              <label className="font-medium text-gray-600 text-sm md:text-base">
+                Division
+              </label>
+              <span className="p-1 md:p-2 border rounded text-sm md:text-base">
+                {division}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="font-medium text-gray-600">Exam Type</label>
+            <div className="flex items-center gap-1 md:gap-2">
+              <label className="font-medium text-gray-600 text-sm md:text-base">
+                Exam Type
+              </label>
               <select
                 value={selectedExamType}
                 onChange={(e) => setSelectedExamType(e.target.value)}
-                className="p-2 border rounded"
+                className="p-1 md:p-2 border rounded text-sm md:text-base"
               >
                 <option value="unit-test">Unit Test</option>
                 <option value="re-unit-test">Re-Unit Test</option>
@@ -1619,57 +1595,70 @@ const TeacherDashboard = () => {
               </select>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Total Students</h3>
-              <p className="text-2xl font-bold">{summaryData.totalStudents}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-4 mb-3 md:mb-4">
+            <div className="bg-white p-3 md:p-4 rounded shadow">
+              <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">
+                Total Students
+              </h3>
+              <p className="text-xl md:text-2xl font-bold">
+                {summaryData.totalStudents}
+              </p>
             </div>
           </div>
-
-          <div className="bg-white p-4 rounded shadow mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Student Performance</h2>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-2">
+          <div className="bg-white p-3 md:p-4 rounded shadow mb-3 md:mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 md:mb-4 gap-2">
+              <h2 className="text-lg md:text-xl font-semibold">
+                Student Performance
+              </h2>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                <div className="flex gap-1 md:gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => handleClassExport("pdf")}
                     disabled={isLoading}
-                    className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                    className="bg-red-500 text-white px-2 py-1 md:px-4 md:py-2 rounded disabled:opacity-50 text-xs md:text-sm"
                   >
                     {isLoading ? "Exporting..." : "Export PDF"}
                   </button>
                   <button
                     onClick={() => handleClassExport("excel")}
                     disabled={isLoading}
-                    className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                    className="bg-green-500 text-white px-2 py-1 md:px-4 md:py-2 rounded disabled:opacity-50 text-xs md:text-sm"
                   >
                     {isLoading ? "Exporting..." : "Export Excel"}
                   </button>
                 </div>
-                <input
-                  type="text"
-                  placeholder="Search students..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="p-2 border rounded"
-                />
-                <button
-                  onClick={filterStudents}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Search
-                </button>
+                <div className="flex gap-1 md:gap-2 w-full">
+                  <input
+                    type="text"
+                    placeholder="Search students..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="p-1 md:p-2 border rounded flex-1 text-sm md:text-base"
+                  />
+                  <button
+                    onClick={filterStudents}
+                    className="bg-blue-500 text-white px-2 py-1 md:px-4 md:py-2 rounded hover:bg-blue-600 text-xs md:text-sm"
+                  >
+                    Search
+                  </button>
+                </div>
               </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-200">
-                    <th className="p-2 text-left border">Roll No.</th>
-                    <th className="p-2 text-left border">Student Name</th>
+                    <th className="p-1 md:p-2 text-left border text-xs md:text-sm">
+                      Roll No.
+                    </th>
+                    <th className="p-1 md:p-2 text-left border text-xs md:text-sm">
+                      Student Name
+                    </th>
                     {subjects.map((subject) => (
-                      <th key={subject._id} className="p-2 text-center border">
+                      <th
+                        key={subject._id}
+                        className="p-1 md:p-2 text-center border text-xs md:text-sm"
+                      >
                         {subject.name}
                         {selectedExamType && (
                           <div className="text-xs font-normal">
@@ -1680,9 +1669,11 @@ const TeacherDashboard = () => {
                     ))}
                     {(selectedExamType === "re-unit-test" ||
                       selectedExamType === "reprelim") && (
-                      <th className="p-2 text-left border">Retest Reason</th>
+                      <th className="p-1 md:p-2 text-left border text-xs md:text-sm">
+                        Retest Reason
+                      </th>
                     )}
-                    <th className="p-2 text-center border bg-gray-100">
+                    <th className="p-1 md:p-2 text-center border bg-gray-100 text-xs md:text-sm">
                       Total
                     </th>
                   </tr>
@@ -1694,37 +1685,36 @@ const TeacherDashboard = () => {
           {renderModalContent()}
         </div>
       )}
-
       {activeTab === "subject-teacher" && (
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white p-4 rounded shadow">
-              <h3 className="text-lg font-semibold mb-2">Total Students</h3>
-              <p className="text-2xl font-bold">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 mb-3 md:mb-4">
+            <div className="bg-white p-3 md:p-4 rounded shadow">
+              <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">
+                Total Students
+              </h3>
+              <p className="text-xl md:text-2xl font-bold">
                 {subjectSummaryData.totalStudents}
               </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 mb-3 md:mb-4">
             {renderSubjects()}
           </div>
-
           {renderModalContent()}
         </div>
       )}
-
       {deleteSubjectId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
-            <h3 className="text-lg font-semibold mb-4">Delete Marks</h3>
-
-            <div className="mb-4">
-              <label className="block mb-2">Select Exam Type to Delete:</label>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 p-4">
+          <div className="bg-white p-4 md:p-6 rounded shadow-lg w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-3 md:mb-4">Delete Marks</h3>
+            <div className="mb-3 md:mb-4">
+              <label className="block mb-1 md:mb-2 text-sm md:text-base">
+                Select Exam Type to Delete:
+              </label>
               <select
                 value={selectedDeleteExamType}
                 onChange={(e) => setSelectedDeleteExamType(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded text-sm md:text-base"
               >
                 <option value="">Select Exam Type</option>
                 <option value="unit-test">Unit Test</option>
@@ -1733,21 +1723,20 @@ const TeacherDashboard = () => {
                 <option value="reprelim">Re-Prelim</option>
               </select>
             </div>
-
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
                   setDeleteSubjectId(null);
                   setSelectedDeleteExamType("");
                 }}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                className="bg-gray-300 text-gray-700 px-3 py-1 md:px-4 md:py-2 rounded text-sm md:text-base"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteMarks}
                 disabled={!selectedDeleteExamType}
-                className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                className="bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 rounded disabled:opacity-50 text-sm md:text-base"
               >
                 Confirm Delete
               </button>
@@ -1755,7 +1744,6 @@ const TeacherDashboard = () => {
           </div>
         </div>
       )}
-
       {renderConfirmationDialog()}
     </div>
   );

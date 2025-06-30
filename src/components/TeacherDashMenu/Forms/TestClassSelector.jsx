@@ -13,6 +13,16 @@ const TestClassSelector = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (
+      selectedType === "class" &&
+      teacherData?.isClassTeacher &&
+      teacherData?.assignedClass
+    ) {
+      setSelectedClass(teacherData.assignedClass);
+    }
+  }, [selectedType, teacherData]);
+
+  useEffect(() => {
     const fetchTeacherData = async () => {
       const token = sessionStorage.getItem("token");
       try {
