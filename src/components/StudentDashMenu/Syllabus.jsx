@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const TeacherSyllabusView = () => {
@@ -8,7 +9,6 @@ const TeacherSyllabusView = () => {
   const [filterStream, setFilterStream] = useState("");
   const [filterYear, setFilterYear] = useState("");
 
-  // Options for Stream, Pattern, and Year
   const streamOptions = [
     { value: "computer", label: "Computer" },
     { value: "it", label: "IT" },
@@ -122,17 +122,17 @@ const TeacherSyllabusView = () => {
   };
 
   return (
-    <div className="container mx-auto p-2 sm:p-4">
-      <div className="header flex flex-col sm:flex-row justify-between items-center mb-2 sm:mb-4">
-        <h1 className="text-lg sm:text-2xl font-semibold text-gray-800">
+    <div className="container mx-auto p-4">
+      <div className="header flex flex-col sm:flex-row justify-between items-center mb-4">
+        <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
           Syllabus Management
         </h1>
       </div>
 
-      <div className="filters grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-2 sm:mb-4">
+      <div className="filters grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <select
           id="pattern"
-          className="filter-select p-1 sm:p-2 border rounded w-full text-sm sm:text-base"
+          className="filter-select p-3 border rounded w-full text-base"
           value={filterPattern}
           onChange={(e) => setFilterPattern(e.target.value)}
         >
@@ -142,7 +142,7 @@ const TeacherSyllabusView = () => {
         </select>
         <select
           id="stream"
-          className="filter-select p-1 sm:p-2 border rounded w-full text-sm sm:text-base"
+          className="filter-select p-3 border rounded w-full text-base"
           value={filterStream}
           onChange={(e) => setFilterStream(e.target.value)}
         >
@@ -157,7 +157,7 @@ const TeacherSyllabusView = () => {
         </select>
         <select
           id="year"
-          className="filter-select p-1 sm:p-2 border rounded w-full text-sm sm:text-base"
+          className="filter-select p-3 border rounded w-full text-base"
           value={filterYear}
           onChange={(e) => setFilterYear(e.target.value)}
         >
@@ -169,29 +169,29 @@ const TeacherSyllabusView = () => {
         </select>
       </div>
 
-      <div className="syllabus-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+      <div className="syllabus-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filterSyllabi().map((entry, index) => (
           <div
             key={index}
-            className="syllabus-card p-2 sm:p-4 bg-white rounded shadow relative"
+            className="syllabus-card p-4 bg-white rounded shadow relative"
           >
-            <div className="syllabus-header mb-1 sm:mb-2">
-              <div className="syllabus-title text-sm sm:text-lg font-semibold">
+            <div className="syllabus-header mb-3">
+              <div className="syllabus-title text-lg font-semibold">
                 {formatStream(entry.stream)}
               </div>
-              <div className="syllabus-pattern text-gray-600 text-xs sm:text-sm">
+              <div className="syllabus-pattern text-gray-600 text-base">
                 {entry.pattern} Pattern • {formatYear(entry.year)}
               </div>
             </div>
-            <div className="syllabus-info flex justify-between items-center mt-2 sm:mt-4 pt-2 sm:pt-4 border-t">
+            <div className="syllabus-info flex justify-between items-center mt-4 pt-4 border-t">
               {entry.fileId && (
-                <div className="mt-1 sm:mt-3">
-                  <p className="font-semibold text-gray-600 text-xs sm:text-sm">
+                <div className="mt-3">
+                  <p className="font-semibold text-gray-600 text-base">
                     Attached File:
                   </p>
                   <button
                     onClick={() => handleDownload(entry.fileId)}
-                    className="text-blue-500 hover:underline text-xs sm:text-sm"
+                    className="text-blue-500 hover:underline text-base"
                   >
                     Download File
                   </button>
