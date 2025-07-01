@@ -39,16 +39,25 @@ const GoogleClassroomIntegration = () => {
   const [success, setSuccess] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("courses");
-  const navigate = useNavigate();
   const [showCourseModal, setShowCourseModal] = useState(false);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [assignmentsByCourse, setAssignmentsByCourse] = useState({});
   const [newCourse, setNewCourse] = useState({
     name: "",
     section: "",
     room: "",
     description: "",
   });
+  const [newAssignment, setNewAssignment] = useState({
+    title: "",
+    description: "",
+    dueDate: "",
+    dueTime: "",
+  });
 
-  // Check Google access status
+  const navigate = useNavigate();
+
   const checkGoogleStatus = async () => {
     try {
       setIsLoading(true);
@@ -116,7 +125,6 @@ const GoogleClassroomIntegration = () => {
     }
   };
 
-  // Fetch Google Classroom courses
   const fetchCourses = async () => {
     try {
       setIsLoading(true);
@@ -139,6 +147,11 @@ const GoogleClassroomIntegration = () => {
 
       const data = await response.json();
       setCourses(data.courses || []);
+
+      for (const course of data.courses || []) {
+        await fetchAssignments(course.id);
+      }
+
       setSuccess(`Successfully loaded ${data.courses?.length || 0} courses`);
       setNeedsAuth(false);
     } catch (err) {
@@ -156,7 +169,32 @@ const GoogleClassroomIntegration = () => {
     }
   };
 
-  // Create new course
+  const fetchAssignments = async (courseId) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const response = await fetch(
+        `${API_BASE_URL}/api/classroom/courses/${courseId}/assignments`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch assignments");
+      }
+
+      const data = await response.json();
+      setAssignmentsByCourse((prev) => ({
+        ...prev,
+        [courseId]: data.assignments || [],
+      }));
+    } catch (err) {
+      setError(err.message || "Assignment fetch failed");
+    }
+  };
+
   const createCourse = async () => {
     if (!newCourse.name) {
       setError("Course name is required");
@@ -189,7 +227,7 @@ const GoogleClassroomIntegration = () => {
         room: "",
         description: "",
       });
-      await fetchCourses(); // Refresh the list
+      await fetchCourses();
     } catch (err) {
       setError(err.message || "Course creation failed.");
     } finally {
@@ -197,7 +235,68 @@ const GoogleClassroomIntegration = () => {
     }
   };
 
-  // Revoke Google access
+  const handleCreateAssignment = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const { title, description, dueDate, dueTime } = newAssignment;
+
+      if (!selectedCourse || !title || !dueDate || !dueTime) {
+        setError("Missing required fields");
+        return;
+      }
+
+      const dueDateParts = dueDate.split("-");
+      const dueTimeParts = dueTime.split(":");
+
+      const payload = {
+        title,
+        description,
+        dueDate: {
+          year: parseInt(dueDateParts[0]),
+          month: parseInt(dueDateParts[1]),
+          day: parseInt(dueDateParts[2]),
+        },
+        dueTime: {
+          hours: parseInt(dueTimeParts[0]),
+          minutes: parseInt(dueTimeParts[1]),
+        },
+      };
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/assignments`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create assignment");
+      }
+
+      const data = await response.json();
+      setAssignmentsByCourse((prev) => ({
+        ...prev,
+        [selectedCourse]: [...(prev[selectedCourse] || []), data.assignment],
+      }));
+      setShowAssignmentModal(false);
+      setNewAssignment({
+        title: "",
+        description: "",
+        dueDate: "",
+        dueTime: "",
+      });
+      setSuccess("Assignment created");
+    } catch (err) {
+      setError(err.message || "Assignment creation failed");
+    }
+  };
+
   const revokeGoogleAccess = async () => {
     try {
       setIsLoading(true);
@@ -235,10 +334,8 @@ const GoogleClassroomIntegration = () => {
     fetchCourses();
   }, []);
 
-  // Check if Google is connected
   const hasGoogleAccess = googleStatus?.hasGoogleAccess;
 
-  // Filter courses based on search term
   const filteredCourses = courses.filter(
     (course) =>
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -592,6 +689,15 @@ const GoogleClassroomIntegration = () => {
                           </div>
                         )}
                       </div>
+                      <button
+                        onClick={() => {
+                          setSelectedCourse(course.id);
+                          setShowAssignmentModal(true);
+                        }}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        + Create Assignment
+                      </button>
 
                       {course.alternateLink && (
                         <a
@@ -690,6 +796,73 @@ const GoogleClassroomIntegration = () => {
             </div>
           )}
 
+          {showAssignmentModal && (
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md space-y-4">
+                <h2 className="text-lg font-semibold">Create Assignment</h2>
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={newAssignment.title}
+                  onChange={(e) =>
+                    setNewAssignment({
+                      ...newAssignment,
+                      title: e.target.value,
+                    })
+                  }
+                  className="w-full border p-2 rounded"
+                />
+                <textarea
+                  placeholder="Description"
+                  value={newAssignment.description}
+                  onChange={(e) =>
+                    setNewAssignment({
+                      ...newAssignment,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="date"
+                  value={newAssignment.dueDate}
+                  onChange={(e) =>
+                    setNewAssignment({
+                      ...newAssignment,
+                      dueDate: e.target.value,
+                    })
+                  }
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="time"
+                  value={newAssignment.dueTime}
+                  onChange={(e) =>
+                    setNewAssignment({
+                      ...newAssignment,
+                      dueTime: e.target.value,
+                    })
+                  }
+                  className="w-full border p-2 rounded"
+                />
+                <div className="flex justify-end gap-3 pt-4">
+                  <button
+                    onClick={() => setShowAssignmentModal(false)}
+                    className="px-4 py-2 rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateAssignment}
+                    className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Assignments Tab */}
           {activeTab === "assignments" && (
             <div className="space-y-6">
@@ -705,7 +878,8 @@ const GoogleClassroomIntegration = () => {
                             </h3>
                             <button
                               onClick={() => {
-                                // Implement assignment creation for this course
+                                setSelectedCourse(course.id);
+                                setShowAssignmentModal(true);
                               }}
                               className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             >
