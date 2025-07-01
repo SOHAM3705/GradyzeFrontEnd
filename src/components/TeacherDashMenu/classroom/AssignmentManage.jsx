@@ -27,7 +27,7 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from "../../../config";
 
 const GoogleClassroomIntegration = () => {
   const [courses, setCourses] = useState([]);
@@ -45,6 +45,7 @@ const GoogleClassroomIntegration = () => {
     name: "",
     section: "",
     room: "",
+    description: "",
   });
 
   // Check Google access status
@@ -95,7 +96,7 @@ const GoogleClassroomIntegration = () => {
       if (!response.ok) {
         const errorText = contentType?.includes("application/json")
           ? await response.json()
-          : await response.text(); // fallback for HTML
+          : await response.text();
         throw new Error(
           typeof errorText === "string"
             ? errorText
@@ -155,6 +156,47 @@ const GoogleClassroomIntegration = () => {
     }
   };
 
+  // Create new course
+  const createCourse = async () => {
+    if (!newCourse.name) {
+      setError("Course name is required");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const token = sessionStorage.getItem("token");
+
+      const response = await fetch(`${API_BASE_URL}/api/classroom/courses`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newCourse),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create course");
+      }
+
+      const data = await response.json();
+      setSuccess(`Created '${data.course.name}'`);
+      setShowCourseModal(false);
+      setNewCourse({
+        name: "",
+        section: "",
+        room: "",
+        description: "",
+      });
+      await fetchCourses(); // Refresh the list
+    } catch (err) {
+      setError(err.message || "Course creation failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Revoke Google access
   const revokeGoogleAccess = async () => {
     try {
@@ -190,6 +232,7 @@ const GoogleClassroomIntegration = () => {
 
   useEffect(() => {
     checkGoogleStatus();
+    fetchCourses();
   }, []);
 
   // Check if Google is connected
@@ -585,7 +628,9 @@ const GoogleClassroomIntegration = () => {
           {showCourseModal && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
               <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md space-y-4">
-                <h2 className="text-lg font-semibold">Create New Course</h2>
+                <h2 className="text-lg font-semibold">
+                  Create Google Classroom Course
+                </h2>
                 <div className="space-y-3">
                   <input
                     type="text"
@@ -598,7 +643,7 @@ const GoogleClassroomIntegration = () => {
                   />
                   <input
                     type="text"
-                    placeholder="Section (optional)"
+                    placeholder="Section"
                     value={newCourse.section}
                     onChange={(e) =>
                       setNewCourse({ ...newCourse, section: e.target.value })
@@ -607,14 +652,26 @@ const GoogleClassroomIntegration = () => {
                   />
                   <input
                     type="text"
-                    placeholder="Room (optional)"
+                    placeholder="Room"
                     value={newCourse.room}
                     onChange={(e) =>
                       setNewCourse({ ...newCourse, room: e.target.value })
                     }
                     className="w-full border p-2 rounded"
                   />
+                  <textarea
+                    placeholder="Description"
+                    value={newCourse.description}
+                    onChange={(e) =>
+                      setNewCourse({
+                        ...newCourse,
+                        description: e.target.value,
+                      })
+                    }
+                    className="w-full border p-2 rounded"
+                  />
                 </div>
+
                 <div className="flex justify-end gap-3 pt-4">
                   <button
                     onClick={() => setShowCourseModal(false)}
@@ -623,44 +680,7 @@ const GoogleClassroomIntegration = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={async () => {
-                      try {
-                        setIsLoading(true);
-                        const token = sessionStorage.getItem("token");
-
-                        const response = await fetch(
-                          `https://classroom.googleapis.com/v1/courses`,
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({
-                              name: newCourse.name,
-                              section: newCourse.section,
-                              room: newCourse.room,
-                            }),
-                          }
-                        );
-
-                        if (!response.ok)
-                          throw new Error("Failed to create course");
-
-                        const created = await response.json();
-                        setSuccess(
-                          `Course '${created.name}' created successfully!`
-                        );
-                        setShowCourseModal(false);
-                        setNewCourse({ name: "", section: "", room: "" });
-
-                        await fetchCourses(); // Refresh list
-                      } catch (err) {
-                        setError(err.message || "Error creating course");
-                      } finally {
-                        setIsLoading(false);
-                      }
-                    }}
+                    onClick={createCourse}
                     className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
                   >
                     Create
@@ -669,6 +689,7 @@ const GoogleClassroomIntegration = () => {
               </div>
             </div>
           )}
+
           {/* Assignments Tab */}
           {activeTab === "assignments" && (
             <div className="space-y-6">
@@ -703,7 +724,7 @@ const GoogleClassroomIntegration = () => {
                                 >
                                   <path
                                     fillRule="evenodd"
-                                    d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
+                                    d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 110 2H10a1 1 0 01-1-1z"
                                     clipRule="evenodd"
                                   />
                                   <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
