@@ -261,7 +261,16 @@ const GoogleClassroomIntegration = () => {
           hours: parseInt(dueTimeParts[0]),
           minutes: parseInt(dueTimeParts[1]),
         },
-        materials: newAssignment.materials,
+        materials: Array.isArray(materials)
+          ? materials.filter((mat) => {
+              return (
+                mat &&
+                mat.driveFile &&
+                mat.driveFile.driveFile &&
+                typeof mat.driveFile.driveFile.id === "string"
+              );
+            })
+          : [],
       };
 
       const response = await fetch(
