@@ -7,7 +7,7 @@ const AssignmentTab = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [coursesLoading, setCoursesLoading] = useState(false);
-  const [viewingAssignment, setViewingAssignment] = useState(null); // assignment object
+  const [viewingAssignment, setViewingAssignment] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
@@ -15,33 +15,6 @@ const AssignmentTab = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const token = sessionStorage.getItem("token");
-
-  const handleManualMark = async (submission) => {
-    const action = submission.state === "TURNED_IN" ? "reclaim" : "turnIn";
-
-    try {
-      await fetch(
-        `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/courseWork/${viewingAssignment.id}/submissions/${submission.id}/${action}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      setSubmissions((prev) =>
-        prev.map((s) =>
-          s.id === submission.id
-            ? {
-                ...s,
-                state: action === "turnIn" ? "TURNED_IN" : "CREATED",
-              }
-            : s
-        )
-      );
-    } catch (err) {
-      console.error(`Failed to ${action} submission:`, err.message);
-    }
-  };
 
   const handleViewSubmissions = async (assignment) => {
     setViewingAssignment(assignment);
@@ -62,7 +35,7 @@ const AssignmentTab = () => {
       const data = await res.json();
       setSubmissions(data.submissions || []);
 
-      // ✅ Fetch students
+      // Fetch students
       const res2 = await fetch(
         `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/students`,
         {
@@ -82,7 +55,7 @@ const AssignmentTab = () => {
     }
   };
 
-  // Fetch all courses (live)
+  // Fetch all courses
   const fetchCourses = async () => {
     try {
       setCoursesLoading(true);
@@ -236,7 +209,7 @@ const AssignmentTab = () => {
             ) : submissions.length === 0 ? (
               <p>No submissions found for this assignment.</p>
             ) : (
-              <table className="w-full table-auto border">
+              <div>
                 <input
                   type="text"
                   placeholder="Search student by name..."
@@ -244,50 +217,51 @@ const AssignmentTab = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="border p-2 rounded w-full mb-4"
                 />
-
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="p-2 text-left">Student Name</th>
-                    <th className="p-2 text-left">Status</th>
-                    <th className="p-2 text-left">Submitted</th>
-                    <th className="p-2 text-left">Last Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissions.map((sub, i) => {
-                    const studentName = studentMap[sub.userId] || sub.userId;
-                    const isSubmitted =
-                      sub.state === "TURNED_IN" || sub.state === "RETURNED";
-                    return (
-                      <tr key={i} className="border-t">
-                        <td className="p-2">{studentName}</td>
-                        <td className="p-2">
-                          <span
-                            className={`font-semibold ${
-                              isSubmitted ? "text-green-600" : "text-red-600"
-                            }`}
-                          >
-                            {isSubmitted ? "Submitted" : "Unsubmitted"}
-                          </span>
-                        </td>
-                        <td className="p-2">
-                          <input
-                            type="checkbox"
-                            checked={isSubmitted}
-                            disabled={isSubmitted}
-                            onChange={() => handleManualMark(sub)}
-                          />
-                        </td>
-                        <td className="p-2 text-sm text-gray-500">
-                          {sub.updateTime
-                            ? new Date(sub.updateTime).toLocaleString()
-                            : "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                <table className="w-full table-auto border">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="p-2 text-left">Student Name</th>
+                      <th className="p-2 text-left">Status</th>
+                      <th className="p-2 text-left">Last Updated</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {submissions
+                      .filter((sub) =>
+                        studentMap[sub.userId]
+                          ?.toLowerCase()
+                          .includes(searchTerm.toLowerCase())
+                      )
+                      .map((sub, i) => {
+                        const studentName =
+                          studentMap[sub.userId] || sub.userId;
+                        const isSubmitted =
+                          sub.state === "TURNED_IN" || sub.state === "RETURNED";
+                        return (
+                          <tr key={i} className="border-t">
+                            <td className="p-2">{studentName}</td>
+                            <td className="p-2">
+                              <span
+                                className={`font-semibold ${
+                                  isSubmitted
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {isSubmitted ? "Submitted" : "Unsubmitted"}
+                              </span>
+                            </td>
+                            <td className="p-2 text-sm text-gray-500">
+                              {sub.updateTime
+                                ? new Date(sub.updateTime).toLocaleString()
+                                : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

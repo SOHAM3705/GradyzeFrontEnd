@@ -622,6 +622,17 @@ const GoogleClassroomIntegration = () => {
                 <BookPlus className="inline mr-2 h-4 w-4" />
                 Assignments
               </button>
+              <button
+                onClick={() => setActiveTab("manualAssignments")}
+                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "manualAssignments"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <Edit className="inline mr-2 h-4 w-4" />
+                Manual Assignments
+              </button>
             </nav>
           </div>
 
@@ -701,15 +712,28 @@ const GoogleClassroomIntegration = () => {
                       </div>
 
                       {course.alternateLink && (
-                        <a
-                          href={course.alternateLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm"
-                        >
-                          <span>Open in Classroom</span>
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
+                        <>
+                          <button
+                            onClick={() => {
+                              setSelectedCourse(course.id);
+                              setShowAssignmentModal(true);
+                            }}
+                            className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium text-sm mb-2"
+                          >
+                            <BookPlus className="w-4 h-4" />
+                            <span>Create Assignment</span>
+                          </button>
+                          <br />
+                          <a
+                            href={course.alternateLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm"
+                          >
+                            <span>Open in Classroom</span>
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </>
                       )}
                     </div>
                   ))}
@@ -732,6 +756,20 @@ const GoogleClassroomIntegration = () => {
             </div>
           )}
 
+          {/* Manual Assignments Tab */}
+          {activeTab === "manualAssignments" && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold">Manual Assignments</h2>
+              <p>
+                This is where you can manually create and manage assignments.
+              </p>
+            </div>
+          )}
+
+          {/* Assignments Tab */}
+          {activeTab === "assignments" && <AssignmentTab />}
+
+          {/* Course Modal */}
           {showCourseModal && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
               <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md space-y-4">
@@ -797,6 +835,7 @@ const GoogleClassroomIntegration = () => {
             </div>
           )}
 
+          {/* Assignment Modal */}
           {showAssignmentModal && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
               <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md space-y-4">
@@ -941,9 +980,6 @@ const GoogleClassroomIntegration = () => {
               </div>
             </div>
           )}
-
-          {/* Assignments Tab */}
-          {activeTab === "assignments" && <AssignmentTab />}
         </div>
       )}
     </div>
