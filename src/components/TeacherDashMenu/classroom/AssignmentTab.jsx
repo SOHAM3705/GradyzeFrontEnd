@@ -7,8 +7,36 @@ const AssignmentTab = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [coursesLoading, setCoursesLoading] = useState(false);
+  const [viewingAssignment, setViewingAssignment] = useState(null); // assignment object
+  const [submissions, setSubmissions] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
 
   const token = sessionStorage.getItem("token");
+
+  const handleViewSubmissions = async (assignment) => {
+    setViewingAssignment(assignment);
+    setModalVisible(true);
+    setSubmissions([]);
+    setSubmissionsLoading(true);
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/courseWork/${assignment.id}/submissions`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await res.json();
+      setSubmissions(data.submissions || []);
+    } catch (err) {
+      console.error("Error fetching submissions:", err.message);
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
 
   // Fetch all courses (live)
   const fetchCourses = async () => {
@@ -129,12 +157,73 @@ const AssignmentTab = () => {
                 </div>
               )}
 
-              <button className="mt-3 px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+              <button
+                onClick={() => handleViewSubmissions(a)}
+                className="mt-3 px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
                 View Submissions
               </button>
             </li>
           ))}
         </ul>
+      )}
+
+      {modalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white rounded-lg p-6 w-full max-w-xl space-y-4 relative shadow-xl">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-600"
+              onClick={() => {
+                setModalVisible(false);
+                setViewingAssignment(null);
+                setSubmissions([]);
+              }}
+            >
+              ✖
+            </button>
+
+            <h3 className="text-xl font-semibold mb-2">
+              Submissions for: {viewingAssignment?.title}
+            </h3>
+
+            {submissionsLoading ? (
+              <p>Loading submissions...</p>
+            ) : submissions.length === 0 ? (
+              <p>No submissions found for this assignment.</p>
+            ) : (
+              <ul className="max-h-64 overflow-y-auto space-y-2">
+                {submissions.map((submission, i) => (
+                  <li
+                    key={i}
+                    className="border px-4 py-2 rounded bg-gray-50 text-sm flex justify-between"
+                  >
+                    <div>
+                      <p>
+                        👤 Student ID:{" "}
+                        <span className="font-medium">{submission.userId}</span>
+                      </p>
+                      <p>
+                        📝 Status:{" "}
+                        <span className="text-blue-600 font-semibold">
+                          {submission.state}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {submission.updateTime && (
+                        <p className="text-xs text-gray-500">
+                          Last Updated:
+                          <br />
+                          {new Date(submission.updateTime).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
