@@ -54,6 +54,7 @@ const GoogleClassroomIntegration = () => {
     description: "",
     dueDate: "",
     dueTime: "",
+    materials: [{ link: "" }],
   });
 
   const navigate = useNavigate();
@@ -260,6 +261,13 @@ const GoogleClassroomIntegration = () => {
           hours: parseInt(dueTimeParts[0]),
           minutes: parseInt(dueTimeParts[1]),
         },
+        materials: newAssignment.materials
+          .filter((m) => m.link.trim() !== "")
+          .map((m) => ({
+            link: {
+              url: m.link,
+            },
+          })),
       };
 
       const response = await fetch(
@@ -290,6 +298,7 @@ const GoogleClassroomIntegration = () => {
         description: "",
         dueDate: "",
         dueTime: "",
+        materials: [{ link: "" }],
       });
       setSuccess("Assignment created");
     } catch (err) {
@@ -689,15 +698,6 @@ const GoogleClassroomIntegration = () => {
                           </div>
                         )}
                       </div>
-                      <button
-                        onClick={() => {
-                          setSelectedCourse(course.id);
-                          setShowAssignmentModal(true);
-                        }}
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        + Create Assignment
-                      </button>
 
                       {course.alternateLink && (
                         <a
@@ -823,6 +823,7 @@ const GoogleClassroomIntegration = () => {
                   }
                   className="w-full border p-2 rounded"
                 />
+                <h3 className="text-lg font-semibold">Due Date/Time</h3>
                 <input
                   type="date"
                   value={newAssignment.dueDate}
@@ -845,6 +846,41 @@ const GoogleClassroomIntegration = () => {
                   }
                   className="w-full border p-2 rounded"
                 />
+                <h3 className="text-lg font-semibold">Attachment:-</h3>
+                {newAssignment.materials.map((mat, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="url"
+                      placeholder="Material URL (e.g., Google Drive, YouTube)"
+                      value={mat.link}
+                      onChange={(e) => {
+                        const updated = [...newAssignment.materials];
+                        updated[idx].link = e.target.value;
+                        setNewAssignment({
+                          ...newAssignment,
+                          materials: updated,
+                        });
+                      }}
+                      className="w-full border p-2 rounded"
+                    />
+                    {idx === newAssignment.materials.length - 1 && (
+                      <button
+                        onClick={() =>
+                          setNewAssignment({
+                            ...newAssignment,
+                            materials: [
+                              ...newAssignment.materials,
+                              { link: "" },
+                            ],
+                          })
+                        }
+                        className="px-2 py-1 bg-blue-500 text-white rounded"
+                      >
+                        +
+                      </button>
+                    )}
+                  </div>
+                ))}
                 <div className="flex justify-end gap-3 pt-4">
                   <button
                     onClick={() => setShowAssignmentModal(false)}
