@@ -292,7 +292,7 @@ const GoogleClassroomIntegration = () => {
         description: "",
         dueDate: "",
         dueTime: "",
-        materials: [{ link: "" }],
+        materials: [],
       });
       setSuccess("Assignment created");
     } catch (err) {
