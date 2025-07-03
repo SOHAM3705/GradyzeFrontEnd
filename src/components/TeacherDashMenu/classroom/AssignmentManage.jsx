@@ -28,6 +28,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { API_BASE_URL } from "../../../config";
+import AssignmentTab from "./AssignmentTab";
 
 const GoogleClassroomIntegration = () => {
   const [courses, setCourses] = useState([]);
@@ -619,7 +620,7 @@ const GoogleClassroomIntegration = () => {
                 }`}
               >
                 <BookPlus className="inline mr-2 h-4 w-4" />
-                Assignments ({assignments.length})
+                Assignments
               </button>
             </nav>
           </div>
@@ -942,108 +943,7 @@ const GoogleClassroomIntegration = () => {
           )}
 
           {/* Assignments Tab */}
-          {activeTab === "assignments" && (
-            <div className="space-y-6">
-              {filteredCourses.length > 0 ? (
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                  <ul className="divide-y divide-gray-200">
-                    {filteredCourses.map((course) => (
-                      <li key={course.id}>
-                        <div className="px-4 py-4 sm:px-6">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-medium text-gray-900">
-                              {course.name}
-                            </h3>
-                            <button
-                              onClick={() => {
-                                setSelectedCourse(course.id);
-                                setShowAssignmentModal(true);
-                              }}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              <Plus className="mr-1 h-3 w-3" />
-                              Add Assignment
-                            </button>
-                          </div>
-                          <div className="mt-2 sm:flex sm:justify-between">
-                            <div className="sm:flex">
-                              <p className="flex items-center text-sm text-gray-500">
-                                <svg
-                                  className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 110 2H10a1 1 0 01-1-1z"
-                                    clipRule="evenodd"
-                                  />
-                                  <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
-                                </svg>
-                                {course.section || "No section"}
-                              </p>
-                              <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                                <svg
-                                  className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                {course.room || "No room"}
-                              </p>
-                            </div>
-                            <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                              <svg
-                                className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                              <span>
-                                Created on{" "}
-                                <time dateTime={course.creationTime}>
-                                  {new Date(
-                                    course.creationTime
-                                  ).toLocaleDateString()}
-                                </time>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BookPlus className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    No Assignments Found
-                  </h3>
-                  <p className="text-gray-600 max-w-md mx-auto">
-                    {searchTerm
-                      ? "No assignments match your search criteria."
-                      : "You don't have any assignments created yet."}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          {activeTab === "assignments" && <AssignmentTab />}
         </div>
       )}
     </div>
