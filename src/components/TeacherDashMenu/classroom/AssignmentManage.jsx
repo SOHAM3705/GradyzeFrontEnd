@@ -54,7 +54,7 @@ const GoogleClassroomIntegration = () => {
     description: "",
     dueDate: "",
     dueTime: "",
-    materials: [{ link: "" }],
+    materials: [],
   });
 
   const navigate = useNavigate();
@@ -915,11 +915,13 @@ const GoogleClassroomIntegration = () => {
                 {/* Uploaded File Preview */}
                 {(newAssignment.materials || []).length > 0 && (
                   <ul className="text-sm mt-2 text-gray-700">
-                    {newAssignment.materials.map((mat, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        📎 {mat.driveFile.driveFile.title}
-                      </li>
-                    ))}
+                    {Array.isArray(newAssignment.materials) &&
+                      newAssignment.materials.map((mat, i) => (
+                        <li key={i}>
+                          📎{" "}
+                          {mat?.driveFile?.driveFile?.title || "Unnamed file"}
+                        </li>
+                      ))}
                   </ul>
                 )}
 
