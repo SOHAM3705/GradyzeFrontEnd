@@ -12,29 +12,34 @@ const AssignmentTab = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [studentMap, setStudentMap] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   const token = sessionStorage.getItem("token");
 
   const handleManualMark = async (submission) => {
+    const action = submission.state === "TURNED_IN" ? "reclaim" : "turnIn";
+
     try {
       await fetch(
-        `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/courseWork/${viewingAssignment.id}/submissions/${submission.id}`,
+        `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/courseWork/${viewingAssignment.id}/submissions/${submission.id}/${action}`,
         {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      // Update UI manually after success
       setSubmissions((prev) =>
         prev.map((s) =>
-          s.id === submission.id ? { ...s, state: "TURNED_IN" } : s
+          s.id === submission.id
+            ? {
+                ...s,
+                state: action === "turnIn" ? "TURNED_IN" : "CREATED",
+              }
+            : s
         )
       );
     } catch (err) {
-      console.error("Failed to manually mark submission:", err.message);
+      console.error(`Failed to ${action} submission:`, err.message);
     }
   };
 
@@ -232,11 +237,19 @@ const AssignmentTab = () => {
               <p>No submissions found for this assignment.</p>
             ) : (
               <table className="w-full table-auto border">
+                <input
+                  type="text"
+                  placeholder="Search student by name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border p-2 rounded w-full mb-4"
+                />
+
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="p-2 text-left">Student Name</th>
                     <th className="p-2 text-left">Status</th>
-                    <th className="p-2 text-left">Physically Submitted</th>
+                    <th className="p-2 text-left">Submitted</th>
                     <th className="p-2 text-left">Last Updated</th>
                   </tr>
                 </thead>
