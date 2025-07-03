@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "../../../config";
 import AssignmentTab from "./AssignmentTab";
+import ManualAssignment from "./ManualAssignment";
 
 const GoogleClassroomIntegration = () => {
   const [courses, setCourses] = useState([]);
@@ -757,14 +758,7 @@ const GoogleClassroomIntegration = () => {
           )}
 
           {/* Manual Assignments Tab */}
-          {activeTab === "manualAssignments" && (
-            <div className="space-y-6">
-              <h2 className="text-lg font-semibold">Manual Assignments</h2>
-              <p>
-                This is where you can manually create and manage assignments.
-              </p>
-            </div>
-          )}
+          {activeTab === "manualAssignments" && <ManualAssignment />}
 
           {/* Assignments Tab */}
           {activeTab === "assignments" && <AssignmentTab />}
