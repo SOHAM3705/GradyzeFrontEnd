@@ -261,15 +261,7 @@ const GoogleClassroomIntegration = () => {
           hours: parseInt(dueTimeParts[0]),
           minutes: parseInt(dueTimeParts[1]),
         },
-        materials: fileAttachments.map((file) => ({
-          driveFile: {
-            driveFile: {
-              id: file.id,
-              title: file.title,
-            },
-            shareMode: "VIEW", // or "STUDENT_COPY" or "EDIT"
-          },
-        })),
+        materials: newAssignment.materials,
       };
 
       const response = await fetch(
