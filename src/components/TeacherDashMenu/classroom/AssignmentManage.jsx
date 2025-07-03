@@ -261,13 +261,15 @@ const GoogleClassroomIntegration = () => {
           hours: parseInt(dueTimeParts[0]),
           minutes: parseInt(dueTimeParts[1]),
         },
-        materials: newAssignment.materials
-          .filter((m) => m.link.trim() !== "")
-          .map((m) => ({
-            link: {
-              url: m.link,
+        materials: fileAttachments.map((file) => ({
+          driveFile: {
+            driveFile: {
+              id: file.id,
+              title: file.title,
             },
-          })),
+            shareMode: "VIEW", // or "STUDENT_COPY" or "EDIT"
+          },
+        })),
       };
 
       const response = await fetch(
@@ -800,6 +802,8 @@ const GoogleClassroomIntegration = () => {
             <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
               <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md space-y-4">
                 <h2 className="text-lg font-semibold">Create Assignment</h2>
+
+                {/* Title */}
                 <input
                   type="text"
                   placeholder="Title"
@@ -812,6 +816,8 @@ const GoogleClassroomIntegration = () => {
                   }
                   className="w-full border p-2 rounded"
                 />
+
+                {/* Description */}
                 <textarea
                   placeholder="Description"
                   value={newAssignment.description}
@@ -823,6 +829,8 @@ const GoogleClassroomIntegration = () => {
                   }
                   className="w-full border p-2 rounded"
                 />
+
+                {/* Due Date & Time */}
                 <h3 className="text-lg font-semibold">Due Date/Time</h3>
                 <input
                   type="date"
@@ -846,41 +854,75 @@ const GoogleClassroomIntegration = () => {
                   }
                   className="w-full border p-2 rounded"
                 />
-                <h3 className="text-lg font-semibold">Attachment:-</h3>
-                {newAssignment.materials.map((mat, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <input
-                      type="url"
-                      placeholder="Material URL (e.g., Google Drive, YouTube)"
-                      value={mat.link}
-                      onChange={(e) => {
-                        const updated = [...newAssignment.materials];
-                        updated[idx].link = e.target.value;
-                        setNewAssignment({
-                          ...newAssignment,
-                          materials: updated,
-                        });
-                      }}
-                      className="w-full border p-2 rounded"
-                    />
-                    {idx === newAssignment.materials.length - 1 && (
-                      <button
-                        onClick={() =>
-                          setNewAssignment({
-                            ...newAssignment,
-                            materials: [
-                              ...newAssignment.materials,
-                              { link: "" },
-                            ],
-                          })
+
+                {/* File Upload */}
+                <h3 className="text-lg font-semibold">
+                  Attachments (Google Drive)
+                </h3>
+                <input
+                  type="file"
+                  accept="*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    try {
+                      const res = await fetch(
+                        `${API_BASE_URL}/api/classroom/drive/upload`,
+                        {
+                          method: "POST",
+                          headers: {
+                            Authorization: `Bearer ${sessionStorage.getItem(
+                              "token"
+                            )}`,
+                          },
+                          body: formData,
                         }
-                        className="px-2 py-1 bg-blue-500 text-white rounded"
-                      >
-                        +
-                      </button>
-                    )}
-                  </div>
-                ))}
+                      );
+
+                      const data = await res.json();
+
+                      if (res.ok) {
+                        const newMaterial = {
+                          driveFile: {
+                            driveFile: {
+                              id: data.id,
+                              title: data.title,
+                            },
+                            shareMode: "VIEW", // Change to "STUDENT_COPY" if needed
+                          },
+                        };
+
+                        setNewAssignment((prev) => ({
+                          ...prev,
+                          materials: [...(prev.materials || []), newMaterial],
+                        }));
+                      } else {
+                        alert(data.error || "Upload failed");
+                      }
+                    } catch (err) {
+                      console.error("Upload error:", err.message);
+                      alert("Drive upload failed");
+                    }
+                  }}
+                  className="w-full border p-2 rounded"
+                />
+
+                {/* Uploaded File Preview */}
+                {(newAssignment.materials || []).length > 0 && (
+                  <ul className="text-sm mt-2 text-gray-700">
+                    {newAssignment.materials.map((mat, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        📎 {mat.driveFile?.driveFile?.title || "Unnamed"}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Action Buttons */}
                 <div className="flex justify-end gap-3 pt-4">
                   <button
                     onClick={() => setShowAssignmentModal(false)}
