@@ -11,8 +11,32 @@ const AssignmentTab = () => {
   const [submissions, setSubmissions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [studentMap, setStudentMap] = useState({});
 
   const token = sessionStorage.getItem("token");
+
+  const handleManualMark = async (submission) => {
+    try {
+      await fetch(
+        `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/courseWork/${viewingAssignment.id}/submissions/${submission.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update UI manually after success
+      setSubmissions((prev) =>
+        prev.map((s) =>
+          s.id === submission.id ? { ...s, state: "TURNED_IN" } : s
+        )
+      );
+    } catch (err) {
+      console.error("Failed to manually mark submission:", err.message);
+    }
+  };
 
   const handleViewSubmissions = async (assignment) => {
     setViewingAssignment(assignment);
@@ -21,6 +45,7 @@ const AssignmentTab = () => {
     setSubmissionsLoading(true);
 
     try {
+      // Fetch submissions
       const res = await fetch(
         `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/courseWork/${assignment.id}/submissions`,
         {
@@ -31,8 +56,22 @@ const AssignmentTab = () => {
       );
       const data = await res.json();
       setSubmissions(data.submissions || []);
+
+      // ✅ Fetch students
+      const res2 = await fetch(
+        `${API_BASE_URL}/api/classroom/courses/${selectedCourse}/students`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data2 = await res2.json();
+      const map = {};
+      (data2.students || []).forEach((s) => {
+        map[s.userId] = s.profile.name.fullName;
+      });
+      setStudentMap(map);
     } catch (err) {
-      console.error("Error fetching submissions:", err.message);
+      console.error("Error fetching submissions/students:", err.message);
     } finally {
       setSubmissionsLoading(false);
     }
@@ -170,19 +209,20 @@ const AssignmentTab = () => {
 
       {modalVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded-lg p-6 w-full max-w-xl space-y-4 relative shadow-xl">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl space-y-4 relative shadow-xl overflow-y-auto max-h-[90vh]">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-red-600"
               onClick={() => {
                 setModalVisible(false);
                 setViewingAssignment(null);
                 setSubmissions([]);
+                setStudentMap({});
               }}
             >
               ✖
             </button>
 
-            <h3 className="text-xl font-semibold mb-2">
+            <h3 className="text-xl font-semibold mb-4">
               Submissions for: {viewingAssignment?.title}
             </h3>
 
@@ -191,36 +231,50 @@ const AssignmentTab = () => {
             ) : submissions.length === 0 ? (
               <p>No submissions found for this assignment.</p>
             ) : (
-              <ul className="max-h-64 overflow-y-auto space-y-2">
-                {submissions.map((submission, i) => (
-                  <li
-                    key={i}
-                    className="border px-4 py-2 rounded bg-gray-50 text-sm flex justify-between"
-                  >
-                    <div>
-                      <p>
-                        👤 Student ID:{" "}
-                        <span className="font-medium">{submission.userId}</span>
-                      </p>
-                      <p>
-                        📝 Status:{" "}
-                        <span className="text-blue-600 font-semibold">
-                          {submission.state}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      {submission.updateTime && (
-                        <p className="text-xs text-gray-500">
-                          Last Updated:
-                          <br />
-                          {new Date(submission.updateTime).toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <table className="w-full table-auto border">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 text-left">Student Name</th>
+                    <th className="p-2 text-left">Status</th>
+                    <th className="p-2 text-left">Physically Submitted</th>
+                    <th className="p-2 text-left">Last Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {submissions.map((sub, i) => {
+                    const studentName = studentMap[sub.userId] || sub.userId;
+                    const isSubmitted =
+                      sub.state === "TURNED_IN" || sub.state === "RETURNED";
+                    return (
+                      <tr key={i} className="border-t">
+                        <td className="p-2">{studentName}</td>
+                        <td className="p-2">
+                          <span
+                            className={`font-semibold ${
+                              isSubmitted ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {isSubmitted ? "Submitted" : "Unsubmitted"}
+                          </span>
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="checkbox"
+                            checked={isSubmitted}
+                            disabled={isSubmitted}
+                            onChange={() => handleManualMark(sub)}
+                          />
+                        </td>
+                        <td className="p-2 text-sm text-gray-500">
+                          {sub.updateTime
+                            ? new Date(sub.updateTime).toLocaleString()
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
