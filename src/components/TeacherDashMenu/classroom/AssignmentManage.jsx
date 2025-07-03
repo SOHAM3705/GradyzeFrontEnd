@@ -239,7 +239,7 @@ const GoogleClassroomIntegration = () => {
   const handleCreateAssignment = async () => {
     try {
       const token = sessionStorage.getItem("token");
-      const { title, description, dueDate, dueTime } = newAssignment;
+      const { title, description, dueDate, dueTime, materials } = newAssignment;
 
       if (!selectedCourse || !title || !dueDate || !dueTime) {
         setError("Missing required fields");
@@ -262,14 +262,11 @@ const GoogleClassroomIntegration = () => {
           minutes: parseInt(dueTimeParts[1]),
         },
         materials: Array.isArray(materials)
-          ? materials.filter((mat) => {
-              return (
-                mat &&
-                mat.driveFile &&
-                mat.driveFile.driveFile &&
+          ? materials.filter(
+              (mat) =>
+                mat?.driveFile?.driveFile?.id &&
                 typeof mat.driveFile.driveFile.id === "string"
-              );
-            })
+            )
           : [],
       };
 
