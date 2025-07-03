@@ -908,7 +908,7 @@ const GoogleClassroomIntegration = () => {
                   <ul className="text-sm mt-2 text-gray-700">
                     {newAssignment.materials.map((mat, i) => (
                       <li key={i} className="flex items-center gap-2">
-                        📎 {mat.driveFile?.driveFile?.title || "Unnamed"}
+                        📎 {mat.driveFile.driveFile.title}
                       </li>
                     ))}
                   </ul>
