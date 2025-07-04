@@ -56,7 +56,7 @@ const ManualAssignment = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://gradyzebackend.onrender.com/api/assignments/${teacherId}/${subjectId}`
+        `https://gradyzebackend.onrender.com/api/classroom/assignments/${teacherId}/${subjectId}`
       );
       const data = await response.json();
 
