@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { ChevronRight, Plus, Edit, Trash2, Check, X } from "lucide-react";
-import { API_BASE_URL } from "../../../config";
 
 const ManualAssignment = () => {
   const [subjects, setSubjects] = useState([]);
@@ -35,12 +34,16 @@ const ManualAssignment = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/studentmanagement/students-by-subject/${teacherId}`
+        `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
       );
       const data = await response.json();
 
+      console.log("Fetched data:", data); // Debug log
+
       setSubjects(data.subjects || []);
       setStudents(data.studentData || {});
+
+      console.log("Students data:", data.studentData); // Debug log
     } catch (error) {
       console.error("Error fetching subjects and students:", error);
     } finally {
@@ -53,7 +56,7 @@ const ManualAssignment = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/classroom/assignments/${teacherId}/${subjectId}`
+        `https://gradyzebackend.onrender.com/api/assignments/${teacherId}/${subjectId}`
       );
       const data = await response.json();
 
@@ -98,7 +101,7 @@ const ManualAssignment = () => {
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/classroom/assignments`,
+          "https://gradyzebackend.onrender.com/api/classroom/assignments",
           {
             method: "POST",
             headers: {
@@ -226,31 +229,39 @@ const ManualAssignment = () => {
     const [selectedStudents, setSelectedStudents] = useState({});
 
     useEffect(() => {
-      if (selectedAssignment && selectedSubject) {
+      if (selectedAssignment && selectedSubject && !loading) {
         fetchStudentAssignments();
       }
-    }, [selectedAssignment, selectedSubject]);
+    }, [selectedAssignment?._id, selectedSubject?._id]); // Only trigger when these specific IDs change
 
     const fetchStudentAssignments = async () => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/classroom/student-assignments/${selectedAssignment._id}`
+        // First, fetch existing student assignments
+        const assignmentResponse = await fetch(
+          `https://gradyzebackend.onrender.com/api/classroom/student-assignments/${selectedAssignment._id}`
         );
-        const data = await response.json();
+        const assignmentData = await assignmentResponse.json();
 
-        if (data.success) {
-          setStudentAssignments(data.studentAssignments);
+        if (assignmentData.success) {
+          setStudentAssignments(assignmentData.studentAssignments);
         }
 
-        // Get students for this subject
+        // Get students for this subject from the main API
         const subjectKey = `${selectedSubject.year}-${selectedSubject.division}`;
         const studentsForSubject = students[subjectKey] || [];
         setStudentData(studentsForSubject);
 
-        // Initialize selected students state
+        // Initialize selected students state based on existing assignments
         const initialSelected = {};
-        data.studentAssignments.forEach((sa) => {
-          initialSelected[sa.studentId._id] = sa.isCompleted;
+        studentsForSubject.forEach((student) => {
+          // Check if this student has already completed the assignment
+          const existingAssignment = assignmentData.studentAssignments?.find(
+            (sa) =>
+              sa.studentId._id === student._id || sa.studentId === student._id
+          );
+          initialSelected[student._id] = existingAssignment
+            ? existingAssignment.isCompleted
+            : false;
         });
         setSelectedStudents(initialSelected);
       } catch (error) {
@@ -275,7 +286,7 @@ const ManualAssignment = () => {
         );
 
         const response = await fetch(
-          `${API_BASE_URL}/api/classroom/student-assignments/bulk/${selectedAssignment._id}`,
+          `https://gradyzebackend.onrender.com/api/classroom/student-assignments/bulk/${selectedAssignment._id}`,
           {
             method: "PUT",
             headers: {
@@ -302,38 +313,58 @@ const ManualAssignment = () => {
             {selectedAssignment?.title} - Student Assignments
           </h3>
 
-          <div className="space-y-2 mb-4">
-            {studentData.map((student) => (
-              <div
-                key={student._id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="font-medium">Roll No: {student.rollNo}</span>
-                  <span>{student.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleStudentToggle(student._id)}
-                    className={`p-2 rounded-md transition-colors ${
-                      selectedStudents[student._id]
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-200 text-gray-600"
-                    }`}
-                  >
-                    {selectedStudents[student._id] ? (
-                      <Check size={16} />
-                    ) : (
-                      <X size={16} />
-                    )}
-                  </button>
-                  <span className="text-sm">
-                    {selectedStudents[student._id] ? "Completed" : "Pending"}
-                  </span>
-                </div>
-              </div>
-            ))}
+          {/* Debug info */}
+          <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+            <p>
+              Subject: {selectedSubject?.year}-{selectedSubject?.division}
+            </p>
+            <p>Students found: {studentData.length}</p>
           </div>
+
+          {studentData.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No students found for this subject.</p>
+              <p className="text-sm mt-2">
+                Looking for students in: {selectedSubject?.year}-
+                {selectedSubject?.division}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2 mb-4">
+              {studentData.map((student) => (
+                <div
+                  key={student._id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium">
+                      Roll No: {student.rollNo}
+                    </span>
+                    <span>{student.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleStudentToggle(student._id)}
+                      className={`p-2 rounded-md transition-colors ${
+                        selectedStudents[student._id]
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {selectedStudents[student._id] ? (
+                        <Check size={16} />
+                      ) : (
+                        <X size={16} />
+                      )}
+                    </button>
+                    <span className="text-sm">
+                      {selectedStudents[student._id] ? "Completed" : "Pending"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex gap-2 pt-4">
             <button
