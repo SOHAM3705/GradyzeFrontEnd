@@ -229,15 +229,21 @@ const ManualAssignment = () => {
     const [selectedStudents, setSelectedStudents] = useState({});
 
     useEffect(() => {
+      // Only fetch if we have all required data and modal is open
       if (
-        selectedAssignment &&
-        selectedSubject &&
-        Object.keys(students).length > 0 &&
-        !loading
+        showStudentModal &&
+        selectedAssignment?._id &&
+        selectedSubject?._id &&
+        Object.keys(students).length > 0
       ) {
         fetchStudentAssignments();
       }
-    }, [selectedAssignment?._id, selectedSubject?._id, students]);
+    }, [
+      showStudentModal,
+      selectedAssignment?._id,
+      selectedSubject?._id,
+      students,
+    ]);
 
     const fetchStudentAssignments = async () => {
       if (
