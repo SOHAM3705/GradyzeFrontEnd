@@ -251,6 +251,9 @@ const ManualAssignment = () => {
         const studentsForSubject = students[subjectKey] || [];
         setStudentData(studentsForSubject);
 
+        console.log("subjectKey", subjectKey);
+        console.log("available studentData keys:", Object.keys(students));
+
         // Initialize selected students state based on existing assignments
         const initialSelected = {};
         studentsForSubject.forEach((student) => {
