@@ -236,7 +236,8 @@ const ManualAssignment = () => {
     const [studentData, setStudentData] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState({});
     const [searchQuery, setSearchQuery] = useState("");
-    const [hasLoaded, setHasLoaded] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [hasInitialized, setHasInitialized] = useState(false);
 
     // Filter students based on search query
     const filteredStudents = studentData.filter(
@@ -245,31 +246,40 @@ const ManualAssignment = () => {
         student.rollNo.toString().includes(searchQuery)
     );
 
+    // Store the assignment and subject IDs to prevent re-renders
+    const assignmentId = selectedAssignment?._id;
+    const subjectId = selectedSubject?._id;
+    const hasStudents = Object.keys(students).length > 0;
+
     useEffect(() => {
-      // Only fetch once when modal opens and we have all required data
+      // Only run when modal opens and we have all required data
       if (
         showStudentModal &&
-        selectedAssignment?._id &&
-        selectedSubject?._id &&
-        Object.keys(students).length > 0 &&
-        !hasLoaded
+        assignmentId &&
+        subjectId &&
+        hasStudents &&
+        !hasInitialized
       ) {
+        console.log("🚀 Fetching student assignments for:", assignmentId);
         fetchStudentAssignments();
-        setHasLoaded(true);
+        setHasInitialized(true);
       }
 
       // Reset when modal closes
-      if (!showStudentModal) {
-        setHasLoaded(false);
+      if (!showStudentModal && hasInitialized) {
+        console.log("🔄 Resetting modal state");
+        setHasInitialized(false);
         setSearchQuery("");
         setStudentData([]);
         setSelectedStudents({});
+        setIsLoading(false);
       }
     }, [
       showStudentModal,
-      selectedAssignment?._id,
-      selectedSubject?._id,
-      hasLoaded,
+      assignmentId,
+      subjectId,
+      hasStudents,
+      hasInitialized,
     ]);
 
     const fetchStudentAssignments = async () => {
@@ -281,6 +291,12 @@ const ManualAssignment = () => {
         console.warn("Missing data: Cannot fetch student assignments yet.");
         return;
       }
+
+      setIsLoading(true);
+      console.log(
+        "📡 Starting API call for assignment:",
+        selectedAssignment._id
+      );
 
       try {
         const subjectKey = `${selectedSubject.year.trim()}-${selectedSubject.division.trim()}`;
@@ -299,6 +315,7 @@ const ManualAssignment = () => {
         );
 
         const assignmentData = await assignmentResponse.json();
+        console.log("📋 API Response:", assignmentData);
 
         if (!assignmentData.success) {
           console.error(
@@ -323,8 +340,11 @@ const ManualAssignment = () => {
         });
 
         setSelectedStudents(initialSelected);
+        console.log("✅ Successfully loaded student assignments");
       } catch (error) {
         console.error("❌ Error in fetchStudentAssignments:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -394,11 +414,21 @@ const ManualAssignment = () => {
             <p>
               Subject: {selectedSubject?.year}-{selectedSubject?.division}
             </p>
+            <p>Assignment ID: {selectedAssignment?._id}</p>
             <p>Students found: {studentData.length}</p>
+            <p>API Status: {isLoading ? "Loading..." : "Loaded"}</p>
+            <p>Has initialized: {hasInitialized ? "Yes" : "No"}</p>
             {searchQuery && <p>Filtered results: {filteredStudents.length}</p>}
           </div>
 
-          {filteredStudents.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-2 text-gray-600">
+                Loading student assignments...
+              </p>
+            </div>
+          ) : filteredStudents.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {searchQuery ? (
                 <p>No students found matching "{searchQuery}"</p>
