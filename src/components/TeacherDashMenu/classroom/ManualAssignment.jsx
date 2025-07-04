@@ -28,12 +28,12 @@ const ManualAssignment = () => {
     practical: false,
     miniproject: false,
   });
+  const [studentData, setStudentData] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState({});
 
-  // Get teacher ID from session storage
   const teacherId =
     sessionStorage.getItem("teacherId") || "67e27245766e6b0b923fe807";
 
-  // Fetch subjects and students
   useEffect(() => {
     fetchSubjectsAndStudents();
   }, []);
@@ -45,13 +45,10 @@ const ManualAssignment = () => {
         `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
       );
       const data = await response.json();
-
-      console.log("Fetched data:", data); // Debug log
-
+      console.log("Fetched data:", data);
       setSubjects(data.subjects || []);
       setStudents(data.studentData || {});
-
-      console.log("Students data:", data.studentData); // Debug log
+      console.log("Students data:", data.studentData);
     } catch (error) {
       console.error("Error fetching subjects and students:", error);
     } finally {
@@ -59,7 +56,6 @@ const ManualAssignment = () => {
     }
   };
 
-  // Fetch assignments for selected subject
   const fetchAssignments = async (subjectId) => {
     setLoading(true);
     try {
@@ -67,7 +63,6 @@ const ManualAssignment = () => {
         `https://gradyzebackend.onrender.com/api/classroom/assignments/${teacherId}/${subjectId}`
       );
       const data = await response.json();
-
       if (data.success) {
         setAssignments(data.assignments);
       }
@@ -78,13 +73,47 @@ const ManualAssignment = () => {
     }
   };
 
-  // Handle subject selection
+  const fetchStudentAssignments = async (assignment) => {
+    if (!selectedSubject || !assignment) return;
+    const subjectKey = `${selectedSubject.year.trim()}-${selectedSubject.division.trim()}`;
+    const studentsForSubject = students[subjectKey] || [];
+    console.log("🔍 subjectKey:", subjectKey);
+    console.log("👥 Students for subject:", studentsForSubject);
+    setStudentData(studentsForSubject);
+
+    try {
+      const assignmentResponse = await fetch(
+        `https://gradyzebackend.onrender.com/api/classroom/student-assignments/${assignment._id}`
+      );
+      const assignmentData = await assignmentResponse.json();
+      if (!assignmentData.success) {
+        console.error(
+          "Failed to fetch assignment data:",
+          assignmentData.message
+        );
+        return;
+      }
+      setStudentAssignments(assignmentData.studentAssignments || []);
+
+      const initialSelected = {};
+      studentsForSubject.forEach((student) => {
+        const match = assignmentData.studentAssignments.find(
+          (sa) =>
+            sa.studentId?._id === student._id || sa.studentId === student._id
+        );
+        initialSelected[student._id] = match ? match.isCompleted : false;
+      });
+      setSelectedStudents(initialSelected);
+    } catch (err) {
+      console.error("❌ Error fetching student assignments:", err);
+    }
+  };
+
   const handleSubjectSelect = (subject) => {
     setSelectedSubject(subject);
     fetchAssignments(subject._id);
   };
 
-  // Toggle section expansion
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -92,7 +121,6 @@ const ManualAssignment = () => {
     }));
   };
 
-  // Create Assignment Modal Component
   const CreateAssignmentModal = () => {
     const [formData, setFormData] = useState({
       title: "",
@@ -101,12 +129,12 @@ const ManualAssignment = () => {
       dueDate: "",
     });
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+      e.preventDefault();
       if (!formData.title) {
         alert("Please enter a title");
         return;
       }
-
       try {
         const response = await fetch(
           "https://gradyzebackend.onrender.com/api/classroom/assignments",
@@ -125,9 +153,7 @@ const ManualAssignment = () => {
             }),
           }
         );
-
         const data = await response.json();
-
         if (data.success) {
           setShowCreateModal(false);
           fetchAssignments(selectedSubject._id);
@@ -231,117 +257,22 @@ const ManualAssignment = () => {
     );
   };
 
-  // Student Assignment Modal Component
-  const StudentAssignmentModal = () => {
-    const [studentData, setStudentData] = useState([]);
-    const [selectedStudents, setSelectedStudents] = useState({});
+  const StudentAssignmentModal = ({
+    studentData,
+    selectedStudents,
+    setSelectedStudents,
+    selectedAssignment,
+    selectedSubject,
+    setShowStudentModal,
+    studentAssignments,
+  }) => {
     const [searchQuery, setSearchQuery] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [hasInitialized, setHasInitialized] = useState(false);
 
-    // Filter students based on search query
     const filteredStudents = studentData.filter(
       (student) =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.rollNo.toString().includes(searchQuery)
     );
-
-    // Store the assignment and subject IDs to prevent re-renders
-    const assignmentId = selectedAssignment?._id;
-    const subjectId = selectedSubject?._id;
-    const hasStudents = Object.keys(students).length > 0;
-
-    useEffect(() => {
-      // Only run when modal opens and we have required data
-      if (showStudentModal && assignmentId && subjectId && !hasInitialized) {
-        console.log("🚀 Fetching student assignments for:", assignmentId);
-        fetchStudentAssignments();
-        setHasInitialized(true);
-      }
-
-      // Reset when modal closes
-      if (!showStudentModal && hasInitialized) {
-        console.log("🔄 Resetting modal state");
-        setHasInitialized(false);
-        setSearchQuery("");
-        setStudentData([]);
-        setSelectedStudents({});
-        setIsLoading(false);
-      }
-    }, [showStudentModal, assignmentId, subjectId, hasInitialized]);
-
-    const fetchStudentAssignments = async () => {
-      setIsLoading(true);
-      console.log(
-        "📡 Starting API call for assignment:",
-        selectedAssignment._id
-      );
-
-      try {
-        // First, fetch students for the subject directly from the API
-        const studentsResponse = await fetch(
-          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
-        );
-        const studentsData = await studentsResponse.json();
-
-        if (!studentsData.success) {
-          console.error("Failed to fetch students:", studentsData.message);
-          return;
-        }
-
-        const subjectKey = `${selectedSubject.year.trim()}-${selectedSubject.division.trim()}`;
-        const studentsForSubject = studentsData.studentData[subjectKey] || [];
-
-        console.log("🔍 subjectKey:", subjectKey);
-        console.log(
-          "📚 Available keys in students:",
-          Object.keys(studentsData.studentData)
-        );
-        console.log("👥 Students for subject:", studentsForSubject);
-
-        // Set local state for rendering
-        setStudentData(studentsForSubject);
-
-        // Fetch existing student assignments from backend
-        const assignmentResponse = await fetch(
-          `https://gradyzebackend.onrender.com/api/classroom/student-assignments/${selectedAssignment._id}`
-        );
-
-        const assignmentData = await assignmentResponse.json();
-        console.log("📋 API Response:", assignmentData);
-
-        if (!assignmentData.success) {
-          console.error(
-            "Failed to fetch student assignments:",
-            assignmentData.message
-          );
-          setIsLoading(false);
-          return;
-        }
-
-        setStudentAssignments(assignmentData.studentAssignments || []);
-
-        // Initialize selection state
-        const initialSelected = {};
-        studentsForSubject.forEach((student) => {
-          const existingAssignment = assignmentData.studentAssignments?.find(
-            (sa) =>
-              sa.studentId?._id === student._id || sa.studentId === student._id
-          );
-          initialSelected[student._id] = existingAssignment
-            ? existingAssignment.isCompleted
-            : false;
-        });
-
-        setSelectedStudents(initialSelected);
-        console.log("✅ Successfully loaded student assignments");
-      } catch (error) {
-        console.error("❌ Error in fetchStudentAssignments:", error);
-      } finally {
-        setIsLoading(false);
-        console.log("🏁 API call completed, loading set to false");
-      }
-    };
 
     const handleStudentToggle = (studentId) => {
       setSelectedStudents((prev) => ({
@@ -358,7 +289,6 @@ const ManualAssignment = () => {
             isCompleted,
           })
         );
-
         const response = await fetch(
           `https://gradyzebackend.onrender.com/api/classroom/student-assignments/bulk/${selectedAssignment._id}`,
           {
@@ -369,9 +299,7 @@ const ManualAssignment = () => {
             body: JSON.stringify({ updates }),
           }
         );
-
         const data = await response.json();
-
         if (data.success) {
           setShowStudentModal(false);
         }
@@ -386,8 +314,6 @@ const ManualAssignment = () => {
           <h3 className="text-lg font-semibold mb-4">
             {selectedAssignment?.title} - Student Assignments
           </h3>
-
-          {/* Search Bar */}
           <div className="mb-4">
             <div className="relative">
               <Search
@@ -403,38 +329,18 @@ const ManualAssignment = () => {
               />
             </div>
           </div>
-
-          {/* Debug info */}
           <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
             <p>
               Subject: {selectedSubject?.year}-{selectedSubject?.division}
             </p>
             <p>Assignment ID: {selectedAssignment?._id}</p>
             <p>Students found: {studentData.length}</p>
-            <p>API Status: {isLoading ? "Loading..." : "Loaded"}</p>
-            <p>Has initialized: {hasInitialized ? "Yes" : "No"}</p>
             {searchQuery && <p>Filtered results: {filteredStudents.length}</p>}
           </div>
-
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">
-                Loading student assignments...
-              </p>
-            </div>
-          ) : filteredStudents.length === 0 ? (
+          {filteredStudents.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {searchQuery ? (
                 <p>No students found matching "{searchQuery}"</p>
-              ) : studentData.length === 0 ? (
-                <>
-                  <p>No students found for this subject.</p>
-                  <p className="text-sm mt-2">
-                    Looking for students in: {selectedSubject?.year}-
-                    {selectedSubject?.division}
-                  </p>
-                </>
               ) : (
                 <p>No students found</p>
               )}
@@ -475,7 +381,6 @@ const ManualAssignment = () => {
               ))}
             </div>
           )}
-
           <div className="flex gap-2 pt-4">
             <button
               onClick={handleSave}
@@ -495,7 +400,6 @@ const ManualAssignment = () => {
     );
   };
 
-  // Render assignment section
   const renderAssignmentSection = (type, assignmentList) => {
     const isExpanded = expandedSections[type];
     const typeLabels = {
@@ -503,7 +407,6 @@ const ManualAssignment = () => {
       practical: "Practical",
       miniproject: "Mini Project",
     };
-
     return (
       <div className="border rounded-lg mb-4">
         <div
@@ -519,7 +422,6 @@ const ManualAssignment = () => {
             }`}
           />
         </div>
-
         {isExpanded && (
           <div className="p-4 space-y-3">
             {assignmentList.length === 0 ? (
@@ -533,6 +435,7 @@ const ManualAssignment = () => {
                   className="flex items-center justify-between p-3 bg-white border rounded-md hover:bg-gray-50 cursor-pointer"
                   onClick={() => {
                     setSelectedAssignment(assignment);
+                    fetchStudentAssignments(assignment);
                     setShowStudentModal(true);
                   }}
                 >
@@ -555,14 +458,12 @@ const ManualAssignment = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Manual Assignment Management</h1>
-
       {loading && (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       )}
-
       {!selectedSubject ? (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Select a Subject</h2>
@@ -605,15 +506,23 @@ const ManualAssignment = () => {
               Create Assignment
             </button>
           </div>
-
           {renderAssignmentSection("theory", assignments.theory)}
           {renderAssignmentSection("practical", assignments.practical)}
           {renderAssignmentSection("miniproject", assignments.miniproject)}
         </div>
       )}
-
       {showCreateModal && <CreateAssignmentModal />}
-      {showStudentModal && <StudentAssignmentModal />}
+      {showStudentModal && (
+        <StudentAssignmentModal
+          studentData={studentData}
+          selectedStudents={selectedStudents}
+          setSelectedStudents={setSelectedStudents}
+          selectedAssignment={selectedAssignment}
+          selectedSubject={selectedSubject}
+          setShowStudentModal={setShowStudentModal}
+          studentAssignments={studentAssignments}
+        />
+      )}
     </div>
   );
 };
