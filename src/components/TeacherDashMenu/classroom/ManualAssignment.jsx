@@ -252,14 +252,8 @@ const ManualAssignment = () => {
     const hasStudents = Object.keys(students).length > 0;
 
     useEffect(() => {
-      // Only run when modal opens and we have all required data
-      if (
-        showStudentModal &&
-        assignmentId &&
-        subjectId &&
-        hasStudents &&
-        !hasInitialized
-      ) {
+      // Only run when modal opens and we have required data
+      if (showStudentModal && assignmentId && subjectId && !hasInitialized) {
         console.log("🚀 Fetching student assignments for:", assignmentId);
         fetchStudentAssignments();
         setHasInitialized(true);
@@ -274,24 +268,9 @@ const ManualAssignment = () => {
         setSelectedStudents({});
         setIsLoading(false);
       }
-    }, [
-      showStudentModal,
-      assignmentId,
-      subjectId,
-      hasStudents,
-      hasInitialized,
-    ]);
+    }, [showStudentModal, assignmentId, subjectId, hasInitialized]);
 
     const fetchStudentAssignments = async () => {
-      if (
-        !selectedSubject ||
-        !selectedAssignment ||
-        Object.keys(students).length === 0
-      ) {
-        console.warn("Missing data: Cannot fetch student assignments yet.");
-        return;
-      }
-
       setIsLoading(true);
       console.log(
         "📡 Starting API call for assignment:",
@@ -299,11 +278,25 @@ const ManualAssignment = () => {
       );
 
       try {
+        // First, fetch students for the subject directly from the API
+        const studentsResponse = await fetch(
+          `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
+        );
+        const studentsData = await studentsResponse.json();
+
+        if (!studentsData.success) {
+          console.error("Failed to fetch students:", studentsData.message);
+          return;
+        }
+
         const subjectKey = `${selectedSubject.year.trim()}-${selectedSubject.division.trim()}`;
-        const studentsForSubject = students[subjectKey] || [];
+        const studentsForSubject = studentsData.studentData[subjectKey] || [];
 
         console.log("🔍 subjectKey:", subjectKey);
-        console.log("📚 Available keys in students:", Object.keys(students));
+        console.log(
+          "📚 Available keys in students:",
+          Object.keys(studentsData.studentData)
+        );
         console.log("👥 Students for subject:", studentsForSubject);
 
         // Set local state for rendering
@@ -322,6 +315,7 @@ const ManualAssignment = () => {
             "Failed to fetch student assignments:",
             assignmentData.message
           );
+          setIsLoading(false);
           return;
         }
 
@@ -345,6 +339,7 @@ const ManualAssignment = () => {
         console.error("❌ Error in fetchStudentAssignments:", error);
       } finally {
         setIsLoading(false);
+        console.log("🏁 API call completed, loading set to false");
       }
     };
 
