@@ -229,46 +229,69 @@ const ManualAssignment = () => {
     const [selectedStudents, setSelectedStudents] = useState({});
 
     useEffect(() => {
-      if (selectedAssignment && selectedSubject && !loading) {
+      if (
+        selectedAssignment &&
+        selectedSubject &&
+        Object.keys(students).length > 0 &&
+        !loading
+      ) {
         fetchStudentAssignments();
       }
-    }, [selectedAssignment?._id, selectedSubject?._id]); // Only trigger when these specific IDs change
+    }, [selectedAssignment?._id, selectedSubject?._id, students]);
 
     const fetchStudentAssignments = async () => {
+      if (
+        !selectedSubject ||
+        !selectedAssignment ||
+        Object.keys(students).length === 0
+      ) {
+        console.warn("Missing data: Cannot fetch student assignments yet.");
+        return;
+      }
+
       try {
-        // First, fetch existing student assignments
+        const subjectKey = `${selectedSubject.year.trim()}-${selectedSubject.division.trim()}`;
+        const studentsForSubject = students[subjectKey] || [];
+
+        console.log("🔍 subjectKey:", subjectKey);
+        console.log("📚 Available keys in students:", Object.keys(students));
+        console.log("👥 Students for subject:", studentsForSubject);
+
+        // Set local state for rendering
+        setStudentData(studentsForSubject);
+
+        // Fetch existing student assignments from backend
         const assignmentResponse = await fetch(
           `https://gradyzebackend.onrender.com/api/classroom/student-assignments/${selectedAssignment._id}`
         );
+
         const assignmentData = await assignmentResponse.json();
 
-        if (assignmentData.success) {
-          setStudentAssignments(assignmentData.studentAssignments);
+        if (!assignmentData.success) {
+          console.error(
+            "Failed to fetch student assignments:",
+            assignmentData.message
+          );
+          return;
         }
 
-        // Get students for this subject from the main API
-        const subjectKey = `${selectedSubject.year}-${selectedSubject.division}`;
-        const studentsForSubject = students[subjectKey] || [];
-        setStudentData(studentsForSubject);
+        setStudentAssignments(assignmentData.studentAssignments || []);
 
-        console.log("subjectKey", subjectKey);
-        console.log("available studentData keys:", Object.keys(students));
-
-        // Initialize selected students state based on existing assignments
+        // Initialize selection state
         const initialSelected = {};
         studentsForSubject.forEach((student) => {
-          // Check if this student has already completed the assignment
           const existingAssignment = assignmentData.studentAssignments?.find(
             (sa) =>
-              sa.studentId._id === student._id || sa.studentId === student._id
+              sa.studentId?._id === student._id || sa.studentId === student._id
           );
           initialSelected[student._id] = existingAssignment
             ? existingAssignment.isCompleted
             : false;
         });
+
         setSelectedStudents(initialSelected);
       } catch (error) {
-        console.error("Error fetching student assignments:", error);
+        console.error("❌ Error in fetchStudentAssignments:", error);
       }
     };
 
