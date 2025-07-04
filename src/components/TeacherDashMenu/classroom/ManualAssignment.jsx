@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { ChevronRight, Plus, Edit, Trash2, Check, X } from "lucide-react";
+import {
+  ChevronRight,
+  Plus,
+  Edit,
+  Trash2,
+  Check,
+  X,
+  Search,
+} from "lucide-react";
 
 const ManualAssignment = () => {
   const [subjects, setSubjects] = useState([]);
@@ -227,22 +235,41 @@ const ManualAssignment = () => {
   const StudentAssignmentModal = () => {
     const [studentData, setStudentData] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState({});
+    const [searchQuery, setSearchQuery] = useState("");
+    const [hasLoaded, setHasLoaded] = useState(false);
+
+    // Filter students based on search query
+    const filteredStudents = studentData.filter(
+      (student) =>
+        student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.rollNo.toString().includes(searchQuery)
+    );
 
     useEffect(() => {
-      // Only fetch if we have all required data and modal is open
+      // Only fetch once when modal opens and we have all required data
       if (
         showStudentModal &&
         selectedAssignment?._id &&
         selectedSubject?._id &&
-        Object.keys(students).length > 0
+        Object.keys(students).length > 0 &&
+        !hasLoaded
       ) {
         fetchStudentAssignments();
+        setHasLoaded(true);
+      }
+
+      // Reset when modal closes
+      if (!showStudentModal) {
+        setHasLoaded(false);
+        setSearchQuery("");
+        setStudentData([]);
+        setSelectedStudents({});
       }
     }, [
       showStudentModal,
       selectedAssignment?._id,
       selectedSubject?._id,
-      students,
+      hasLoaded,
     ]);
 
     const fetchStudentAssignments = async () => {
@@ -345,25 +372,51 @@ const ManualAssignment = () => {
             {selectedAssignment?.title} - Student Assignments
           </h3>
 
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search students by name or roll number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
           {/* Debug info */}
           <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
             <p>
               Subject: {selectedSubject?.year}-{selectedSubject?.division}
             </p>
             <p>Students found: {studentData.length}</p>
+            {searchQuery && <p>Filtered results: {filteredStudents.length}</p>}
           </div>
 
-          {studentData.length === 0 ? (
+          {filteredStudents.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <p>No students found for this subject.</p>
-              <p className="text-sm mt-2">
-                Looking for students in: {selectedSubject?.year}-
-                {selectedSubject?.division}
-              </p>
+              {searchQuery ? (
+                <p>No students found matching "{searchQuery}"</p>
+              ) : studentData.length === 0 ? (
+                <>
+                  <p>No students found for this subject.</p>
+                  <p className="text-sm mt-2">
+                    Looking for students in: {selectedSubject?.year}-
+                    {selectedSubject?.division}
+                  </p>
+                </>
+              ) : (
+                <p>No students found</p>
+              )}
             </div>
           ) : (
             <div className="space-y-2 mb-4">
-              {studentData.map((student) => (
+              {filteredStudents.map((student) => (
                 <div
                   key={student._id}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
