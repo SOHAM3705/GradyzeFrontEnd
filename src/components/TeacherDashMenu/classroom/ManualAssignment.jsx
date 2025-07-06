@@ -30,7 +30,6 @@ const ManualAssignment = () => {
   });
   const [studentData, setStudentData] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState({});
-
   const teacherId =
     sessionStorage.getItem("teacherId") || "67e27245766e6b0b923fe807";
 
@@ -45,10 +44,8 @@ const ManualAssignment = () => {
         `https://gradyzebackend.onrender.com/api/studentmanagement/students-by-subject/${teacherId}`
       );
       const data = await response.json();
-      console.log("Fetched data:", data);
       setSubjects(data.subjects || []);
       setStudents(data.studentData || {});
-      console.log("Students data:", data.studentData);
     } catch (error) {
       console.error("Error fetching subjects and students:", error);
     } finally {
@@ -77,10 +74,7 @@ const ManualAssignment = () => {
     if (!selectedSubject || !assignment) return;
     const subjectKey = `${selectedSubject.year.trim()}-${selectedSubject.division.trim()}`;
     const studentsForSubject = students[subjectKey] || [];
-    console.log("🔍 subjectKey:", subjectKey);
-    console.log("👥 Students for subject:", studentsForSubject);
     setStudentData(studentsForSubject);
-
     try {
       const assignmentResponse = await fetch(
         `https://gradyzebackend.onrender.com/api/classroom/student-assignments/${assignment._id}`
@@ -94,7 +88,6 @@ const ManualAssignment = () => {
         return;
       }
       setStudentAssignments(assignmentData.studentAssignments || []);
-
       const initialSelected = {};
       studentsForSubject.forEach((student) => {
         const match = assignmentData.studentAssignments.find(
@@ -105,7 +98,7 @@ const ManualAssignment = () => {
       });
       setSelectedStudents(initialSelected);
     } catch (err) {
-      console.error("❌ Error fetching student assignments:", err);
+      console.error("Error fetching student assignments:", err);
     }
   };
 
@@ -212,19 +205,7 @@ const ManualAssignment = () => {
                 <option value="miniproject">Mini Project</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Max Marks
-              </label>
-              <input
-                type="number"
-                value={formData.maxMarks}
-                onChange={(e) =>
-                  setFormData({ ...formData, maxMarks: e.target.value })
-                }
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Due Date</label>
               <input
@@ -267,7 +248,6 @@ const ManualAssignment = () => {
     studentAssignments,
   }) => {
     const [searchQuery, setSearchQuery] = useState("");
-
     const filteredStudents = studentData.filter(
       (student) =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -333,7 +313,6 @@ const ManualAssignment = () => {
             <p>
               Subject: {selectedSubject?.year}-{selectedSubject?.division}
             </p>
-            <p>Assignment ID: {selectedAssignment?._id}</p>
             <p>Students found: {studentData.length}</p>
             {searchQuery && <p>Filtered results: {filteredStudents.length}</p>}
           </div>
