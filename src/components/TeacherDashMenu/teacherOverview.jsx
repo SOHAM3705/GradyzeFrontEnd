@@ -18,7 +18,13 @@ import axios from "axios";
 
 const TeacherOverview = () => {
   const [activeTab, setActiveTab] = useState("All Classes");
-  const [activePeriod, setActivePeriod] = useState("Month");
+  const [activeExamType, setActiveExamType] = useState("unit-test"); // default
+  const [performanceData, setPerformanceData] = useState({
+    examType: "unit-test",
+    totalStudents: 0,
+    overallPercent: 0,
+    subjectAverages: [],
+  });
   const [lectureStats, setLectureStats] = useState(0);
 
   const handleTabClick = (tab) => {
@@ -33,6 +39,24 @@ const TeacherOverview = () => {
     averageScore: 0,
     subjectAverages: [],
   });
+
+  useEffect(() => {
+    const fetchPerformance = async () => {
+      try {
+        const teacherId = sessionStorage.getItem("teacherId");
+        if (!teacherId) return;
+
+        const res = await axios.get(
+          `${API_BASE_URL}/api/teacher/performance/${teacherId}?examType=${activeExamType}`
+        );
+        setPerformanceData(res.data);
+      } catch (err) {
+        console.error("Error fetching class performance", err);
+      }
+    };
+
+    fetchPerformance();
+  }, [activeExamType]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -163,73 +187,77 @@ const TeacherOverview = () => {
               Class Performance
             </h2>
             <div className="flex items-center bg-gray-100 rounded-lg p-1 overflow-hidden">
-              <div
-                className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
-                  activePeriod === "Week"
-                    ? "bg-teal-700 text-white font-medium"
-                    : "text-gray-600"
-                }`}
-                onClick={() => handlePeriodClick("Week")}
-              >
-                Week
-              </div>
-              <div
-                className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
-                  activePeriod === "Month"
-                    ? "bg-teal-700 text-white font-medium"
-                    : "text-gray-600"
-                }`}
-                onClick={() => handlePeriodClick("Month")}
-              >
-                Month
-              </div>
-              <div
-                className={`px-3 sm:px-4 py-2 rounded-md cursor-pointer ${
-                  activePeriod === "Year"
-                    ? "bg-teal-700 text-white font-medium"
-                    : "text-gray-600"
-                }`}
-                onClick={() => handlePeriodClick("Year")}
-              >
-                Year
+              <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+                <button
+                  type="button"
+                  className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-center ${
+                    activeExamType === "unit-test"
+                      ? "bg-teal-700 text-white font-medium"
+                      : "text-gray-600"
+                  }`}
+                  onClick={() => setActiveExamType("unit-test")}
+                >
+                  Unit Test
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-center ${
+                    activeExamType === "prelim"
+                      ? "bg-teal-700 text-white font-medium"
+                      : "text-gray-600"
+                  }`}
+                  onClick={() => setActiveExamType("prelim")}
+                >
+                  Prelim
+                </button>
               </div>
             </div>
           </div>
-
           <div className="bg-transparent rounded-lg p-4 h-72">
-            <div className="flex justify-between items-end h-48">
-              {overviewStats.subjectAverages.map((subjectData, index) => {
-                const barHeight = Math.min(
-                  Math.max(subjectData.average, 5),
-                  100
-                ); // Prevent invisible bars
-
-                return (
-                  <div
-                    key={index}
-                    className="flex flex-col items-center w-12 sm:w-16 group"
-                  >
-                    <div
-                      className="w-5 sm:w-6 bg-gradient-to-t from-teal-700 to-teal-600 rounded-md transition-all duration-500 relative group-hover:scale-105"
-                      style={{ height: `${barHeight}%`, minHeight: "1rem" }}
-                    >
-                      <span className="absolute -top-6 bg-teal-600 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        {subjectData.average}%
-                      </span>
-                    </div>
-                    <p className="mt-2 text-gray-600 text-xs sm:text-sm text-center truncate w-full">
-                      {subjectData.subject}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex justify-between px-4 mt-4 text-xs text-gray-500">
-              <span>0%</span>
-              <span>Performance</span>
-              <span>100%</span>
-            </div>
+            {performanceData.subjectAverages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                No {activeExamType.replace("-", " ")} data available.
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-end h-48">
+                  {performanceData.subjectAverages.map((s, i) => {
+                    // Use computed percentage
+                    const pct =
+                      typeof s.averagePercent === "number"
+                        ? s.averagePercent
+                        : parseFloat(s.averagePercent) || 0;
+                    const barHeight = Math.min(Math.max(pct, 5), 100); // keep visible
+                    return (
+                      <div
+                        key={i}
+                        className="flex flex-col items-center w-12 sm:w-16 group"
+                      >
+                        <div
+                          className="w-5 sm:w-6 bg-gradient-to-t from-teal-700 to-teal-600 rounded-md transition-all duration-500 relative group-hover:scale-105"
+                          style={{ height: `${barHeight}%`, minHeight: "1rem" }}
+                        >
+                          <span className="absolute -top-6 bg-teal-600 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                            {pct.toFixed ? pct.toFixed(1) : pct}%
+                          </span>
+                        </div>
+                        <p className="mt-2 text-gray-600 text-xs sm:text-sm text-center truncate w-full">
+                          {s.subject}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between px-4 mt-4 text-xs text-gray-500">
+                  <span>0%</span>
+                  <span>
+                    {activeExamType === "unit-test" ? "Unit Test" : "Prelim"}{" "}
+                    Performance
+                  </span>
+                  <span>100%</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
