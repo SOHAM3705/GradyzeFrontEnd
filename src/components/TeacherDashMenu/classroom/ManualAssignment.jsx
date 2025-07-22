@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { ChevronRight, Plus, Search, X } from "lucide-react";
+import {
+  ChevronRight,
+  Plus,
+  Edit,
+  Trash2,
+  Check,
+  X,
+  Search,
+} from "lucide-react";
 
 const ManualAssignment = () => {
   const [subjects, setSubjects] = useState([]);
@@ -197,6 +205,7 @@ const ManualAssignment = () => {
                 <option value="miniproject">Mini Project</option>
               </select>
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Due Date</label>
               <input
@@ -339,9 +348,9 @@ const ManualAssignment = () => {
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={selectedStudents[student._id] || false}
+                      checked={!!selectedStudents[student._id]}
                       onChange={() => handleStudentToggle(student._id)}
-                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="h-5 w-5 text-green-500 rounded focus:ring-green-400"
                     />
                     <span className="text-sm">
                       {selectedStudents[student._id] ? "Completed" : "Pending"}
@@ -398,11 +407,9 @@ const ManualAssignment = () => {
                   key={assignment._id}
                   className="flex items-center justify-between p-3 bg-white border rounded-md hover:bg-gray-50 cursor-pointer"
                   onClick={() => {
-                    if (selectedAssignment?._id !== assignment._id) {
-                      setSelectedAssignment(assignment);
-                      fetchStudentAssignments(assignment);
-                      setShowStudentModal(true);
-                    }
+                    setSelectedAssignment(assignment);
+                    fetchStudentAssignments(assignment);
+                    setShowStudentModal(true);
                   }}
                 >
                   <div>
