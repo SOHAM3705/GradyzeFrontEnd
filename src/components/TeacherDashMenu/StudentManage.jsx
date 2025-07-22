@@ -478,7 +478,6 @@ const StudentManagementSystem = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-
             {loading ? (
               <p className="text-gray-600">Loading students...</p>
             ) : students.length > 0 ? (
@@ -502,6 +501,7 @@ const StudentManagementSystem = () => {
                   </thead>
                   <tbody>
                     {students
+                      .sort((a, b) => a.rollNo - b.rollNo) // Sort students by rollNo
                       .filter(
                         (student) =>
                           student.name
@@ -678,13 +678,11 @@ const StudentManagementSystem = () => {
               </div>
             </div>
           )}
-
           {Object.keys(subjectStudents).map((key) => (
             <div key={key} className="mt-6 md:mt-8">
               <h3 className="text-gray-800 font-semibold mb-3 md:mb-4">
                 Students for {key}
               </h3>
-
               <div className="table-container overflow-x-auto rounded-lg shadow-md">
                 <table className="min-w-full bg-white">
                   <thead>
@@ -701,19 +699,21 @@ const StudentManagementSystem = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {subjectStudents[key].map((student) => (
-                      <tr key={student.rollNo}>
-                        <td className="py-2 px-2 md:px-4 text-sm md:text-base">
-                          {student.rollNo}
-                        </td>
-                        <td className="py-2 px-2 md:px-4 text-sm md:text-base">
-                          {student.name}
-                        </td>
-                        <td className="py-2 px-2 md:px-4 text-sm md:text-base">
-                          {student.email}
-                        </td>
-                      </tr>
-                    ))}
+                    {subjectStudents[key]
+                      .sort((a, b) => a.rollNo - b.rollNo) // Sort students by rollNo
+                      .map((student) => (
+                        <tr key={student.rollNo}>
+                          <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                            {student.rollNo}
+                          </td>
+                          <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                            {student.name}
+                          </td>
+                          <td className="py-2 px-2 md:px-4 text-sm md:text-base">
+                            {student.email}
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>

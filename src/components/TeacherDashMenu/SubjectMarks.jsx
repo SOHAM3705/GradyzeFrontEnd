@@ -491,8 +491,6 @@ const TeacherDashboard = () => {
       if (!subject) throw new Error("Subject not found");
 
       const token = sessionStorage.getItem("token");
-
-      // For retest exams, we need to check the previous exam marks
       const previousExamType =
         examType === "re-unit-test"
           ? "unit-test"
@@ -500,14 +498,13 @@ const TeacherDashboard = () => {
           ? "prelim"
           : examType;
 
-      // Get marks for the previous exam type to determine who needs retest
       const response = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/marks-by-subject`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: {
             subjectName: subject.name,
-            examType: previousExamType, // Query previous exam marks
+            examType: previousExamType,
           },
         }
       );
@@ -515,9 +512,8 @@ const TeacherDashboard = () => {
       const existingMarks = response.data || {};
       const allStudents = studentsData[subjectId]?.students || [];
 
-      console.log("Previous exam marks data:", existingMarks);
-
       let studentsToShow = allStudents;
+
       if (examType === "re-unit-test" || examType === "reprelim") {
         studentsToShow = allStudents.filter((student) => {
           const studentMarks = existingMarks[student._id]?.[previousExamType];
@@ -527,17 +523,14 @@ const TeacherDashboard = () => {
           );
         });
 
-        console.log("Students needing retest:", studentsToShow);
-
         if (studentsToShow.length === 0) {
           toast.info(`No students need retest for ${subject.name} ${examType}`);
           setIsLoading(false);
-          setModalContent(null); // Close modal when no students need retest
+          setModalContent(null);
           return;
         }
       }
 
-      // Now get current exam marks if they exist
       const currentResponse = await axios.get(
         `https://gradyzebackend.onrender.com/api/teachermarks/marks-by-subject`,
         {
@@ -549,6 +542,9 @@ const TeacherDashboard = () => {
         }
       );
 
+      // Sort students by roll number
+      studentsToShow.sort((a, b) => a.rollNo - b.rollNo);
+
       setIsLoading(false);
       setModalContent({
         type: "students-list",
@@ -557,7 +553,7 @@ const TeacherDashboard = () => {
         examType,
         isUpdateMode: Object.keys(currentResponse.data).length > 0,
         existingMarks: currentResponse.data,
-        previousExamMarks: existingMarks, // Store previous exam marks for reference
+        previousExamMarks: existingMarks,
         lastUpdated: currentResponse.data.lastUpdated,
         studentsToShow,
       });
@@ -567,6 +563,59 @@ const TeacherDashboard = () => {
       toast.error("Failed to load marks. Please try again.");
       setModalContent(null);
     }
+  };
+
+  const updateStudentRow = (studentId) => {
+    const row = document.querySelector(`tr[data-id="${studentId}"]`);
+    if (!row) return;
+
+    const isAbsent = row.querySelector(".absent-checkbox").checked;
+    if (isAbsent) {
+      row.querySelector(".total-cell").textContent = "Absent";
+      row.querySelector(".status-cell").textContent = "Absent";
+      row.querySelector(".status-cell").className =
+        "p-1 md:p-2 status-cell text-center text-gray-600 text-xs md:text-sm";
+      return;
+    }
+
+    const isUnitTest = selectedExamType.includes("unit");
+    const passingMarks = isUnitTest ? 12 : 28;
+
+    const q1q2 = parseInt(row.querySelector(".q1q2-input").value) || 0;
+    const q3q4 = parseInt(row.querySelector(".q3q4-input").value) || 0;
+    const q5q6 = isUnitTest
+      ? 0
+      : parseInt(row.querySelector(".q5q6-input")?.value) || 0;
+    const q7q8 = isUnitTest
+      ? 0
+      : parseInt(row.querySelector(".q7q8-input")?.value) || 0;
+
+    const total = q1q2 + q3q4 + q5q6 + q7q8;
+    row.querySelector(".total-cell").textContent = total;
+
+    let status = total >= passingMarks ? "Pass" : "Fail";
+    if (
+      selectedExamType === "re-unit-test" ||
+      selectedExamType === "reprelim"
+    ) {
+      const previousExamType =
+        selectedExamType === "re-unit-test" ? "unit-test" : "prelim";
+      const previousMarks =
+        modalContent.existingMarks[studentId]?.[previousExamType];
+      if (previousMarks?.status === "Fail" && status === "Pass") {
+        status = "Improved";
+      }
+    }
+
+    const statusCell = row.querySelector(".status-cell");
+    statusCell.textContent = status;
+    statusCell.className = `p-1 md:p-2 status-cell text-center text-xs md:text-sm ${
+      status === "Pass"
+        ? "text-green-600"
+        : status === "Fail"
+        ? "text-red-600"
+        : "text-gray-600"
+    }`;
   };
 
   const handleExport = async (exportType, subjectId, examType) => {
