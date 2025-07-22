@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  ChevronRight,
-  Plus,
-  Edit,
-  Trash2,
-  Check,
-  X,
-  Search,
-} from "lucide-react";
+import { ChevronRight, Plus, Search, X } from "lucide-react";
 
 const ManualAssignment = () => {
   const [subjects, setSubjects] = useState([]);
@@ -205,7 +197,6 @@ const ManualAssignment = () => {
                 <option value="miniproject">Mini Project</option>
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-1">Due Date</label>
               <input
@@ -346,20 +337,12 @@ const ManualAssignment = () => {
                     <span>{student.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleStudentToggle(student._id)}
-                      className={`p-2 rounded-md transition-colors ${
-                        selectedStudents[student._id]
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-200 text-gray-600"
-                      }`}
-                    >
-                      {selectedStudents[student._id] ? (
-                        <Check size={16} />
-                      ) : (
-                        <X size={16} />
-                      )}
-                    </button>
+                    <input
+                      type="checkbox"
+                      checked={selectedStudents[student._id] || false}
+                      onChange={() => handleStudentToggle(student._id)}
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
                     <span className="text-sm">
                       {selectedStudents[student._id] ? "Completed" : "Pending"}
                     </span>
