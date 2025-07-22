@@ -47,7 +47,7 @@ import ManageClasses from "./components/TeacherDashMenu/attendance/ManageClasses
 import ManageStudents from "./components/TeacherDashMenu/attendance/ManageStudents";
 import AttendanceReport from "./components/TeacherDashMenu/attendance/AttendanceReports";
 
-import AssignmentManage from "./components/TeacherDashMenu/classroom/AssignmentManage";
+import AssignmentManage from "./components/TeacherDashMenu/classroom/Assignmentselector";
 
 import StudentDash from "./Pages/StudentDash/StudentDash";
 import StudentAttendanceDashboard from "./components/StudentDashMenu/AttendnaceReport";
