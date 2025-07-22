@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Book,
   ChevronRight,
@@ -58,6 +59,8 @@ const GoogleClassroomIntegration = () => {
     materials: [],
   });
 
+  const navigate = useNavigate();
+
   const checkGoogleStatus = async () => {
     try {
       setIsLoading(true);
@@ -75,13 +78,9 @@ const GoogleClassroomIntegration = () => {
       const data = await response.json();
       setGoogleStatus(data);
 
-      // Automatically refresh if token is about to expire
-      if (data.isExpired || data.hasGoogleAccess === false) {
+      if (data.isExpired) {
         setNeedsAuth(true);
         setError("Google access expired. Please reconnect your account.");
-      } else if (data.hasGoogleAccess) {
-        // If connected, fetch courses immediately
-        await fetchCourses();
       }
     } catch (err) {
       console.error("Error checking Google status:", err);
@@ -96,26 +95,6 @@ const GoogleClassroomIntegration = () => {
       setIsLoading(true);
       setError(null);
 
-      // First check if we already have a connection
-      const statusResponse = await fetch(
-        `${API_BASE_URL}/api/auth/classroom/status`,
-        {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (statusResponse.ok) {
-        const statusData = await statusResponse.json();
-        if (statusData.hasGoogleAccess && !statusData.isExpired) {
-          setGoogleStatus(statusData);
-          await fetchCourses();
-          return;
-        }
-      }
-
-      // If no valid connection, initiate OAuth
       const response = await fetch(`${API_BASE_URL}/api/auth/initiate-oauth`, {
         method: "POST",
         headers: {
@@ -123,6 +102,19 @@ const GoogleClassroomIntegration = () => {
           Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
       });
+
+      const contentType = response.headers.get("content-type");
+
+      if (!response.ok) {
+        const errorText = contentType?.includes("application/json")
+          ? await response.json()
+          : await response.text();
+        throw new Error(
+          typeof errorText === "string"
+            ? errorText
+            : errorText.message || "Unknown error"
+        );
+      }
 
       const data = await response.json();
       if (data.authUrl) {
@@ -153,25 +145,15 @@ const GoogleClassroomIntegration = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-
-        // Special handling for token expiration
-        if (errorData.requiresReauth) {
-          setNeedsAuth(true);
-          setError("Session expired - please reconnect");
-          return;
-        }
-
         throw new Error(errorData.message || "Failed to fetch courses");
       }
 
       const data = await response.json();
       setCourses(data.courses || []);
 
-      // Fetch assignments for each course
-      const assignmentPromises = (data.courses || []).map((course) =>
-        fetchAssignments(course.id)
-      );
-      await Promise.all(assignmentPromises);
+      for (const course of data.courses || []) {
+        await fetchAssignments(course.id);
+      }
 
       setSuccess(`Successfully loaded ${data.courses?.length || 0} courses`);
       setNeedsAuth(false);
@@ -363,20 +345,6 @@ const GoogleClassroomIntegration = () => {
     fetchCourses();
   }, []);
 
-  useEffect(() => {
-    // Initial check
-    checkGoogleStatus();
-
-    // Set up periodic checks (every 5 minutes)
-    const interval = setInterval(() => {
-      if (googleStatus?.hasGoogleAccess) {
-        checkGoogleStatus();
-      }
-    }, 300000); // 5 minutes
-
-    return () => clearInterval(interval);
-  }, []);
-
   const hasGoogleAccess = googleStatus?.hasGoogleAccess;
 
   const filteredCourses = courses.filter(
@@ -404,22 +372,26 @@ const GoogleClassroomIntegration = () => {
         </div>
       </div>
 
+      {/* Status Messages */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-red-800 font-medium">{error}</p>
-              {(error.includes("expired") || error.includes("reconnect")) && (
-                <button
-                  onClick={initiateOAuth}
-                  className="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
-                >
-                  Reconnect to Google Classroom
-                </button>
-              )}
-            </div>
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <span className="text-red-800">{error}</span>
           </div>
+          <button
+            onClick={clearMessages}
+            className="text-red-500 hover:text-red-700"
+          >
+            <span className="sr-only">Close</span>
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -453,54 +425,43 @@ const GoogleClassroomIntegration = () => {
         </div>
       )}
 
+      {/* Connection Status Card */}
       {googleStatus && (
         <div
           className={`mb-6 rounded-lg border-2 p-4 ${
-            googleStatus.hasGoogleAccess && !googleStatus.isExpired
+            googleStatus.hasGoogleAccess
               ? "bg-green-50 border-green-200"
-              : "bg-yellow-50 border-yellow-200"
+              : "bg-gray-50 border-gray-200"
           }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
                 className={`w-3 h-3 rounded-full ${
-                  googleStatus.hasGoogleAccess && !googleStatus.isExpired
-                    ? "bg-green-500"
-                    : "bg-yellow-500"
+                  googleStatus.hasGoogleAccess ? "bg-green-500" : "bg-red-500"
                 }`}
               ></div>
               <div>
-                <span className="font-semibold">
-                  {googleStatus.hasGoogleAccess && !googleStatus.isExpired
-                    ? "Connected"
-                    : "Connection Issue"}
+                <span
+                  className={`font-semibold ${
+                    googleStatus.hasGoogleAccess
+                      ? "text-green-800"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {googleStatus.hasGoogleAccess ? "Connected" : "Not Connected"}
                 </span>
-                <p className="text-sm">
-                  {googleStatus.hasGoogleAccess && !googleStatus.isExpired
-                    ? `Connected as: ${googleStatus.connectedEmail}`
-                    : "Your connection needs attention"}
-                </p>
+                {googleStatus.hasGoogleAccess && (
+                  <p className="text-sm text-green-600">
+                    Connected as: {googleStatus.connectedEmail}
+                  </p>
+                )}
               </div>
             </div>
-
-            {googleStatus.hasGoogleAccess && !googleStatus.isExpired ? (
+            {googleStatus.hasGoogleAccess && (
               <CheckCircle className="w-6 h-6 text-green-500" />
-            ) : (
-              <AlertCircle className="w-6 h-6 text-yellow-500" />
             )}
           </div>
-
-          {googleStatus.isExpired && (
-            <div className="mt-3 text-sm">
-              <button
-                onClick={initiateOAuth}
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Reconnect now
-              </button>
-            </div>
-          )}
         </div>
       )}
 

@@ -66,81 +66,92 @@ const TeacherOverview = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8 bg-gray-100">
-      <div className="flex justify-between items-center mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-teal-700 relative">
-          Overview
-          <span className="absolute bottom-[-8px] left-0 w-[70%] h-1 bg-gradient-to-r from-teal-700 to-teal-700 rounded-sm"></span>
-        </h1>
-      </div>
-
-      {/* Main Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-          <div className="flex justify-between items-start mb-4 sm:mb-6">
-            <div>
-              <h3 className="text-gray-500 text-sm font-medium">
-                Total Students
-              </h3>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-800 mt-1">
-                {overviewStats.totalStudents}
-              </p>
-            </div>
-            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
-              <FontAwesomeIcon icon={faUserGraduate} />
-            </div>
-          </div>
-          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-teal-700 to-teal-700 h-full"
-              style={{ width: "85%" }}
-            ></div>
-          </div>
+      <div className="max-w-7xl mx-auto p-4 sm:p-8 bg-gray-100">
+        {/* Page Heading */}
+        <div className="flex justify-between items-center mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-teal-700 relative">
+            Overview
+            <span className="absolute bottom-[-8px] left-0 w-[70%] h-1 bg-gradient-to-r from-teal-700 to-teal-700 rounded-sm"></span>
+          </h1>
         </div>
 
-        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-          <div className="flex justify-between items-start mb-4 sm:mb-6">
-            <div>
-              <h3 className="text-gray-500 text-sm font-medium">
-                Average Class Score
-              </h3>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-800 mt-1">
-                {overviewStats.averageScore}%
-              </p>
+        {/* Main Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          {/* Total Students */}
+          <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-transform duration-300 transform hover:-translate-y-1">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-gray-500 text-sm font-medium">
+                  Total Students
+                </h3>
+                <p className="text-3xl font-bold text-gray-800 mt-1">
+                  {overviewStats.totalStudents}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
+                <FontAwesomeIcon icon={faUserGraduate} />
+              </div>
             </div>
-            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
-              <FontAwesomeIcon icon={faPercentage} />
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-teal-700 to-teal-700 h-full"
+                style={{ width: "85%" }}
+              ></div>
             </div>
           </div>
-          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-teal-700 to-teal-700 h-full"
-              style={{ width: "75%" }}
-            ></div>
-          </div>
-        </div>
-      </div>
 
-      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md relative overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-        <div className="flex justify-between items-start mb-4 sm:mb-6">
-          <div>
-            <h3 className="text-gray-500 text-sm font-medium">Lectures Held</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-800 mt-1">
-              {lectureStats}
-            </p>
-            <div className="flex items-center gap-2 mt-2 text-sm">
-              <FontAwesomeIcon icon={faArrowUp} className="text-green-500" />
-              <span className="text-green-500">This academic term</span>
+          {/* Average Class Score */}
+          <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-transform duration-300 transform hover:-translate-y-1">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-gray-500 text-sm font-medium">
+                  Average Class Score
+                </h3>
+                <p className="text-3xl font-bold text-gray-800 mt-1">
+                  {overviewStats.averageScore}%
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
+                <FontAwesomeIcon icon={faPercentage} />
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-teal-700 to-teal-700 h-full"
+                style={{ width: "75%" }}
+              ></div>
             </div>
           </div>
-          <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
-            <FontAwesomeIcon icon={faChartBar} />
+
+          {/* Lectures Held */}
+          <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-transform duration-300 transform hover:-translate-y-1">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-gray-500 text-sm font-medium">
+                  Lectures Held
+                </h3>
+                <p className="text-3xl font-bold text-gray-800 mt-1">
+                  {lectureStats}
+                </p>
+                <div className="flex items-center gap-2 mt-2 text-sm">
+                  <FontAwesomeIcon
+                    icon={faArrowUp}
+                    className="text-green-500"
+                  />
+                  <span className="text-green-500">This academic term</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
+                <FontAwesomeIcon icon={faChartBar} />
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-teal-700 to-teal-700 h-full"
+                style={{ width: "60%" }}
+              ></div>
+            </div>
           </div>
-        </div>
-        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-          <div
-            className="bg-gradient-to-r from-teal-700 to-teal-700 h-full"
-            style={{ width: "60%" }} // Optional, or remove this bar
-          ></div>
         </div>
       </div>
 
@@ -220,48 +231,42 @@ const TeacherOverview = () => {
               Quick Actions
             </h2>
           </div>
-          <div className="flex flex-col gap-3">
-            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <Link to="/teacherdash/subject-marks">
-                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
-                  <FontAwesomeIcon icon={faFileExport} />
+          <div className="grid gap-4">
+            {[
+              {
+                to: "/teacherdash/subject-marks",
+                icon: faFileExport,
+                label: "Export Grades",
+              },
+              {
+                to: "/teacherdash/TeacherStudentManage",
+                icon: faUsers,
+                label: "Export Student List",
+              },
+              {
+                to: "/teacherdash/attendance",
+                icon: faFileAlt,
+                label: "Take Attendance",
+              },
+              {
+                to: "/teacherdash/notifications",
+                icon: faBell,
+                label: "Send Notification",
+              },
+            ].map((action, index) => (
+              <Link
+                key={index}
+                to={action.to}
+                className="flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
+                  <FontAwesomeIcon icon={action.icon} />
                 </div>
-                <span className="text-gray-600 font-medium">Export Grades</span>
-              </Link>
-            </button>
-
-            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <Link to="/teacherdash/TeacherStudentManage">
-                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
-                  <FontAwesomeIcon icon={faUsers} />
-                </div>
-                <span className="text-gray-600 font-medium">
-                  Export Student List
+                <span className="text-gray-700 font-medium">
+                  {action.label}
                 </span>
               </Link>
-            </button>
-
-            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <Link to="/teacherdash/attendance">
-                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
-                  <FontAwesomeIcon icon={faFileAlt} />
-                </div>
-                <span className="text-gray-600 font-medium">
-                  Take Attendance
-                </span>
-              </Link>
-            </button>
-
-            <button className="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300 relative overflow-hidden">
-              <Link to="/teacherdash/notifications">
-                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg mr-4">
-                  <FontAwesomeIcon icon={faBell} />
-                </div>
-                <span className="text-gray-600 font-medium">
-                  Send Notification
-                </span>
-              </Link>
-            </button>
+            ))}
           </div>
         </div>
       </div>
