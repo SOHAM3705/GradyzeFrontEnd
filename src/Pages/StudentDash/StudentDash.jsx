@@ -52,7 +52,6 @@ function StudentDash() {
       label: "Test And Surveys",
       path: "/studentdash/Forms",
     },
-    { icon: "📄", label: "Assignment", path: "/studentdash/assignment" },
     {
       icon: "📅",
       label: "Attendance Reports",
