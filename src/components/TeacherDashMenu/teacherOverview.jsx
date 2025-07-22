@@ -132,7 +132,7 @@ const TeacherOverview = () => {
                   Average Class Score
                 </h3>
                 <p className="text-3xl font-bold text-gray-800 mt-1">
-                  {overviewStats.averageScore}%
+                  {overviewStats.averageScore}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
@@ -157,13 +157,6 @@ const TeacherOverview = () => {
                 <p className="text-3xl font-bold text-gray-800 mt-1">
                   {lectureStats}
                 </p>
-                <div className="flex items-center gap-2 mt-2 text-sm">
-                  <FontAwesomeIcon
-                    icon={faArrowUp}
-                    className="text-green-500"
-                  />
-                  <span className="text-green-500">This academic term</span>
-                </div>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-700 text-white flex items-center justify-center rounded-lg shadow-md">
                 <FontAwesomeIcon icon={faChartBar} />
