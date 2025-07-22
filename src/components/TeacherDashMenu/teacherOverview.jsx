@@ -222,12 +222,12 @@ const TeacherOverview = () => {
               <>
                 <div className="flex justify-between items-end h-48">
                   {performanceData.subjectAverages.map((s, i) => {
-                    // Use computed percentage
                     const pct =
                       typeof s.averagePercent === "number"
                         ? s.averagePercent
                         : parseFloat(s.averagePercent) || 0;
-                    const barHeight = Math.min(Math.max(pct, 5), 100); // keep visible
+                    const barHeight = Math.max((pct / 100) * 150, 10); // minimum 10px height for visibility
+
                     return (
                       <div
                         key={i}
@@ -235,10 +235,13 @@ const TeacherOverview = () => {
                       >
                         <div
                           className="w-5 sm:w-6 bg-gradient-to-t from-teal-700 to-teal-600 rounded-md transition-all duration-500 relative group-hover:scale-105"
-                          style={{ height: `${barHeight}%`, minHeight: "1rem" }}
+                          style={{
+                            height: `${barHeight}px`,
+                            minHeight: "1rem",
+                          }}
                         >
                           <span className="absolute -top-6 bg-teal-600 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                            {pct.toFixed ? pct.toFixed(1) : pct}%
+                            {pct.toFixed(1)}%
                           </span>
                         </div>
                         <p className="mt-2 text-gray-600 text-xs sm:text-sm text-center truncate w-full">
