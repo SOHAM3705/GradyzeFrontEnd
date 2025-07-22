@@ -258,6 +258,11 @@ const ManualAssignment = () => {
       );
 
     const handleSave = async () => {
+      if (!selectedAssignment?._id) {
+        console.error("No assignment selected. Aborting save.");
+        return;
+      }
+
       try {
         const updates = Object.entries(selectedStudents).map(
           ([studentId, isCompleted]) => ({
@@ -280,6 +285,8 @@ const ManualAssignment = () => {
         const data = await response.json();
         if (data.success) {
           setShowStudentModal(false);
+        } else {
+          console.error("Save failed:", data.message);
         }
       } catch (error) {
         console.error("Error updating student assignments:", error);
@@ -343,7 +350,10 @@ const ManualAssignment = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleStudentToggle(student._id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStudentToggle(student._id);
+                      }}
                       className={`p-2 rounded-md transition-colors ${
                         selectedStudents[student._id]
                           ? "bg-green-500 text-white"
