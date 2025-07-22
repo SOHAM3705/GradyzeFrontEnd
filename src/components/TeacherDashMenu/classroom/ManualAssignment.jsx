@@ -248,6 +248,7 @@ const ManualAssignment = () => {
     studentAssignments,
   }) => {
     const [searchQuery, setSearchQuery] = useState("");
+
     const filteredStudents = [...studentData]
       .sort((a, b) => a.rollNo - b.rollNo)
       .filter(
@@ -255,13 +256,6 @@ const ManualAssignment = () => {
           student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           student.rollNo.toString().includes(searchQuery)
       );
-
-    const handleStudentToggle = (studentId) => {
-      setSelectedStudents((prev) => ({
-        ...prev,
-        [studentId]: !prev[studentId],
-      }));
-    };
 
     const handleSave = async () => {
       try {
@@ -271,6 +265,7 @@ const ManualAssignment = () => {
             isCompleted,
           })
         );
+
         const response = await fetch(
           `https://gradyzebackend.onrender.com/api/classroom/student-assignments/bulk/${selectedAssignment._id}`,
           {
@@ -281,6 +276,7 @@ const ManualAssignment = () => {
             body: JSON.stringify({ updates }),
           }
         );
+
         const data = await response.json();
         if (data.success) {
           setShowStudentModal(false);
@@ -291,24 +287,18 @@ const ManualAssignment = () => {
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl p-8 w-full max-w-3xl mx-4 max-h-[85vh] overflow-y-auto shadow-2xl relative">
-          {/* Close Button */}
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto relative">
           <button
             onClick={() => setShowStudentModal(false)}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-            aria-label="Close modal"
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
-
-          {/* Modal Header */}
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">
-            {selectedAssignment?.title} - Student Submissions
+          <h3 className="text-lg font-semibold mb-4">
+            {selectedAssignment?.title} - Student Assignments
           </h3>
-
-          {/* Search Bar */}
-          <div className="mb-6">
+          <div className="mb-4">
             <div className="relative">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -319,23 +309,19 @@ const ManualAssignment = () => {
                 placeholder="Search students by name or roll number..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-700"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
-
-          {/* Subject Info */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-            <p className="font-medium">
+          <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+            <p>
               Subject: {selectedSubject?.year}-{selectedSubject?.division}
             </p>
             <p>Students found: {studentData.length}</p>
             {searchQuery && <p>Filtered results: {filteredStudents.length}</p>}
           </div>
-
-          {/* Student List */}
           {filteredStudents.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">
+            <div className="text-center py-8 text-gray-500">
               {searchQuery ? (
                 <p>No students found matching "{searchQuery}"</p>
               ) : (
@@ -343,32 +329,34 @@ const ManualAssignment = () => {
               )}
             </div>
           ) : (
-            <div className="space-y-3 mb-6">
+            <div className="space-y-2 mb-4">
               {filteredStudents.map((student) => (
                 <div
                   key={student._id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="font-medium text-gray-800">
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium">
                       Roll No: {student.rollNo}
                     </span>
-                    <span className="text-gray-700">{student.name}</span>
+                    <span>{student.name}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedStudents[student._id] || false}
-                      onChange={() => handleStudentToggle(student._id)}
-                      className="h-5 w-5 text-blue-500 rounded focus:ring-blue-500 border-gray-300"
-                    />
-                    <span
-                      className={`text-sm font-medium ${
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleStudentToggle(student._id)}
+                      className={`p-2 rounded-md transition-colors ${
                         selectedStudents[student._id]
-                          ? "text-green-600"
-                          : "text-red-600"
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-200 text-gray-600"
                       }`}
                     >
+                      {selectedStudents[student._id] ? (
+                        <Check size={16} />
+                      ) : (
+                        <X size={16} />
+                      )}
+                    </button>
+                    <span className="text-sm">
                       {selectedStudents[student._id] ? "Completed" : "Pending"}
                     </span>
                   </div>
@@ -376,20 +364,12 @@ const ManualAssignment = () => {
               ))}
             </div>
           )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-2 pt-4">
             <button
               onClick={handleSave}
-              className="flex-1 bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+              className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
             >
               Save Changes
-            </button>
-            <button
-              onClick={() => setShowStudentModal(false)}
-              className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-            >
-              Cancel
             </button>
           </div>
         </div>

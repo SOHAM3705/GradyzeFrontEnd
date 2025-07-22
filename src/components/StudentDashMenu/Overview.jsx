@@ -18,7 +18,8 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const studentId = sessionStorage.getItem("studentId");
+  // Replace with actual student ID from your auth system
+  const studentId = "your-student-id";
 
   useEffect(() => {
     const fetchStudentOverview = async () => {
@@ -39,18 +40,18 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchGradePerformance = async () => {
       try {
+        if (!studentId) return;
         const response = await axios.get(
           `/api/student/grades/${studentId}/${activePeriod}`
         );
-        setGradePerformance(response.data.gradePerformance);
+        setGradePerformance(response.data.gradePerformance || []);
       } catch (err) {
         console.error("Error fetching grade performance:", err);
+        setGradePerformance([]);
       }
     };
 
-    if (studentId) {
-      fetchGradePerformance();
-    }
+    fetchGradePerformance();
   }, [activePeriod, studentId]);
 
   const handlePeriodChange = (period) => {
@@ -70,23 +71,29 @@ const StudentDashboard = () => {
   }
 
   if (!studentData) {
-    return null;
+    return (
+      <div className="max-w-6xl mx-auto p-8 text-center">
+        No student data available
+      </div>
+    );
   }
 
-  // Calculate trend indicators
+  // Safely calculate trend indicators with fallbacks
   const getTrendIndicator = (current, previous) => {
+    current = current || 0;
+    previous = previous || 0;
     const difference = current - previous;
     if (difference > 0) {
       return {
         icon: faArrowUp,
         color: "text-green-500",
-        text: `${Math.abs(difference)}% from last period`,
+        text: `${Math.abs(difference).toFixed(1)}% from last period`,
       };
     } else if (difference < 0) {
       return {
         icon: faArrowDown,
         color: "text-red-500",
-        text: `${Math.abs(difference)}% from last period`,
+        text: `${Math.abs(difference).toFixed(1)}% from last period`,
       };
     }
     return {
@@ -96,34 +103,43 @@ const StudentDashboard = () => {
     };
   };
 
-  const gpaTrend = getTrendIndicator(
-    studentData.stats.gpa,
-    studentData.stats.gpa - studentData.trends.gpaChange
-  );
+  // Safely access nested properties with fallbacks
+  const stats = studentData.stats || {};
+  const trends = studentData.trends || {};
+  const studentInfo = studentData.student || {};
+  const upcomingDeadlines = studentData.upcomingDeadlines || [];
 
+  const gpa = stats.gpa || 0;
+  const attendanceRate = stats.attendanceRate || 0;
+  const assignmentsDue = stats.assignmentsDue || 0;
+  const gpaChange = trends.gpaChange || 0;
+  const attendanceChange = trends.attendanceChange || 0;
+
+  const gpaTrend = getTrendIndicator(gpa, gpa - gpaChange);
   const attendanceTrend = getTrendIndicator(
-    studentData.stats.attendanceRate,
-    studentData.stats.attendanceRate + studentData.trends.attendanceChange
+    attendanceRate,
+    attendanceRate + attendanceChange
   );
 
   // For assignments due, we'll assume some previous value since backend doesn't provide it
   const assignmentsTrend =
-    studentData.stats.assignmentsDue > 3
+    assignmentsDue > 3
       ? {
           icon: faArrowUp,
           color: "text-red-500",
-          text: `${studentData.stats.assignmentsDue - 3} more than last week`,
+          text: `${assignmentsDue - 3} more than last week`,
         }
       : {
           icon: faArrowDown,
           color: "text-green-500",
-          text: `${3 - studentData.stats.assignmentsDue} fewer than last week`,
+          text: `${3 - assignmentsDue} fewer than last week`,
         };
 
   // Normalize grade performance data for the chart
-  const normalizedGrades = gradePerformance.map((subject) => ({
+  const normalizedGrades = (gradePerformance || []).map((subject) => ({
     ...subject,
-    normalizedHeight: `${subject.percentage}%`,
+    normalizedHeight: `${subject.percentage || 0}%`,
+    subject: subject.subject || "Unknown",
   }));
 
   // Fill with empty data if less than 5 subjects for the chart
@@ -156,17 +172,20 @@ const StudentDashboard = () => {
           </div>
           <div className="flex items-center gap-2 sm:gap-4 p-1 sm:p-2 bg-white rounded-lg shadow-md cursor-pointer transition hover:shadow-lg">
             <div className="w-7 sm:w-9 h-7 sm:h-9 bg-gradient-to-br from-blue-600 to-blue-400 text-white flex items-center justify-center rounded-lg font-bold text-sm sm:text-lg">
-              {studentData.student.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
+              {studentInfo.name
+                ? studentInfo.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                : "S"}
             </div>
             <div>
               <div className="font-semibold text-gray-800 text-sm sm:text-base">
-                {studentData.student.name}
+                {studentInfo.name || "Student"}
               </div>
               <div className="text-gray-500 text-xs sm:text-sm">
-                {studentData.student.year} Year, {studentData.student.division}
+                {studentInfo.year ? `${studentInfo.year} Year` : ""}{" "}
+                {studentInfo.division || ""}
               </div>
             </div>
           </div>
@@ -181,7 +200,7 @@ const StudentDashboard = () => {
                 Current GPA
               </h3>
               <p className="text-2xl sm:text-4xl font-bold text-gray-800 mt-1 sm:mt-2">
-                {studentData.stats.gpa.toFixed(1)}
+                {gpa.toFixed(1)}
               </p>
               {gpaTrend.icon && (
                 <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
@@ -200,7 +219,7 @@ const StudentDashboard = () => {
           <div className="w-full bg-gray-200 h-1 sm:h-2 rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-600 rounded-full"
-              style={{ width: `${(studentData.stats.gpa / 4) * 100}%` }}
+              style={{ width: `${(gpa / 4) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -212,7 +231,7 @@ const StudentDashboard = () => {
                 Assignments Due
               </h3>
               <p className="text-2xl sm:text-4xl font-bold text-gray-800 mt-1 sm:mt-2">
-                {studentData.stats.assignmentsDue}
+                {assignmentsDue}
               </p>
               {assignmentsTrend.icon && (
                 <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
@@ -234,10 +253,7 @@ const StudentDashboard = () => {
             <div
               className="h-full bg-blue-600 rounded-full"
               style={{
-                width: `${Math.min(
-                  (studentData.stats.assignmentsDue / 10) * 100,
-                  100
-                )}%`,
+                width: `${Math.min((assignmentsDue / 10) * 100, 100)}%`,
               }}
             ></div>
           </div>
@@ -250,7 +266,7 @@ const StudentDashboard = () => {
                 Attendance Rate
               </h3>
               <p className="text-2xl sm:text-4xl font-bold text-gray-800 mt-1 sm:mt-2">
-                {studentData.stats.attendanceRate}%
+                {attendanceRate}%
               </p>
               {attendanceTrend.icon && (
                 <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
@@ -271,7 +287,7 @@ const StudentDashboard = () => {
           <div className="w-full bg-gray-200 h-1 sm:h-2 rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-600 rounded-full"
-              style={{ width: `${studentData.stats.attendanceRate}%` }}
+              style={{ width: `${attendanceRate}%` }}
             ></div>
           </div>
         </div>
@@ -284,36 +300,19 @@ const StudentDashboard = () => {
               Grade Performance
             </h2>
             <div className="flex gap-1 sm:gap-2">
-              <button
-                className={`px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition text-xs sm:text-sm ${
-                  activePeriod === "Week"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200"
-                }`}
-                onClick={() => handlePeriodChange("Week")}
-              >
-                Week
-              </button>
-              <button
-                className={`px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition text-xs sm:text-sm ${
-                  activePeriod === "Month"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200"
-                }`}
-                onClick={() => handlePeriodChange("Month")}
-              >
-                Month
-              </button>
-              <button
-                className={`px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition text-xs sm:text-sm ${
-                  activePeriod === "Semester"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200"
-                }`}
-                onClick={() => handlePeriodChange("Semester")}
-              >
-                Semester
-              </button>
+              {["Week", "Month", "Semester"].map((period) => (
+                <button
+                  key={period}
+                  className={`px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition text-xs sm:text-sm ${
+                    activePeriod === period
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200"
+                  }`}
+                  onClick={() => handlePeriodChange(period)}
+                >
+                  {period}
+                </button>
+              ))}
             </div>
           </div>
           <div className="flex justify-between items-end h-40 sm:h-64 px-2 sm:px-4">
@@ -346,8 +345,8 @@ const StudentDashboard = () => {
             Upcoming Deadlines
           </h2>
           <div className="space-y-2 sm:space-y-4">
-            {studentData.upcomingDeadlines.length > 0 ? (
-              studentData.upcomingDeadlines.map((deadline, index) => (
+            {upcomingDeadlines.length > 0 ? (
+              upcomingDeadlines.map((deadline, index) => (
                 <div
                   key={index}
                   className="flex items-center p-2 sm:p-4 bg-white border rounded-lg shadow-sm transition hover:shadow-md"
@@ -357,10 +356,10 @@ const StudentDashboard = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-800 text-sm sm:text-base">
-                      {deadline.title}
+                      {deadline.title || "Assignment"}
                     </h4>
                     <p className="text-gray-500 text-xs sm:text-sm">
-                      {deadline.subject}
+                      {deadline.subject || "General"}
                     </p>
                   </div>
                 </div>
