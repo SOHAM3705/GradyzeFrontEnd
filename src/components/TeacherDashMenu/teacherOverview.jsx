@@ -195,31 +195,40 @@ const TeacherOverview = () => {
               </div>
             </div>
           </div>
+
           <div className="bg-transparent rounded-lg p-4 h-72">
             <div className="flex justify-between items-end h-48">
-              {overviewStats.subjectAverages.map((subjectData, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-center w-12 sm:w-16"
-                >
+              {overviewStats.subjectAverages.map((subjectData, index) => {
+                const barHeight = Math.min(
+                  Math.max(subjectData.average, 5),
+                  100
+                ); // Prevent invisible bars
+
+                return (
                   <div
-                    className="w-5 bg-gradient-to-t from-teal-700 to-teal-700 rounded-md transition-all duration-500 relative"
-                    style={{ height: `${subjectData.average}%` }}
+                    key={index}
+                    className="flex flex-col items-center w-12 sm:w-16 group"
                   >
-                    <span className="absolute top-[-25px] left-1/2 transform -translate-x-1/2 bg-teal-700 text-white px-2 py-1 rounded-md text-xs opacity-0 transition-opacity duration-300">
-                      {subjectData.average}%
-                    </span>
+                    <div
+                      className="w-5 sm:w-6 bg-gradient-to-t from-teal-700 to-teal-600 rounded-md transition-all duration-500 relative group-hover:scale-105"
+                      style={{ height: `${barHeight}%`, minHeight: "1rem" }}
+                    >
+                      <span className="absolute -top-6 bg-teal-600 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {subjectData.average}%
+                      </span>
+                    </div>
+                    <p className="mt-2 text-gray-600 text-xs sm:text-sm text-center truncate w-full">
+                      {subjectData.subject}
+                    </p>
                   </div>
-                  <p className="mt-4 text-gray-600 font-medium text-xs sm:text-sm">
-                    {subjectData.subject}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
             <div className="flex justify-between px-4 mt-4 text-xs text-gray-500">
-              <span>0</span>
-              <span>Class Performance Score (%)</span>
-              <span>100</span>
+              <span>0%</span>
+              <span>Performance</span>
+              <span>100%</span>
             </div>
           </div>
         </div>
