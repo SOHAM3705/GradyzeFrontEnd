@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSearch,
@@ -9,13 +9,131 @@ import {
   faCalendarCheck,
   faCalculator,
 } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 const StudentDashboard = () => {
   const [activePeriod, setActivePeriod] = useState("Month");
+  const [studentData, setStudentData] = useState(null);
+  const [gradePerformance, setGradePerformance] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const studentId = sessionStorage.getItem("studentId");
+
+  useEffect(() => {
+    const fetchStudentOverview = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/api/student/overview/${studentId}`);
+        setStudentData(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchStudentOverview();
+  }, [studentId]);
+
+  useEffect(() => {
+    const fetchGradePerformance = async () => {
+      try {
+        const response = await axios.get(
+          `/api/student/grades/${studentId}/${activePeriod}`
+        );
+        setGradePerformance(response.data.gradePerformance);
+      } catch (err) {
+        console.error("Error fetching grade performance:", err);
+      }
+    };
+
+    if (studentId) {
+      fetchGradePerformance();
+    }
+  }, [activePeriod, studentId]);
 
   const handlePeriodChange = (period) => {
     setActivePeriod(period);
   };
+
+  if (loading) {
+    return <div className="max-w-6xl mx-auto p-8 text-center">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto p-8 text-center text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
+
+  if (!studentData) {
+    return null;
+  }
+
+  // Calculate trend indicators
+  const getTrendIndicator = (current, previous) => {
+    const difference = current - previous;
+    if (difference > 0) {
+      return {
+        icon: faArrowUp,
+        color: "text-green-500",
+        text: `${Math.abs(difference)}% from last period`,
+      };
+    } else if (difference < 0) {
+      return {
+        icon: faArrowDown,
+        color: "text-red-500",
+        text: `${Math.abs(difference)}% from last period`,
+      };
+    }
+    return {
+      icon: null,
+      color: "text-gray-500",
+      text: "No change from last period",
+    };
+  };
+
+  const gpaTrend = getTrendIndicator(
+    studentData.stats.gpa,
+    studentData.stats.gpa - studentData.trends.gpaChange
+  );
+
+  const attendanceTrend = getTrendIndicator(
+    studentData.stats.attendanceRate,
+    studentData.stats.attendanceRate + studentData.trends.attendanceChange
+  );
+
+  // For assignments due, we'll assume some previous value since backend doesn't provide it
+  const assignmentsTrend =
+    studentData.stats.assignmentsDue > 3
+      ? {
+          icon: faArrowUp,
+          color: "text-red-500",
+          text: `${studentData.stats.assignmentsDue - 3} more than last week`,
+        }
+      : {
+          icon: faArrowDown,
+          color: "text-green-500",
+          text: `${3 - studentData.stats.assignmentsDue} fewer than last week`,
+        };
+
+  // Normalize grade performance data for the chart
+  const normalizedGrades = gradePerformance.map((subject) => ({
+    ...subject,
+    normalizedHeight: `${subject.percentage}%`,
+  }));
+
+  // Fill with empty data if less than 5 subjects for the chart
+  while (normalizedGrades.length < 5) {
+    normalizedGrades.push({
+      subject: `Subject ${normalizedGrades.length + 1}`,
+      percentage: 0,
+      normalizedHeight: "0%",
+    });
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-8">
@@ -38,13 +156,18 @@ const StudentDashboard = () => {
           </div>
           <div className="flex items-center gap-2 sm:gap-4 p-1 sm:p-2 bg-white rounded-lg shadow-md cursor-pointer transition hover:shadow-lg">
             <div className="w-7 sm:w-9 h-7 sm:h-9 bg-gradient-to-br from-blue-600 to-blue-400 text-white flex items-center justify-center rounded-lg font-bold text-sm sm:text-lg">
-              JS
+              {studentData.student.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
             </div>
             <div>
               <div className="font-semibold text-gray-800 text-sm sm:text-base">
-                Jamie Smith
+                {studentData.student.name}
               </div>
-              <div className="text-gray-500 text-xs sm:text-sm">Student</div>
+              <div className="text-gray-500 text-xs sm:text-sm">
+                {studentData.student.year} Year, {studentData.student.division}
+              </div>
             </div>
           </div>
         </div>
@@ -58,12 +181,17 @@ const StudentDashboard = () => {
                 Current GPA
               </h3>
               <p className="text-2xl sm:text-4xl font-bold text-gray-800 mt-1 sm:mt-2">
-                3.8
+                {studentData.stats.gpa.toFixed(1)}
               </p>
-              <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
-                <FontAwesomeIcon icon={faArrowUp} className="text-green-500" />
-                <span className="text-green-500">0.2 from last semester</span>
-              </div>
+              {gpaTrend.icon && (
+                <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
+                  <FontAwesomeIcon
+                    icon={gpaTrend.icon}
+                    className={gpaTrend.color}
+                  />
+                  <span className={gpaTrend.color}>{gpaTrend.text}</span>
+                </div>
+              )}
             </div>
             <div className="w-8 sm:w-12 h-8 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-400 text-white flex items-center justify-center rounded-lg">
               <FontAwesomeIcon icon={faChartLine} />
@@ -72,7 +200,7 @@ const StudentDashboard = () => {
           <div className="w-full bg-gray-200 h-1 sm:h-2 rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-600 rounded-full"
-              style={{ width: "95%" }}
+              style={{ width: `${(studentData.stats.gpa / 4) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -84,12 +212,19 @@ const StudentDashboard = () => {
                 Assignments Due
               </h3>
               <p className="text-2xl sm:text-4xl font-bold text-gray-800 mt-1 sm:mt-2">
-                5
+                {studentData.stats.assignmentsDue}
               </p>
-              <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
-                <FontAwesomeIcon icon={faArrowDown} className="text-red-500" />
-                <span className="text-red-500">2 fewer than last week</span>
-              </div>
+              {assignmentsTrend.icon && (
+                <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
+                  <FontAwesomeIcon
+                    icon={assignmentsTrend.icon}
+                    className={assignmentsTrend.color}
+                  />
+                  <span className={assignmentsTrend.color}>
+                    {assignmentsTrend.text}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="w-8 sm:w-12 h-8 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-400 text-white flex items-center justify-center rounded-lg">
               <FontAwesomeIcon icon={faTasks} />
@@ -98,7 +233,12 @@ const StudentDashboard = () => {
           <div className="w-full bg-gray-200 h-1 sm:h-2 rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-600 rounded-full"
-              style={{ width: "42%" }}
+              style={{
+                width: `${Math.min(
+                  (studentData.stats.assignmentsDue / 10) * 100,
+                  100
+                )}%`,
+              }}
             ></div>
           </div>
         </div>
@@ -110,12 +250,19 @@ const StudentDashboard = () => {
                 Attendance Rate
               </h3>
               <p className="text-2xl sm:text-4xl font-bold text-gray-800 mt-1 sm:mt-2">
-                96%
+                {studentData.stats.attendanceRate}%
               </p>
-              <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
-                <FontAwesomeIcon icon={faArrowUp} className="text-green-500" />
-                <span className="text-green-500">1.5% from last month</span>
-              </div>
+              {attendanceTrend.icon && (
+                <div className="flex items-center gap-2 text-xs sm:text-sm mt-1 sm:mt-2">
+                  <FontAwesomeIcon
+                    icon={attendanceTrend.icon}
+                    className={attendanceTrend.color}
+                  />
+                  <span className={attendanceTrend.color}>
+                    {attendanceTrend.text}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="w-8 sm:w-12 h-8 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-400 text-white flex items-center justify-center rounded-lg">
               <FontAwesomeIcon icon={faCalendarCheck} />
@@ -124,7 +271,7 @@ const StudentDashboard = () => {
           <div className="w-full bg-gray-200 h-1 sm:h-2 rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-600 rounded-full"
-              style={{ width: "96%" }}
+              style={{ width: `${studentData.stats.attendanceRate}%` }}
             ></div>
           </div>
         </div>
@@ -170,41 +317,22 @@ const StudentDashboard = () => {
             </div>
           </div>
           <div className="flex justify-between items-end h-40 sm:h-64 px-2 sm:px-4">
-            <div className="flex flex-col items-center w-10 sm:w-14">
+            {normalizedGrades.slice(0, 5).map((subject, index) => (
               <div
-                className="w-2 sm:w-4 bg-gradient-to-t from-blue-600 to-blue-400 rounded-lg"
-                style={{ height: "92%" }}
-              ></div>
-              <p className="text-gray-600 text-xs mt-1 sm:mt-2">Math</p>
-            </div>
-            <div className="flex flex-col items-center w-10 sm:w-14">
-              <div
-                className="w-2 sm:w-4 bg-gradient-to-t from-blue-600 to-blue-400 rounded-lg"
-                style={{ height: "87%" }}
-              ></div>
-              <p className="text-gray-600 text-xs mt-1 sm:mt-2">Science</p>
-            </div>
-            <div className="flex flex-col items-center w-10 sm:w-14">
-              <div
-                className="w-2 sm:w-4 bg-gradient-to-t from-blue-600 to-blue-400 rounded-lg"
-                style={{ height: "78%" }}
-              ></div>
-              <p className="text-gray-600 text-xs mt-1 sm:mt-2">History</p>
-            </div>
-            <div className="flex flex-col items-center w-10 sm:w-14">
-              <div
-                className="w-2 sm:w-4 bg-gradient-to-t from-blue-600 to-blue-400 rounded-lg"
-                style={{ height: "85%" }}
-              ></div>
-              <p className="text-gray-600 text-xs mt-1 sm:mt-2">English</p>
-            </div>
-            <div className="flex flex-col items-center w-10 sm:w-14">
-              <div
-                className="w-2 sm:w-4 bg-gradient-to-t from-blue-600 to-blue-400 rounded-lg"
-                style={{ height: "94%" }}
-              ></div>
-              <p className="text-gray-600 text-xs mt-1 sm:mt-2">Art</p>
-            </div>
+                key={index}
+                className="flex flex-col items-center w-10 sm:w-14"
+              >
+                <div
+                  className="w-2 sm:w-4 bg-gradient-to-t from-blue-600 to-blue-400 rounded-lg"
+                  style={{ height: subject.normalizedHeight }}
+                ></div>
+                <p className="text-gray-600 text-xs mt-1 sm:mt-2">
+                  {subject.subject.length > 8
+                    ? `${subject.subject.substring(0, 5)}...`
+                    : subject.subject}
+                </p>
+              </div>
+            ))}
           </div>
           <div className="flex justify-between px-2 sm:px-4 mt-2 sm:mt-4 text-gray-500 text-xs">
             <span>0</span>
@@ -218,19 +346,28 @@ const StudentDashboard = () => {
             Upcoming Deadlines
           </h2>
           <div className="space-y-2 sm:space-y-4">
-            <div className="flex items-center p-2 sm:p-4 bg-white border rounded-lg shadow-sm transition hover:shadow-md">
-              <div className="w-7 sm:w-10 h-7 sm:h-10 bg-gradient-to-br from-blue-600 to-blue-400 text-white flex items-center justify-center rounded-lg mr-2 sm:mr-4">
-                <FontAwesomeIcon icon={faCalculator} />
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-800 text-sm sm:text-base">
-                  Math Homework
-                </h4>
-                <p className="text-gray-500 text-xs sm:text-sm">
-                  Calculus II - Chapter 5
-                </p>
-              </div>
-            </div>
+            {studentData.upcomingDeadlines.length > 0 ? (
+              studentData.upcomingDeadlines.map((deadline, index) => (
+                <div
+                  key={index}
+                  className="flex items-center p-2 sm:p-4 bg-white border rounded-lg shadow-sm transition hover:shadow-md"
+                >
+                  <div className="w-7 sm:w-10 h-7 sm:h-10 bg-gradient-to-br from-blue-600 to-blue-400 text-white flex items-center justify-center rounded-lg mr-2 sm:mr-4">
+                    <FontAwesomeIcon icon={faCalculator} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800 text-sm sm:text-base">
+                      {deadline.title}
+                    </h4>
+                    <p className="text-gray-500 text-xs sm:text-sm">
+                      {deadline.subject}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">No upcoming deadlines</p>
+            )}
           </div>
         </div>
       </div>
